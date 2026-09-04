@@ -33,6 +33,20 @@ export function withTarget(payload, target = {}) {
   return routed;
 }
 
+/**
+ * 出站方向：一条排队中的 outbox 请求是否属于当前视图。
+ *
+ * threadId 必须先于 instanceId 判断 —— 一个 instance 上可以先后开多个 thread，
+ * 反过来先比 instanceId 的话，切到同实例的新 thread 后，旧 thread 的排队消息
+ * 会被当成属于当前视图而发出去，落进错误的会话。
+ */
+export function outboxRequestMatchesView(request, view = {}) {
+  const payload = request?.payload || {};
+  if (payload.threadId) return payload.threadId === view.threadId;
+  if (payload.instanceId) return payload.instanceId === view.instanceId;
+  return !view.threadId && !view.instanceId;
+}
+
 export function bindThreadFromEvent(target = {}, event = {}) {
   if (target.threadId || !target.instanceId) return target;
   if (event.instanceId !== target.instanceId || !event.sessionId) return target;

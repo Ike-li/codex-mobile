@@ -24,7 +24,7 @@ server.js（鉴权、设备、可靠投递、视图路由、恢复、Push）
 
 前端由 `public/index.html` 的 HTML shell、外部样式表 `public/css/app.css`、外部主应用模块 `public/js/app.js`，以及 `public/js/` 下的 outbox、ACK、恢复和视图路由小模块组成。它渲染文本增量、thinking/reasoning、命令与工具卡片、diff、审批、提问、状态栏和未知事件的 raw fallback。
 
-`public/css/app.css` 的 `<link>` 必须排在 highlight.js 主题 `github-dark.min.css` 之后：应用样式表覆盖了 `.hljs` 相关的代码块外观，顺序一旦提前，覆盖关系会反转。代码块在浅色和深色配色下都是暗底（`.codex .bubble.md pre` 与 `.tool-output` 固定 `#1e1e1e`），因此只打包暗色主题、不按 `prefers-color-scheme` 切换。两条约束都由 `test/public-ui.test.mjs` 守护。
+`public/css/app.css` 的 `<link>` 必须排在 highlight.js 主题 `github-dark.min.css` 之后：应用样式表覆盖了 `.hljs` 相关的代码块外观，顺序一旦提前，覆盖关系会反转。代码块在浅色和深色配色下都是暗底（`.codex .bubble.md pre` 与 `.tool-output` 固定 `#1e1e1e`），因此只打包暗色主题、不按 `prefers-color-scheme` 切换。两条约束都由 `test/public-shell-guard.test.mjs` 守护。
 
 ## 关键数据流
 

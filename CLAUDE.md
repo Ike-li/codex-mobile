@@ -43,4 +43,6 @@ npm run test:e2e
 - `docs/PROTOCOL_UPGRADE.md`：Codex app-server 协议升级流程。
 - `docs/archive/`：历史存档，不再维护，不作为事实来源。
 
-文档结构由 `test/acceptance-doc.test.mjs` 契约测试守护；调整文档结构时先改契约测试。
+`test/acceptance-doc.test.mjs` 守两类东西：**客观缺陷**（死链、引用了不存在的图片/文档、许可证与 package.json 不一致、CONTRIBUTING 提到的 npm script 不存在）和**具体教训**（每条注释里写明是哪一次踩坑）。
+
+它**不**冻结文档的标题和措辞——上一版那样做过，401 行里六成在断言标题字面存在，结果是改一次措辞就红，而正文写错一条都抓不到，那个文件因此被追着改了 12 次。新增文档约束前先问：违反了，读者会被坑吗？答案是「只是不好看」就不要加。

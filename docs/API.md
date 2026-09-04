@@ -253,4 +253,4 @@ flag 默认关闭；关闭时 ACK 为 `feature_disabled`。
 | structured UserInput、上传与输入解析 | `test/agent-appserver.test.mjs`、`test/new-modules.test.mjs`、`test/input-parts.test.mjs` |
 | catch-up、epoch/gap 重建、needs-you 决议 | `test/server-integration.test.mjs`、`test/recovery-state.test.mjs` |
 | app-server 生命周期、事件映射与审批 | `test/agent-appserver.test.mjs`、`test/agent-appserver-branches.test.mjs`、`test/protocol-adaptation.test.mjs`、`test/approval-broker.test.mjs` |
-| 前端信封渲染与端到端流程 | `test/public-ui.test.mjs`、`e2e/critical-flows.spec.js`、`e2e/needs-you-recovery.spec.js`、`e2e/outbox-recovery.spec.js` |
+| 前端信封渲染与端到端流程 | `e2e/critical-flows.spec.js`、`e2e/needs-you-recovery.spec.js`、`e2e/outbox-recovery.spec.js` |

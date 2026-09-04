@@ -1,4 +1,9 @@
-import { bindThreadFromEvent, eventMatchesTarget, withTarget } from '/js/view-routing.js';
+import {
+  bindThreadFromEvent,
+  eventMatchesTarget,
+  outboxRequestMatchesView as requestMatchesView,
+  withTarget,
+} from '/js/view-routing.js';
 import { clearCurrentThread, getCurrentThread, setCurrentThread } from '/js/thread-preferences.js';
 import { bufferRecoveryEvent, completeRecovery, createRecoveryState } from '/js/recovery-state.js';
 import { createMessageRequest, messageWirePayload } from '/js/message-request.js';
@@ -20,6 +25,7 @@ import {
 } from '/js/thread-status.js';
 import { resolveComposerPrimaryMode } from '/js/composer-mode.js';
 import { projectLabel } from '/js/project-label.js';
+import { compactPath, parentPath } from '/js/display-path.js';
 import { loadExpandedDirs, persistExpandedDirs, toggleExpandedDir } from '/js/drawer-dirs.js';
 import { renderMarkdown } from '/js/markdown.js';
 import { createTranscriptStream } from '/js/transcript-stream.js';
@@ -471,10 +477,10 @@ import { icon, hydrateIcons } from '/js/icons.js';
   }
 
   function outboxRequestMatchesView(request) {
-    const payload = request?.payload || {};
-    if (payload.threadId) return payload.threadId === currentSessionId;
-    if (payload.instanceId) return payload.instanceId === currentViewingId;
-    return !currentSessionId && !currentViewingId;
+    return requestMatchesView(request, {
+      threadId: currentSessionId,
+      instanceId: currentViewingId,
+    });
   }
 
   function outboxRequestIsOrphaned(request) {
@@ -1928,13 +1934,6 @@ import { icon, hydrateIcons } from '/js/icons.js';
     renderConnectionState();
   }
 
-  function compactPath(path) {
-    if (!path) return '';
-    const parts = String(path).split('/').filter(Boolean);
-    if (parts.length <= 2) return path;
-    return '…/' + parts.slice(-2).join('/');
-  }
-
   function syncVisualViewport() {
     const vv = window.visualViewport;
     const height = vv?.height || window.innerHeight;
@@ -2650,13 +2649,6 @@ import { icon, hydrateIcons } from '/js/icons.js';
 
   function joinPath(base, name) {
     return `${String(base || '/').replace(/\/+$/, '')}/${name}`.replace(/^\/\//, '/');
-  }
-
-  function parentPath(path) {
-    const clean = String(path || '').replace(/\/+$/, '');
-    if (!clean || clean === '/') return null;
-    const idx = clean.lastIndexOf('/');
-    return idx <= 0 ? '/' : clean.slice(0, idx);
   }
 
   function decodeBase64Text(dataBase64) {

@@ -33,9 +33,21 @@ npm run test:e2e
 
 ### `public/js/app.js` 是这几条教训的共同来源
 
-它有 3952 行装在一个 IIFE 里（`app.js:72` 到文件末尾），里面的东西**一个都导不出来，因此一个都没法单元测试**。于是 `test/public-ui.test.mjs` 只能 `readFileSync('app.js')` 之后对源码文本做正则匹配——683 条断言，验证的是「代码写了」而不是「功能能用」。真实行为只有 e2e 覆盖。
+它有约 4000 行装在一个 IIFE 里（`app.js:72` 到文件末尾），里面的东西**一个都导不出来，因此一个都没法单元测试**。于是 `test/public-ui.test.mjs` 只能 `readFileSync('app.js')` 之后对源码文本做正则匹配——1807 行、90 个 test，验证的是「代码写了」而不是「功能能用」。
 
-这不是可以顺手修的东西：3952 行的重构没有安全网（现有的文本断言会整片失效，只剩 61 条 e2e）。在拆开之前，涉及 `app.js` 的功能必须有一条 e2e 用真实 `click` 和 `toBeVisible` 守住入口——文本断言在这里只能当补充，不能当门禁。
+那个文件已经删掉了，实测代价有三条：
+
+1. **1028–1401 与 1402–1775 是逐字相同的 374 行**，15 个 test 跑了两遍（`fc2ad4a` 粘重了）。879 个测试全绿，没有任何东西发现它。文件大到没人能通读，就是它失去审阅价值的那一刻。
+2. **两条断言互相打架而同时绿**：一条要求源码里必须出现 `crypto.randomUUID()`，另一条禁止裸调它。前者会拦住「把 `createDeviceToken` 改用统一的 `randomId()`」这个明确的改进——门禁在阻止修 bug。
+3. **删掉后覆盖率一点没掉**（91.30 → 91.33）。因为它只 `readFileSync` 而从不 `import`，对被测代码的执行覆盖始终是 0。1800 行测试连覆盖率这个最宽松的指标都没骗到，只骗过了人。
+
+替代形态是三层，不再有第四层：
+
+- **结构性绊线** → `test/public-shell-guard.test.mjs`（7 条）。不描述实现长什么样，只在越过边界时红：无内联 script、资源引用完整性、样式表顺序、不裸调 `randomUUID`、不用 `Math.random` 生成凭证、不重新引入账号登录。
+- **可提取的纯逻辑** → 抽成 `public/js/` 下的模块 + 真 `import` 的单测。已抽出 32 个；`outboxRequestMatchesView`（`view-routing.js`）和 `compactPath`/`parentPath`（`display-path.js`）是最近两个。
+- **真实行为** → e2e，用真实 `click` 和 `toBeVisible`。
+
+在 `app.js` 拆完之前，涉及它的功能必须有一条 e2e 守住入口。**不要再往回加源码文本断言**：它抓不到逻辑错误，却会在重命名时变红，净效果是拖慢重构、制造虚假的绿。
 
 ## 自动化覆盖
 
@@ -49,7 +61,9 @@ npm run test:e2e
 - **审批与 needs-you**：approval/question 分类、精确 target、snapshot/revision、进程内幂等重放与 conflict/stale/unknown、resolved/expired/revoked 广播和脱敏深链。
 - **自托管安全**：HTTPS fail-closed、Origin allowlist、可信代理、HttpOnly device-bound session、query token 拒绝、配对/撤销、外部 trusted-file 原子变更、认证/Push 容量限制、rate-limit 审计聚合、O_APPEND + bounded rotation、宿主配置审计 sink 脱敏，以及 Push DNS pin/总超时/响应上限与持久化失败。
 - **产品门控**：Labs default-off 的 feature manifest 与服务端拒绝；宿主配置的逐动作确认与缺确认拒绝。
-- **门禁自身**：CI 矩阵关闭 fail-fast、没有 `continue-on-error` 吞掉失败、生产依赖 audit 阻断、覆盖率退化门禁不限于 PR（`test/ci-workflow.test.mjs`）；E2E 必须走 mock 且跑用例前先探测后端版本（`test/zero-quota-guard.test.mjs` + `e2e/assert-mock-backend.js`）；落盘文件不超出 A2 允许的例外（`test/zero-persistence-guard.test.mjs`）。这三类守的是「规则被违反时会不会有东西变红」，此前全靠文档约定。
+- **门禁自身**：CI 矩阵关闭 fail-fast、没有 `continue-on-error` 吞掉失败、生产依赖 audit 阻断、覆盖率退化门禁不限于 PR（`test/ci-workflow.test.mjs`）；E2E 必须走 mock 且跑用例前先探测后端版本（`test/zero-quota-guard.test.mjs` + `e2e/assert-mock-backend.js`）；落盘文件不超出 A2 允许的例外（`test/zero-persistence-guard.test.mjs`）；`public/` 外壳的结构性边界——无内联 script、资源引用完整性、样式表顺序、不裸调 `randomUUID`、不用 `Math.random` 生成凭证、不重新引入账号登录（`test/public-shell-guard.test.mjs`）。这几类守的是「规则被违反时会不会有东西变红」，此前全靠文档约定。
+
+  这些是**绊线**，不是实现的镜像：它们从源码里抽事实，只写死「允许什么」。所以重构不会误伤，越界一定变红。新增门禁请照这个形态写——凡是需要复述当前代码长什么样才能通过的断言，重命名一次就会红，而逻辑写反时不会红，净效果是负的。
 - **移动端**：流式气泡、thinking、命令/工具/diff/审批/提问卡片、状态栏、PWA/Service Worker、needs-you 恢复、outbox 存储与多实例/多视图隔离。
 
 主要证据分布在 `test/app-server-{transport,host}.test.mjs`、`test/thread-{registry,runtime,source-of-truth,status}.test.mjs`、`test/message-{receipt-ledger,outbox,request}.test.mjs`、`test/recovery-state.test.mjs`、`test/{user-inputs,input-parts}.test.mjs`、`test/server-{integration,security,push}.test.mjs`、`test/service-worker.test.mjs` 和 `e2e/*recovery*.spec.js`。
