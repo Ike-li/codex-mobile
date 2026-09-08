@@ -400,13 +400,46 @@ app.use((_req, res, next) => {
 const clientIp = v => normalizeAddress(v);
 const authFailureWindows = new Map();
 
+// 这张表的上界。超过之后不是「扫一遍试试能不能清掉点」——那不构成上界：
+// 条目还没过期时一个也删不掉，表继续涨，而每次失败都要全表扫一遍。实测冲过阈值后
+// 同样 2000 次调用从 0.3ms 涨到 309ms（899×），且随表继续增长。
+// 可达性不是理论上的：IPv6 下一个 /64 前缀给单台主机 2^64 个源地址，每个都会新建一个
+// 窗口——**为抵抗认证滥用而存在的限流表，自己成了 DoS 放大器**。
+const AUTH_WINDOW_MAX_ENTRIES = 10_000;
+
+// 定时清理（每 5 分钟一次，见 startServer 里的 failureWindowsPruneTimer）。
+// 它负责**上界之下**的内存回收：表没满但攒了一堆过期条目时，靠它释放。
+// 每 5 分钟扫一次全表的代价可以忽略；不能把它挂到每次失败上——那正是下面那段注释里
+// 说的 899× 的来源。
 function pruneExpiredFailureWindows(now = Date.now()) {
   for (const [key, value] of authFailureWindows) {
     if (value.resetAt <= now) authFailureWindows.delete(key);
   }
 }
 
-function recordAuthFailure(address, now = Date.now()) {
+// 表头即最早到期：Map 保持插入顺序，而窗口时长固定。所以从表头往后走，
+// 先碰到的自然是已经过期的那些。
+//
+// 停止条件有两个：碰到第一个还没过期的条目**且**表已经回到上限内就停——
+// 于是常态下每次调用只删掉刚刚过期的那几个，是 O(1) 摊还，不是全表扫描。
+// 仍然超限时会继续删，包括还没过期的：宁可让最早那批提前失去记录（等同于窗口提前到期），
+// 也不能让表无界增长。
+//
+// ⚠ 代价写明白：攻击者用一万次失败可以把自己早先那条被限流的记录顶出去，等于提前重置计数。
+// 但那一万次本身就是失败的认证请求，而他本来也只要等一个窗口就能重置——除非运维把
+// CODEX_AUTH_WINDOW_MS 配得远长于默认的 60 秒，那时这条捷径才比等待便宜。
+function trimAuthFailureWindows(now) {
+  for (const [key, value] of authFailureWindows) {
+    const expired = value.resetAt <= now;
+    if (!expired && authFailureWindows.size <= AUTH_WINDOW_MAX_ENTRIES) break;
+    authFailureWindows.delete(key);
+  }
+}
+
+// 导出是为了可测：窗口按来源隔离、到 resetAt 就真的过期、表满时的回收，这三件事从
+// socket 那一侧驱动不了（来源地址由内核决定，注入不进去）。与 reclaimIdleAgents /
+// pushDecision 同一做法——生产代码照常用它，测试用注入的 now 直接驱动。
+export function recordAuthFailure(address, now = Date.now()) {
   const key = clientIp(address) || 'unknown';
   let window = authFailureWindows.get(key);
   if (!window || window.resetAt <= now) {
@@ -414,7 +447,7 @@ function recordAuthFailure(address, now = Date.now()) {
   }
   window.count += 1;
   authFailureWindows.set(key, window);
-  if (authFailureWindows.size > 10_000) pruneExpiredFailureWindows(now);
+  trimAuthFailureWindows(now);
   const rateLimited = window.count > AUTH_MAX_FAILURES;
   return {
     rateLimited,
