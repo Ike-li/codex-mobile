@@ -990,3 +990,395 @@ test('rpc 日志跳过已打码的 delta 通知，保留 request/response/error'
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+// ---- observeTransportFrame：host 模式下的帧分类与 turn 追踪 ----
+//
+// 这条路径在 host 模式（多 runtime 共用一个 app-server 子进程）下是**唯一**的观测入口，
+// 而它此前只被间接碰到：`:277`/`:283`/`:288`–`:295` 共 15 个变异全部存活。
+
+test('observeTransportFrame 把四类帧分开记，方向与 id 都是判据', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ccm-observe-classify-'));
+  const rpcLogPath = join(dir, 'rpc.jsonl');
+  try {
+    const { session } = makeSession({ cwd: dir, rpcLogPath });
+
+    // 服务端请求：有 method、有 id、方向是 inbound。三个条件缺一就不是它。
+    session.observeTransportFrame({
+      direction: 'inbound',
+      frame: { id: 7, method: 'item/commandExecution/requestApproval', params: {} },
+    });
+    // 客户端请求：同样有 method 有 id，但方向是 outbound。
+    session.observeTransportFrame({
+      direction: 'outbound',
+      frame: { id: 8, method: 'turn/start', params: {} },
+    });
+    // 通知：有 method、没有 id。
+    session.observeTransportFrame({
+      direction: 'inbound',
+      frame: { method: 'turn/started', params: {} },
+    });
+    // 响应：有 id、没有 method。
+    session.observeTransportFrame({
+      direction: 'inbound',
+      frame: { id: 9, result: { ok: true } },
+    });
+
+    assert.deepEqual(readJsonl(rpcLogPath).map(line => line.frame),
+      ['server_request', 'request', 'notification', 'response'],
+      '分类错的后果是 RPC 日志谎报流量方向——排查时唯一的线索就成了误导');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// 方法名优先取调用方传进来的那个：响应帧本身不带 method，只有发起时的上下文知道它是什么。
+// 回落顺序写反的话，响应那一行的 method 会变成 null，日志里请求与响应就配不成对。
+test('observeTransportFrame 的方法名优先用调用方给的，其次才看帧里的', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ccm-observe-method-'));
+  const rpcLogPath = join(dir, 'rpc.jsonl');
+  try {
+    const { session } = makeSession({ cwd: dir, rpcLogPath });
+
+    // 响应帧没有 method，靠调用方补。
+    session.observeTransportFrame({ direction: 'inbound', method: 'thread/list', frame: { id: 1, result: {} } });
+    // 帧自带 method、调用方没给。
+    session.observeTransportFrame({ direction: 'inbound', frame: { method: 'turn/started', params: {} } });
+    // 两个都没有：记 null，而不是 undefined 或崩溃。
+    session.observeTransportFrame({ direction: 'inbound', frame: { id: 2, result: {} } });
+
+    assert.deepEqual(readJsonl(rpcLogPath).map(line => line.method),
+      ['thread/list', 'turn/started', null]);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// currentTurnId 是 steer / abort / 中断的目标。记错了，用户点「停止」停的是别的轮次。
+test('只有 turn/start 与 turn/steer 的入站响应会记录当前轮次', () => {
+  const accepted = [
+    ['turn/start 的响应', 'turn/start', { turn: { id: 'turn-a' } }, 'turn-a'],
+    ['turn/steer 的响应', 'turn/steer', { turn: { id: 'turn-b' } }, 'turn-b'],
+    ['结果用 turnId 而不是 turn.id', 'turn/start', { turnId: 'turn-c' }, 'turn-c'],
+  ];
+  for (const [label, method, result, expected] of accepted) {
+    const { session } = makeSession();
+    session.observeTransportFrame({ direction: 'inbound', method, frame: { id: 1, result } });
+    assert.equal(session.currentTurnId, expected, label);
+  }
+
+  const ignored = [
+    ['出站的 turn/start（那是请求，还没有结果）', 'outbound', 'turn/start', { turn: { id: 'nope' } }],
+    ['别的方法的入站响应', 'inbound', 'thread/start', { turn: { id: 'nope' } }],
+    ['入站通知（没有 result）', 'inbound', 'turn/started', undefined],
+  ];
+  for (const [label, direction, method, result] of ignored) {
+    const { session } = makeSession();
+    session.observeTransportFrame({ direction, method, frame: { id: 1, result } });
+    assert.equal(session.currentTurnId, null, label);
+  }
+});
+
+// 服务端请求（审批等）带 turnId 时可以用它补上当前轮次——但**只在还不知道的时候**。
+// 覆盖已知值的后果：一个无关请求把 currentTurnId 改掉，之后的 steer / abort 打错目标。
+test('服务端请求携带的 turnId 只在当前轮次未知时被采纳', () => {
+  {
+    const { session } = makeSession();
+    assert.equal(session.currentTurnId, null, '前置：一开始不知道');
+    session.handleServerRequest(1, 'item/commandExecution/requestApproval', { turnId: 'turn-from-request' });
+    assert.equal(session.currentTurnId, 'turn-from-request', '不知道时可以从服务端请求里补');
+  }
+  {
+    const { session } = makeSession();
+    session.currentTurnId = 'turn-known';
+    session.handleServerRequest(1, 'item/commandExecution/requestApproval', { turnId: 'turn-other' });
+    assert.equal(session.currentTurnId, 'turn-known',
+      '已经知道当前轮次时不许被覆盖——覆盖了之后 steer / abort 就打在别的轮次上');
+  }
+  for (const bad of ['', 123, null, undefined]) {
+    const { session } = makeSession();
+    session.handleServerRequest(1, 'item/commandExecution/requestApproval', { turnId: bad });
+    assert.equal(session.currentTurnId, null, `turnId=${String(bad)} 不是可用的轮次标识`);
+  }
+});
+
+// ---- 旧版审批方法的参数归一 ----
+//
+// applyPatchApproval / execCommandApproval 是旧协议的审批方法，它们不带
+// threadId / turnId / itemId。归一化补上这三个字段——而它们**正是手机按下「同意」时
+// 用来核对目标的那三个**（见 approval-broker 的 approvalTargetMatches）。
+// 补错了的后果：手机的应答对不上，审批静默失效；或者对上了别的请求，
+// agent 拿到一个用户从没看过的授权。这个函数有 12 个变异存活。
+test('旧版审批方法补齐的目标字段能被手机的应答对上', () => {
+  const { session } = makeSession();
+  session.sessionId = 'thr_current';
+
+  session.handleServerRequest(77, 'execCommandApproval', { callId: 'call_1', command: ['ls'] });
+
+  // 用补出来的三个字段应答：必须对得上。
+  assert.equal(session.approvalBroker.respondApproval(77, 'accept', {
+    threadId: 'thr_current',       // 没给 threadId / conversationId → 回落到当前会话
+    turnId: 'legacy_turn_77',      // 没给 turnId 且当前轮次未知 → 用 rpcId 造一个
+    itemId: 'call_1',              // 没给 itemId → 回落到 callId
+  }), true, '补出来的三个字段必须与手机看到的一致');
+});
+
+test('旧版审批的三个字段各自的回落顺序', () => {
+  const cases = [
+    ['threadId 优先用自己的', { threadId: 'thr_own', conversationId: 'thr_conv' }, 'threadId', 'thr_own'],
+    ['其次用 conversationId', { conversationId: 'thr_conv' }, 'threadId', 'thr_conv'],
+    ['最后回落到当前会话', {}, 'threadId', 'thr_current'],
+    ['itemId 优先', { itemId: 'item_1', callId: 'call_1', approvalId: 'appr_1' }, 'itemId', 'item_1'],
+    ['其次 callId', { callId: 'call_1', approvalId: 'appr_1' }, 'itemId', 'call_1'],
+    ['再次 approvalId', { approvalId: 'appr_1' }, 'itemId', 'appr_1'],
+    ['都没有则按 rpcId 造一个', {}, 'itemId', 'legacy_request_88'],
+    ['turnId 优先用自己的', { turnId: 'turn_own' }, 'turnId', 'turn_own'],
+    ['都没有则按 rpcId 造一个', {}, 'turnId', 'legacy_turn_88'],
+  ];
+
+  for (const [label, params, field, expected] of cases) {
+    const { session } = makeSession();
+    session.sessionId = 'thr_current';
+    session.handleServerRequest(88, 'applyPatchApproval', params);
+    // 用期望值去应答：对得上说明归一化补的就是它。
+    assert.equal(session.approvalBroker.respondApproval(88, 'accept', { [field]: expected }), true, label);
+  }
+
+  // 空串不算「给了」，要继续往下回落。
+  const { session } = makeSession();
+  session.sessionId = 'thr_current';
+  session.handleServerRequest(88, 'applyPatchApproval', { threadId: '', itemId: '', callId: 'call_x' });
+  assert.equal(session.approvalBroker.respondApproval(88, 'accept', {
+    threadId: 'thr_current', itemId: 'call_x',
+  }), true, '空串要跳过，不能当成有效值补上去');
+});
+
+// turnId 已知时用已知的那个，而不是造一个——造出来的 legacy_turn_N 与真实轮次对不上，
+// 手机上那条审批就挂在一个不存在的轮次下面。
+test('当前轮次已知时旧版审批沿用它，不另造一个', () => {
+  const { session } = makeSession();
+  session.sessionId = 'thr_current';
+  session.currentTurnId = 'turn_real';
+  session.handleServerRequest(99, 'execCommandApproval', { callId: 'c' });
+  assert.equal(session.approvalBroker.respondApproval(99, 'accept', { turnId: 'turn_real' }), true);
+});
+
+// 非旧版方法不该被动手脚：新协议自己带齐了这三个字段，凭空补字段会覆盖掉真值。
+test('非旧版方法的参数原样透传，不被归一化改写', () => {
+  const { session } = makeSession();
+  session.sessionId = 'thr_current';
+  session.handleServerRequest(11, 'item/commandExecution/requestApproval', {
+    threadId: 'thr_real', turnId: 'turn_real', itemId: 'item_real',
+  });
+  assert.equal(session.approvalBroker.respondApproval(11, 'accept', {
+    threadId: 'thr_real', turnId: 'turn_real', itemId: 'item_real',
+  }), true, '新协议自带的三个字段必须原样保留');
+});
+
+// ---- RPC 统计计数器 ----
+//
+// 七个计数器各自认一组 (frame, direction)。串了的后果是 statusPayload 里的诊断数字
+// 说谎——排查「客户端发了多少请求 / 服务端推了多少通知」时，那是唯一的量化线索。
+// 这个函数有 14 个变异存活。
+test('七个 RPC 计数器各认各的帧类型与方向，不互相串', () => {
+  const { session } = makeSession();
+  const combos = [
+    ['request', 'outbound', 'clientRequests'],
+    ['response', 'inbound', 'clientResponses'],
+    ['response', 'outbound', 'serverResponses'],
+    ['notification', 'outbound', 'clientNotifications'],
+    ['notification', 'inbound', 'serverNotifications'],
+    ['server_request', 'inbound', 'serverRequests'],
+  ];
+
+  for (const [frame, direction, counter] of combos) {
+    const before = { ...session.rpcStats };
+    session.incrementRpcStats(frame, { direction });
+    for (const [key, value] of Object.entries(session.rpcStats)) {
+      const expected = key === counter ? before[key] + 1 : before[key];
+      assert.equal(value, expected,
+        `${frame}/${direction} 应当只加 ${counter}，实际动了 ${key}`);
+    }
+  }
+
+  // 反方向的组合一个都不该加：出站的 request 是我们发的，入站的 request 是服务端请求，
+  // 两者算在不同的桶里。
+  const before = { ...session.rpcStats };
+  session.incrementRpcStats('request', { direction: 'inbound' });
+  assert.deepEqual(session.rpcStats, before, '入站的 request 不属于任何一个客户端计数器');
+
+  // server_request 不看方向——它按定义只会是入站的。
+  const beforeServerRequest = session.rpcStats.serverRequests;
+  session.incrementRpcStats('server_request', {});
+  assert.equal(session.rpcStats.serverRequests, beforeServerRequest + 1);
+});
+
+test('带 error 的帧额外计一次错误，与它属于哪个桶无关', () => {
+  const { session } = makeSession();
+  const before = { ...session.rpcStats };
+  session.incrementRpcStats('response', { direction: 'inbound', error: { code: -1 } });
+  assert.equal(session.rpcStats.errors, before.errors + 1, '错误单独计数');
+  assert.equal(session.rpcStats.clientResponses, before.clientResponses + 1,
+    '同时它仍然是一条入站响应——两个计数器都要动');
+
+  const afterFirst = { ...session.rpcStats };
+  session.incrementRpcStats('response', { direction: 'inbound' });
+  assert.equal(session.rpcStats.errors, afterFirst.errors, '没有 error 就不加错误计数');
+});
+
+// ---- 构造时的安全策略默认值 ----
+//
+// approvalPolicy 与 sandbox 是**发给 codex 的安全策略**。回落写错的后果是这两个字段
+// 变成 undefined 送上去，由 codex 自己挑一个默认——而它的默认未必和本项目的一致。
+// 这两行加上 experimentalApi 的严格判定，共 7 个变异存活。
+test('审批策略与沙箱有明确的默认值，环境变量为空时不会漏成 undefined', () => {
+  const saved = { policy: process.env.CODEX_APPROVAL_POLICY, sandbox: process.env.CODEX_SANDBOX };
+  try {
+    delete process.env.CODEX_APPROVAL_POLICY;
+    delete process.env.CODEX_SANDBOX;
+    const { session } = makeSession();
+    assert.equal(session.approvalPolicy, 'on-request', '默认要人确认，而不是交给上游挑');
+    assert.equal(session.sandbox, 'workspace-write', '默认限制在工作区内');
+
+    process.env.CODEX_APPROVAL_POLICY = '';
+    process.env.CODEX_SANDBOX = '';
+    const { session: empty } = makeSession();
+    assert.equal(empty.approvalPolicy, 'on-request', '空串等同于没设，不能当成有效策略');
+    assert.equal(empty.sandbox, 'workspace-write');
+
+    process.env.CODEX_APPROVAL_POLICY = 'never';
+    process.env.CODEX_SANDBOX = 'read-only';
+    const { session: custom } = makeSession();
+    assert.equal(custom.approvalPolicy, 'never', '显式配置要生效');
+    assert.equal(custom.sandbox, 'read-only');
+  } finally {
+    for (const [key, value] of [['CODEX_APPROVAL_POLICY', saved.policy], ['CODEX_SANDBOX', saved.sandbox]]) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
+});
+
+test('实验 API 默认关闭且只认严格 true；RPC 日志上限拒绝非法值', () => {
+  assert.equal(makeSession().session.experimentalApi, false, '不传时默认关闭');
+  assert.equal(makeSession({ experimentalApi: true }).session.experimentalApi, true);
+  for (const bad of [1, 'true', {}, null]) {
+    assert.equal(makeSession({ experimentalApi: bad }).session.experimentalApi, false,
+      `experimentalApi=${String(bad)} 不是严格 true，不该开启`);
+  }
+
+  const fallback = makeSession().session.rpcLogMaxBytes;
+  assert.ok(Number.isInteger(fallback) && fallback > 0, '默认上限必须是个正整数');
+  for (const bad of [0, -1, 1.5, Number.NaN, '1024', null]) {
+    assert.equal(makeSession({ rpcLogMaxBytes: bad }).session.rpcLogMaxBytes, fallback,
+      `rpcLogMaxBytes=${String(bad)} 必须回落——0 会让每条记录都"超限"，日志从此一条也写不进去`);
+  }
+  assert.equal(makeSession({ rpcLogMaxBytes: 2048 }).session.rpcLogMaxBytes, 2048);
+});
+
+// ---- turn 覆盖参数要真的送到 codex ----
+//
+// 用户在 composer 里选的模型与服务档位靠这两行送上去。漏掉的表现是**静默降级**：
+// 界面显示选的是 gpt-5，实际跑的是账号默认模型，而没有任何提示。
+// thread/start 与 thread/resume 两条路径各有一份，是「形态漏过整族」的又一例。
+test('turn 覆盖的模型与服务档位在 thread/start 与 thread/resume 上都送出去', async () => {
+  for (const [label, resumeId, method] of [
+    ['新建线程', null, 'thread/start'],
+    ['恢复线程', 'thr_existing', 'thread/resume'],
+  ]) {
+    const { session } = makeSession({ resumeId });
+    const { writes, child } = fakeChild();
+    session.child = child;
+    session.initialized = true;
+    if (resumeId) session.sessionId = resumeId;
+    session.turnOverrides = { model: 'gpt-5-codex', serviceTier: 'priority' };
+
+    session.ensureReady().catch(() => {});
+    await new Promise(resolve => setImmediate(resolve));
+
+    const sent = writes.map(chunk => JSON.parse(chunk)).find(frame => frame.method === method);
+    assert.ok(sent, `${label}：应当发出 ${method}`);
+    assert.equal(sent.params.model, 'gpt-5-codex', `${label}：模型覆盖必须送到 codex`);
+    assert.equal(sent.params.serviceTier, 'priority', `${label}：服务档位覆盖同理`);
+    assert.equal(sent.params.approvalPolicy, session.approvalPolicy, `${label}：安全策略一并送出`);
+    assert.equal(sent.params.sandbox, session.sandbox);
+  }
+});
+
+test('没有 turn 覆盖时不凭空塞 model / serviceTier 字段', async () => {
+  const { session } = makeSession();
+  const { writes, child } = fakeChild();
+  session.child = child;
+  session.initialized = true;
+  session.turnOverrides = {};
+
+  session.ensureReady().catch(() => {});
+  await new Promise(resolve => setImmediate(resolve));
+
+  const sent = writes.map(chunk => JSON.parse(chunk)).find(frame => frame.method === 'thread/start');
+  assert.equal('model' in sent.params, false, '没选就不该出现——凭空塞会覆盖账号默认');
+  assert.equal('serviceTier' in sent.params, false);
+});
+
+// ---- 终端输出增量 ----
+test('终端输出的正文与进程标识各有回落链', () => {
+  const encoded = Buffer.from('已解码正文', 'utf8').toString('base64');
+  const cases = [
+    ['优先用 base64 正文', { deltaBase64: encoded, delta: 'x', text: 'y' }, '已解码正文'],
+    ['其次用 delta', { delta: '来自 delta' }, '来自 delta'],
+    ['再次用 text', { text: '来自 text' }, '来自 text'],
+  ];
+  for (const [label, params, expected] of cases) {
+    const { session, events } = makeSession();
+    session.handleNotification('process/outputDelta', { processHandle: 'ph', ...params });
+    assert.equal(byType(events, 'term_output').slice(-1)[0].payload.text, expected, label);
+  }
+
+  // 三处都没有正文时不发事件——一条空的终端输出只会让卡片抖一下。
+  const { session, events } = makeSession();
+  session.handleNotification('process/outputDelta', { processHandle: 'ph' });
+  assert.deepEqual(byType(events, 'term_output'), [], '没有正文就不该发事件');
+});
+
+test('终端输出的进程标识优先用该通知自己那种键名', () => {
+  // process/outputDelta 用 processHandle，terminal/outputDelta 用 processId。
+  const { session, events } = makeSession();
+  session.handleNotification('process/outputDelta',
+    { processHandle: 'ph_1', processId: 'pid_1', delta: 'x' });
+  assert.equal(byType(events, 'term_output').slice(-1)[0].payload.processId, 'ph_1',
+    '这条通知的主键是 processHandle，两个都有时以它为准');
+
+  const other = makeSession();
+  other.session.handleNotification('process/outputDelta', { processId: 'pid_only', delta: 'x' });
+  assert.equal(byType(other.events, 'term_output').slice(-1)[0].payload.processId, 'pid_only',
+    '主键缺失时回落到另一种写法');
+
+  const none = makeSession();
+  none.session.handleNotification('process/outputDelta', { delta: 'x' });
+  assert.equal(byType(none.events, 'term_output').slice(-1)[0].payload.processId, null);
+  assert.equal(byType(none.events, 'term_output').slice(-1)[0].payload.stream, 'stdout', '流默认 stdout');
+});
+
+// ---- 推理正文的提取 ----
+test('推理正文从 summary 或 content 里提取，三种片段写法都认', () => {
+  const cases = [
+    ['summary 优先于 content', { summary: ['来自 summary'], content: ['来自 content'] }, '来自 summary'],
+    ['summary 为空时用 content', { summary: [], content: ['来自 content'] }, '来自 content'],
+    ['片段是裸字符串', { summary: ['a', 'b'] }, 'a\nb'],
+    ['片段是 { text }', { summary: [{ text: 'a' }, { text: 'b' }] }, 'a\nb'],
+    ['片段是 { content }', { summary: [{ content: 'a' }] }, 'a'],
+    ['混着来', { summary: ['a', { text: 'b' }, { content: 'c' }] }, 'a\nb\nc'],
+    ['认不出的片段被丢掉，不产生空行', { summary: ['a', { nope: 1 }, 'b'] }, 'a\nb'],
+  ];
+  for (const [label, item, expected] of cases) {
+    const { session, events } = makeSession();
+    session.handleItem({ type: 'reasoning', id: 'r1', ...item }, true);
+    assert.equal(byType(events, 'reasoning').slice(-1)[0].payload.text, expected, label);
+  }
+
+  // 提取不出正文时不发事件——一张空的推理卡片对用户没有意义。
+  for (const item of [{}, { summary: [] }, { summary: [{ nope: 1 }] }, { summary: '不是数组' }]) {
+    const { session, events } = makeSession();
+    session.handleItem({ type: 'reasoning', id: 'r1', ...item }, true);
+    assert.deepEqual(byType(events, 'reasoning'), [], `${JSON.stringify(item)} 提不出正文就不发`);
+  }
+});

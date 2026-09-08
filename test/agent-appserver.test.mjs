@@ -1598,3 +1598,255 @@ test('审批审计落点可注入，默认不写进用户工作区', () => {
   assert.equal(session.approvalBroker.auditPath, '/var/data/security-audit.jsonl');
   assert.ok(!session.approvalBroker.auditPath.startsWith('/tmp/user-repo'), '不得落在工作区内');
 });
+
+// ---- RECOVER-01：断线重连时「只补缺失增量」的判据 ----
+//
+// `gap` 是三个条件与起来的：lastSeq > 0 && bufferTrimmed && oldest > lastSeq + 1。
+// 它判错的方向不对称：
+//   该 true 判成 false → 客户端以为收全了，而中间那段已经被环形缓冲裁掉——**静默丢事件**，
+//                        这正是 RECOVER-01 要防的东西
+//   该 false 判成 true → 多做一次 thread/read 全量重建，慢但不丢
+//
+// 既有的两条 eventsSince 测试里，裁剪那条**从没断言过 gap**——它只看了 events 的内容。
+test('eventsSince: 客户端要的事件已被裁掉时报 gap，逼服务端走全量重建', () => {
+  const { session } = makeSession();
+  // 缓冲上限 500。发 600 条之后，最早还留着的是 seq 101。
+  for (let index = 0; index < 600; index += 1) session.emit('text_delta', { text: `c${index}` });
+  assert.equal(session.bufferTrimmed, true, '前置：缓冲必须真的裁剪过');
+  assert.equal(session.buffer[0].seq, 101, '前置：最早留存的是 seq 101');
+
+  const result = session.eventsSince(1);
+  assert.equal(result.gap, true,
+    '客户端停在 seq 1，而缓冲里最早的是 101——2..100 已经没了，必须报 gap');
+  assert.equal(result.epoch, session.epoch, 'gap 时也要带上 epoch，客户端靠它判断实例有没有换过');
+});
+
+test('eventsSince: 三个条件各自都必要，缺一个就不该报 gap', () => {
+  // 1) 从没裁剪过：缓冲连续，无论客户端停在哪都不是 gap。
+  {
+    const { session } = makeSession();
+    for (let index = 0; index < 10; index += 1) session.emit('text_delta', { text: `c${index}` });
+    assert.equal(session.bufferTrimmed, false, '前置：没到上限');
+    assert.equal(session.eventsSince(1).gap, false, '缓冲连续就不是 gap');
+  }
+
+  // 2) 裁剪过，但客户端要的那一段还在缓冲里：不是 gap。
+  {
+    const { session } = makeSession();
+    for (let index = 0; index < 600; index += 1) session.emit('text_delta', { text: `c${index}` });
+    assert.equal(session.eventsSince(100).gap, false,
+      '客户端停在 100，缓冲最早是 101——正好接得上，不是 gap');
+    assert.equal(session.eventsSince(500).gap, false, '更靠后的更接得上');
+  }
+
+  // 3) ⚠ 反直觉：全新客户端（lastSeq = 0）即使缓冲裁剪过也**不**报 gap。
+  // 它本来就没有历史可补，该走的是正常的首次加载，不是「重建」那条更贵的路。
+  {
+    const { session } = makeSession();
+    for (let index = 0; index < 600; index += 1) session.emit('text_delta', { text: `c${index}` });
+    assert.equal(session.eventsSince(0).gap, false,
+      '全新客户端没有「缺失的增量」这回事，不该被判成 gap');
+    assert.equal(session.eventsSince(0).events.length, 500, '但它要拿到缓冲里现有的全部');
+  }
+});
+
+// 空缓冲时 oldest 取 this.seq + 1，避免读 buffer[0] 崩溃。这个兜底值同时要保证
+// 「刚建好、什么都没发过」的实例不会被误判成 gap。
+test('eventsSince: 缓冲为空时既不崩溃也不误报 gap', () => {
+  const { session } = makeSession();
+  const fresh = session.eventsSince(0);
+  assert.deepEqual(fresh.events, []);
+  assert.equal(fresh.gap, false);
+  assert.equal(fresh.epoch, session.epoch);
+
+  // 发过又被 clearQueue 之类清掉的情况：seq 已经推进，但缓冲里没有对应条目。
+  session.emit('text_delta', { text: 'a' });
+  session.buffer = [];
+  assert.equal(session.eventsSince(1).gap, false,
+    'seq 1 之后没有新事件，客户端已经是最新——不该报 gap 逼它重建');
+});
+
+// ---- 通知的会话归属与轮次终态 ----
+//
+// 这一片是 handleNotification 的字段回落族：`threadId: params.threadId || this.sessionId || null`
+// 之类的写法在文件里出现 4 次，改成 && 之后事件带着 null 或错误的 threadId 送出去，
+// 客户端要么把它归到别的对话，要么直接丢掉——两种都是静默的。
+
+test('通知带的会话归属：优先用通知自己的 threadId，其次才回落到当前会话', () => {
+  const { session, events } = makeSession();
+  session.sessionId = 'thr_current';
+
+  // 错误通知自带 threadId：必须用它，不能被当前会话覆盖。
+  session.handleErrorNotification({ message: 'boom', threadId: 'thr_other', turnId: 'turn_x' });
+  const [errorEvent] = byType(events, 'system').slice(-1);
+  assert.equal(errorEvent.payload.threadId, 'thr_other', '通知自带的归属优先');
+  assert.equal(errorEvent.payload.turnId, 'turn_x');
+
+  // 不带 threadId 时回落到 null（错误通知这一处不回落到当前会话）。
+  session.handleErrorNotification({ message: 'boom2' });
+  const [bare] = byType(events, 'system').slice(-1);
+  assert.equal(bare.payload.threadId, null, '拿不到归属时给 null，而不是 undefined');
+  assert.equal(bare.payload.turnId, null);
+});
+
+test('thread_event 的归属与名字各自独立回落', () => {
+  const { session, events } = makeSession();
+
+  session.emitThreadEvent('archived', { threadId: 'thr_1', name: 'A' });
+  session.emitThreadEvent('name_updated', { threadId: 'thr_2', threadName: 'B' });
+  session.emitThreadEvent('deleted', {});
+
+  assert.deepEqual(byType(events, 'thread_event').map(e => [e.payload.threadId, e.payload.name]),
+    [['thr_1', 'A'], ['thr_2', 'B'], [null, null]],
+    'name 与 threadName 是两种上游写法，都要认；都没有时给 null');
+});
+
+// willRetry 决定这条错误是「正在重试」还是「失败了」。判反的后果不对称：
+// 把重试判成失败，用户看到一条其实会自动恢复的红色报错；
+// 把失败判成重试，用户以为还在跑，而实际上什么都不会再发生。
+test('willRetry 只认严格 true，决定错误的措辞与状态', () => {
+  for (const [willRetry, expectError, expectStatus] of [
+    [true, false, 'turn_retrying'],
+    [false, true, 'server_error'],
+    [undefined, true, 'server_error'],
+    ['true', true, 'server_error'],
+  ]) {
+    const { session, events } = makeSession();
+    session.handleErrorNotification({ message: 'boom', willRetry });
+    const [systemEvent] = byType(events, 'system').slice(-1);
+    assert.equal(systemEvent.payload.isError, expectError, `willRetry=${String(willRetry)}`);
+    assert.equal(systemEvent.payload.willRetry, willRetry === true);
+    const [statusEvent] = byType(events, 'status').slice(-1);
+    assert.equal(statusEvent.payload.reason, expectStatus);
+  }
+});
+
+// 轮次终态决定用户看到「完成」还是「失败」，也决定 busy 会不会被放开。
+// status 的回落顺序写反的话，一个 failed 的轮次会被当成 completed——
+// 用户看到绿色的完成标记，而任务其实没做。
+test('轮次终态：turn.status 优先于 status，都没有才当成 completed', () => {
+  const cases = [
+    ['turn.status 优先', { turn: { status: 'failed' }, status: 'completed' }, false, 'turn_failed'],
+    ['只有顶层 status', { status: 'failed' }, false, 'turn_failed'],
+    ['中断', { turn: { status: 'interrupted' } }, false, 'turn_interrupted'],
+    ['都没有时按完成处理', {}, true, 'turn_completed'],
+    ['认不出的终态不当成成功', { status: 'weird' }, false, 'turn_completed'],
+  ];
+
+  for (const [label, params, expectOk, expectReason] of cases) {
+    const { session, events } = makeSession();
+    session.busy = true;
+    session.handleTurnCompleted(params);
+    assert.equal(session.busy, false, `${label}：无论哪条终态都要放开 busy`);
+    const [statusEvent] = byType(events, 'status').slice(-1);
+    assert.equal(statusEvent.payload.reason, expectReason, label);
+    if (expectOk) {
+      assert.equal(byType(events, 'result').slice(-1)[0].payload.ok, true, label);
+    } else if (expectReason === 'turn_completed') {
+      assert.equal(byType(events, 'result').slice(-1)[0].payload.ok, false,
+        `${label}：认不出的状态不能报成功`);
+    } else {
+      assert.equal(byType(events, 'error').length > 0, true, `${label}：失败要发 error 事件`);
+    }
+  }
+});
+
+// ---- 进程退出通知的字段归一 ----
+//
+// 上游对进程标识用过两个名字（processHandle / processId），输出字段可能整个缺失。
+// 归一化错了的后果：终端卡片认不出是哪个进程退出的（于是永远停在"运行中"），
+// 或者 stdout 变成 undefined 被渲染成字面量 "undefined"。这一段有 6 个变异存活。
+test('process/exited 的字段归一：两种进程标识都认，输出缺失时给空串', () => {
+  const cases = [
+    ['用 processHandle', { processHandle: 'ph_1', exitCode: 0 }, 'ph_1'],
+    ['用 processId', { processId: 'pid_1', exitCode: 0 }, 'pid_1'],
+    ['两个都有时以 processHandle 为准', { processHandle: 'ph_2', processId: 'pid_2' }, 'ph_2'],
+    ['两个都没有', { exitCode: 1 }, null],
+  ];
+  for (const [label, params, expected] of cases) {
+    const { session, events } = makeSession();
+    session.handleNotification('process/exited', params);
+    assert.equal(byType(events, 'term_exit').slice(-1)[0].payload.processId, expected, label);
+  }
+
+  const { session, events } = makeSession();
+  session.handleNotification('process/exited', { processId: 'p', exitCode: 0 });
+  const [bare] = byType(events, 'term_exit').slice(-1);
+  assert.equal(bare.stdout, undefined);
+  assert.equal(bare.payload.stdout, '', '输出缺失时给空串，不能让 undefined 渲染成字面量');
+  assert.equal(bare.payload.stderr, '');
+  assert.equal(bare.payload.exitCode, 0, '退出码 0 是成功，不能被当成"没有"');
+});
+
+// 截断标记只认严格 true。判反的后果是每条输出都被标成"已截断"（用户以为还有内容没看到），
+// 或者真的截断了却不标（用户把半截输出当成全部，据此做判断）。
+test('输出截断标记只认严格 true', () => {
+  for (const [value, expected] of [[true, true], [false, false], [undefined, false], ['true', false], [1, false]]) {
+    const { session, events } = makeSession();
+    session.handleNotification('process/exited', {
+      processId: 'p', stdoutCapReached: value, stderrCapReached: value,
+    });
+    const [payload] = byType(events, 'term_exit').slice(-1).map(e => e.payload);
+    assert.equal(payload.stdoutCapReached, expected, `stdoutCapReached=${String(value)}`);
+    assert.equal(payload.stderrCapReached, expected, `stderrCapReached=${String(value)}`);
+  }
+});
+
+// ---- 线程状态与 busy ----
+//
+// busy 决定发送按钮是"发送"还是"停止"，也决定队列会不会继续排下去。
+// 判反的后果：turn 结束了界面还停在运行中，用户点不了发送，也看不出为什么。
+test('线程状态里只有三种终态会放开 busy，active 会置上', () => {
+  const { session, events } = makeSession();
+  session.sessionId = 'thr_1';
+
+  session.handleNotification('thread/status/changed', { threadId: 'thr_1', status: { type: 'active' } });
+  assert.equal(session.busy, true, 'active 时置上 busy');
+
+  for (const type of ['idle', 'notLoaded', 'systemError']) {
+    session.busy = true;
+    session.handleNotification('thread/status/changed', { threadId: 'thr_1', status: { type } });
+    assert.equal(session.busy, false, `${type} 是终态，必须放开 busy`);
+  }
+
+  // 认不出的状态既不置上也不放开——保持原样比猜一个方向安全。
+  session.busy = true;
+  session.handleNotification('thread/status/changed', { threadId: 'thr_1', status: { type: 'whatever' } });
+  assert.equal(session.busy, true, '认不出的状态不该改动 busy');
+
+  assert.equal(byType(events, 'thread_status').slice(-1)[0].payload.threadId, 'thr_1');
+});
+
+test('线程状态事件的归属：通知没带 threadId 时回落到当前会话', () => {
+  const { session, events } = makeSession();
+  session.sessionId = 'thr_current';
+
+  session.handleNotification('thread/status/changed', { status: { type: 'idle' } });
+  assert.equal(byType(events, 'thread_status').slice(-1)[0].payload.threadId, 'thr_current',
+    '不带归属时用当前会话，否则客户端不知道这条状态属于谁');
+
+  const fresh = makeSession();
+  fresh.session.handleNotification('thread/status/changed', { status: { type: 'idle' } });
+  assert.equal(byType(fresh.events, 'thread_status').slice(-1)[0].payload.threadId, null,
+    '两个都没有时给 null，不是 undefined');
+});
+
+// 外部配置导入的进度/完成事件把上游 params 整个透传出去。
+// `...(params || {})` 写成 `&&` 的话，params 存在时反而展开一个空对象——
+// 进度里的百分比、完成时的结果全部消失，界面停在"导入中"。
+test('外部配置导入的进度与完成事件把上游字段透传出去', () => {
+  const { session, events } = makeSession();
+  session.handleNotification('externalAgentConfig/import/progress', { done: 3, total: 10 });
+  session.handleNotification('externalAgentConfig/import/completed', { imported: 7 });
+
+  const imports = byType(events, 'external_agent_config_import').map(e => e.payload);
+  assert.deepEqual(imports, [
+    { status: 'progress', done: 3, total: 10 },
+    { status: 'completed', imported: 7 },
+  ], '上游字段必须原样带出去，只补一个 status');
+
+  // params 缺失时不崩，只发 status。
+  const bare = makeSession();
+  bare.session.handleNotification('externalAgentConfig/import/progress', undefined);
+  assert.deepEqual(byType(bare.events, 'external_agent_config_import')[0].payload, { status: 'progress' });
+});

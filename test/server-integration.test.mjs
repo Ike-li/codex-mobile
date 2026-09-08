@@ -1212,6 +1212,75 @@ test('设备面板能按列表里的引用撤销设备，无需知道完整 toke
   }
 });
 
+// 上一条只验证了「设备从列表里消失」。真正要紧的是那台设备**当下连着的 socket**：
+// 撤销之后它必须立刻失去授权并被断开，否则界面上撤销成功了，被撤的设备还在照常收发。
+//
+// 这里还区分了一个此前从没被区分过的点：外部文件变化那条路径传 preserveLocalSockets: true
+// （保住本机会话不误伤），而 devices:revoke **不传，默认 false**——显式撤销就是要断开，
+// 哪怕对方是本机。夹具里所有连接都走 127.0.0.1，所以这条正好覆盖那个方向。
+test('撤销设备会立刻踢掉它当下连着的 socket，本机连接也不例外', async () => {
+  const admin = 'device-revoke-admin-000000000001';
+  const victim = 'device-revoke-victim-00000000002';
+  const fixture = await startIsolatedServer({ initialTrustedDevices: [admin, victim] });
+  try {
+    const adminSocket = await connectSocket(fixture.url, fixture.authToken, admin);
+    const victimSocket = await connectSocket(fixture.url, fixture.authToken, victim);
+    try {
+      const victimDisconnected = once(victimSocket, 'disconnect');
+
+      const revoked = await emitWithAck(adminSocket, 'devices:revoke', {
+        deviceRef: victim.slice(0, 16),
+      });
+      assert.equal(revoked.ok, true);
+      await victimDisconnected;
+
+      const denial = victimSocket.__agentEvents.find(event => (
+        event?.type === 'device_status' && event?.payload?.status === 'denied'
+      ));
+      assert.ok(denial, '被撤销的设备要先收到一条 denied，再被断开——否则它不知道发生了什么');
+      assert.equal(denial.payload.deviceId, victim);
+
+      // ⚠ 反直觉方向，写下来免得被当成 bug「修好」：
+      // **撤销一台设备并不能阻止它从本机重连。** server.js:1075 的
+      // `if (isLocal) socket.deviceApproved = true` 是无条件的——设备闸防的是远程接入，
+      // 而能在本机跑进程的人本来就有完整访问权，再挡一道只会砍掉 loopback 的可用性。
+      //
+      // 这条断言的价值在于把这个方向钉死：将来谁把 isLocal 那条去掉，这里会红，
+      // 并且会读到上面这段解释。
+      const retry = socketClient(fixture.url, {
+        transports: ['websocket'],
+        forceNew: true,
+        reconnection: false,
+        auth: { token: fixture.authToken, deviceToken: victim },
+      });
+      try {
+        const outcome = await Promise.race([
+          once(retry, 'connect').then(() => ({ kind: 'connected' })),
+          once(retry, 'connect_error').then(([error]) => ({ kind: 'error', error })),
+        ]);
+        assert.equal(outcome.kind, 'connected', '本机重连仍然放行');
+
+        // 而且是真的可用，不是「连上但被闸拦着」。未批准设备的事件会被静默丢弃（不回 ack），
+        // 所以拿得到 ack 就说明它确实被当成已批准。
+        const listed = await emitWithAck(retry, 'devices:list', {});
+        assert.equal(listed.ok, true, '本机连接无条件批准，受控事件照常响应');
+      } finally {
+        retry.disconnect();
+      }
+
+      // 撤销别人不该波及管理端自己。
+      assert.equal(adminSocket.connected, true, '发起撤销的那台设备不该被一起踢掉');
+      const stillListed = await emitWithAck(adminSocket, 'devices:list', {});
+      assert.deepEqual(stillListed.devices.map(item => item.deviceRef), [admin.slice(0, 16)]);
+    } finally {
+      adminSocket.close();
+      victimSocket.close();
+    }
+  } finally {
+    await fixture.close();
+  }
+});
+
 test('atomically removing an offline trusted device revokes its session and Push binding', async () => {
   const deviceToken = 'device-offline-external-revoke';
   const endpoint = 'https://push.example/offline-external-revoke';
@@ -3850,7 +3919,7 @@ test('server exposes P3 experimental controls only behind feature flag', async (
   }
 });
 
-async function startIsolatedServer({ codexBin, rpcLog, spawnLog, p3Experimental = false, eventBufferCap, vapid, initialPushSubscriptions, initialTrustedDevices, pushMaxSubscriptions, allowedOrigins = [], trustedProxyIps = [], allowInsecureRemote = false, authMaxFailures, authWindowMs, pendingDeviceLimit, agentIdleTtlMs } = {}) {
+async function startIsolatedServer({ codexBin, rpcLog, spawnLog, p3Experimental = false, eventBufferCap, vapid, initialPushSubscriptions, initialTrustedDevices, initialEnrollmentToken, pushMaxSubscriptions, allowedOrigins = [], trustedProxyIps = [], allowInsecureRemote = false, authMaxFailures, authWindowMs, pendingDeviceLimit, agentIdleTtlMs } = {}) {
   const previous = snapshotEnv();
   const root = mkdtempSync(join(tmpdir(), 'ccm-server-test-'));
   let workDir = join(root, 'work');
@@ -3864,6 +3933,11 @@ async function startIsolatedServer({ codexBin, rpcLog, spawnLog, p3Experimental 
   }
   if (Array.isArray(initialTrustedDevices)) {
     writeFileSync(join(dataDir, 'trusted-devices.json'), JSON.stringify(initialTrustedDevices));
+  }
+  // 模拟「上次运行轮换过注册凭证」——server.js 在 import 时读这个文件，所以预置它
+  // 等价于带着轮换结果重启一次。
+  if (initialEnrollmentToken) {
+    writeFileSync(join(dataDir, 'enrollment-token'), initialEnrollmentToken);
   }
   workDir = realpathSync(workDir);
   altWorkDir = realpathSync(altWorkDir);
@@ -4880,6 +4954,42 @@ test('已注册设备用专属凭证换会话，轮换注册凭证不影响它',
       headers: { 'x-device-secret': 'wrong-secret-value-padding-0123', 'x-device-token': deviceToken },
     });
     assert.equal(bad.status, 401);
+  } finally {
+    await fixture.close();
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+// server.js:437 的注释把这条承诺写得很明白：「持久化在 data/enrollment-token，重启后仍然
+// 有效，否则『轮换』等于『重启前有效』，用户没法信任它」。但那只是注释——变异把读取那两行
+// 的条件取反（不存在时才读 / 空的时候才用），全套测试照样绿。
+//
+// 取反的后果分两种，都很实：跳过文件 → 被轮换掉的旧 AUTH_TOKEN 重启后复活；把空值当有效
+// → enrollmentToken 变成空串，`tokenMatches` 对任何输入都返回 false，没人再能注册新设备。
+// 预置文件再启动，等价于「带着上次轮换的结果重启一次」。
+test('轮换后的注册凭证跨重启仍然有效，被换掉的旧 AUTH_TOKEN 不复活', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'ccm-enrollment-restart-'));
+  const codexBin = createFakeCodexBin(root);
+  const rotated = 'rotated-enrollment-token-0123456789';
+  const deviceToken = 'dev_enroll_after_restart_01';
+  const fixture = await startIsolatedServer({
+    codexBin,
+    initialEnrollmentToken: rotated,
+    initialTrustedDevices: [deviceToken],
+  });
+  try {
+    const withRotated = await fetch(`${fixture.url}/auth/session`, {
+      method: 'POST',
+      headers: { 'x-auth-token': rotated, 'x-device-token': deviceToken },
+    });
+    assert.equal(withRotated.status, 201,
+      '轮换后的凭证必须跨重启有效——否则「轮换」只是「重启前有效」，那不值得用户信任');
+
+    const withOld = await fetch(`${fixture.url}/auth/session`, {
+      method: 'POST',
+      headers: { 'x-auth-token': fixture.authToken, 'x-device-token': deviceToken },
+    });
+    assert.equal(withOld.status, 401, '被轮换掉的旧 AUTH_TOKEN 不能因为一次重启就复活');
   } finally {
     await fixture.close();
     rmSync(root, { recursive: true, force: true });

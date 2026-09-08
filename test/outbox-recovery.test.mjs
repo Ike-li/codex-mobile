@@ -113,3 +113,59 @@ test('a failed record stays visible even when it belongs to another thread', () 
   assert.equal(shouldSurfaceInOutboxView(provisional, { matchesView: false, orphaned: false }), false);
   assert.equal(shouldSurfaceInOutboxView(provisional, { matchesView: false, orphaned: true }), true);
 });
+
+// ---- 变异补漏：批 3 ----
+
+// 这几条守的是「不知道时往哪边倒」。三个可选参数的默认值都是 false，方向一致：
+// 拿不准就**别**当成孤儿、**别**当成属于当前视图。改成 true 的后果不对称——
+// orphaned 默认 true 会让每条记录都要用户手工处理（无谓的打扰），
+// matchesView 默认 true 会让别的会话的记录混进当前视图（错误的信息）。
+// 现在所有生产调用点都显式传参（app.js:487/581/600），所以这三条守的是**下一个调用点**。
+test('可选参数的默认方向是保守的：不知道时不当成孤儿、不当成属于本视图', () => {
+  const attempted = { state: 'sending', attempts: 1, payload: { threadId: 'thr-1' } };
+  const pending = { state: 'pending', attempts: 0, payload: { threadId: 'thr-1' } };
+
+  // orphaned 默认 false：已尝试但没失败的记录不该被要求手工处理。
+  assert.equal(requiresManualDisposal(attempted), false);
+  assert.equal(requiresManualDisposal(pending), false);
+  // 显式传 true 才进入「孤儿且已尝试过」这条出路。
+  assert.equal(requiresManualDisposal(attempted, { orphaned: true }), true);
+  assert.equal(requiresManualDisposal(pending, { orphaned: true }), false,
+    '从未尝试的记录还有 rebind 这条自动出路，不该丢给用户');
+
+  // matchesView / orphaned 都默认 false：一条没失败、也不属于本视图的记录不该被渲染出来。
+  assert.equal(shouldSurfaceInOutboxView(attempted), false);
+  assert.equal(shouldSurfaceInOutboxView(attempted, { matchesView: true }), true);
+  assert.equal(shouldSurfaceInOutboxView(attempted, { orphaned: true }), true);
+});
+
+// shouldSurfaceInOutboxView 内部固定用 { orphaned: false } 调 requiresManualDisposal。
+// 改成 true 会把「带 threadId、已尝试、但还没失败」的记录也捞进视图——它还在正常发送中，
+// 却会以「需要你处理」的样子出现，用户被要求处理一件还没出问题的事。
+test('捞失败记录进视图时不把还在发送中的记录一起捞进来', () => {
+  const stillSending = { state: 'sending', attempts: 1, payload: { threadId: 'thr-other' } };
+  const failed = { state: 'rejected', attempts: 1, payload: { threadId: 'thr-other' } };
+
+  assert.equal(shouldSurfaceInOutboxView(stillSending, { matchesView: false, orphaned: false }), false,
+    '还在发送中的记录不该被当成「需要你处理」');
+  assert.equal(shouldSurfaceInOutboxView(failed, { matchesView: false, orphaned: false }), true,
+    '已失败的记录必须露出来，哪怕它属于别的会话');
+});
+
+// 当前实例自己的 provisional 记录不是孤儿——它的实例还活着。
+// 判反了会让正在发送的消息被标成「原会话目标已失效」，用户以为消息丢了。
+test('属于当前实例的 provisional 记录不算孤儿', () => {
+  const request = { state: 'pending', payload: { instanceId: 'inst-current' } };
+
+  assert.equal(isProvisionalInstanceOrphan(request, {
+    currentInstanceId: 'inst-current',
+    instanceSnapshotReceived: true,
+    activeInstanceIds: [],
+  }), false, '实例就是当前这个，不该判成孤儿——哪怕它没出现在活跃列表里');
+
+  assert.equal(isProvisionalInstanceOrphan(request, {
+    currentInstanceId: 'inst-other',
+    instanceSnapshotReceived: true,
+    activeInstanceIds: [],
+  }), true, '换成别的实例、且快照说它不活跃，才是孤儿');
+});

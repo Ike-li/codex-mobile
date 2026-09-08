@@ -204,3 +204,30 @@ test('sanitize: 普通赋值不被误伤', () => {
   assert.equal(sanitize('count=42&page=3'), 'count=42&page=3');
   assert.equal(sanitize('hello world'), 'hello world');
 });
+
+// ---- 变异补漏：批 5（AUDIT） ----
+
+// 8 是「小写标识符的赋值要多长才算敏感」的分界线。注释写明了它的用意：
+// 短的（foo=bar）不误伤，长的（apikey=abcdefgh）要打码。分界线判反的方向不对称——
+// 往松了判会把真凭证放出去，往紧了判只是多打几个码，所以边界必须钉死在「>= 8」。
+test('小写敏感标识符的赋值以 8 个字符为界，边界值算敏感', () => {
+  assert.equal(sanitize('apikey=abcdefgh'), 'apikey=***', '正好 8 个字符：必须打码');
+  assert.equal(sanitize('apikey=abcdefghi'), 'apikey=***', '超过 8 个：必须打码');
+  assert.equal(sanitize('apikey=abcdefg'), 'apikey=abcdefg', '只有 7 个：按注释说的不误伤');
+
+  // 全大写（环境变量风格）不受长度限制。
+  assert.equal(sanitize('API_KEY=short'), 'API_KEY=***');
+  assert.equal(sanitize('S3_KEY=a'), 'S3_KEY=***');
+  // 名字里不含敏感词的一律不动。
+  assert.equal(sanitize('width=1234567890'), 'width=1234567890');
+});
+
+// maskToken 的两条早退都返回 '***'。判反的话，空串或非字符串会掉进下面的 slice，
+// 结果是把一个不该出现的东西（比如 undefined 的字面量）拼进日志。
+test('maskToken 对空值与非字符串一律给 ***，不掉进 slice', () => {
+  for (const value of ['', null, undefined, 0, 123456789012, {}, []]) {
+    assert.equal(maskToken(value), '***', `${String(value)} 不该走进 slice`);
+  }
+  assert.equal(maskToken('short'), '***', '太短的也只给 ***');
+  assert.equal(maskToken('abcdefghijkl'), 'abcd****ijkl', '12 个字符正好是下限，可以露头尾');
+});

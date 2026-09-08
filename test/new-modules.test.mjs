@@ -382,3 +382,133 @@ test('saveAttachments: 没有扩展名的超长文件名也能落盘', async () 
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+// ---- 变异补漏：批 4（uploads.js，SCOPE） ----
+
+// 一个刚好合法的最小 PNG：签名 8 + IHDR(长度 4 + 'IHDR' 4 + 宽高 8 + 5 + CRC 4) + IEND 12 = 45 字节。
+// 45 正好是长度下限，用它才能测到边界。
+function minimalPng({ ihdrLength = 13, ihdr = 'IHDR', width = 1, height = 1, iend = true } = {}) {
+  const head = Buffer.concat([
+    Buffer.from('89504e470d0a1a0a', 'hex'),
+    (() => { const b = Buffer.alloc(4); b.writeUInt32BE(ihdrLength); return b; })(),
+    Buffer.from(ihdr, 'ascii'),
+    (() => { const b = Buffer.alloc(4); b.writeUInt32BE(width); return b; })(),
+    (() => { const b = Buffer.alloc(4); b.writeUInt32BE(height); return b; })(),
+    Buffer.from('0806000000', 'hex'),
+    Buffer.alloc(4),
+  ]);
+  const tail = iend
+    ? Buffer.from('0000000049454e44ae426082', 'hex')
+    : Buffer.alloc(12, 0x41);
+  return Buffer.concat([head, tail]);
+}
+
+async function saveOne(content, name = 'a.png') {
+  const workDir = mkdtempSync(join(tmpdir(), 'ccm-uploads-mut-'));
+  try {
+    const attachment = { name, mimeType: 'application/octet-stream', data: content.toString('base64') };
+    const { decoded, error } = decodeAttachments([attachment]);
+    assert.equal(error, undefined, '前置：附件本身要能通过校验');
+    const [saved] = await saveAttachments(workDir, [attachment], decoded);
+    return saved;
+  } finally {
+    rmSync(workDir, { recursive: true, force: true });
+  }
+}
+
+// PNG 识别决定这个附件是以 image 还是 file 的身份交给 runtime。六个条件全部串联，
+// 任一个被改成 || 都会让「随便一段 45 字节以上的数据」被当成 PNG——
+// runtime 拿到的是一个声称是图片、实际不是的东西。
+test('PNG 识别要求六个条件同时成立，缺一不可', async () => {
+  const good = await saveOne(minimalPng());
+  assert.equal(good.kind, 'image', '45 字节的合法最小 PNG 必须被识别为图片');
+  assert.equal(good.detectedMimeType, 'image/png');
+
+  const rejected = [
+    ['不足 45 字节', Buffer.from('89504e470d0a1a0a', 'hex')],
+    ['长度够但完全不是 PNG', Buffer.alloc(64, 0x41)],
+    ['签名对但 IHDR 长度字段不是 13', minimalPng({ ihdrLength: 12 })],
+    ['签名对但块名不是 IHDR', minimalPng({ ihdr: 'IHDX' })],
+    ['宽为 0', minimalPng({ width: 0 })],
+    ['高为 0', minimalPng({ height: 0 })],
+    ['结尾不是 IEND', minimalPng({ iend: false })],
+  ];
+  for (const [label, content] of rejected) {
+    const saved = await saveOne(content, 'x.bin');
+    assert.equal(saved.kind, 'file', `${label}：不该被识别成 PNG`);
+    assert.equal(saved.detectedMimeType, undefined);
+  }
+});
+
+// 附件字段校验的三条早退，每条给的错误文案不同——那是用户唯一能看到的线索。
+// 串错了会给出指向错误方向的提示（明明是数据没给，却说 name 缺了）。
+test('附件字段校验各自给出指向真正问题的错误', () => {
+  const cases = [
+    ['附件不是对象', [null], /附件缺少数据/],
+    ['data 缺失', [{ name: 'a', mimeType: 'text/plain' }], /附件缺少数据/],
+    ['data 是空串', [{ name: 'a', mimeType: 'text/plain', data: '' }], /附件缺少数据/],
+    ['data 是数字', [{ name: 'a', mimeType: 'text/plain', data: 1 }], /附件缺少数据/],
+    ['name 是数字', [{ name: 1, mimeType: 'text/plain', data: 'QQ==' }], /缺少 name\/mimeType/],
+    ['mimeType 缺失', [{ name: 'a', data: 'QQ==' }], /缺少 name\/mimeType/],
+    ['不是数组', {}, /必须是数组/],
+    ['超过 10 个', Array.from({ length: 11 }, () => ({ name: 'a', mimeType: 't', data: 'QQ==' })), /附件过多/],
+  ];
+  for (const [label, attachments, message] of cases) {
+    const result = decodeAttachments(attachments);
+    assert.match(result.error ?? '', message, label);
+    assert.equal(validateAttachments(attachments), result.error, `${label}：两个入口要给同一句话`);
+  }
+});
+
+test('附件总量超过上限时拒绝，而不是把 20MB 写进工作区', () => {
+  const chunk = Buffer.alloc(7 * 1024 * 1024).toString('base64');
+  const attachments = Array.from({ length: 3 }, (_, i) => ({
+    name: `big-${i}.bin`, mimeType: 'application/octet-stream', data: chunk,
+  }));
+  assert.match(decodeAttachments(attachments).error ?? '', /总量过大/, '3 × 7MB 超过 20MB 上限');
+});
+
+// 落盘名的长度收敛：超长要截断并保住扩展名，因为 agent 拿到的就是这个名字。
+test('落盘名超长时截断并保住短扩展名，长后缀不当扩展名', async () => {
+  const exactly200 = `${'a'.repeat(196)}.txt`;
+  const saved200 = await saveOne(Buffer.alloc(8), exactly200);
+  assert.ok(saved200.absPath.endsWith(exactly200),
+    '正好 200 的名字要原样保留，不该走进截断分支');
+
+  const long = `${'b'.repeat(300)}.png`;
+  const savedLong = await saveOne(Buffer.alloc(8), long);
+  const namePart = savedLong.absPath.split(/[/\\]/).pop().replace(/^\d+-[0-9a-f]{8}-/, '');
+  assert.equal(namePart.length, 200, '截断到 200');
+  assert.ok(namePart.endsWith('.png'), '扩展名必须保住——被截掉会改变 agent 对文件类型的判断');
+
+  const longExt = `${'c'.repeat(300)}.${'d'.repeat(20)}`;
+  const savedLongExt = await saveOne(Buffer.alloc(8), longExt);
+  const extPart = savedLongExt.absPath.split(/[/\\]/).pop().replace(/^\d+-[0-9a-f]{8}-/, '');
+  assert.equal(extPart.length, 200);
+  assert.ok(!extPart.includes('.'), '20 个字符的后缀不是扩展名，不该被保住');
+
+  const boundaryExt = `${'e'.repeat(300)}.${'f'.repeat(11)}`;
+  const savedBoundary = await saveOne(Buffer.alloc(8), boundaryExt);
+  const boundaryPart = savedBoundary.absPath.split(/[/\\]/).pop().replace(/^\d+-[0-9a-f]{8}-/, '');
+  assert.ok(boundaryPart.endsWith(`.${'f'.repeat(11)}`), '12 字符（含点）正好是上限，要保住');
+});
+
+// 清理任务的两条边界：没有上传目录是正常状态（还没人传过东西），必须安静返回；
+// 上传目录被换成一个普通文件则是异常，必须报出来而不是继续 chmod / readdir。
+test('清理上传目录：不存在时安静返回，被换成普通文件时报错', async () => {
+  const empty = mkdtempSync(join(tmpdir(), 'ccm-prune-none-'));
+  try {
+    await pruneExpiredUploads(empty);
+  } finally {
+    rmSync(empty, { recursive: true, force: true });
+  }
+
+  const hijacked = mkdtempSync(join(tmpdir(), 'ccm-prune-file-'));
+  try {
+    writeFileSync(join(hijacked, '.ccm-uploads'), 'not a directory');
+    await assert.rejects(() => pruneExpiredUploads(hijacked), /必须是普通目录/,
+      '上传目录被换成文件是异常，要报出来');
+  } finally {
+    rmSync(hijacked, { recursive: true, force: true });
+  }
+});

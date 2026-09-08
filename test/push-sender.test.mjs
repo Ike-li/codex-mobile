@@ -198,3 +198,118 @@ test('endpoint 本身就是公网 IP 时跳过 DNS 但仍然校验', async () =>
   assert.equal(resolved, 0, 'IP 字面量不需要再过 DNS');
   assert.equal(result.statusCode, 201);
 });
+
+// ---- 变异补漏：批 4（SCOPE / SSRF） ----
+
+function respondWith(statusCode) {
+  return (options, onResponse) => {
+    const request = new EventEmitter();
+    request.write = () => {};
+    request.destroy = error => queueMicrotask(() => request.emit('error', error));
+    request.end = () => queueMicrotask(() => {
+      const response = new EventEmitter();
+      response.statusCode = statusCode;
+      response.headers = {};
+      response.destroy = () => {};
+      onResponse(response);
+      response.emit('end');
+    });
+    return request;
+  };
+}
+
+// Push endpoint 是用户从浏览器交上来的一个 URL，服务端会主动去请求它——
+// 这是一条现成的 SSRF 通道。四条判据串在一起，最后那条（主机名不能指向本机/内网）
+// 被改成 && 之后，`https://localhost/...` 就会被放行。
+test('push endpoint 必须是公网 HTTPS 主机名，四条判据缺一不可', async () => {
+  const sender = createPushSender({
+    generateRequestDetails: requestDetails,
+    resolveHostname: async () => [{ address: '93.184.216.34', family: 4 }],
+    request: respondWith(201),
+  });
+
+  const rejected = [
+    ['明文 http', 'http://push.example.com/x'],
+    ['带用户名', 'https://user@push.example.com/x'],
+    ['带用户名和密码', 'https://user:pw@push.example.com/x'],
+    ['指向本机', 'https://localhost/x'],
+    ['指向 .local', 'https://printer.local/x'],
+    ['指向 .internal', 'https://metadata.internal/x'],
+  ];
+  for (const [label, endpoint] of rejected) {
+    await assert.rejects(
+      () => sender({ endpoint }, 'payload'),
+      /public HTTPS hostname/,
+      `${label}：不能作为 push endpoint`,
+    );
+  }
+
+  await assert.rejects(() => sender({ endpoint: 'not a url' }, 'p'), /endpoint is invalid/);
+  await sender({ endpoint: 'https://push.example.com/x' }, 'payload');
+});
+
+// 只有 2xx 算送达。判反的后果是：推送服务返回 410 Gone（订阅已失效）时被当成成功，
+// 那条订阅永远不会被清理，此后每次推送都白发一次。
+test('只有 2xx 算送达，4xx / 5xx 必须报失败', async () => {
+  const make = statusCode => createPushSender({
+    generateRequestDetails: requestDetails,
+    resolveHostname: async () => [{ address: '93.184.216.34', family: 4 }],
+    request: respondWith(statusCode),
+  });
+
+  for (const statusCode of [200, 201, 204, 299]) {
+    const result = await make(statusCode)({ endpoint: 'https://push.example.com/x' }, 'p');
+    assert.equal(result.statusCode, statusCode, `${statusCode} 应当算送达`);
+  }
+  for (const statusCode of [199, 300, 400, 410, 500]) {
+    await assert.rejects(
+      () => make(statusCode)({ endpoint: 'https://push.example.com/x' }, 'p'),
+      `${statusCode} 不该被当成送达`,
+    );
+  }
+});
+
+// DNS 记录不一定带 family（不同解析器返回的形状不同）。缺了就用地址本身推断，
+// 而不是判成「解析不出公网地址」——那会让推送对一整类解析器直接失效。
+test('DNS 记录缺 family 时按地址本身推断，不直接判失败', async () => {
+  const shapes = [
+    ['带 family 的对象', [{ address: '93.184.216.34', family: 4 }]],
+    ['不带 family 的对象', [{ address: '93.184.216.34' }]],
+    ['family 是字符串', [{ address: '93.184.216.34', family: '4' }]],
+    ['裸字符串', ['93.184.216.34']],
+  ];
+  for (const [label, records] of shapes) {
+    const sender = createPushSender({
+      generateRequestDetails: requestDetails,
+      resolveHostname: async () => records,
+      request: respondWith(201),
+    });
+    const result = await sender({ endpoint: 'https://push.example.com/x' }, 'p');
+    assert.equal(result.statusCode, 201, label);
+  }
+
+  // 解析到私有地址仍然要拒——这是 DNS rebinding 的那道闸。
+  const rebinding = createPushSender({
+    generateRequestDetails: requestDetails,
+    resolveHostname: async () => [{ address: '169.254.169.254', family: 4 }],
+    request: respondWith(201),
+  });
+  await assert.rejects(
+    () => rebinding({ endpoint: 'https://push.example.com/x' }, 'p'),
+    /non-public address/,
+    '主机名公网、解析结果私有，是 DNS rebinding 的典型形态',
+  );
+});
+
+test('缺少 DNS 或 HTTPS 传输时构造就报错，两个都要检查', () => {
+  assert.throws(() => createPushSender({}), /generateRequestDetails/);
+  assert.throws(
+    () => createPushSender({ generateRequestDetails: requestDetails, resolveHostname: null }),
+    /DNS and HTTPS transports/,
+  );
+  assert.throws(
+    () => createPushSender({ generateRequestDetails: requestDetails, request: null }),
+    /DNS and HTTPS transports/,
+    '只检查其中一个的话，另一个缺失时会在第一次推送时才炸',
+  );
+});

@@ -159,3 +159,40 @@ test('gap 为真但没重建时，throughSeq 不生效，缓冲一条不丢', ()
   assert.equal(result.rebuilt, false);
   assert.deepEqual(result.events.map(e => e.seq), [1, 2, 3], '没有快照兜底就不能按 watermark 丢东西');
 });
+
+// ---- 变异补漏：批 3 ----
+
+// 标识符归一化：非字符串一律变 null。留下原值会让下游的相等比较拿数字去和字符串比，
+// bufferRecoveryEvent 的 `event.instanceId !== recovery.instanceId` 就会永远为真——
+// 重建期间到达的事件全部被丢掉，而没有任何报错。
+test('createRecoveryState 把非字符串标识符归一成 null，不原样留下', () => {
+  assert.deepEqual(createRecoveryState({ instanceId: 123, threadId: '' }), {
+    instanceId: null, threadId: null, events: [],
+  });
+  assert.deepEqual(createRecoveryState({ instanceId: 'inst-1', threadId: 'thr-1' }), {
+    instanceId: 'inst-1', threadId: 'thr-1', events: [],
+  });
+  assert.deepEqual(createRecoveryState(), { instanceId: null, threadId: null, events: [] });
+});
+
+// throughSeq 是「快照已经覆盖到哪一条」的水位线，客户端据它决定丢弃哪些暂存事件。
+// 重建时对方没给出合法的 throughSeq，必须回落到 -1（含义：一条都不丢），
+// 而不是把 undefined 传下去——`seq <= undefined` 恒为 false，看着也"没丢事件"，
+// 但返回值里的水位线就成了 undefined，调用方拿它再做判断时行为不可预期。
+test('重建时 throughSeq 非法则回落到 -1，不把 undefined 当水位线传下去', () => {
+  const recovery = createRecoveryState({ instanceId: 'inst-1', threadId: 'thr-1' });
+  bufferRecoveryEvent(recovery, { seq: 5, epoch: 'e1', instanceId: 'inst-1', sessionId: 'thr-1' });
+
+  const result = completeRecovery(recovery, {
+    instanceId: 'inst-1',
+    threadId: 'thr-1',
+    gap: true,
+    rebuilt: true,
+    snapshot: { source: 'thread/read' },
+    // throughSeq 缺失
+  });
+
+  assert.equal(result.accepted, true);
+  assert.equal(result.throughSeq, -1, '拿不到合法水位线时回落到 -1（一条都不丢）');
+  assert.deepEqual(result.events.map(event => event.seq), [5], '暂存的事件不该被丢掉');
+});

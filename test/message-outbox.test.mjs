@@ -1207,3 +1207,365 @@ test('outbox 在没有 randomUUID 的环境里照样能发出消息', async () =
     Object.defineProperty(globalThis, 'crypto', { value: original, configurable: true, writable: true });
   }
 });
+
+// ---- 变异补漏：批 3（DELIVER-03/04/05/07） ----
+
+function outboxStore({ withDelete = true } = {}) {
+  const records = new Map();
+  const store = {
+    async put(record) { records.set(record.clientRequestId, structuredClone(record)); },
+    async list() { return [...records.values()].map(record => structuredClone(record)); },
+  };
+  if (withDelete) store.delete = async id => { records.delete(id); };
+  return { store, records };
+}
+
+function pendingRequest(overrides = {}) {
+  return {
+    ...createMessageRequest({ text: 'hello', target: { threadId: 'thr' } },
+      { createId: () => 'req-1', now: () => 1 }),
+    ...overrides,
+  };
+}
+
+// 失败的分类决定这条消息接下来会不会被重发，三个方向的后果完全不同：
+//   retryable       → 下次 drain 会再发一次
+//   rejected        → 不再自动重发，等用户处理
+//   needs_reconcile → 结果未知，只能先去核对，绝不能直接重发
+// 分错任何一个方向，要么消息静默丢失，要么同一条消息被执行两次。
+test('drain 对失败的分类决定这条消息还会不会被重发', async () => {
+  const cases = [
+    ['明确可重试', { retryable: true }, 'retryable'],
+    ['明确不可重试', { retryable: false }, 'rejected'],
+    ['没说可不可重试 → 保守地当成不可重试', {}, 'rejected'],
+    ['结果未知优先于可重试', { resultUnknown: true, retryable: true }, 'needs_reconcile'],
+  ];
+
+  for (const [label, shape, expected] of cases) {
+    const { store, records } = outboxStore();
+    const outbox = createMessageOutbox({
+      store,
+      transport: async () => { throw Object.assign(new Error('boom'), shape); },
+    });
+    await outbox.enqueue(pendingRequest());
+    await outbox.drain();
+    assert.equal(records.get('req-1').state, expected, label);
+  }
+});
+
+// transport 抛出的不一定是 Error：Promise reject 一个 null、一个字符串都可能。
+// 兜底文案要在那时候顶上，否则用户看到的失败原因是字面量 "null"。
+test('transport 抛出非 Error 时也给得出可读的失败原因', async () => {
+  const { store, records } = outboxStore();
+  const outbox = createMessageOutbox({ store, transport: async () => { throw null; } });
+  await outbox.enqueue(pendingRequest());
+  await outbox.drain();
+
+  const record = records.get('req-1');
+  assert.equal(record.lastError.code, 'transport_error');
+  assert.equal(record.lastError.message, 'transport error', '不能把字面量 "null" 当成失败原因给用户看');
+});
+
+// steered 与 submitted 一样表示「消息已经进了 runtime」，都必须清出 outbox。
+// 漏掉 steered 的后果是刷新一次页面就重发一遍——而 steered 恰恰是插话到运行中 turn
+// 的那条路径，重发的副作用直接落在正在跑的任务上。
+test('steered 回执与 submitted 一样把请求清出 outbox', async () => {
+  for (const state of ['submitted', 'steered']) {
+    const { store, records } = outboxStore();
+    const outbox = createMessageOutbox({
+      store,
+      transport: async payload => ({ ok: true, receipt: { clientRequestId: payload.clientRequestId, state } }),
+    });
+    await outbox.enqueue(pendingRequest());
+    await outbox.drain();
+    assert.equal(records.size, 0, `${state} 回执之后请求必须离开 outbox，否则刷新一次就会重发`);
+  }
+});
+
+// store 没有 delete 能力时（降级到内存实现的场景）不能直接调它。
+test('store 不支持 delete 时，已完成的请求留在原地而不是让 drain 抛异常', async () => {
+  const { store, records } = outboxStore({ withDelete: false });
+  const outbox = createMessageOutbox({
+    store,
+    transport: async payload => ({
+      ok: true, receipt: { clientRequestId: payload.clientRequestId, state: 'submitted' },
+    }),
+  });
+  await outbox.enqueue(pendingRequest());
+  await outbox.drain();
+  assert.equal(records.size, 1, '删不掉就留着，不能因为缺 delete 就炸掉整个 drain');
+});
+
+// DELIVER-05：从未尝试过的记录可以保留原 id 重绑，但目标必须是**能落地的**。
+// 空串、数字这种"看着有值"的目标绑上去，消息会发往一个不存在的会话而没人发现。
+test('rebind 要求一个能落地的目标：空串、非字符串、两者皆无都不行', async () => {
+  const seed = async () => {
+    const { store, records } = outboxStore();
+    const outbox = createMessageOutbox({ store, transport: async () => ({ ok: true }) });
+    await outbox.enqueue(pendingRequest({ payload: undefined, state: 'pending' }));
+    return { outbox, records };
+  };
+
+  for (const bad of [undefined, {}, { threadId: '' }, { instanceId: '' }, { threadId: 123 }]) {
+    const { outbox } = await seed();
+    await assert.rejects(
+      () => outbox.rebindUnattempted('req-1', bad),
+      /exact target/,
+      `目标 ${JSON.stringify(bad)} 落不了地，必须拒绝而不是绑上去`,
+    );
+  }
+
+  // threadId 与 instanceId 有其一就够——不是两个都要。要求两个都有会让
+  // 「还没拿到 threadId 的 provisional 会话」永远重绑不了。
+  for (const good of [{ threadId: 'thr-new' }, { instanceId: 'inst-new' }]) {
+    const { outbox } = await seed();
+    const rebound = await outbox.rebindUnattempted('req-1', good);
+    assert.ok(rebound, `目标 ${JSON.stringify(good)} 应当足以重绑`);
+    assert.equal(rebound.clientRequestId, 'req-1',
+      '从未尝试过，所以保留原 id；换新 id 反而会在服务端看起来像第二条消息');
+  }
+});
+
+// reconcile 是**只读核对**，它的三条出路各自意味着不同的下一步。
+test('reconcile 的三条出路各自可辨：核对上、明确被拒、仍然未知', async () => {
+  const seed = async reconcileTransport => {
+    const { store, records } = outboxStore();
+    const outbox = createMessageOutbox({
+      store, transport: async () => ({ ok: true }), reconcileTransport,
+    });
+    await store.put(pendingRequest({ state: 'needs_reconcile' }));
+    return { outbox, records };
+  };
+
+  {
+    const { outbox, records } = await seed(async () => ({
+      ok: true, resolved: true, receipt: { clientRequestId: 'req-1', state: 'submitted' },
+    }));
+    assert.deepEqual(await outbox.reconcile(), { checked: 1, resolved: 1, unresolved: 0 });
+    assert.equal(records.size, 0, '核对到「已提交」就该清出 outbox');
+  }
+
+  {
+    const { outbox, records } = await seed(async () => ({
+      ok: true, resolved: true, gatewayEpoch: 'ep-2',
+      outcome: { ok: false, errorCode: 'thread_closed', error: '会话已关闭', resultUnknown: false, retryable: false },
+    }));
+    assert.deepEqual(await outbox.reconcile(), { checked: 1, resolved: 1, unresolved: 0 });
+    const record = records.get('req-1');
+    assert.equal(record.state, 'rejected');
+    assert.equal(record.lastError.code, 'thread_closed', '服务端给了具体原因就要透出去，不能换成通用文案');
+    assert.equal(record.lastError.message, '会话已关闭');
+    assert.equal(record.lastError.resultUnknown, false, '明确被拒就是明确的，不能标成结果未知');
+    assert.equal(record.reconciledGatewayEpoch, 'ep-2');
+  }
+
+  // ⚠ 反直觉：「服务端说这次失败了、可以重试」**不等于**「消息没被执行过」。
+  // 判成 resolved 会让它进入自动重发，而重发的副作用直接落在真实工作区上。
+  {
+    const { outbox, records } = await seed(async () => ({
+      ok: true, resolved: true,
+      outcome: { ok: false, errorCode: 'queue_full', error: '队列满', retryable: true },
+    }));
+    assert.deepEqual(await outbox.reconcile(), { checked: 1, resolved: 0, unresolved: 1 });
+    assert.equal(records.get('req-1').state, 'needs_reconcile');
+    assert.equal(records.get('req-1').lastReconcileError.resultUnknown, true);
+  }
+
+  {
+    const { outbox, records } = await seed(async () => { throw null; });
+    assert.deepEqual(await outbox.reconcile(), { checked: 1, resolved: 0, unresolved: 1 });
+    const record = records.get('req-1');
+    assert.equal(record.lastReconcileError.code, 'reconcile_transport_error');
+    assert.equal(record.lastReconcileError.message, 'Message reconciliation failed',
+      '核对通道自己坏了要说清是通道坏了，不能笼统地说「结果仍然未知」');
+  }
+});
+
+test('断线时 reconcile 也不动手，不只是 drain', async () => {
+  const { store, records } = outboxStore();
+  let sends = 0;
+  let reconciles = 0;
+  const outbox = createMessageOutbox({
+    store,
+    isConnected: () => false,
+    transport: async () => { sends += 1; return { ok: true }; },
+    reconcileTransport: async () => { reconciles += 1; return { ok: true }; },
+  });
+  await store.put(pendingRequest({ state: 'needs_reconcile' }));
+
+  assert.deepEqual(await outbox.reconcile(), { checked: 0, resolved: 0, unresolved: 0 });
+  assert.equal(reconciles, 0, '断线时不该发核对请求');
+  await outbox.drain();
+  assert.equal(sends, 0, '断线时不该发消息');
+  assert.equal(records.get('req-1').state, 'needs_reconcile', '记录原样保留');
+});
+
+// 不传 isConnected 时默认「已连接」。默认成 false 的话，任何没显式接线的调用方
+// 都会得到一个永远不发消息的 outbox——而且不报错。
+test('不传 isConnected 时默认按已连接处理', async () => {
+  const { store, records } = outboxStore();
+  const outbox = createMessageOutbox({
+    store,
+    transport: async payload => ({
+      ok: true, receipt: { clientRequestId: payload.clientRequestId, state: 'submitted' },
+    }),
+  });
+  await outbox.enqueue(pendingRequest());
+  await outbox.drain();
+  assert.equal(records.size, 0, '默认应当真的会发出去');
+});
+
+test('缺少 store 能力或 transport 时当场报错，而不是等到第一次发送才炸', () => {
+  const transport = async () => ({ ok: true });
+  assert.throws(() => createMessageOutbox({ transport }), /requires a store/);
+  assert.throws(() => createMessageOutbox({ store: {}, transport }), /requires a store/);
+  assert.throws(() => createMessageOutbox({ store: { put() {} }, transport }), /requires a store/,
+    '只有 put 没有 list 也不行——两个能力都要，缺一个就在运行时才炸');
+  assert.throws(() => createMessageOutbox({ store: { list() {} }, transport }), /requires a store/);
+  assert.throws(() => createMessageOutbox({ store: { put() {}, list() {} } }), /requires a transport/);
+});
+
+// 这几个返回值是调用方判断「这次操作到底做没做」的唯一依据。
+test('enqueue / acceptReceipt / retryAfterConfirmation / discard 的返回值是契约', async () => {
+  const { store, records } = outboxStore();
+  const outbox = createMessageOutbox({ store, transport: async () => ({ ok: true }) });
+  const record = pendingRequest();
+
+  assert.equal(await outbox.enqueue(record), record, 'enqueue 回传入队的那条记录');
+
+  assert.equal(await outbox.acceptReceipt(null), false, '没有回执就没有可接受的东西');
+  assert.equal(await outbox.acceptReceipt({ clientRequestId: 'nobody', state: 'submitted' }), false,
+    '认不出的 clientRequestId 不能算接受成功');
+  assert.equal(await outbox.acceptReceipt({ clientRequestId: 'req-1', state: '???' }), false,
+    '认不出的状态不能算接受成功');
+  assert.equal(await outbox.acceptReceipt({ clientRequestId: 'req-1', state: 'queued' }), true);
+  assert.equal(records.get('req-1').state, 'queued');
+
+  // 只有 needs_reconcile 的记录才谈得上「用户确认后重试」。对别的状态动手会造成重复发送。
+  assert.equal(await outbox.retryAfterConfirmation('req-1'), null,
+    'queued 的记录还在正常流程里，不该被换成新请求');
+  assert.equal(await outbox.retryAfterConfirmation('nobody'), null);
+
+  assert.equal(await outbox.discard(''), false);
+  assert.equal(await outbox.discard(123), false);
+  assert.equal(await outbox.discard('nobody'), false, '不存在的记录丢弃不了，要如实返回 false');
+  assert.equal(await outbox.discard('req-1'), true);
+  assert.equal(records.size, 0);
+});
+
+// drain 期间再次调用 drain 会把选项排队合并。合并规则的方向很关键：
+// 任一方没有筛选条件 = 「全发」，合并结果必须也是全发，而不是取交集。
+// 取交集的话，只有一方想发的消息在那一轮里被静默跳过——它不会报错，只是没发出去。
+async function gatedOutbox(ids) {
+  const { store, records } = outboxStore();
+  let releaseList;
+  let markGateReached;
+  const listGate = new Promise(resolve => { releaseList = resolve; });
+  // 排队必须发生在 while 循环体**已经启动之后**：循环进去第一件事就是把
+  // queuedDrainOptions 清空，在那之前排的队会被擦掉（这条测试第一版就是这么写错的）。
+  const gateReached = new Promise(resolve => { markGateReached = resolve; });
+  let listCalls = 0;
+  const sent = [];
+
+  const gatedStore = {
+    ...store,
+    async list() {
+      listCalls += 1;
+      if (listCalls === 1) {
+        markGateReached();
+        await listGate;
+      }
+      return store.list();
+    },
+  };
+  const outbox = createMessageOutbox({
+    store: gatedStore,
+    async transport(payload) {
+      sent.push(payload.clientRequestId);
+      return { ok: true, receipt: { clientRequestId: payload.clientRequestId, state: 'submitted' } };
+    },
+  });
+  for (const id of ids) {
+    await outbox.enqueue({
+      ...createMessageRequest({ text: id, target: { threadId: 'thr' } }, { createId: () => id, now: () => 1 }),
+    });
+  }
+  return { outbox, records, sent, releaseList, gateReached };
+}
+
+const only = id => ({ shouldSend: request => request.clientRequestId === id });
+
+test('drain 排队合并：任一方没有筛选条件就等于全发', async () => {
+  const { outbox, sent, releaseList, gateReached } = await gatedOutbox(['req-a', 'req-b']);
+
+  const first = outbox.drain({ shouldSend: () => false }); // 第一轮谁也不发，判断落在第二轮
+  await gateReached;
+  outbox.drain(only('req-a'));
+  outbox.drain({});                                        // 没有条件 = 全发
+  releaseList();
+  await first;
+
+  assert.deepEqual(sent.sort(), ['req-a', 'req-b'],
+    '合并后有一方是「全发」，结果就该是全发；取交集会让 req-b 在这一轮被静默跳过');
+});
+
+test('drain 排队合并：两方都有筛选条件时取并集，不是交集也不是全发', async () => {
+  const { outbox, sent, releaseList, gateReached } = await gatedOutbox(['req-a', 'req-b', 'req-c']);
+
+  const first = outbox.drain({ shouldSend: () => false });
+  await gateReached;
+  outbox.drain(only('req-a'));
+  outbox.drain(only('req-b'));
+  releaseList();
+  await first;
+
+  assert.deepEqual(sent.sort(), ['req-a', 'req-b'],
+    '并集：两方各自想发的都要发；req-c 谁也没要，退化成「全发」同样是错的');
+});
+
+// 已经在跑的 drain 必须把**正在进行的那个 promise** 交回去。返回 null 的话，
+// 调用方的 `await outbox.drain()` 会立刻返回，而队列其实还在发——它会以为发完了。
+test('drain 期间再次调用返回的是正在进行的那个 promise，不是空值', async () => {
+  const { outbox, sent, releaseList } = await gatedOutbox(['req-a']);
+
+  const first = outbox.drain();
+  const second = outbox.drain();
+  assert.ok(second && typeof second.then === 'function', '必须交回一个可以 await 的东西');
+
+  releaseList();
+  await second;
+  assert.deepEqual(sent, ['req-a'], 'await 第二次调用之后，队列必须真的已经发完');
+  await first;
+});
+
+// 没配核对通道时 reconcile 必须原地返回，而不是进循环去调一个不是函数的东西——
+// 那个调用会被 try/catch 吞掉，变成「核对失败，结果仍然未知」，把一条本来干净的记录
+// 标上一个假的失败原因。
+test('没配 reconcileTransport 时 reconcile 原地返回，不伪造一条核对失败', async () => {
+  const { store, records } = outboxStore();
+  const outbox = createMessageOutbox({ store, transport: async () => ({ ok: true }) });
+  await store.put(pendingRequest({ state: 'needs_reconcile' }));
+
+  assert.deepEqual(await outbox.reconcile(), { checked: 0, resolved: 0, unresolved: 0 });
+  assert.equal(records.get('req-1').lastReconcileError, undefined,
+    '没核对过就不该留下核对失败的痕迹');
+});
+
+// DELIVER-05：用户确认重试时可以指定一个新目标（原会话已失效的情况）。
+// 忽略它、沿用旧 payload 里的目标，消息就会再次发往那个已经不存在的会话。
+test('retryAfterConfirmation 用调用方给的目标，而不是旧记录里的那个', async () => {
+  const { store, records } = outboxStore();
+  const outbox = createMessageOutbox({ store, transport: async () => ({ ok: true }) });
+  await store.put(pendingRequest({ state: 'needs_reconcile' }));
+
+  const replacement = await outbox.retryAfterConfirmation('req-1', {
+    target: { threadId: 'thr-new' },
+    confirmedAt: 999,
+  });
+
+  assert.ok(replacement, '需要核对的记录应当可以在用户确认后重试');
+  assert.equal(replacement.payload.threadId, 'thr-new', '必须用调用方指定的新目标');
+  assert.equal(replacement.retryOfClientRequestId, 'req-1', '新请求要指回它替代的那一条');
+  assert.notEqual(replacement.clientRequestId, 'req-1', '已尝试过，必须换新 id——旧 id 不得复活');
+  assert.equal(records.has('req-1'), false, '旧记录要被替换掉');
+});
