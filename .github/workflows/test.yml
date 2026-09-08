@@ -57,7 +57,7 @@ jobs:
       # 而 fast-forward 合并走的是 push 路径 —— 只在 PR 上跑等于给自己留后门。
       - name: Check coverage delta
         if: matrix.node-version == 20
-        run: node scripts/check-coverage-delta.js
+        run: node scripts/gates/check-coverage-delta.js
 
       - name: Install Playwright browsers
         if: matrix.node-version == 20

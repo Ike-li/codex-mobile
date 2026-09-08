@@ -8,7 +8,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { summaryVerdict } from '../scripts/check-test-summary.js';
+import { summaryVerdict } from '../scripts/gates/check-test-summary.js';
 
 const summary = ({ tests = 10, pass = 10, fail = 0, cancelled = 0, skipped = 0 }) => `
 ✔ 某个用例 (1.2ms)
@@ -50,7 +50,7 @@ test('读不到汇总行时 fail-closed，而不是沉默放行', () => {
 });
 
 // 这条守的是解析器本身的一个真实陷阱：本仓的测试注释里就出现过 "cancelled" 这个词
-// （docs/TESTING.md 和 scripts/check-test-summary.js 的文件头都在讲它），
+// （docs/TESTING.md 和 scripts/gates/check-test-summary.js 的文件头都在讲它），
 // 用例名里出现它也完全可能。只按关键字搜会把正文当成汇总。
 test('用例名里出现 cancelled 不会被误当成汇总', () => {
   const output = `

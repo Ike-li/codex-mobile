@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readCoverageSummary, evaluateCoverage } from '../scripts/check-coverage-delta.js';
+import { readCoverageSummary, evaluateCoverage } from '../scripts/gates/check-coverage-delta.js';
 
 const MIN = { statements: 80, branches: 60, functions: 80, lines: 80 };
 

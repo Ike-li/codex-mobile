@@ -1,4 +1,4 @@
-// scripts/check-test-summary.js —— 跑测试，并在 cancelled / skipped 不为 0 时让构建变红。
+// scripts/gates/check-test-summary.js —— 跑测试，并在 cancelled / skipped 不为 0 时让构建变红。
 //
 // 为什么需要它：`node --test` 的汇总把 cancelled 和 skipped 与 fail 分开计数，而**退出码
 // 不一定反映它们**。于是一次「fail 0」的运行可能实际上有整片用例根本没跑——症状是全绿，
@@ -12,7 +12,7 @@
 // 那个具体问题已经修了（实测 13 pass / 0 cancelled），**但没有任何机制防止它复发**。
 // 这个脚本就是那道防线。
 //
-// 用法：node scripts/check-test-summary.js [传给 node --test 的参数...]
+// 用法：node scripts/gates/check-test-summary.js [传给 node --test 的参数...]
 
 import { spawn } from 'node:child_process';
 

@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseStringLiteralUnion } from '../scripts/protocol-check.mjs';
+import { parseStringLiteralUnion } from '../scripts/gates/protocol-check.mjs';
 import {
   APPROVAL_OPTIONS,
   SANDBOX_OPTIONS,

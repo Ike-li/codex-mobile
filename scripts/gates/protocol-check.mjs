@@ -12,7 +12,7 @@ import { tmpdir } from 'node:os';
 import { basename, join, relative, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-const ROOT = fileURLToPath(new URL('../', import.meta.url));
+const ROOT = fileURLToPath(new URL('../../', import.meta.url));
 const STABLE_PROTOCOL_DIR = join(ROOT, '.protocol', 'stable');
 const CODEX_VERSION_FILE = join(ROOT, '.codex-version');
 const PROTOCOL_KINDS = {
@@ -77,9 +77,21 @@ export function readTypeFields(protocolDir, typeName) {
 export function readAllNotificationParamsFields(protocolDir) {
   const source = readFileSync(join(protocolDir, 'ServerNotification.ts'), 'utf8');
   const declared = new Map();
-  for (const typeName of new Set(parseNotificationParamsTypes(source).values())) {
+  const paramsTypes = new Set(parseNotificationParamsTypes(source).values());
+  for (const typeName of paramsTypes) {
     const fields = readTypeFields(protocolDir, typeName);
     if (fields) declared.set(typeName, fields);
+  }
+  // 扫描面塌陷：声明了 params 类型，却一个字段都读不出。
+  // 「扫不出字段」与「字段都对得上」在下游输出上完全一样——findUnknownNotificationFields 的
+  // `if (!declaredFields) continue` 会把每个 method 跳过，打印「Notification field usage: OK」
+  // 并返回退出码 0。而 method 名走的是另一个正则，不受影响，所以方法覆盖那侧也兜不住。
+  // 上游把 `export type X = { ... }` 改成 `export interface X { ... }` 就是这个形态。
+  if (paramsTypes.size > 0 && declared.size === 0) {
+    throw new Error(
+      `字段解析面塌了：ServerNotification 声明了 ${paramsTypes.size} 个 params 类型，却一个字段都没读出来。\n`
+      + '这不是「没有字段要查」——核对 readTypeFields 的正则与上游的类型声明写法（例如 type 改成了 interface）。',
+    );
   }
   return declared;
 }

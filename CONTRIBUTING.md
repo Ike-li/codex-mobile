@@ -37,7 +37,7 @@ npm run protocol:check
 npm run test:e2e
 ```
 
-`npm run test:ci` chains lint, unit tests, coverage thresholds, and Playwright E2E — the same set CI runs on Node 20 and 22. Coverage must not regress (`scripts/check-coverage.js`, `scripts/check-coverage-delta.js`).
+`npm run test:ci` chains lint, unit tests, coverage thresholds, and Playwright E2E — the same set CI runs on Node 20 and 22. Coverage must not regress (`scripts/gates/check-coverage-delta.js`, baseline in `.coverage-baseline.json`).
 
 `npm test` used to fail intermittently with `Unable to deserialize cloned data`, failing the whole of `test/server-integration.test.mjs`. It was not Node-25-specific and not unrelated to the code under test: CI hit the same error on Node 22, and the trigger was on our side. `node --test` multiplexes its child-v8 control frames and the child's raw stdout on one stream, and that file imports a fresh `server.js` per case (~60 times), writing startup banners, per-connection logs, and dotenv's randomly-worded promo banner into that stream. Silencing dotenv and routing `console.log` to `console.error` in the two server-starting test files took the same-session failure rate from 4/7 to 0/10. `npm run test:local` (`--test-isolation=none`) is still available for fast local iteration, but it shares one process across files, so `npm test` is the gate.
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// scripts/check-coverage-delta.js —— 检查覆盖率是否下降。
+// scripts/gates/check-coverage-delta.js —— 检查覆盖率是否下降。
 // 用于 PR 检查：对比当前覆盖率与基线，确保不下降。
 //
 // 覆盖率数据取自 c8 的 json-summary，而不是解析文本表格。早期实现用
@@ -13,7 +13,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const ROOT = join(HERE, '..');
+const ROOT = join(HERE, '..', '..');
 const BASELINE_FILE = join(ROOT, '.coverage-baseline.json');
 
 const METRICS = ['statements', 'branches', 'functions', 'lines'];

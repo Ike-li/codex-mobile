@@ -26,7 +26,7 @@ import {
   collectNotificationFieldUsage,
   findUnknownNotificationFields,
   formatUnknownNotificationFields,
-} from '../scripts/protocol-check.mjs';
+} from '../scripts/gates/protocol-check.mjs';
 
 const root = process.cwd();
 const protocolDir = join(root, '.protocol', 'stable');
@@ -218,7 +218,7 @@ test('protocol check CLI succeeds against a pinned fake codex export', () => {
     ].join('\n'));
     chmodSync(fakeCodex, 0o755);
 
-    const result = spawnSync(process.execPath, ['scripts/protocol-check.mjs'], {
+    const result = spawnSync(process.execPath, ['scripts/gates/protocol-check.mjs'], {
       cwd: root,
       encoding: 'utf8',
       env: {
@@ -323,4 +323,67 @@ test('通知字段用法对得上协议：真实的 agent-appserver.js 对着真
     allowlist: LEGACY_FIELD_ALLOWLIST,
   });
   assert.deepEqual(unknown, [], formatUnknownNotificationFields(unknown));
+});
+
+// 字段解析面塌陷 —— 「扫不出字段」与「字段都对得上」在输出上无法区分，而前者意味着这道闸失明了。
+//
+// 【失败形态】上游把 params 类型从 `export type X = { ... }` 改成 `export interface X { ... }`：
+// readTypeFields 的正则（`export type \w+\s*=\s*\{`）全不匹配 → 每个类型返回 null →
+// readAllNotificationParamsFields 的 `if (fields)` 把它们全部丢弃 → declared 为空 →
+// findUnknownNotificationFields 的 `if (!declaredFields) continue` 把每个 method 都跳过 →
+// 「Notification field usage: OK」→ 退出码 0。
+//
+// 【为什么方法覆盖那侧兜不住】method 名走的是另一个正则（`"method": "x"`），与字段解析互相独立。
+// 2026-09-08 实测：拿真实 .protocol/stable/ 做夹具、只把 params 类型文件改成 interface 写法，
+// 方法覆盖 missing = 0，declared = 0，整个 protocol:check 退出码 0 全绿。
+// 而字段级检查是唯一挡住「上游改字段名 → 运行时读到 undefined」的东西（见
+// formatUnknownNotificationFields 自己的提示语：no throw, no failing test）。
+//
+// 【判据为什么是「全塌」而不是「每个类型都必须读出字段」】readTypeFields 返回 null 有两种
+// 合法原因：类型文件不存在（真实协议里 SkillsChangedNotification 就是，93 个文件里没有它），
+// 以及联合类型/别名没有顶层字段可比。2026-09-08 实测真实目录：71 个 params 类型 → 70 个读出。
+// 要求 71/71 会当场误伤。锚在「声明了 N 个类型却一个都读不出」这个两侧对比上，不锚在绝对数字，
+// 也不设会漂移的比例阈值。
+test('通知字段用法对得上协议：字段解析全塌时必须红，不得报 OK', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ccm-field-collapse-'));
+  try {
+    writeFileSync(join(dir, 'ServerNotification.ts'), [
+      'export type ServerNotification =',
+      '  | { "method": "turn/started", "params": TurnStartedNotification }',
+      '  | { "method": "process/exited", "params": ProcessExitedNotification };',
+    ].join('\n'));
+    // 上游改用 interface 写法：method 侧照常解析得出，字段侧一个都读不出。
+    writeFileSync(join(dir, 'TurnStartedNotification.ts'), 'export interface TurnStartedNotification { turnId: string }\n');
+    writeFileSync(join(dir, 'ProcessExitedNotification.ts'), 'export interface ProcessExitedNotification { exitCode: number }\n');
+
+    assert.equal(parseNotificationParamsTypes(readFileSync(join(dir, 'ServerNotification.ts'), 'utf8')).size, 2,
+      'method → params 类型这一侧必须仍然正常，否则这条测的就不是字段侧塌陷了');
+    assert.throws(
+      () => readAllNotificationParamsFields(dir),
+      /塌/,
+      '声明了 params 类型却一个字段都读不出，是解析面塌了，不是「没有字段要查」',
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// 正对照：只断言「塌了要抛」的话，实现写成无条件 throw 也能过。这条钉住不该抛的那一侧。
+test('通知字段用法对得上协议：只要读得出字段就不抛，个别类型缺文件属正常', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ccm-field-partial-'));
+  try {
+    writeFileSync(join(dir, 'ServerNotification.ts'), [
+      'export type ServerNotification =',
+      '  | { "method": "turn/started", "params": TurnStartedNotification }',
+      '  | { "method": "skills/changed", "params": SkillsChangedNotification };',
+    ].join('\n'));
+    writeFileSync(join(dir, 'TurnStartedNotification.ts'), 'export type TurnStartedNotification = { turnId: string };\n');
+    // SkillsChangedNotification.ts 故意不写 —— 真实协议里就是这个形态。
+
+    const declared = readAllNotificationParamsFields(dir);
+    assert.equal(declared.size, 1, '读得出的那个要在，读不出的那个跳过');
+    assert.deepEqual([...declared.get('TurnStartedNotification')], ['turnId']);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });

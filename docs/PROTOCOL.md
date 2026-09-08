@@ -163,7 +163,7 @@ server.js ── ThreadRuntime(instances)
 
 从 `0.142.5` 升到 `0.147.0` 是纯新增、零移除：ServerNotification 多出 `thread/environment/connected`、`thread/environment/disconnected`、`rawResponse/completed`，ClientRequest 多出 `threadSection/{list,create,update,delete}`、`thread/section/move`、`app/read`、`app/installed`、`externalAgentConfig/import/recordHistory`。bridge 一项都没接，新通知靠 `handleNotification` 的 switch 落空安全忽略。
 
-统计由 `scripts/protocol-check.mjs` 的静态收集逻辑定义。未处理通知进入 `handleNotification` default 分支并安全忽略；未识别 item 才转成 `raw_item`。
+统计由 `scripts/gates/protocol-check.mjs` 的静态收集逻辑定义。未处理通知进入 `handleNotification` default 分支并安全忽略；未识别 item 才转成 `raw_item`。
 
 ## 升级与验证
 

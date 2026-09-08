@@ -11,7 +11,7 @@
 //   1. 客观缺陷 —— 死链、引用了不存在的图片/文件、许可证与 package.json 不一致。
 //      机器能判定对错，与措辞无关。
 //   2. 具体教训 —— 每条背后有一次真实踩坑，注释里写明是哪一次。
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
@@ -115,6 +115,46 @@ test('CONTRIBUTING 列出的门禁命令与 package.json 的脚本真实存在',
     assert.ok(scripts[name], `CONTRIBUTING.md 让贡献者跑 npm run ${name}，但 package.json 里没有这个脚本`);
   }
   assert.match(contributing, /npm test/, 'CONTRIBUTING.md 必须写明单测入口');
+});
+
+test('文档里点名的 scripts/ 脚本都真实存在', () => {
+  // 【为什么上面那条抓不到】CONTRIBUTING.md 一度让贡献者去看 `scripts/check-coverage.js`
+  // 判断覆盖率门禁——那个文件不存在，只有 check-coverage-delta.js。上面那条扫的是
+  // 命令名（/npm run ([a-z0-9:]+)/），文件路径完全在它视野外。同一份文档里两种引用形态，
+  // 此前只守了一种。读者照着去找会扑空，和死链是同一类客观缺陷。
+  //
+  // 扫描面是递归的而不是手写文档清单：手写清单挡不住「新文档引用了不存在的脚本」，
+  // 而那正是这条要防的形态。docs/archive/ 除外——它自称不再维护、不作为事实来源，
+  // 历史文档指向已删除的脚本是预期内的，为它变红只会逼人去改归档。
+  const roots = [['..', false], ['../docs', true]];
+  const docs = [];
+  for (const [rel, recurse] of roots) {
+    const walk = dir => {
+      for (const entry of readdirSync(new URL(dir, import.meta.url), { withFileTypes: true })) {
+        if (entry.isDirectory()) {
+          if (recurse && entry.name !== 'archive') walk(`${dir}/${entry.name}`);
+          continue;
+        }
+        if (entry.name.endsWith('.md')) docs.push(`${dir}/${entry.name}`);
+      }
+    };
+    walk(rel);
+  }
+
+  let checked = 0;
+  for (const docPath of docs) {
+    // 路径段要允许多级：门禁在 scripts/gates/ 下，只认单层会让那三个引用静默不被检查——
+    // 而扫描面收窄不会让塌陷断言变红（其余引用照样够数），是这条自己差点犯的错。
+    for (const [, target] of readDoc(docPath).matchAll(/\b(scripts\/(?:[A-Za-z0-9._-]+\/)*[A-Za-z0-9._-]+\.(?:js|mjs|sh))/g)) {
+      checked += 1;
+      assert.ok(
+        existsSync(new URL(`../${target}`, import.meta.url)),
+        `${docPath} 点名了不存在的脚本 ${target}`,
+      );
+    }
+  }
+  // 扫到 0 个和「全都存在」在断言上无法区分，前者意味着这道检查已经失明。
+  assert.ok(checked >= 12, `脚本引用扫描器只检出 ${checked} 处，疑似失配`);
 });
 
 // ---------------------------------------------------------------------------
