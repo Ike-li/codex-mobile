@@ -61,7 +61,10 @@ jobs:
 
       - name: Install Playwright browsers
         if: matrix.node-version == 20
-        run: npx playwright install chromium
+        # webkit 是 playwright.config.js 里 mobile-webkit project 的引擎。产品主设备是
+        # 手机，只装 chromium 等于 iOS 侧零覆盖；漏装的症状是 E2E 报
+        # "Executable doesn't exist"，读起来像配置坏了而不像少装了浏览器。
+        run: npx playwright install chromium webkit
 
       - name: Run E2E tests
         if: matrix.node-version == 20

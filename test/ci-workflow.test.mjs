@@ -61,3 +61,31 @@ test('覆盖率退化门禁不只在 pull_request 上生效', () => {
     '直接 push 到 master 时会跳过 2pp 退化门禁 —— 而 fast-forward 合并走的正是 push 路径',
   );
 });
+
+// playwright.config.js 里每加一个 project，CI 就要多装一个浏览器引擎。这两处是分开的
+// 文件，改一处漏一处的症状是 E2E 报 "Executable doesn't exist" —— 那句报错读起来像
+// 环境坏了，不像少装了浏览器，于是排查方向会先跑偏。
+//
+// 名单从 config 派生而不是写死，所以将来加 firefox project 也会被自动守住。
+test('CI 安装的浏览器覆盖 playwright.config.js 声明的全部引擎', () => {
+  const config = readFileSync(join(ROOT, 'playwright.config.js'), 'utf8');
+
+  // project 的引擎由 devices[...] 决定：Pixel 5 → chromium，iPhone 13 → webkit。
+  const engines = new Set();
+  for (const [, device] of config.matchAll(/devices\['([^']+)'\]/g)) {
+    if (/^Pixel|^Galaxy|Chrome/i.test(device)) engines.add('chromium');
+    else if (/^iPhone|^iPad|Safari/i.test(device)) engines.add('webkit');
+    else if (/Firefox/i.test(device)) engines.add('firefox');
+  }
+  assert.ok(engines.size > 0, '没能从 playwright.config.js 解析出任何引擎，解析失配了');
+
+  const install = /npx playwright install ([^\n]*)/.exec(workflow);
+  assert.ok(install, 'CI 里找不到 playwright install 步骤');
+  const installed = install[1].trim().split(/\s+/);
+
+  const missing = [...engines].filter(e => !installed.includes(e));
+  assert.deepEqual(missing, [],
+    `playwright.config.js 声明了这些引擎的 project，但 CI 没装：${missing.join(', ')}。`
+    + `\nCI 当前装的是：${installed.join(' ')}`
+    + '\n漏装时 E2E 会报 "Executable doesn\'t exist"，而那句话不会告诉你少装了什么。');
+});
