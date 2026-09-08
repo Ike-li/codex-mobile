@@ -19,6 +19,10 @@ let trustedDevices = new Map();
 let pendingDevices = []; // Array of { deviceToken, ip, userAgent, ts }
 let lastTrustedSignature = null;
 let lastPendingSignature = null;
+// 上一次加载信任表是否失败。写入方全都是「load → 改内存 → save 整张表」，而加载失败会
+// 把内存清空；不挡住的话，一次瞬时读失败（fd 耗尽、权限被改、EIO——磁盘上的字节完全没问题）
+// 之后的任何一次批准/撤销，都会把一份残缺的表原子覆盖回文件，老设备永久失联。
+let trustedLoadFailed = false;
 
 function cacheSignature(file, stat) {
   return `${resolve(file)}\0${stat.dev}:${stat.ino}:${stat.size}:${stat.mtimeMs}`;
@@ -28,8 +32,10 @@ export function loadTrustedDevices({ force = false } = {}) {
   const file = trustedDevicesFile();
   try {
     if (!existsSync(file)) {
+      // 没有文件是合法状态（还没有任何设备被批准过），不是失败。
       trustedDevices = new Map();
       lastTrustedSignature = null;
+      trustedLoadFailed = false;
       return;
     }
     const signature = cacheSignature(file, statSync(file));
@@ -47,13 +53,29 @@ export function loadTrustedDevices({ force = false } = {}) {
       }
     }
     lastTrustedSignature = signature;
+    trustedLoadFailed = false;
   } catch (err) {
     console.error('[devices] 读取 trusted-devices.json 失败:', err.message);
+    // ⚠ 方向：读不出信任表就谁也不信（fail-closed）。门后面是能改本机文件系统的 agent，
+    // 宁可全锁死也不拿一份不知道是否过期的信任表放行。姊妹项目在同一岔口选了保留
+    // last-good（可用性优先），两个方向都成立——改方向前先读这段。
     trustedDevices = new Map();
+    // 签名一并作废：留着旧签名的话，文件被恢复成逐字节相同的那一份时会命中缓存，
+    // 于是拿着这份空表当成「已是最新」。
+    lastTrustedSignature = null;
+    trustedLoadFailed = true;
   }
 }
 
 export function saveTrustedDevices() {
+  // 内存里这份表来自一次失败的加载，是残缺的。写回去等于用它覆盖磁盘上那份。
+  // 两个写入方（approveDevice / denyDevice）都有 `if (!saveTrustedDevices())` 的回滚
+  // 分支，会自动走进去并如实返回 false，管理员因此知道这次没生效。
+  if (trustedLoadFailed) {
+    console.error('[devices] 拒绝写入 trusted-devices.json：上一次读取失败，'
+      + '内存里的设备表不完整，写回去会覆盖掉磁盘上那份。请修复或删除该文件后重试。');
+    return false;
+  }
   const file = trustedDevicesFile();
   try {
     mkdirSync(dirname(file), { recursive: true });
