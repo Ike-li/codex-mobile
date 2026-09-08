@@ -1,0 +1,51 @@
+# docker/docker-compose.test.yml —— 两个 service，隔离强度不同。
+#
+#   test    源码读写挂载。跑常规测试，改一行代码立刻生效。
+#   mutate  源码**只读**挂载 + 容器内复制到可写层。变异改坏的源码随容器一起消失，
+#           够不到宿主机。这一条不能省：mutate.js 有恢复逻辑，但"靠恢复逻辑"又回到了
+#           「安全性依赖代码正确性」——容器被 kill 或变异中断时它不会执行。
+
+services:
+  test:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.test
+    image: ccm-test:local
+    init: true                       # 容器里会 spawn server 与 mock CLI 子进程，无 init 会攒僵尸
+    working_dir: /app
+    volumes:
+      - ..:/app
+      - /app/node_modules            # 匿名卷盖住挂载，用镜像里平台匹配的那份
+    environment:
+      CI: "true"
+      # 必须与本 service 的 working_dir 同根，见 Dockerfile 里 CODEX_BIN 那段注释。
+      CODEX_BIN: /app/scripts/mock-codex.sh
+    command: npm test
+
+  mutate:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.test
+    image: ccm-test:local
+    init: true
+    working_dir: /work
+    volumes:
+      - ..:/repo:ro                  # 只读：容器改不到宿主机源码
+    environment:
+      CI: "true"
+      # /work 而不是 /app —— 这里的工作副本在 /work，写成 /app 会指向一个只有
+      # node_modules 的目录，mock 不存在。见 Dockerfile 里 CODEX_BIN 那段注释。
+      CODEX_BIN: /work/scripts/mock-codex.sh
+    # 复制到容器可写层再变异。排除 node_modules（用镜像里那份）与 .git（不需要，
+    # 且 worktree 的 .git 是指向宿主机路径的指针文件，容器里解析不到）。
+    # 末尾的 `--` 让 exec "$@" 能接住 `docker compose run` 追加的参数。
+    entrypoint:
+      - sh
+      - -lc
+      - >-
+        mkdir -p /work &&
+        tar -C /repo -cf - --exclude=./node_modules --exclude=./.git --exclude=./data . | tar -C /work -xf - &&
+        ln -sfn /app/node_modules /work/node_modules &&
+        exec "$@"
+      - --
+    command: ["node", "scripts/mutate.js", "--help"]

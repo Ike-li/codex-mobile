@@ -24,13 +24,16 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "protocol:check": "node scripts/protocol-check.mjs",
-    "test": "node --test --test-concurrency=1 test/*.test.mjs",
+    "test": "node scripts/check-test-summary.js --test-concurrency=1 test/*.test.mjs",
     "test:local": "node --test --test-isolation=none test/*.test.mjs",
     "test:e2e": "playwright test",
     "test:all": "npm test && npm run test:e2e",
     "test:ci": "npm run lint && npm run protocol:check && npm test && node scripts/check-coverage-delta.js && npm run test:e2e",
     "coverage": "c8 node --test test/*.test.mjs",
-    "coverage:report": "c8 report --reporter=text --reporter=lcov node --test test/*.test.mjs"
+    "coverage:report": "c8 report --reporter=text --reporter=lcov node --test test/*.test.mjs",
+    "test:docker": "docker compose -f docker/docker-compose.test.yml run --rm test",
+    "mutate": "node scripts/mutate.js",
+    "mutate:docker": "docker compose -f docker/docker-compose.test.yml run --rm mutate node scripts/mutate.js"
   },
   "dependencies": {
     "compression": "^1.8.1",

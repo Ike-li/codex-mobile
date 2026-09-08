@@ -1,0 +1,40 @@
+# docker/Dockerfile.test —— 测试与变异的隔离环境。
+#
+# 存在的理由是 ENV HOME：变异会故意改坏源码，而改坏的可能恰恰是算删除路径的那段代码。
+# 在宿主机真实 HOME 上跑变异，测试的删除目标就交给了正在被怀疑的代码去算——而怀疑它
+# 正是测试存在的理由。容器的隔离**不依赖任何代码正确性**，没想到的形态也一起挡住。
+#
+# tag 必须与 package.json 的 @playwright/test 严格对齐，版本错开会报
+# "Executable doesn't exist"。当前对齐 1.61.1。
+FROM mcr.microsoft.com/playwright:v1.61.1-noble
+
+# 一次性家目录。~/.codex 在容器内解析到 /home/ccm-test/.codex —— 不存在，是空壳。
+# 宿主机上那六个带版本后缀的 sqlite（state_5、thread_history_1 …）够不到。
+ENV HOME=/home/ccm-test
+RUN mkdir -p /home/ccm-test && chmod 777 /home/ccm-test
+
+# 容器里不该存在任何真实凭据。显式清空，防止本该跳过的测试真去打网络或烧额度。
+ENV AUTH_TOKEN= \
+    VAPID_PUBLIC_KEY= \
+    VAPID_PRIVATE_KEY= \
+    VAPID_SUBJECT= \
+    CODEX_ALLOW_REMOTE_IMAGES=
+
+# CODEX_BIN 故意**不在这里设**。两个 service 的工作副本在不同路径（test 在 /app，
+# mutate 在 /work），在镜像里烧死一个绝对路径，另一个 service 拿到的就是不存在的文件。
+# 那种坏法很难查：它表现为测试挂起或 ENOENT，而变异会把它读成「这个变异被杀掉了」——
+# 一个假红，正好是变异测试要消灭的东西的镜像。所以每个 service 在 compose 里自己声明。
+
+# scripts/mutate.js 靠这个变量确认自己在容器里。缺它就拒绝运行。
+ENV CCM_IN_CONTAINER=1
+
+WORKDIR /app
+
+# 只 COPY 清单，源码在 compose 里挂载 —— 改一行代码不会让镜像失效。
+COPY package*.json ./
+RUN npm ci
+
+# 依赖全是纯 JS（compression / dotenv / express / socket.io / web-push），没有原生模块，
+# 所以 node_modules 的平台差异只涉及 Playwright 的浏览器二进制。仍然用匿名卷盖住挂载点，
+# 免得宿主机 macOS/arm64 的那份被带进来。
+CMD ["npm", "test"]
