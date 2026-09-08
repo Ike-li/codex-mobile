@@ -38,7 +38,6 @@ export class MessageReceiptLedger {
       runtimeKey: null,
       createdAt: this.now(),
       updatedAt: this.now(),
-      terminalAt: null,
       settledAt: null,
       ready,
       resolveReady,
@@ -51,11 +50,10 @@ export class MessageReceiptLedger {
     const entry = this.#entryOf(handle);
     if (!entry || entry.phase !== 'pending') return false;
     const receipt = selectLatestReceipt(result?.receipt, entry.latestReceipt);
-    entry.phase = settledPhase(result, receipt);
+    entry.phase = receiptPhase(receipt);
     entry.result = applyReceipt(result, receipt);
     entry.updatedAt = this.now();
     entry.settledAt = entry.updatedAt;
-    if (entry.phase === 'terminal') entry.terminalAt = entry.updatedAt;
     entry.resolveReady();
     if (
       !receipt
@@ -91,12 +89,7 @@ export class MessageReceiptLedger {
     if (entry.result) entry.result = applyReceipt(entry.result, entry.latestReceipt);
     entry.updatedAt = this.now();
     if (entry.settledAt !== null) entry.settledAt = entry.updatedAt;
-    if (entry.phase !== 'pending') {
-      entry.phase = receiptPhase(entry.latestReceipt);
-      if (entry.phase === 'terminal' && entry.terminalAt === null) {
-        entry.terminalAt = entry.updatedAt;
-      }
-    }
+    if (entry.phase !== 'pending') entry.phase = receiptPhase(entry.latestReceipt);
     return true;
   }
 
@@ -139,8 +132,10 @@ export class MessageReceiptLedger {
         continue;
       }
 
-      // 回收依据是「已结算」而不是「已终态」。settledPhase 对 dispatch_failed 的形状
-      // （retryable + resultUnknown）返回 'settled'，它的 terminalAt 是 null。
+      // 回收依据是 settledAt——「结算过没有」，而不是「是不是终态」。
+      // 曾经按终态回收，于是 dispatch_failed 形状（retryable + resultUnknown）的条目
+      // 永不回收，攒够 maxEntries 后所有带 clientRequestId 的消息一律收到
+      // receipt_ledger_full，只有重启能恢复。这一行是那次事故的修法，别改回去。
       if (entry.settledAt === null || entry.settledAt > cutoff) continue;
       this.removeEntry(entry);
     }
@@ -189,18 +184,17 @@ function selectLatestReceipt(current, latest) {
   return canAdvanceReceipt(current, latest) ? { ...current, ...latest } : current;
 }
 
+// phase 只有三种，而且只有 'pending' 与 'waiting' 会被读：
+//   pending —— 还在派发，prune 不能碰（有人 await 着它的 ready）
+//   waiting —— 停在 queued，由 abandonedTtlMs 管
+//   settled —— 其余一切已结算的，由 ttlMs 管
+//
+// 曾经还有第四种 'terminal'，与 'settled' 的唯一区别体现在一个叫 terminalAt 的字段上，
+// 而那个字段写了三处、一处也没读（prune 的依据是 settledAt）。更糟的是它半可靠：
+// dispatch_failed 形状的条目算 'settled'，terminalAt 恒为 null——谁按它写回收逻辑，
+// 就会重现上面 prune 注释里那次事故。所以整个区分被删掉了，不要再加回来。
 function receiptPhase(receipt) {
-  if (receipt?.state === 'queued') return 'waiting';
-  if (receiptRank(receipt) >= 2) return 'terminal';
-  return 'settled';
-}
-
-function settledPhase(result, receipt) {
-  if (receipt) return receiptPhase(receipt);
-  if (result?.ok === false && result.retryable !== true && result.resultUnknown !== true) {
-    return 'terminal';
-  }
-  return 'settled';
+  return receipt?.state === 'queued' ? 'waiting' : 'settled';
 }
 
 function applyReceipt(result, receipt) {
