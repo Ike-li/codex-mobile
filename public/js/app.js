@@ -74,6 +74,10 @@ import {
   visibleModels,
 } from '/js/cli-settings.js';
 import { icon, hydrateIcons } from '/js/icons.js';
+// 沿用 escHtml 这个本地名字：94 处调用点原样不动，改名不是这次搬迁的目的。
+import { escapeHtml as escHtml } from '/js/html-escape.js';
+import { renderAnsi } from '/js/ansi-html.js';
+import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/client-encoding.js';
 
 (function() {
   const $ = id => document.getElementById(id);
@@ -129,14 +133,6 @@ import { icon, hydrateIcons } from '/js/icons.js';
     localStorage.setItem('codex_device_token', deviceToken);
   }
   deviceIdDisplay.textContent = deviceToken;
-
-  function createDeviceToken() {
-    if (!globalThis.crypto?.getRandomValues) throw new Error('Web Crypto is required for device credentials');
-    if (typeof crypto.randomUUID === 'function') return `dev_${crypto.randomUUID()}`;
-    const bytes = new Uint8Array(24);
-    crypto.getRandomValues(bytes);
-    return `dev_${[...bytes].map(byte => byte.toString(16).padStart(2, '0')).join('')}`;
-  }
 
   const searchParams = new URLSearchParams(location.search);
   const urlToken = searchParams.get('token') || '';
@@ -2651,15 +2647,6 @@ import { icon, hydrateIcons } from '/js/icons.js';
     return `${String(base || '/').replace(/\/+$/, '')}/${name}`.replace(/^\/\//, '/');
   }
 
-  function decodeBase64Text(dataBase64) {
-    try {
-      const bytes = Uint8Array.from(atob(dataBase64), c => c.charCodeAt(0));
-      return new TextDecoder().decode(bytes);
-    } catch {
-      return '';
-    }
-  }
-
   function loadNativeThreadHistory(s) {
     socket.emit('thread:history', { threadId: s.id, cwd: s.cwd }, data => {
       if (!data?.ok) {
@@ -3656,45 +3643,6 @@ import { icon, hydrateIcons } from '/js/icons.js';
     scrollBottom(true);
   });
 
-  function escHtml(s) {
-    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  function renderAnsi(s) {
-    const input = String(s || '');
-    // ANSI SGR sequences start with the ESC control byte by definition.
-    // eslint-disable-next-line no-control-regex
-    const re = /\x1b\[([0-9;]*)m/g;
-    let html = '';
-    let last = 0;
-    let open = false;
-    const classFor = code => ({
-      1: 'ansi-bold',
-      2: 'ansi-dim',
-      31: 'ansi-red',
-      32: 'ansi-green',
-      33: 'ansi-yellow',
-      34: 'ansi-blue',
-      35: 'ansi-magenta',
-      36: 'ansi-cyan',
-      90: 'ansi-muted'
-    }[code]);
-    for (const match of input.matchAll(re)) {
-      html += escHtml(input.slice(last, match.index));
-      if (open) { html += '</span>'; open = false; }
-      const codes = (match[1] || '0').split(';').map(n => Number(n || 0));
-      const classes = codes.map(classFor).filter(Boolean);
-      if (classes.length) {
-        html += `<span class="${classes.join(' ')}">`;
-        open = true;
-      }
-      last = match.index + match[0].length;
-    }
-    html += escHtml(input.slice(last));
-    if (open) html += '</span>';
-    return html;
-  }
-
   sendBtn.onclick = () => {
     if (sendBtn.dataset.mode === 'stop') interruptCurrentTurn();
     else sendMessage();
@@ -4012,15 +3960,5 @@ import { icon, hydrateIcons } from '/js/icons.js';
   setConnectionPhase('connecting');
 
   // Helper for push VAPID key
-  function urlBase64ToUint8Array(base64String) {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-    for (let i = 0; i < rawData.length; ++i) {
-      outputArray[i] = rawData.charCodeAt(i);
-    }
-    return outputArray;
-  }
 
 })();

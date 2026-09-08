@@ -1,17 +1,11 @@
+import { escapeHtml } from './html-escape.js';
+
 export const SANITIZE_CONFIG = {
   FORBID_TAGS: ['label', 'form', 'button', 'select', 'textarea', 'option', 'fieldset', 'legend'],
   FORBID_ATTR: ['style', 'for', 'tabindex', 'accesskey', 'autofocus', 'contenteditable', 'draggable'],
 };
 
 const hookedPurifiers = new WeakSet();
-
-function escapeHtml(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
 
 function ensureLinkHook(DOMPurify) {
   if (!DOMPurify?.addHook || hookedPurifiers.has(DOMPurify)) return;

@@ -12,7 +12,7 @@ export function randomId() {
   const webCrypto = globalThis.crypto;
   if (typeof webCrypto?.randomUUID === 'function') return webCrypto.randomUUID();
   if (typeof webCrypto?.getRandomValues !== 'function') {
-    throw new Error('Web Crypto is required to generate request ids');
+    throw new Error('Web Crypto is required to generate secure random ids');
   }
   // 16 字节 = 128 位，与 UUIDv4 的随机位数同量级；投递去重全靠这个 id 不撞号。
   const bytes = new Uint8Array(16);

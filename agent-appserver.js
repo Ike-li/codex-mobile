@@ -7,9 +7,10 @@ import { dirname, join } from 'node:path';
 import { AppServerTransport } from './app-server-transport.js';
 import { ApprovalBroker } from './approval-broker.js';
 import { fixPermissions } from './file-security.js';
-import { sanitize, sanitizePath } from './sanitizer.js';
+import { sanitize } from './sanitizer.js';
 import { buildUserInputs } from './user-inputs.js';
-import { truncate } from './text-utils.js';
+import { truncate, truncatePayload } from './text-utils.js';
+import { buildRpcLogEntry, isDeltaNotification } from './rpc-log-redaction.js';
 import {
   buildTurnStartOverrides,
   collaborationModeFromThreadSettings,
@@ -26,10 +27,7 @@ const DEFAULT_INTERRUPT_TIMEOUT_MS = 2000;
 const DEFAULT_BACKPRESSURE_RETRIES = 5;
 const DEFAULT_BACKPRESSURE_BASE_MS = 250;
 const MAX_BACKPRESSURE_DELAY_MS = 5000;
-const RPC_SUMMARY_CAP = 240;
 const DEFAULT_RPC_LOG_MAX_BYTES = 8 * 1024 * 1024;
-const SENSITIVE_RPC_KEY_RE = /(token|secret|password|passwd|credential|authorization|api[_-]?key|private[_-]?key|refreshToken|accessToken|chatgptAuthTokens|dataBase64)/i;
-const CONTENT_RPC_KEY_RE = /^(text|input|prompt|content|delta|aggregatedOutput|output|diff|data)$/i;
 const LEGACY_APPROVAL_METHODS = new Set(['applyPatchApproval', 'execCommandApproval']);
 
 function inputPartEventMeta(parts) {
@@ -1816,66 +1814,6 @@ function normalizeServerRequestParams(runtime, rpcId, method, params) {
 // Compatibility export for existing integrations while the runtime split rolls out.
 export { ThreadRuntime as CodexAppServerSession };
 
-
-// 高频增量通知：正文按 CONTENT_RPC_KEY_RE 打码后只剩长度信息，逐帧留档没有意义。
-function isDeltaNotification(frame, method) {
-  return frame === 'notification' && typeof method === 'string' && /Delta$|\/delta$/.test(method);
-}
-
-function buildRpcLogEntry(details) {
-  const sensitiveMethod = SENSITIVE_RPC_KEY_RE.test(details.method || '');
-  const entry = {
-    ts: Date.now(),
-    direction: details.direction || null,
-    frame: details.frame,
-    id: details.id ?? null,
-    method: details.method || null,
-    instanceId: details.instanceId || null,
-    sessionId: details.sessionId || null,
-  };
-  if (details.params !== undefined) entry.params = sensitiveMethod ? '<redacted>' : redactRpcValue(details.params);
-  if (details.result !== undefined) entry.result = sensitiveMethod ? '<redacted>' : redactRpcValue(details.result);
-  if (details.error !== undefined) entry.error = redactRpcError(details.error);
-  return entry;
-}
-
-function redactRpcError(error) {
-  if (!error || typeof error !== 'object') return { message: redactRpcString(String(error ?? ''), 'message') };
-  const out = {};
-  if (error.code !== undefined) out.code = error.code;
-  if (error.message !== undefined) out.message = redactRpcString(String(error.message), 'message');
-  if (error.data !== undefined) out.data = redactRpcValue(error.data, 'data');
-  return out;
-}
-
-function redactRpcValue(value, key = '') {
-  if (SENSITIVE_RPC_KEY_RE.test(key)) return '<redacted>';
-  if (typeof value === 'string') return redactRpcString(value, key);
-  if (Array.isArray(value)) {
-    if (CONTENT_RPC_KEY_RE.test(key)) return `<redacted:${value.length} items>`;
-    return value.slice(0, 30).map(item => redactRpcValue(item));
-  }
-  if (value && typeof value === 'object') {
-    const out = {};
-    for (const [childKey, child] of Object.entries(value).slice(0, 40)) {
-      out[childKey] = redactRpcValue(child, childKey);
-    }
-    return out;
-  }
-  return value;
-}
-
-function redactRpcString(value, key = '') {
-  if (CONTENT_RPC_KEY_RE.test(key)) return `<redacted:${value.length} chars>`;
-  const pathSafe = key === 'cwd' || key === 'path' || /^([A-Za-z]:\\|\/Users\/|\/home\/|\/tmp\/|\/var\/)/.test(value)
-    ? sanitizePath(value)
-    : value;
-  // 不要在这里对输入切窗口。sanitize 会缩短文本（整块 PEM → ***），窗口既会丢掉
-  // 本可进入输出的正文，也会把 -----END----- 这类结束锚切走，让整条 pattern 失配
-  // 而把密钥材料原样留下。正则是线性的，全长扫描不是问题。
-  return truncate(sanitize(pathSafe), RPC_SUMMARY_CAP);
-}
-
 function definedParams(params) {
   return Object.fromEntries(Object.entries(params).filter(([, value]) => value !== undefined));
 }
@@ -1933,23 +1871,6 @@ function integerOption(value, fallback, options = {}) {
   const n = Number(value);
   if (Number.isInteger(n) && (options.allowZero ? n >= 0 : n > 0)) return n;
   return fallback;
-}
-
-function truncatePayload(value, cap, depth = 4) {
-  if (typeof value === 'string') return truncate(value, cap);
-  if (Array.isArray(value)) {
-    if (depth <= 0) return [];
-    return value.slice(0, 50).map(item => truncatePayload(item, cap, depth - 1));
-  }
-  if (value && typeof value === 'object') {
-    if (depth <= 0) return {};
-    const out = {};
-    for (const [key, child] of Object.entries(value).slice(0, 50)) {
-      out[key] = truncatePayload(child, cap, depth - 1);
-    }
-    return out;
-  }
-  return value;
 }
 
 function turnErrorMessage(params, fallback = '任务失败') {
