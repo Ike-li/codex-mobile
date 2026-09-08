@@ -33,7 +33,9 @@ const ACTION_NOUNS = {
 // 桌面版 Codex 一升级就会把新迁移写进去,旧二进制再去读自己那版才有的表就扑空。
 // 但这是推断不是观测——库损坏、CODEX_HOME 指错也会落到同一句报错上,所以文案给的是
 // 「多半」加一个最可能奏效的动作,不是断言。重试肯定没用,「稍后再试」那种假出路不给。
-const SCHEMA_MISMATCH = /no such (table|column)/i;
+// 导出给 scripts/doctor.js 复用：启动前自检和运行时兜底必须认同一个形态，
+// 两处各写一份的话，上游改了错误文案就只有一边跟着改。
+export const SCHEMA_MISMATCH = /no such (table|column)/i;
 
 // app-server 的错误是给开发者看的:前半截 Rust 的 anyhow 链,后半截 SQLite 原文。
 // 原样糊进聊天区,用户读到的是「no such table: agent_jobs」——既答不了「到底删掉了
