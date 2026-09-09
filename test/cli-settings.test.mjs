@@ -554,3 +554,42 @@ test('选中细粒度审批时下发协议的对象形态', () => {
   // 没开细粒度时行为不变。
   assert.equal(sanitizeTurnOverrides({ approvalPolicy: 'never' }).approvalPolicy, 'never');
 });
+
+test('session settings panel HTML contracts define compact grid layouts and necessary IDs', () => {
+  const indexHtml = readFileSync(join(process.cwd(), 'public', 'index.html'), 'utf8');
+
+  // 必须保留给 JS 绑定的各个容器 ID
+  const requiredIds = [
+    'session-settings',
+    'session-settings-close',
+    'session-settings-body',
+    'mode-list',
+    'approval-list',
+    'granular-list',
+    'approval-reset',
+    'sandbox-list',
+    'bypass-list',
+    'model-list',
+    'reasoning-list',
+    'speed-section-label',
+    'speed-list',
+  ];
+  for (const id of requiredIds) {
+    assert.ok(indexHtml.includes(`id="${id}"`), `public/index.html 缺少关键容器 id="${id}"`);
+  }
+
+  // 紧凑网格类名约定契约
+  assert.match(indexHtml, /class="[^"]*settings-grid-2[^"]*" id="mode-list"/, '#mode-list 应当具备 settings-grid-2 紧凑双列布局类');
+  assert.match(indexHtml, /class="[^"]*settings-grid-3[^"]*" id="approval-list"/, '#approval-list 应当具备 settings-grid-3 紧凑三列布局类');
+  assert.match(indexHtml, /class="[^"]*settings-grid-3[^"]*" id="sandbox-list"/, '#sandbox-list 应当具备 settings-grid-3 紧凑三列布局类');
+  assert.match(indexHtml, /class="[^"]*settings-grid-2[^"]*" id="model-list"/, '#model-list 应当具备 settings-grid-2 紧凑双列布局类');
+  assert.match(indexHtml, /class="[^"]*settings-wrap-row[^"]*" id="reasoning-list"/, '#reasoning-list 应当具备 settings-wrap-row 紧凑药丸流式布局类');
+
+  // 常用项置顶顺序契约：模型 -> 思考强度 -> 审批策略依次排在最前
+  const modelIdx = indexHtml.indexOf('id="model-list"');
+  const reasoningIdx = indexHtml.indexOf('id="reasoning-list"');
+  const approvalIdx = indexHtml.indexOf('id="approval-list"');
+  assert.ok(modelIdx < reasoningIdx, '模型应排在思考强度之前');
+  assert.ok(reasoningIdx < approvalIdx, '思考强度应排在审批策略之前');
+});
+

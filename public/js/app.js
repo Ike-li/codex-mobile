@@ -876,8 +876,8 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
         <div class="popover-item${active ? ' selected' : ''}" data-bypass="1">
           <span class="popover-item-icon">${icon('skull')}</span>
           <div class="popover-item-details">
-            <span class="popover-item-title">绕过批准和沙箱</span>
-            <span class="popover-item-desc">对应 --dangerously-bypass-approvals-and-sandbox</span>
+            <span class="popover-item-title">绕过批准与沙箱</span>
+            <span class="popover-item-desc">危险全开</span>
           </div>
           <span class="popover-item-check">✓</span>
         </div>`;

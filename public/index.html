@@ -291,13 +291,21 @@
       <button type="button" id="session-settings-close" class="native-mini-btn" style="margin-left:auto">关闭</button>
     </div>
     <div id="session-settings-body" class="workspace-body" style="padding-bottom:8px;">
-      <div class="popover-section-label">会话模式</div>
-      <div class="popover-list" id="mode-list">
+      <div class="popover-section-label">模型 <span class="label-sub">-m / --model</span></div>
+      <div class="popover-list model-list settings-grid-2" id="model-list"></div>
+      <div class="popover-section-label bordered">思考强度 <span class="label-sub">effort</span></div>
+      <div class="popover-list reasoning-list settings-wrap-row" id="reasoning-list"></div>
+      <div class="popover-section-label bordered" id="speed-section-label">速度 <span class="label-sub">serviceTier</span></div>
+      <div class="popover-list speed-list settings-wrap-row" id="speed-list"></div>
+      <div class="popover-section-label bordered">审批策略 <span class="label-sub">-a / --ask-for-approval</span></div>
+      <div class="popover-list settings-grid-3" id="approval-list"></div>
+      <div class="popover-section-label bordered">会话模式</div>
+      <div class="popover-list settings-grid-2" id="mode-list">
         <div class="popover-item selected" data-mode="default">
           <span class="popover-item-icon" data-icon="chat"></span>
           <div class="popover-item-details">
             <span class="popover-item-title">对话模式 (Chat)</span>
-            <span class="popover-item-desc">常规双向问答与代码编写交互</span>
+            <span class="popover-item-desc">常规双向问答与代码交互</span>
           </div>
           <span class="popover-item-check">✓</span>
         </div>
@@ -305,33 +313,25 @@
           <span class="popover-item-icon" data-icon="clipboard"></span>
           <div class="popover-item-details">
             <span class="popover-item-title">计划模式 (Plan)</span>
-            <span class="popover-item-desc">只规划、提问，不改代码或执行命令</span>
+            <span class="popover-item-desc">只规划提问，不改代码</span>
           </div>
           <span class="popover-item-check">✓</span>
         </div>
       </div>
-      <div class="popover-section-label bordered">审批策略 (-a / --ask-for-approval)</div>
-      <div class="popover-list" id="approval-list"></div>
-      <div class="popover-section-label bordered">细粒度审批 (granular)</div>
-      <div class="popover-list" id="granular-list"></div>
-      <div class="popover-list">
+      <div class="popover-section-label bordered">细粒度审批 <span class="label-sub">granular</span></div>
+      <div class="popover-list settings-grid-2" id="granular-list"></div>
+      <div class="popover-section-label bordered">沙箱环境 <span class="label-sub">-s / --sandbox</span></div>
+      <div class="popover-list settings-grid-3" id="sandbox-list"></div>
+      <div class="settings-actions-row">
         <div class="popover-item" id="approval-reset" role="button" tabindex="0">
           <span class="popover-item-icon" data-icon="refresh"></span>
           <div class="popover-item-details">
             <span class="popover-item-title">恢复宿主机默认</span>
-            <span class="popover-item-desc">清除本会话的审批与沙箱覆盖，交回 config.toml</span>
+            <span class="popover-item-desc">交回 config.toml</span>
           </div>
         </div>
+        <div id="bypass-list"></div>
       </div>
-      <div class="popover-section-label bordered">沙箱 (-s / --sandbox)</div>
-      <div class="popover-list" id="sandbox-list"></div>
-      <div class="popover-list" id="bypass-list"></div>
-      <div class="popover-section-label bordered">模型 (-m / --model)</div>
-      <div class="popover-list model-list" id="model-list"></div>
-      <div class="popover-section-label bordered">思考强度 (model_reasoning_effort)</div>
-      <div class="popover-list reasoning-list" id="reasoning-list"></div>
-      <div class="popover-section-label bordered" id="speed-section-label">速度</div>
-      <div class="popover-list speed-list" id="speed-list"></div>
     </div>
   </div>
 </div>
