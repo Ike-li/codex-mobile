@@ -209,6 +209,47 @@ test('dispatchUserMessage returns a submitted outcome and maps clientRequestId t
   assert.equal(byType(events, 'user_message')[0].payload.clientRequestId, 'req-submit');
 });
 
+// steer 是往正在跑的 turn 里追加输入，那一轮的权限/模型早已生效，所以 steerTurnDispatch
+// 不接收 turn 参数、overrides 被整个丢掉——这在语义上是对的，不该改。
+//
+// 但此前它是**静默**丢弃：用户在 turn 快结束时改了权限再发一句，设置没生效、界面上
+// 也没有任何痕迹，只能等下一轮自己发现。e2e/session-settings.spec.js 那个长期 flaky
+// 就是同一个机制的另一面（测试没等 turn 真正结束，于是落进了 steer 分支）。
+test('steer 丢弃 turn overrides 时给出可见提示，而不是静默吞掉', async () => {
+  const { session, events } = makeSession();
+  session.sessionId = 'thr-steer';
+  session.currentTurnId = 'turn-running';
+  session.busy = true;
+  session.request = async () => ({ turn: { id: 'turn-running', status: 'inProgress' } });
+
+  const outcome = await session.dispatchUserMessage({
+    text: '顺便看看这个',
+    clientRequestId: 'req-steer',
+    turn: { permission: { mode: 'host' } },
+  });
+
+  assert.equal(outcome.state, 'steered', '前置：busy + currentTurnId 必须走 steer');
+  const notice = byType(events, 'system').find(event => /下一轮/.test(event.payload?.message || ''));
+  assert.ok(notice, 'steer 丢掉了 turn overrides，必须告诉用户它们没生效');
+  assert.equal(notice.payload.isError, false, '这不是错误，是一次说明');
+});
+
+test('steer 不带 overrides 时不产生多余提示', async () => {
+  const { session, events } = makeSession();
+  session.sessionId = 'thr-steer-plain';
+  session.currentTurnId = 'turn-running';
+  session.busy = true;
+  session.request = async () => ({ turn: { id: 'turn-running', status: 'inProgress' } });
+
+  await session.dispatchUserMessage({ text: '继续', clientRequestId: 'req-plain', turn: {} });
+
+  assert.deepEqual(
+    byType(events, 'system').filter(event => /下一轮/.test(event.payload?.message || '')),
+    [],
+    '没带设置就不该提示——否则每次追加输入都弹一条噪音',
+  );
+});
+
 test('dispatchUserMessage forwards CLI model, effort, approval and sandbox onto turn/start', async () => {
   const { session } = makeSession();
   session.sessionId = 'thr-cli-settings';

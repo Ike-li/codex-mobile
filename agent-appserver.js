@@ -627,6 +627,15 @@ export class ThreadRuntime {
     }
     if (this.busy) {
       if (this.currentTurnId) {
+        // steer 把输入追加进正在跑的 turn，那一轮的权限/模型早已生效，所以这里刻意
+        // 不把 turn overrides 传下去——改写一个已经在执行的 turn 的权限边界是危险的。
+        // 但不能静默：用户刚改完设置再发一句，得知道它这一轮不算数。
+        if (turn && Object.keys(turn).length) {
+          this.emit('system', {
+            message: '这条追加到了正在执行的任务，本次修改的设置要等下一轮才生效。',
+            isError: false,
+          });
+        }
         return this.steerTurnDispatch(text, savedAttachments, parts, clientRequestId);
       }
       return this.enqueueInputDispatch(text, savedAttachments, parts, clientRequestId, turn);
