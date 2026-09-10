@@ -2913,6 +2913,49 @@ test('a terminal turn failure expires unresolved needs-you entries', async () =>
   }
 });
 
+// 【为什么单独加这条】TURN_TERMINAL_REASONS 有两个消费者，对它的依赖强度不同：
+//   - trackNeedsYou 还认 envelope.type === 'error'，而 finishTurnFailure 是先 emit('error')
+//     再 emitStatus(reason)，所以 needs-you 在 error 那一步就过期了——上面那条用例覆盖的是
+//     这条路径，reason 判断对它其实是冗余的。
+//   - syncRuntimeIdentity 只认 'result' 和 status.reason，**不认 'error'**。turn 失败时
+//     唯一能让它释放 registry 的 turn 绑定的，就是 status(turn_failed)。
+// 变异实测证实了这个缺口：把 'turn_failed' 从集合里删掉，全量 1043 条单测依然全绿。
+// 绑定不释放的后果是 registry 里留着一个永不失效的 turnId，后续用它定向的请求会被
+// 路由到一个早已结束的 turn 上，而不是 fail-closed 地拒绝。
+test('turn 失败后 registry 释放 turn 绑定，旧 turnId 不再能定向', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'ccm-turn-release-test-'));
+  const codexBin = createFakeCodexBin(root);
+  const fixture = await startIsolatedServer({ codexBin });
+  let socket;
+  try {
+    socket = await connectSocket(fixture.url, fixture.authToken, 'device-turn-release');
+    await waitForAgentEvent(socket, 'init');
+    const selected = await emitWithAck(socket, 'thread:select', {
+      threadId: 'thr_turn_release', cwd: fixture.workDir, title: 'Turn release',
+    });
+    socket.emit('user:message', {
+      text: 'request failed approval',
+      instanceId: selected.instanceId,
+      threadId: 'thr_turn_release',
+    });
+    const approval = await waitForAgentEvent(socket, 'approval_request');
+    const turnId = approval.payload?.turnId;
+    assert.ok(turnId, '前置：审批请求必须带 turnId，否则这条用例观察不到绑定');
+
+    await waitForAgentEventMatching(socket, 'status', event => event.payload?.reason === 'turn_failed');
+
+    // registry.resolve 是 fail-closed 的：任一标识未知就抛 stale，即使 instanceId 仍然有效。
+    // 所以 turn 绑定有没有被释放，可以直接用这个旧 turnId 定向来观察。
+    const stale = await emitWithAck(socket, 'user:interrupt', { turnId });
+    assert.equal(stale.ok, false, 'turn 已终结，旧 turnId 不该还能定向到 runtime');
+    assert.equal(stale.errorCode, 'stale_target');
+  } finally {
+    socket?.disconnect();
+    await fixture.close();
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test('an app-server exit expires unresolved needs-you entries immediately', async () => {
   const root = mkdtempSync(join(tmpdir(), 'ccm-needs-you-process-exit-test-'));
   const codexBin = createFakeCodexBin(root);
