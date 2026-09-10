@@ -79,7 +79,9 @@ app-server 发起且必须响应的交互：
 - 会话模式：B1 可读取 `thread/settings/updated.collaborationMode`；实验写入适配保留，但 Web Plan 入口禁用，稳定 `turn/start` 不发送 `collaborationMode`，不承诺 deferred 会在下一轮应用。
 - 权限设置：`config/read` 按 cwd 解析默认值，`configRequirements/read` 提供限制；权限预设经服务端映射为 `approvalPolicy`、`approvalsReviewer`、`sandboxPolicy`。跟随主机配置显式替换旧覆盖并保留工作区可写目录和网络设置。
 - 只读资源：`fs/readFile`、`fs/readDirectory`、`mcpServerStatus/list`、`skills/list`、`externalAgentConfig/detect`、`externalAgentConfig/import`
-- 需要逐动作确认的宿主机写操作：`config/value/write`、`config/batchWrite`、`fs/writeFile`、`fs/remove`、`fs/copy`、`plugin/install`、`plugin/uninstall`、`marketplace/add`、`marketplace/remove`、`marketplace/upgrade`、`mcpServer/tool/call`、`account/logout`
+- 宿主机写操作，按**误触防护落在哪一侧**分两类（两类对攻击者都不设防——唯一的安全边界是设备凭证）：
+  - 服务端强制 `confirmAction`，缺失即拒绝并写审计（`runHostConfigAction`）：`config/value/write`、`config/batchWrite`、`plugin/install`、`plugin/uninstall`、`marketplace/add`、`marketplace/remove`、`marketplace/upgrade`、`mcpServer/tool/call`、`account/logout`
+  - 服务端只做工作区路径校验并写审计，确认在浏览器侧的 confirm sheet（`runFsMutation`）：`fs/writeFile`、`fs/remove`、`fs/copy`
 
 常见 item wire `type` 包括 `userMessage`、`agentMessage`、`plan`、`reasoning`、`commandExecution`、`fileChange`、`mcpToolCall`、`dynamicToolCall`、`webSearch`、`imageView`、`enteredReviewMode`、`exitedReviewMode`、`contextCompaction`。只有已由 host 精确路由到 owner runtime 的未知通知才可宽容忽略；无法路由的帧会记录诊断，定向 server request 会 fail-closed。未知 item 转成可见的 `raw_item`，避免静默丢失用户可见工作。
 
