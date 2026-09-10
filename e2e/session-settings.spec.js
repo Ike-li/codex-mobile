@@ -38,8 +38,16 @@ test('permission presets require confirmation, persist and keep advanced control
 //
 // 下面每轮发送后的 error-msg 断言就是为此：它把「turn 根本没起来」和「起来了但
 // 状态没更新」区分开。两者的修法完全不同，混在一起没法查。
-// 根因尚未确证：假设是 readSessionSettings 的两个 RPC（configRequirements/read、
-// config/read）之一在高负载下失败 → host 模式 enabled=false → 抛「权限模式不可用」。
+//
+// 【2026-09-10 复现一次，结论：上面那条回滚路径被排除】两条 error-msg 断言双双通过，
+// 失败仍停在最后一句——turn/start **没有**失败，catch 回滚从未发生。原先写在这里的
+// 假设（readSessionSettings 的 RPC 在高负载下失败 → host 模式 enabled=false →
+// 抛「权限模式不可用」）随之证伪，已删除，别再往那个方向查。
+//
+// 剩下的方向：turn 成功了，但 sessionStatus.effectivePermissions.source 仍是上一轮的
+// 'session'，或者 selectedPermission 被 adoptEffectivePermission 改离了 'host'。
+// permission-state 那行要求两者同时成立才显示「主机配置已应用」（public/js/app.js
+// renderCliSettingsPopovers）。下次复现该抓的是这两个值，不是再看有没有报错。
 test('full access and host reset become effective only after a new turn', async ({ page }) => {
   await page.goto('/');
   await page.locator('[data-testid="composer-defaults"]').click();
