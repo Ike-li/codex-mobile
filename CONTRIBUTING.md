@@ -4,6 +4,8 @@ Thanks for helping improve codex-chat-mobile. Issues and pull requests are welco
 
 ## Ground Rules
 
+- Use `master` as the main branch and `dev` as the only development branch. Make all code, fixes, and documentation changes on `dev`; do not create feature branches or edit directly on `master`.
+- Check `git branch --show-current` before editing. Switch to `dev` while preserving uncommitted work; if it does not exist yet, create it from `master`. Merge validated changes from `dev` into `master` when authorized. Both branches run CI on push.
 - TDD by default: write a failing test that expresses the expected behavior, make the minimal change, then run the real verification gates.
 - Read the existing code, tests, and docs before changing anything; do not guess the architecture from the project name or old plan drafts.
 - The production baseline is `codex app-server` over stdio (JSON-RPC 2.0). The legacy `codex exec --json` path is gone — do not reintroduce it.

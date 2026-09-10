@@ -18,6 +18,14 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const WORKFLOW_PATH = join(ROOT, '.github', 'workflows', 'test.yml');
 const workflow = readFileSync(WORKFLOW_PATH, 'utf8');
 
+test('开发分支 dev 和主分支 master 的 push 都触发验证', () => {
+  const push = workflow.match(/^ {2}push:\n([\s\S]*?)(?=^ {2}\w|^jobs:)/m)?.[1];
+  assert.ok(push, '找不到 push 触发器');
+  const branches = push.match(/branches:\s*\[([^\]]+)\]/)?.[1].split(',').map(s => s.trim());
+  assert.ok(branches?.includes('master'), 'master 合并后必须验证');
+  assert.ok(branches?.includes('dev'), '开发只在 dev 上进行，不能漏掉它的 push 门禁');
+});
+
 test('Node 版本矩阵关闭 fail-fast，一条腿失败不会取消另一条腿上的门禁', () => {
   assert.match(
     workflow,
