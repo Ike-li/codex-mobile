@@ -1201,6 +1201,19 @@ function sendActiveStatus(socket, reason = 'connect') {
   });
 }
 
+// turn 走到终点的 status.reason。两个消费者必须看同一份：syncRuntimeIdentity 据此
+// 释放 ThreadRegistry 的 turn 绑定，trackNeedsYou 据此把该 runtime 的待办标记过期。
+// 此前是两份逐字相同的字面量数组——加一个新终态时漏改一处，那一侧的状态就会泄漏：
+// registry 留着一个永不释放的 turnId，或者手机上挂着一张永远不消失的待办卡。
+const TURN_TERMINAL_REASONS = new Set([
+  'turn_failed',
+  'turn_interrupted',
+  'interrupt',
+  'interrupt_cleared_queue',
+  'process_exit',
+  'process_error',
+]);
+
 function syncRuntimeIdentity(runtime, envelope) {
   const turnId = envelope?.payload?.turnId;
   if (typeof turnId === 'string' && turnId) {
@@ -1215,11 +1228,8 @@ function syncRuntimeIdentity(runtime, envelope) {
   if (envelope?.type === 'approval_revoked') {
     threadRegistry.releaseRequest(runtime, envelope.payload?.approvalId);
   }
-  if (envelope?.type === 'result' || (
-    envelope?.type === 'status'
-    && ['turn_failed', 'turn_interrupted', 'interrupt', 'interrupt_cleared_queue', 'process_exit', 'process_error']
-      .includes(envelope.payload?.reason)
-  )) {
+  if (envelope?.type === 'result'
+    || (envelope?.type === 'status' && TURN_TERMINAL_REASONS.has(envelope.payload?.reason))) {
     threadRegistry.clearTurn(runtime);
   }
 }
@@ -1267,8 +1277,7 @@ function trackNeedsYou(agent, envelope) {
     return need ? [{ changed: closed.changed, revision: closed.revision, need }] : [];
   }
   const terminalStatusReason = envelope?.type === 'status'
-    && ['turn_failed', 'turn_interrupted', 'interrupt', 'interrupt_cleared_queue', 'process_exit', 'process_error']
-      .includes(envelope.payload?.reason)
+    && TURN_TERMINAL_REASONS.has(envelope.payload?.reason)
     ? envelope.payload.reason
     : null;
   if (envelope?.type === 'result' || envelope?.type === 'error' || terminalStatusReason) {
