@@ -80,7 +80,7 @@ npm run test:e2e
 - **结构化输入**：attachments 类型、10/20 MiB 业务限制、32 MiB Socket wire cap、0700 上传目录/0600 文件，图片→`localImage`、文件→`mention`，workspace mention、enabled skill、显式门控的 HTTPS image URL 与完整 IPv4/IPv6 DNS/SSRF 拒绝路径。
 - **审批与 needs-you**：approval/question 分类、精确 target、snapshot/revision、进程内幂等重放与 conflict/stale/unknown、resolved/expired/revoked 广播和脱敏深链。
 - **自托管安全**：HTTPS fail-closed、Origin allowlist、可信代理、HttpOnly device-bound session、query token 拒绝、配对/撤销、外部 trusted-file 原子变更、认证/Push 容量限制、rate-limit 审计聚合、O_APPEND + bounded rotation、宿主配置审计 sink 脱敏，以及 Push DNS pin/总超时/响应上限与持久化失败。
-- **产品门控**：Labs default-off 的 feature manifest 与服务端拒绝；宿主配置的逐动作确认与缺确认拒绝。
+- **产品门控**：宿主配置的逐动作确认与缺确认拒绝。
 - **门禁自身**：CI 矩阵关闭 fail-fast、没有 `continue-on-error` 吞掉失败、生产依赖 audit 阻断、覆盖率退化门禁不限于 PR（`test/ci-workflow.test.mjs`）；E2E 必须走 mock 且跑用例前先探测后端版本（`test/zero-quota-guard.test.mjs` + `e2e/assert-mock-backend.js`）；落盘文件不超出 A2 允许的例外（`test/zero-persistence-guard.test.mjs`）；`public/` 外壳的结构性边界——无内联 script、资源引用完整性、样式表顺序、不裸调 `randomUUID`、不用 `Math.random` 生成凭证、不重新引入账号登录（`test/public-shell-guard.test.mjs`）。这几类守的是「规则被违反时会不会有东西变红」，此前全靠文档约定。
 
   这些是**绊线**，不是实现的镜像：它们从源码里抽事实，只写死「允许什么」。所以重构不会误伤，越界一定变红。新增门禁请照这个形态写——凡是需要复述当前代码长什么样才能通过的断言，重命名一次就会红，而逻辑写反时不会红，净效果是负的。
@@ -102,7 +102,7 @@ npm run test:e2e
 | 案例 6 | 历史浏览 + 工具/变更卡重建 + app-server thread 唯一事实源 + Codex App/Web 双向续接 | `thread-history.js`、`app-server-host.js`、`agent-appserver.js`、`server.js` 的 `thread:*` | thread-history 单测、native thread 集成、workspace-and-composer E2E |
 | 案例 7 | 多工作目录 + 实例切换 + 双设备/双 thread 零串流 + 共享单进程 | `app-server-host.js`、`thread-registry.js`、`agent-appserver.js`、`public/js/view-routing.js` | shared-host spawn/initialize、stale target、route/workdir、多实例 E2E |
 | 案例 8 | Web Push + DNS/address pinning + bounded response + needs-you 脱敏深链 + device revoke | `server.js`、`push-sender.js`、`network-address.js`、`needs-you-registry.js`、`public/js/sw.js` | Push DNS/mixed-IP/timeout/body-cap 单测、authenticated persist/prune、service worker 和 needs-you E2E |
-| 案例 9 | 模型切换 + 权限档切换 + Labs default-off | `agent-appserver.js`、`server.js` feature manifest、`public/index.html`、`public/js/app.js` | model/permission UI、feature flag、宿主配置逐动作确认测试 |
+| 案例 9 | 模型切换 + 权限档切换 | `agent-appserver.js`、`server.js`、`public/index.html`、`public/js/app.js` | model/permission UI、宿主配置逐动作确认测试 |
 | 案例 10 | PWA 安装 + HTTPS/auth session + 全屏/移动体验 | `server-security.js`、`public/manifest.webmanifest`、`public/js/sw.js` | transport security/session/SW 测试、响应式和 PWA E2E |
 
 ## 手工冒烟清单
@@ -131,7 +131,7 @@ npm run test:e2e
 - TC-20：强制 event buffer gap 或 epoch mismatch 后由 `thread/read` 重建；恢复期间 live event 不丢不重。
 - TC-21：新设备登录后保持 pending；批准后解锁，deny 后 cookie/socket/Push 同时失效。
 - TC-22：远程 HTTP、错误 Origin、缺失可信 `X-Forwarded-Proto` 和撤销后的 session 均 fail-closed。
-- TC-23：Labs 默认隐藏且服务端拒绝，显式 flag 后才显示；宿主配置入口常驻，但缺 `confirmAction` 会被拒绝。
+- TC-23：宿主配置入口常驻，但缺 `confirmAction` 会被拒绝。
 - TC-24：workspace mention、enabled skill 可发送；越界路径、未启用 skill 和默认关闭的远程图片被拒绝。
 - TC-25：ACK 丢失后重启 gateway，客户端只调用 `message:reconcile`；无 thread 时仍先查 receipt ledger，有 thread 时 `thread/read` 命中 `clientRequestId` 后清除 outbox 且 `turn/start` 总计一次。消失 instance 的未尝试记录保留原 id 重绑；已尝试且无法核对时保持 `needs_reconcile`，用户确认后使用新 id，旧 id 不得复活。
 

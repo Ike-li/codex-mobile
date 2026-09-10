@@ -112,9 +112,6 @@ export class ThreadRuntime {
     this.currentTurnId = null;
     this.threadStatus = null;
     this.lastErrorMessage = null;
-    // command/exec 起的进程。它们不置 busy、不产生 turn，所以必须单独记账，
-    // 否则一个跑着长命令的 runtime 在 isReclaimable 眼里完全空闲。
-    this.activeProcesses = new Set();
     this.drainScheduled = false;
     this.experimentalApi = experimentalApi === true;
     // 审批/沙箱（仅 app-server 后端）：默认 on-request + workspace-write，可经环境变量覆盖。
@@ -899,23 +896,6 @@ export class ThreadRuntime {
       case 'item/commandExecution/outputDelta':
         this.handleCommandOutputDelta(params);
         break;
-      case 'command/exec/outputDelta':
-        this.handleTerminalOutputDelta(params, 'processId');
-        break;
-      case 'process/outputDelta':
-        this.handleTerminalOutputDelta(params, 'processHandle');
-        break;
-      case 'process/exited':
-        this.activeProcesses.delete(params.processHandle || params.processId);
-        this.emit('term_exit', {
-          processId: params.processHandle || params.processId || null,
-          exitCode: params.exitCode ?? null,
-          stdout: params.stdout || '',
-          stderr: params.stderr || '',
-          stdoutCapReached: params.stdoutCapReached === true,
-          stderrCapReached: params.stderrCapReached === true,
-        });
-        break;
       case 'thread/realtime/started':
         this.emitRealtime('started', params);
         break;
@@ -1145,17 +1125,6 @@ export class ThreadRuntime {
     });
   }
 
-  handleTerminalOutputDelta(params, idKey) {
-    const text = decodeBase64(params.deltaBase64) || params.delta || params.text || '';
-    if (!text) return;
-    this.emit('term_output', {
-      processId: params[idKey] || params.processId || params.processHandle || null,
-      stream: params.stream || 'stdout',
-      text,
-      capReached: params.capReached === true,
-    });
-  }
-
   emitRealtime(event, params) {
     this.emit('realtime', { event, ...(params || {}) });
   }
@@ -1270,7 +1239,6 @@ export class ThreadRuntime {
       && !this.busy
       && this.pendingApprovals.size === 0
       && this.inputQueue.length === 0
-      && this.activeProcesses.size === 0
       && this.lastActivity <= idleSince;
   }
 
@@ -1628,95 +1596,6 @@ export class ThreadRuntime {
     return this.request('account/logout', undefined);
   }
 
-  async spawnTerminal(options = {}) {
-    await this.ensureInitialized();
-    const processId = requireString(options.processId, 'processId');
-    if (!Array.isArray(options.command) || options.command.length === 0) throw new Error('terminal command is required');
-    const response = await this.request('command/exec', definedParams({
-      processId,
-      command: options.command.map((part, index) => requireString(part, `command[${index}]`)),
-      tty: true,
-      streamStdin: true,
-      streamStdoutStderr: true,
-      cwd: options.cwd,
-      env: options.env,
-      size: options.size,
-      timeoutMs: options.timeoutMs,
-      disableTimeout: options.disableTimeout,
-      outputBytesCap: options.outputBytesCap,
-      disableOutputCap: options.disableOutputCap,
-      sandboxPolicy: options.sandboxPolicy,
-    }));
-    this.activeProcesses.add(processId);
-    return response;
-  }
-
-  async writeTerminal(processId, text, options = {}) {
-    await this.ensureInitialized();
-    return this.request('command/exec/write', definedParams({
-      processId: requireString(processId, 'processId'),
-      deltaBase64: text === undefined || text === null ? undefined : Buffer.from(String(text)).toString('base64'),
-      closeStdin: options.closeStdin,
-    }));
-  }
-
-  async resizeTerminal(processId, size = {}) {
-    await this.ensureInitialized();
-    return this.request('command/exec/resize', {
-      processId: requireString(processId, 'processId'),
-      size: {
-        cols: requirePositiveInteger(size.cols, 'terminal cols'),
-        rows: requirePositiveInteger(size.rows, 'terminal rows'),
-      },
-    });
-  }
-
-  async terminateTerminal(processId) {
-    await this.ensureInitialized();
-    const id = requireString(processId, 'processId');
-    try {
-      return await this.request('command/exec/terminate', { processId: id });
-    } finally {
-      this.activeProcesses.delete(id);
-    }
-  }
-
-  async listThreadTurns(options = {}) {
-    const thread = await this.readThread({
-      threadId: options.threadId || this.sessionId,
-      includeTurns: true,
-    });
-    return {
-      thread,
-      turns: thread?.turns ?? [],
-      source: 'thread/read',
-    };
-  }
-
-  async searchThreads(options = {}) {
-    await this.ensureInitialized();
-    const query = requireString(options.query, 'search query');
-    const response = await this.request('thread/list', definedParams({
-      cwd: options.cwd ?? this.cwd,
-      archived: options.archived ?? false,
-      limit: options.limit,
-      cursor: options.cursor,
-      searchTerm: query,
-    }));
-    return {
-      results: response?.results ?? response?.data ?? [],
-      nextCursor: response?.nextCursor ?? null,
-      backwardsCursor: response?.backwardsCursor ?? null,
-      source: 'thread/list',
-      query,
-    };
-  }
-
-  async listP3Capabilities() {
-    await this.ensureInitialized();
-    return this.request('experimentalFeature/list', {});
-  }
-
   dispose() {
     this.disposed = true;
     clearInterval(this.idleTimer); this.idleTimer = null;
@@ -1940,23 +1819,9 @@ function requireString(value, label) {
   throw new Error(`${label} is required`);
 }
 
-function requirePositiveInteger(value, label) {
-  if (Number.isInteger(value) && value > 0) return value;
-  throw new Error(`${label} must be a positive integer`);
-}
-
 function requireMergeStrategy(value) {
   if (value === 'replace' || value === 'upsert') return value;
   throw new Error('mergeStrategy must be replace or upsert');
-}
-
-function decodeBase64(value) {
-  if (typeof value !== 'string' || !value) return '';
-  try {
-    return Buffer.from(value, 'base64').toString();
-  } catch {
-    return '';
-  }
 }
 
 function rpcError(error) {

@@ -1319,46 +1319,6 @@ test('没有 turn 覆盖时不凭空塞 model / serviceTier 字段', async () =>
   assert.equal('serviceTier' in sent.params, false);
 });
 
-// ---- 终端输出增量 ----
-test('终端输出的正文与进程标识各有回落链', () => {
-  const encoded = Buffer.from('已解码正文', 'utf8').toString('base64');
-  const cases = [
-    ['优先用 base64 正文', { deltaBase64: encoded, delta: 'x', text: 'y' }, '已解码正文'],
-    ['其次用 delta', { delta: '来自 delta' }, '来自 delta'],
-    ['再次用 text', { text: '来自 text' }, '来自 text'],
-  ];
-  for (const [label, params, expected] of cases) {
-    const { session, events } = makeSession();
-    session.handleNotification('process/outputDelta', { processHandle: 'ph', ...params });
-    assert.equal(byType(events, 'term_output').slice(-1)[0].payload.text, expected, label);
-  }
-
-  // 三处都没有正文时不发事件——一条空的终端输出只会让卡片抖一下。
-  const { session, events } = makeSession();
-  session.handleNotification('process/outputDelta', { processHandle: 'ph' });
-  assert.deepEqual(byType(events, 'term_output'), [], '没有正文就不该发事件');
-});
-
-test('终端输出的进程标识优先用该通知自己那种键名', () => {
-  // process/outputDelta 用 processHandle，terminal/outputDelta 用 processId。
-  const { session, events } = makeSession();
-  session.handleNotification('process/outputDelta',
-    { processHandle: 'ph_1', processId: 'pid_1', delta: 'x' });
-  assert.equal(byType(events, 'term_output').slice(-1)[0].payload.processId, 'ph_1',
-    '这条通知的主键是 processHandle，两个都有时以它为准');
-
-  const other = makeSession();
-  other.session.handleNotification('process/outputDelta', { processId: 'pid_only', delta: 'x' });
-  assert.equal(byType(other.events, 'term_output').slice(-1)[0].payload.processId, 'pid_only',
-    '主键缺失时回落到另一种写法');
-
-  const none = makeSession();
-  none.session.handleNotification('process/outputDelta', { delta: 'x' });
-  assert.equal(byType(none.events, 'term_output').slice(-1)[0].payload.processId, null);
-  assert.equal(byType(none.events, 'term_output').slice(-1)[0].payload.stream, 'stdout', '流默认 stdout');
-});
-
-// ---- 推理正文的提取 ----
 test('推理正文从 summary 或 content 里提取，三种片段写法都认', () => {
   const cases = [
     ['summary 优先于 content', { summary: ['来自 summary'], content: ['来自 content'] }, '来自 summary'],

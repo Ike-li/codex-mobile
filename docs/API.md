@@ -155,20 +155,6 @@
 
 needs-you 是当前 gateway 进程内跨 thread 的中央聚合视图。每项以 `needId` 和完整的 instance/thread/turn/item/request 目标标识；在同一 registry 生命周期和同一 need 记录内，同一决议重复提交返回成功且 `duplicate:true`，不同决议冲突返回 `already_resolved`，使正常重试具备 effectively-exactly-once 语义。该状态未跨 gateway 进程持久化，进程重启不在此保证内。上游 `serverRequest/resolved` 会撤销待办，turn 终态会使未决项过期。
 
-### Labs 实验 p3:*（需 `CODEX_P3_EXPERIMENTAL=1`）
-
-flag 默认关闭；关闭时 ACK 为 `feature_disabled`。
-
-| 事件 | 参数 | ACK |
-|---|---|---|
-| `p3:capabilities` | `cwd` | `{ok:true, capabilities}` |
-| `p3:terminalSpawn` | `cwd`、`processId`、`command[]`、`cols`、`rows` | `{ok:true, processId, result}` |
-| `p3:terminalWrite` | `cwd`、`processId`、`text`、`closeStdin` | `{ok:true, processId}` |
-| `p3:terminalResize` | `cwd`、`processId`、`cols`、`rows` | `{ok:true, processId}` |
-| `p3:terminalTerminate` | `cwd`、`processId` | `{ok:true, processId}` |
-| `p3:threadTurns` | `cwd`、`threadId` | `{ok:true, thread, turns, source:"thread/read"}` |
-| `p3:threadSearch` | `cwd`、`query`、`limit`、`cursor`、`archived` | `{ok:true, results, ..., source:"thread/list"}` |
-
 ### 宿主配置 host:*
 
 直接改动宿主机 Codex 配置的操作，入口常驻，无需解锁：
@@ -227,7 +213,7 @@ flag 默认关闭；关闭时 ACK 为 `feature_disabled`。
 | `account_login` / `account_updated` / `rate_limits` / `usage` | 账号、登录、额度和 token 用量 |
 | `compact` / `rollback` | 压缩或回退结果 |
 | `mcp_status` / `skills_changed` / `external_agent_config_import` | MCP、skill 和迁移状态 |
-| `term_output` / `term_exit` / `realtime` / `remote_control` | Labs 终端、实时与远程控制通知 |
+| `realtime` / `remote_control` | 实时会话与远程控制通知（服务端转发，Web 端当前无 UI）|
 | `result` / `error` / `system` | turn 终态、可见错误和系统消息 |
 | `raw_item` | 未识别 app-server item 的可见兜底 |
 
@@ -240,7 +226,7 @@ flag 默认关闭；关闭时 ACK 为 `feature_disabled`。
 - **设备信任**：远程新设备进入 pending；批准写入 trusted devices。外部撤销即使设备离线也会撤销 session 与 Push 绑定并断开远程 socket，但保留已连接的 loopback socket。
 - **Push**：订阅路由必须通过 HTTP 鉴权并提供已批准设备 ID；投递前再次检查设备信任与全部 DNS 结果，非公网或混合解析会拒绝。TLS 仍验证原 endpoint hostname，但连接地址由已验证 DNS 结果 pin；总超时 10 秒、响应上限 64 KiB。陈旧绑定会被清除。approval/question 的 needs-you 推送只含通用提示与 `thread` / `need` 深链，不包含命令或问题正文；result/error 推送没有该深链，正文是截断至 180 字符的 status/message，可能包含实际错误文本。
 - **宿主配置**：没有开关也没有解锁步骤；每个动作需要 `confirmAction`，缺失即拒绝并记审计。
-- **Labs**：默认关闭；需 `CODEX_P3_EXPERIMENTAL=1`，共享 app-server 初始化时才声明 `experimentalApi:true`。
+- **实验协议能力**：`CODEX_P3_EXPERIMENTAL=1` 时才在共享 app-server 的 `initialize` 里声明 `experimentalApi:true`；它现在只影响 `thread/settings/update`（collaborationMode）是否可用。
 
 详见 [REMOTE_ACCESS.md](REMOTE_ACCESS.md)。
 
@@ -248,7 +234,7 @@ flag 默认关闭；关闭时 ACK 为 `feature_disabled`。
 
 | 范围 | 测试文件 |
 |---|---|
-| HTTP/session/Push、Socket 路由、精确实例目标、设备信任、宿主配置/Labs | `test/server-integration.test.mjs`、`test/server-security.test.mjs`、`test/server-push.test.mjs` |
+| HTTP/session/Push、Socket 路由、精确实例目标、设备信任、宿主配置 | `test/server-integration.test.mjs`、`test/server-security.test.mjs`、`test/server-push.test.mjs` |
 | 共享 app-server 传输与 thread/turn/request 路由 | `test/app-server-host.test.mjs`、`test/app-server-transport.test.mjs`、`test/thread-registry.test.mjs` |
 | ACK、receipt、去重与 IndexedDB outbox | `test/socket-ack.test.mjs`、`test/message-receipt-ledger.test.mjs`、`test/message-outbox.test.mjs` |
 | structured UserInput、上传与输入解析 | `test/agent-appserver.test.mjs`、`test/new-modules.test.mjs`、`test/input-parts.test.mjs` |

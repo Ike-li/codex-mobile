@@ -426,7 +426,7 @@ test('CODEX_ALLOWED_ORIGINS 只收纯 origin，多写的部分当场报错而不
 });
 
 // ackError 是 26 个 socket 处理器共用的失败出口（thread:*、models:read、files:search、
-// account:read、mcp:read、externalAgentConfig:import、p3:* 等），它给出的字符串会被
+// account:read、mcp:read、externalAgentConfig:import 等），它给出的字符串会被
 // appendSystem(ack?.error, true) 直接渲染进手机上的消息列表。
 //
 // 全仓其他用户可见的错误都过 sanitize()——agent-appserver 的 turn/start、turn/steer、

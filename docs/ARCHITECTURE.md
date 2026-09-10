@@ -20,7 +20,7 @@ server.js（鉴权、设备、可靠投递、视图路由、恢复、Push）
 - `AppServerHost` 只初始化一次共享进程，并按 thread、turn、request、process/login correlation 把入站通知和 server request 交给唯一 owner。无法确定 owner 的定向 server request 会 fail-closed，应答 JSON-RPC 错误而不是广播或挂起。
 - `ThreadRegistry` 维护 `instanceId`、`threadId`、`turnId`、`requestId` 的交叉 ownership；标识未知、过期或指向不同 runtime 时拒绝路由。
 - `ThreadRuntime`（`agent-appserver.js`）管理单个 thread 的 start/resume/turn、队列、中断、审批和事件映射，不拥有独立 app-server 子进程。
-- `server.js` 管理 HTTP/Socket.IO、工作区 allowlist、每个 socket 的当前视图、消息 receipt、恢复、设备、Push 和 feature flags。
+- `server.js` 管理 HTTP/Socket.IO、工作区 allowlist、每个 socket 的当前视图、消息 receipt、恢复、设备和 Push。
 
 前端由 `public/index.html` 的 HTML shell、外部样式表 `public/css/app.css`、外部主应用模块 `public/js/app.js`，以及 `public/js/` 下的 outbox、ACK、恢复和视图路由小模块组成。它渲染文本增量、thinking/reasoning、命令与工具卡片、diff、审批、提问、状态栏和未知事件的 raw fallback。
 
@@ -60,7 +60,7 @@ server.js（鉴权、设备、可靠投递、视图路由、恢复、Push）
 
 审批和用户输入 server request 必须显式应答。共享 host 只有在完整 target 唯一定位 owner 后才下发；未知定向请求返回 `-32602`，不支持的未知请求返回 `-32601`。已路由到正确 runtime 后，未知 notification 可宽容忽略；未知 item type 则降级为可见 `raw_item`。
 
-experimental 方法受服务端 flag 与前端 feature manifest 门控，`CODEX_P3_EXPERIMENTAL=0` 时核心聊天不依赖它们。宿主配置操作不再有特性开关：解锁机制是安全剧场（口令为源码常量、绕行路径至少三条），已拆除；保留的是逐动作确认与审计，那防的是误触。
+`CODEX_P3_EXPERIMENTAL=1` 时才向 app-server 声明 `capabilities.experimentalApi`；核心聊天不依赖它，当前唯一受影响的是 collaborationMode。宿主配置操作不再有特性开关：解锁机制是安全剧场（口令为源码常量、绕行路径至少三条），已拆除；保留的是逐动作确认与审计，那防的是误触。
 
 ## 安全模型
 
@@ -78,5 +78,5 @@ experimental 方法受服务端 flag 与前端 feature manifest 门控，`CODEX_
 - app-server thread API 是唯一会话事实源；浏览器本地只保存 UI 偏好、可靠 outbox 和当前指针。
 - Socket.IO envelope、ACK/receipt 与 recovery snapshot 是浏览器的稳定协议边界。
 - 目标不完整或标识冲突时 fail-closed，不使用全局当前视图猜测 thread。
-- Labs default-off；P0 聊天、可靠投递、恢复和安全不依赖它和宿主配置。
+- P0 聊天、可靠投递、恢复和安全不依赖宿主配置面板。
 - 日常回归只用确定性 mock app-server。接受 Codex CLI 升级前必须按 [PROTOCOL_UPGRADE.md](PROTOCOL_UPGRADE.md) 更新 pin、基线和协议门禁。

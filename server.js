@@ -87,7 +87,10 @@ const HERE = import.meta.dirname;
 const DATA_DIR = process.env.CODEX_DATA_DIR || join(HERE, 'data');
 const HOST_CONFIG_AUDIT_FILE = join(DATA_DIR, 'host-config-audit.jsonl');
 const SECURITY_AUDIT_FILE = join(DATA_DIR, 'security-audit.jsonl');
-const P3_EXPERIMENTAL_ENABLED = process.env.CODEX_P3_EXPERIMENTAL === '1';
+// 声明给 app-server 的 capabilities.experimentalApi。P3/Labs 面板已删除，现在它唯一的
+// 用途是让 thread/settings/update（collaborationMode）可用；环境变量名保留旧名以免
+// 破坏已有的 .env。
+const EXPERIMENTAL_API_ENABLED = process.env.CODEX_P3_EXPERIMENTAL === '1';
 const REMOTE_IMAGE_INPUTS_ENABLED = process.env.CODEX_ALLOW_REMOTE_IMAGES === '1';
 const rawPushMaxSubscriptions = Number(process.env.CODEX_PUSH_MAX_SUBSCRIPTIONS);
 const PUSH_MAX_SUBSCRIPTIONS = Number.isInteger(rawPushMaxSubscriptions) && rawPushMaxSubscriptions > 0
@@ -301,9 +304,6 @@ function buildInitPayload({ sessionId = null, instanceId = null, cwd = WORK_DIR 
     cwd,
     workDirs,
     versions,
-    features: {
-      labs: P3_EXPERIMENTAL_ENABLED,
-    },
   };
 }
 
@@ -1127,7 +1127,7 @@ function getAppServerHost() {
       codexBin,
       cwd: WORK_DIR,
       registry: threadRegistry,
-      experimentalApi: P3_EXPERIMENTAL_ENABLED,
+      experimentalApi: EXPERIMENTAL_API_ENABLED,
       onThreadStatus: change => broadcastHostThreadStatus(change),
       onUnrouted: frame => {
         if (process.env.LOG_STDERR) console.error('[appserver:unrouted]', frame);
@@ -1343,7 +1343,7 @@ function createAgent(resumeId = null, cwd = WORK_DIR) {
     onExit: () => {
       // Session process ended naturally; keep agent in map for reconnect
     },
-    experimentalApi: P3_EXPERIMENTAL_ENABLED,
+    experimentalApi: EXPERIMENTAL_API_ENABLED,
   });
   threadRegistry.register(agent, {
     instanceId,
@@ -1436,8 +1436,8 @@ function ackOk(ack, payload = {}) {
   if (typeof ack === 'function') ack({ ok: true, ...payload });
 }
 
-// 26 个 socket 处理器共用的失败出口（thread:*、models:read、files:search、account:read、
-// mcp:read、externalAgentConfig:import、p3:* 等）。这里给出的字符串会被客户端的
+// socket 处理器共用的失败出口（thread:*、models:read、files:search、account:read、
+// mcp:read、externalAgentConfig:import 等）。这里给出的字符串会被客户端的
 // appendSystem(ack?.error, true) 直接渲染进手机上的消息列表，所以必须过 sanitize —— 全仓
 // 其他用户可见的错误（agent-appserver 的 turn/start、turn/steer、启动失败）都是这么做的，
 // 唯独这条路曾经把原始 error.message 直送浏览器。
@@ -1452,23 +1452,6 @@ export function ackError(ack, error) {
   if (typeof ack !== 'function') return;
   const raw = error?.message || String(error ?? '') || 'unknown error';
   ack({ ok: false, error: sanitize(raw) || 'unknown error' });
-}
-
-function ackFeatureDisabled(ack, feature) {
-  if (typeof ack === 'function') {
-    ack({
-      ok: false,
-      errorCode: 'feature_disabled',
-      error: `${feature} controls are disabled`,
-      retryable: false,
-    });
-  }
-}
-
-function requireP3Experimental(ack) {
-  if (P3_EXPERIMENTAL_ENABLED) return true;
-  ackFeatureDisabled(ack, 'P3 experimental');
-  return false;
 }
 
 function ensureControlAgent(cwd = WORK_DIR, socket = null) {
@@ -2597,97 +2580,6 @@ io.on('connection', socket => {
       if (!items.length) throw new Error('没有可导入的配置项');
       const response = await ensureControlAgent(payload?.cwd, socket).importExternalAgentConfig(items, { source: 'mobile' });
       ackOk(ack, { importId: response?.importId || null });
-    } catch (err) {
-      ackError(ack, err);
-    }
-  });
-
-  on(socket, 'p3:capabilities', async (payload = {}, ack) => {
-    if (!requireP3Experimental(ack)) return;
-    try {
-      const response = await ensureControlAgent(payload?.cwd, socket).listP3Capabilities();
-      ackOk(ack, { capabilities: response?.data || response?.features || response || {} });
-    } catch (err) {
-      ackError(ack, err);
-    }
-  });
-
-  on(socket, 'p3:terminalSpawn', async (payload = {}, ack) => {
-    if (!requireP3Experimental(ack)) return;
-    try {
-      const processId = typeof payload?.processId === 'string' && payload.processId
-        ? payload.processId
-        : `term_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-      const response = await ensureControlAgent(payload?.cwd, socket).spawnTerminal({
-        processId,
-        command: Array.isArray(payload?.command) ? payload.command : [],
-        cwd: payload?.cwd ? routeCwd(payload.cwd) : WORK_DIR,
-        size: {
-          cols: Number.isInteger(payload?.cols) ? payload.cols : 80,
-          rows: Number.isInteger(payload?.rows) ? payload.rows : 24,
-        },
-      });
-      ackOk(ack, { processId, result: response ?? null });
-    } catch (err) {
-      ackError(ack, err);
-    }
-  });
-
-  on(socket, 'p3:terminalWrite', async (payload = {}, ack) => {
-    if (!requireP3Experimental(ack)) return;
-    try {
-      await ensureControlAgent(payload?.cwd, socket).writeTerminal(payload?.processId, payload?.text ?? '', {
-        closeStdin: payload?.closeStdin === true,
-      });
-      ackOk(ack, { processId: payload?.processId });
-    } catch (err) {
-      ackError(ack, err);
-    }
-  });
-
-  on(socket, 'p3:terminalResize', async (payload = {}, ack) => {
-    if (!requireP3Experimental(ack)) return;
-    try {
-      await ensureControlAgent(payload?.cwd, socket).resizeTerminal(payload?.processId, {
-        cols: payload?.cols,
-        rows: payload?.rows,
-      });
-      ackOk(ack, { processId: payload?.processId });
-    } catch (err) {
-      ackError(ack, err);
-    }
-  });
-
-  on(socket, 'p3:terminalTerminate', async (payload = {}, ack) => {
-    if (!requireP3Experimental(ack)) return;
-    try {
-      await ensureControlAgent(payload?.cwd, socket).terminateTerminal(payload?.processId);
-      ackOk(ack, { processId: payload?.processId });
-    } catch (err) {
-      ackError(ack, err);
-    }
-  });
-
-  on(socket, 'p3:threadTurns', async (payload = {}, ack) => {
-    if (!requireP3Experimental(ack)) return;
-    try {
-      const response = await ensureControlAgent(payload?.cwd, socket).listThreadTurns({ threadId: payload?.threadId });
-      ackOk(ack, response);
-    } catch (err) {
-      ackError(ack, err);
-    }
-  });
-
-  on(socket, 'p3:threadSearch', async (payload = {}, ack) => {
-    if (!requireP3Experimental(ack)) return;
-    try {
-      const response = await ensureControlAgent(payload?.cwd, socket).searchThreads({
-        query: payload?.query,
-        limit: Number.isInteger(payload?.limit) ? payload.limit : 20,
-        cursor: payload?.cursor,
-        archived: payload?.archived === true,
-      });
-      ackOk(ack, response);
     } catch (err) {
       ackError(ack, err);
     }

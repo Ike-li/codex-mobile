@@ -67,8 +67,8 @@ test.describe('Native Controls Browser Panels', () => {
     // 只断言「HTML 里有这个 id」挡不住整块被 hidden：判据必须是用户真的看得见。
     await expect(page.locator('#drawer-tools')).toBeVisible();
 
-    // 名单从 DOM 派生，不写死。此前这里硬编码了三个按钮，于是另外九个工具入口
-    // （compact / devices / host-config / import / mcp / models / rollback / skills / labs）
+    // 名单从 DOM 派生，不写死。此前这里硬编码了三个按钮，于是另外八个工具入口
+    // （compact / devices / host-config / import / mcp / models / rollback / skills）
     // 一个都没有可达性覆盖，新加一个工具也不会自动被守住 —— 而「面板在、里面点不到」
     // 正是这个文件开头那段注释记录的那次事故。
     const buttons = page.locator('#drawer-tools button');
@@ -79,8 +79,8 @@ test.describe('Native Controls Browser Panels', () => {
     for (let i = 0; i < count; i += 1) {
       const button = buttons.nth(i);
       const id = (await button.getAttribute('id')) || `第 ${i + 1} 个`;
-      // Labs 由 CODEX_P3_EXPERIMENTAL 门控，默认关闭时它带 hidden，属于有意不可见。
-      if (await button.evaluate(el => el.hasAttribute('hidden'))) continue;
+      // 2026-09-10 Labs 删除后这里不再有 hidden 按钮，因此不再跳过任何一个：
+      // 工具面板里的每个按钮都必须可见。将来若真要藏一个，这条会红——那是对的。
       await expect(button, `${id} 存在但用户点不到`).toBeVisible();
       const box = await button.boundingBox();
       expect(box?.height ?? 0, `${id} 高度为 0，视觉上不存在`).toBeGreaterThan(0);

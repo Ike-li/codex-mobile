@@ -185,7 +185,6 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   let sessionsByCwd = new Map();
   let expandedDirs = new Set();
   let showArchivedThreads = false;
-  let features = { labs: false };
   let pendingToolCards = {}; // toolUseId -> element
   let pendingApprovalCards = {}; // approvalId -> element
   let needsYouRevision = 0;
@@ -1336,12 +1335,6 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
       case 'tool_output_delta':
         handleToolOutputDelta(ev.payload);
         break;
-      case 'term_output':
-        handleP3TerminalOutput(ev.payload);
-        break;
-      case 'term_exit':
-        handleP3TerminalExit(ev.payload);
-        break;
       case 'tool_result':
         handleToolResult(ev.payload);
         break;
@@ -1386,12 +1379,6 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
         break;
       case 'external_agent_config_import':
         handleExternalAgentConfigImport(ev.payload);
-        break;
-      case 'realtime':
-        handleP3Realtime(ev.payload);
-        break;
-      case 'remote_control':
-        handleP3RemoteControl(ev.payload);
         break;
       case 'mcp_use':
         handleMcpUse(ev.payload);
@@ -1527,7 +1514,6 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   }
 
   function handleInit(payload, event) {
-    applyFeatureManifest(payload.features);
     gatewayEpoch = payload.gatewayEpoch || gatewayEpoch;
     serverCwd = payload.cwd || serverCwd;
     const incomingInstanceId = event?.instanceId || payload.instanceId || null;
@@ -1666,13 +1652,6 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     if (actions) {
       actions.innerHTML = '<span class="tool-output tool-err" style="background:transparent;padding:0;">结果未知，等待上游终态</span>';
     }
-  }
-
-  function applyFeatureManifest(manifest) {
-    features = { labs: manifest?.labs === true };
-    // 宿主配置不再是特性开关，入口常驻；Labs 仍受实验开关控制。
-    const labsButton = $('native-p3-btn');
-    if (labsButton) labsButton.hidden = !features.labs;
   }
 
   function renderWorkdirSelect() {
@@ -2455,133 +2434,6 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
         };
       });
     });
-  }
-
-  function openP3Panel() {
-    if (!features.labs) return;
-    renderNativePanel('Labs', `
-      <div class="native-list-row">
-        <div class="native-row-title">Capabilities</div>
-        <div class="native-row-actions"><button id="p3-capabilities-btn" class="native-mini-btn" type="button">Read</button></div>
-      </div>
-      <div class="native-list-row">
-        <div class="native-row-title">Terminal</div>
-        <div class="native-row-actions">
-          <button id="p3-terminal-spawn-btn" class="native-mini-btn" type="button">Spawn</button>
-          <button id="p3-terminal-write-btn" class="native-mini-btn" type="button">Write</button>
-          <button id="p3-terminal-resize-btn" class="native-mini-btn" type="button">Resize</button>
-          <button id="p3-terminal-terminate-btn" class="native-mini-btn native-danger" type="button">Stop</button>
-        </div>
-      </div>
-      <div class="native-list-row">
-        <div class="native-row-title">Threads</div>
-        <div class="native-row-actions">
-          <button id="p3-thread-turns-btn" class="native-mini-btn" type="button">Turns</button>
-          <button id="p3-thread-search-btn" class="native-mini-btn" type="button">Search</button>
-        </div>
-      </div>
-    `);
-    $('p3-capabilities-btn').onclick = loadP3Capabilities;
-    $('p3-terminal-spawn-btn').onclick = spawnP3Terminal;
-    $('p3-terminal-write-btn').onclick = writeP3Terminal;
-    $('p3-terminal-resize-btn').onclick = resizeP3Terminal;
-    $('p3-terminal-terminate-btn').onclick = terminateP3Terminal;
-    $('p3-thread-turns-btn').onclick = loadP3ThreadTurns;
-    $('p3-thread-search-btn').onclick = searchP3Threads;
-  }
-
-  function loadP3Capabilities() {
-    socket.emit('p3:capabilities', { cwd: serverCwd }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || 'P3 capabilities failed', true);
-      renderNativePanel('Labs', `<pre class="tool-output" style="max-height:220px;">${escHtml(JSON.stringify(ack.capabilities || {}, null, 2))}</pre>`);
-    });
-  }
-
-  function spawnP3Terminal() {
-    const command = promptRequired('Command', 'bash -lc "pwd"');
-    if (command === null) return;
-    const processId = promptRequired('Process id', `term_${Date.now()}`);
-    if (processId === null) return;
-    socket.emit('p3:terminalSpawn', {
-      cwd: serverCwd,
-      processId,
-      command: ['bash', '-lc', command],
-      cols: 100,
-      rows: 30,
-    }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || 'P3 terminal spawn failed', true);
-      appendSystem(`Terminal spawned: ${ack.processId || processId}`, false);
-    });
-  }
-
-  function writeP3Terminal() {
-    const processId = promptRequired('Process id');
-    if (processId === null) return;
-    const text = prompt('Input', '');
-    if (text === null) return;
-    socket.emit('p3:terminalWrite', { cwd: serverCwd, processId, text }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || 'P3 terminal write failed', true);
-      appendSystem(`Terminal write: ${processId}`, false);
-    });
-  }
-
-  function resizeP3Terminal() {
-    const processId = promptRequired('Process id');
-    if (processId === null) return;
-    socket.emit('p3:terminalResize', { cwd: serverCwd, processId, cols: 100, rows: 30 }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || 'P3 terminal resize failed', true);
-      appendSystem(`Terminal resized: ${processId}`, false);
-    });
-  }
-
-  function terminateP3Terminal() {
-    const processId = promptRequired('Process id');
-    if (processId === null) return;
-    socket.emit('p3:terminalTerminate', { cwd: serverCwd, processId }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || 'P3 terminal terminate failed', true);
-      appendSystem(`Terminal stopped: ${processId}`, false);
-    });
-  }
-
-  function loadP3ThreadTurns() {
-    const threadId = promptRequired('Thread id', currentSessionId || '');
-    if (threadId === null) return;
-    socket.emit('p3:threadTurns', { cwd: serverCwd, threadId }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || 'P3 thread turns failed', true);
-      renderNativePanel('Turns', `<pre class="tool-output" style="max-height:220px;">${escHtml(JSON.stringify(ack.turns || [], null, 2))}</pre>`);
-    });
-  }
-
-  function searchP3Threads() {
-    const query = promptRequired('Search query');
-    if (query === null) return;
-    socket.emit('p3:threadSearch', { cwd: serverCwd, query, limit: 20 }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || 'P3 thread search failed', true);
-      const rows = (ack.results || []).map(thread => `<div class="native-list-row">
-        <div class="native-row-title">${escHtml(thread.name || thread.title || thread.preview || thread.id || 'Thread')}</div>
-        <div class="native-row-meta">${escHtml(thread.id || thread.sessionId || '')}</div>
-      </div>`).join('') || '<div class="native-list-row">No results</div>';
-      renderNativePanel('Search', rows);
-    });
-  }
-
-  function handleP3TerminalOutput(payload) {
-    const text = String(payload?.text || '');
-    if (!text) return;
-    appendSystem(`Terminal ${payload?.stream || 'stdout'} ${payload?.processId || ''}: ${text.slice(0, 600)}`, payload?.stream === 'stderr');
-  }
-
-  function handleP3TerminalExit(payload) {
-    appendSystem(`Terminal exited ${payload?.processId || ''}: ${payload?.exitCode ?? 'unknown'}`, Number(payload?.exitCode) !== 0);
-  }
-
-  function handleP3Realtime(payload) {
-    appendSystem(`Realtime ${payload?.event || 'event'}: ${payload?.threadId || currentSessionId || ''}`, payload?.event === 'error');
-  }
-
-  function handleP3RemoteControl(payload) {
-    const status = typeof payload?.status === 'string' ? payload.status : (payload?.status?.type || 'updated');
-    appendSystem(`Remote control ${status}: ${payload?.serverName || ''}`, false);
   }
 
   function openHostConfigPanel() {
@@ -3737,7 +3589,6 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   $('native-devices-btn').onclick = loadDevicesPanel;
   $('native-skills-btn').onclick = loadSkillsPanel;
   $('native-import-btn').onclick = detectExternalAgentConfig;
-  $('native-p3-btn').onclick = openP3Panel;
   $('native-host-config-btn').onclick = openHostConfigPanel;
   // 工具按钮在抽屉里:点任一按钮后关闭抽屉,让主区的数据面板可见
   const nativeControlsRegion = $('native-controls');

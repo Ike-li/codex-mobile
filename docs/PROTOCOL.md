@@ -2,7 +2,7 @@
 
 本文件是 codex-chat-mobile 对 Codex `app-server` JSON-RPC 2.0 协议的维护型参考。仓库 pin 为 `.codex-version` 中的 `0.147.0`；类型与方法事实以 `.protocol/stable/` 的 `generate-ts` 基线为准，桥接行为以 `app-server-host.js`、`app-server-transport.js`、`thread-registry.js` 和 `agent-appserver.js` 为准。
 
-本文只记录项目实际依赖与适配边界，不记录某台开发机某次门禁是否通过。更早的调研底稿位于 [archive/](archive/)；它们不再维护，也不是事实来源。
+本文只记录项目实际依赖与适配边界，不记录某台开发机某次门禁是否通过。
 
 ## 三层集合模型
 
@@ -16,8 +16,8 @@ B2  generate-ts --experimental / Codex 源码     → 包含实验接口
 
 - `generate-ts` 默认过滤带实验标记的请求方法，但不会因此过滤所有相关通知，所以可能出现“通知已导出、启动方法未导出”。
 - `B1 ⊂ B2`；本仓库的 `.protocol/stable/` 固定为 pin 版本的 B1。
-- 项目主干只依赖 B1 中的稳定方法。Labs 是项目自身的产品门控：其中既可能包装 B1 方法，也可能只消费实验通知；不能把“出现在 Labs”解释为“一定不在 B1”。
-- 共享 app-server 只有在 `CODEX_P3_EXPERIMENTAL=1` 时，才在一次性的 `initialize` 中声明 `capabilities.experimentalApi:true`。
+- 项目主干只依赖 B1 中的稳定方法。
+- 共享 app-server 只有在 `CODEX_P3_EXPERIMENTAL=1` 时，才在一次性的 `initialize` 中声明 `capabilities.experimentalApi:true`；当前它唯一影响的是 `thread/settings/update`（collaborationMode）。
 
 `0.147.0` 默认导出集合为：ClientRequest 98、ServerRequest 10、ServerNotification 72、ClientNotification 1。
 
@@ -83,20 +83,6 @@ app-server 发起且必须响应的交互：
 
 常见 item wire `type` 包括 `userMessage`、`agentMessage`、`plan`、`reasoning`、`commandExecution`、`fileChange`、`mcpToolCall`、`dynamicToolCall`、`webSearch`、`imageView`、`enteredReviewMode`、`exitedReviewMode`、`contextCompaction`。只有已由 host 精确路由到 owner runtime 的未知通知才可宽容忽略；无法路由的帧会记录诊断，定向 server request 会 fail-closed。未知 item 转成可见的 `raw_item`，避免静默丢失用户可见工作。
 
-## 实验门控接口
-
-以下能力位于项目 Labs 面板，默认关闭：
-
-| 分组 | 底层协议 | 当前适配 |
-|---|---|---|
-| 网页终端 | `command/exec`、`command/exec/write`、`command/exec/resize`、`command/exec/terminate` 及输出通知 | 映射为 `term_output` / `term_exit`；虽然方法已在 B1，仍由项目 flag 隔离 |
-| 历史分页视图 | `thread/read` | `p3:threadTurns` 返回 `source:"thread/read"`，不调用不存在的独立分页接口 |
-| thread 搜索 | `thread/list(searchTerm)` | `p3:threadSearch` 返回 `source:"thread/list"` |
-| 实时语音 | `thread/realtime/*` 通知 | 仅映射通知，不启动真实音频会话 |
-| 远程控制 | `remoteControl/status/changed` | 仅展示状态，不实现 Codex 官方 pairing |
-
-`experimentalFeature/list` 用作能力探测。Labs 的浏览器入口和 Socket 事件在 flag 关闭时统一返回 `feature_disabled`。
-
 ## 传输与运维约定
 
 ### 一个共享 app-server
@@ -155,10 +141,10 @@ server.js ── ThreadRuntime(instances)
 
 | 方向 | 默认导出 | bridge 字面使用 | 说明 |
 |---|---:|---:|---|
-| Client → Server Request | 98 | 46 | 45 项在基线内，另 1 项是 experimental allowlist 的 `thread/settings/update`；未用能力不会由网关暴露 |
+| Client → Server Request | 98 | 43 | 42 项在基线内，另 1 项是 experimental allowlist 的 `thread/settings/update`；未用能力不会由网关暴露 |
 | Client → Server Notification | 1 | 1 | `initialized` |
 | Server → Client Request | 10 | 7 | 未处理：`attestation/generate`、`item/tool/call`、`mcpServer/elicitation/request` |
-| Server → Client Notification | 72 | 41 | 40 项在基线内，另 1 项是 legacy allowlist 的 `turn/failed` |
+| Server → Client Notification | 72 | 38 | 37 项在基线内，另 1 项是 legacy allowlist 的 `turn/failed` |
 
 「bridge 字面使用」一列统一为 `collectBridgeMethodUsage` 数出的总数，allowlist 项含在内、并在说明列拆开；`0.142.5` 那版表格的 Request 行填的是「在基线内」的数，与列头对不上，这次一并纠正。
 

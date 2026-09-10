@@ -1079,97 +1079,6 @@ test('P2 admin controls call stable app-server methods with protocol params', as
   assert.equal(calls[13].params, undefined);
 });
 
-test('P3 experimental controls use gated app-server methods and isolated envelopes', async () => {
-  const { session, events } = makeSession({ experimentalApi: true });
-  session.sessionId = 'thr_p3';
-  const calls = [];
-  session.request = async (method, params) => {
-    calls.push({ method, params });
-    if (method === 'command/exec') return { exitCode: 0 };
-    if (method === 'thread/read') return { thread: { id: params.threadId, turns: [{ id: 'turn_1', items: [{ id: 'item_1' }] }] } };
-    if (method === 'thread/list') return { data: [{ id: 'thr_hit', title: 'match' }], nextCursor: null };
-    return {};
-  };
-  session.notify = method => calls.push({ method, params: null });
-
-  await session.spawnTerminal({
-    processId: 'term_1',
-    command: ['bash', '-lc', 'echo hi'],
-    cwd: '/tmp/work',
-    size: { cols: 100, rows: 30 },
-  });
-  await session.writeTerminal('term_1', 'ls\n');
-  await session.resizeTerminal('term_1', { cols: 120, rows: 40 });
-  await session.terminateTerminal('term_1');
-  await session.listThreadTurns({ threadId: 'thr_p3' });
-  await session.searchThreads({ query: 'match', limit: 5 });
-  await session.listP3Capabilities();
-
-  assert.deepEqual(calls.map(c => c.method), [
-    'initialize', 'initialized',
-    'command/exec',
-    'command/exec/write',
-    'command/exec/resize',
-    'command/exec/terminate',
-    'thread/read',
-    'thread/list',
-    'experimentalFeature/list',
-  ]);
-  assert.deepEqual(calls[2].params, {
-    processId: 'term_1',
-    command: ['bash', '-lc', 'echo hi'],
-    tty: true,
-    streamStdin: true,
-    streamStdoutStderr: true,
-    cwd: '/tmp/work',
-    size: { cols: 100, rows: 30 },
-  });
-  assert.deepEqual(calls[3].params, {
-    processId: 'term_1',
-    deltaBase64: Buffer.from('ls\n').toString('base64'),
-  });
-  assert.deepEqual(calls[4].params, { processId: 'term_1', size: { cols: 120, rows: 40 } });
-  assert.deepEqual(calls[5].params, { processId: 'term_1' });
-  assert.deepEqual(calls[6].params, { threadId: 'thr_p3', includeTurns: true });
-  assert.deepEqual(calls[7].params, { cwd: '/tmp/work', archived: false, limit: 5, searchTerm: 'match' });
-
-  session.handleNotification('command/exec/outputDelta', {
-    processId: 'term_1',
-    stream: 'stdout',
-    deltaBase64: Buffer.from('hi\n').toString('base64'),
-    capReached: false,
-  });
-  session.handleNotification('process/outputDelta', {
-    processHandle: 'term_2',
-    stream: 'stderr',
-    deltaBase64: Buffer.from('warn\n').toString('base64'),
-    capReached: true,
-  });
-  session.handleNotification('process/exited', {
-    processHandle: 'term_2',
-    exitCode: 2,
-    stdout: '',
-    stdoutCapReached: false,
-    stderr: '',
-    stderrCapReached: true,
-  });
-  session.handleNotification('thread/realtime/sdp', { threadId: 'thr_p3', sdp: 'v=0' });
-  session.handleNotification('thread/realtime/transcript/delta', { threadId: 'thr_p3', delta: 'hello' });
-  session.handleNotification('thread/realtime/error', { threadId: 'thr_p3', error: 'mic failed' });
-  session.handleNotification('remoteControl/status/changed', {
-    status: { type: 'connected' },
-    serverName: 'local',
-    installationId: 'install_1',
-    environmentId: 'env_1',
-  });
-
-  assert.deepEqual(byType(events, 'term_output').map(e => e.payload.text), ['hi\n', 'warn\n']);
-  assert.equal(byType(events, 'term_output').at(-1).payload.capReached, true);
-  assert.equal(byType(events, 'term_exit').at(-1).payload.exitCode, 2);
-  assert.equal(byType(events, 'realtime').map(e => e.payload.event).join(','), 'sdp,transcript_delta,error');
-  assert.equal(byType(events, 'remote_control').at(-1).payload.serverName, 'local');
-});
-
 test('item/commandExecution/outputDelta: streams raw terminal output including ANSI', () => {
   const { session, events } = makeSession();
   session.handleNotification('item/commandExecution/outputDelta', {
@@ -1535,26 +1444,6 @@ test('a disposed runtime is not re-attached by a late response', { timeout: 3000
   host.dispose();
 });
 
-test('isReclaimable refuses while an app-server process is still running', () => {
-  // command/exec 不置 busy、不产生 turn，所以一个跑着 `npm run dev` 的终端在
-  // isReclaimable 眼里完全空闲。回收之后进程仍在 app-server 里跑，网关这边没有
-  // 属主：输出和退出事件全部 unrouted，也再没有路径能 terminate 它。
-  const { session } = makeSession();
-  session.lastActivity = 1_000;
-  const idleSince = 5_000;
-  assert.equal(session.isReclaimable(idleSince), true);
-
-  session.activeProcesses.add('term_1');
-  assert.equal(session.isReclaimable(idleSince), false, '仍有 command/exec 进程时不能回收');
-
-  session.handleNotification('process/exited', { processHandle: 'term_1', exitCode: 0 });
-  // 通知本身会刷新 lastActivity（这是对的），这里只验证进程集合已经清空。
-  session.lastActivity = 1_000;
-  assert.equal(session.isReclaimable(idleSince), true, '进程退出后应重新可回收');
-  session.dispose();
-});
-
-// 真实 app-server（0.142.5）不发 item/reasoning/* 通知——它把 reasoning 作为一个 item
 // 经 item/started|completed 送出：{type:"reasoning", id:"rs_...", summary:[...], content:[...]}。
 // 之前 handleItem 不认这个 type，162 次 reasoning 全部掉进 raw_item 兜底，界面上显示成
 // 「🧾 Raw」而不是 reasoning 卡。
@@ -1770,44 +1659,6 @@ test('轮次终态：turn.status 优先于 status，都没有才当成 completed
 // ---- 进程退出通知的字段归一 ----
 //
 // 上游对进程标识用过两个名字（processHandle / processId），输出字段可能整个缺失。
-// 归一化错了的后果：终端卡片认不出是哪个进程退出的（于是永远停在"运行中"），
-// 或者 stdout 变成 undefined 被渲染成字面量 "undefined"。这一段有 6 个变异存活。
-test('process/exited 的字段归一：两种进程标识都认，输出缺失时给空串', () => {
-  const cases = [
-    ['用 processHandle', { processHandle: 'ph_1', exitCode: 0 }, 'ph_1'],
-    ['用 processId', { processId: 'pid_1', exitCode: 0 }, 'pid_1'],
-    ['两个都有时以 processHandle 为准', { processHandle: 'ph_2', processId: 'pid_2' }, 'ph_2'],
-    ['两个都没有', { exitCode: 1 }, null],
-  ];
-  for (const [label, params, expected] of cases) {
-    const { session, events } = makeSession();
-    session.handleNotification('process/exited', params);
-    assert.equal(byType(events, 'term_exit').slice(-1)[0].payload.processId, expected, label);
-  }
-
-  const { session, events } = makeSession();
-  session.handleNotification('process/exited', { processId: 'p', exitCode: 0 });
-  const [bare] = byType(events, 'term_exit').slice(-1);
-  assert.equal(bare.stdout, undefined);
-  assert.equal(bare.payload.stdout, '', '输出缺失时给空串，不能让 undefined 渲染成字面量');
-  assert.equal(bare.payload.stderr, '');
-  assert.equal(bare.payload.exitCode, 0, '退出码 0 是成功，不能被当成"没有"');
-});
-
-// 截断标记只认严格 true。判反的后果是每条输出都被标成"已截断"（用户以为还有内容没看到），
-// 或者真的截断了却不标（用户把半截输出当成全部，据此做判断）。
-test('输出截断标记只认严格 true', () => {
-  for (const [value, expected] of [[true, true], [false, false], [undefined, false], ['true', false], [1, false]]) {
-    const { session, events } = makeSession();
-    session.handleNotification('process/exited', {
-      processId: 'p', stdoutCapReached: value, stderrCapReached: value,
-    });
-    const [payload] = byType(events, 'term_exit').slice(-1).map(e => e.payload);
-    assert.equal(payload.stdoutCapReached, expected, `stdoutCapReached=${String(value)}`);
-    assert.equal(payload.stderrCapReached, expected, `stderrCapReached=${String(value)}`);
-  }
-});
-
 // ---- 线程状态与 busy ----
 //
 // busy 决定发送按钮是"发送"还是"停止"，也决定队列会不会继续排下去。

@@ -1,13 +1,14 @@
 import { test, expect } from '@playwright/test';
 
-// Labs 仍是实验开关，默认关闭就不该出现在控制栏里。宿主配置不再是特性开关——解锁机制拆除后
-// 它是直达但逐动作确认的普通操作，所以入口常驻可见。
-test('disabled experimental features are absent from the mobile controls', async ({ page }) => {
+// 宿主配置不再是特性开关——解锁机制（源码常量口令、至少三条绕行路径）拆除后，
+// 它是直达但逐动作确认的普通操作，所以入口常驻可见。这条守的是它不要再被藏回开关后面。
+//
+// 2026-09-10：Labs/P3 面板整个删除后，这里不再有任何被开关隐藏的入口。
+test('host config stays reachable instead of hiding behind a feature flag', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#state-label')).not.toHaveText('offline', { timeout: 10000 });
 
   await page.locator('#menu-btn').click();
   await expect(page.locator('#drawer')).toHaveClass(/open/);
-  await expect(page.locator('#native-p3-btn')).toBeHidden();
   await expect(page.locator('#native-host-config-btn')).toBeVisible();
 });
