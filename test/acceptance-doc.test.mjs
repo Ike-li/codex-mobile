@@ -64,15 +64,22 @@ test('文档里的本地图片引用都指向真实文件', () => {
   assert.ok(checked >= 2, `图片扫描器只检出 ${checked} 个本地引用，疑似失配`);
 });
 
-test('文档之间的相对链接都指向真实文件', () => {
+// 扫描面覆盖所有本地链接目标，不只 `.md`。
+// 2026-09-10：上一版正则是 `\(([^)\s#]+\.md)\)`，只认 .md 结尾——于是 PROTOCOL.md 里
+// 那句 `[archive/](archive/)` 在 docs/archive/ 被删掉之后仍然全绿，是人工发现的。
+// 目录链接、指向 LICENSE / package.json 这类无扩展名或非 .md 文件的链接，此前全部
+// 在扫描面之外。existsSync 对目录同样返回 true，所以不需要为目录单独分支。
+test('文档里的本地链接都指向真实文件或目录', () => {
   let checked = 0;
   for (const [docPath, base] of allDocs()) {
-    for (const [, target] of readDoc(docPath).matchAll(/(?<!!)\[[^\]]*\]\(([^)\s#]+\.md)(?:#[^)\s]*)?\)/g)) {
-      if (/^https?:/.test(target)) continue;
+    for (const [, target] of readDoc(docPath).matchAll(/(?<!!)\[[^\]]*\]\(([^)\s]+)\)/g)) {
+      if (/^(https?:|mailto:|#)/.test(target)) continue;
+      const [path] = target.split('#');
+      if (!path) continue;
       checked += 1;
       assert.ok(
-        existsSync(new URL(`${base}/${target}`, import.meta.url)),
-        `${docPath} 指向了不存在的文档 ${target}`,
+        existsSync(new URL(`${base}/${path}`, import.meta.url)),
+        `${docPath} 指向了不存在的 ${path}`,
       );
     }
   }
