@@ -65,19 +65,46 @@ test('full access and host reset become effective only after a new turn', async 
   await page.locator('#msg-input').fill('hello permissions');
   await page.locator('#msg-input').press('Enter');
   await expect(page.locator('.msg.user')).toHaveCount(1);
+  // 必须等到助手回复真的出现，才算这一轮跑完。
+  // 只断言 #state-label 是 idle 不够：turn 尚未开始时它同样是 idle，断言会立刻通过，
+  // 于是下一轮的权限选择和发送可能落在第一轮仍在跑的时候——那时 dispatchUserMessage
+  // 走的是 steerTurnDispatch，而它压根不接收 turn 参数，permission:{mode:'host'}
+  // 会被整个丢掉（不 applyTurnOverrides、不 resolveHostPermissions、
+  // 不 rememberEffectivePermissions）。这正是本用例长期间歇性红的成因。
+  await expect(page.locator('.msg.codex').last()).toContainText('hello permissions');
   await expect(page.locator('#state-label')).toHaveText('idle');
   await expect(page.locator('.error-msg'), 'turn/start 失败会回滚权限覆盖，后面的状态断言就失去意义').toHaveCount(0);
   await page.locator('[data-testid="composer-defaults"]').click();
   await expect(page.locator('#permission-state')).toHaveText('当前已生效');
   await expect(page.locator('#permission-effective')).toContainText('dangerFullAccess');
   await page.locator('[data-permission="host"]').click();
+  // 点击可能被静默吞掉：permission-list 的 handler 里有
+  //   `if (!capability?.enabled) return;`（public/js/app.js）
+  // 按钮的 disabled 属性来自上一次 renderCliSettingsPopovers，而 handler 读的是
+  // 当次的 settingsCapabilities——两者不同步时，按钮看着可点、点了却什么都不发生，
+  // selectedPermission 仍停在 full-access。不钉住这一步，后面所有断言都在替它背锅。
+  await expect(page.locator('[data-permission="host"]'), '点了 host 但没被选中——点击被 capability 门控吞掉了')
+    .toHaveClass(/selected/);
   await page.locator('#session-settings-close').click();
   await page.locator('#msg-input').fill('hello host defaults');
   await page.locator('#msg-input').press('Enter');
   await expect(page.locator('.msg.user')).toHaveCount(2);
+  await expect(page.locator('.msg.codex').last()).toContainText('hello host defaults');
   await expect(page.locator('#state-label')).toHaveText('idle');
   await expect(page.locator('.error-msg'), 'turn/start 失败会回滚权限覆盖，下一句的「主机配置已应用」必然落空').toHaveCount(0);
   await page.locator('[data-testid="composer-defaults"]').click();
+  // 下面那句「主机配置已应用」要求 selectedPermission==='host' **且**
+  // effectivePermissions.source==='host' 同时成立，两者任一不成立都显示同一句
+  // 「所选设置将在下一轮生效」——这正是这个 flaky 一直难定位的原因。
+  //
+  // #permission-effective 的内容就是 JSON.stringify(sessionStatus.effectivePermissions)，
+  // 所以先单独钉住 source 这一半，把二分做完：这条先红 = 服务端没把 source 更新成
+  // host；这条绿而下一条红 = applied 是对的，selectedPermission 被 adopt 改走了。
+  // 用 textContent 轮询而不是 toContainText：此刻 #settings-advanced 还没展开。
+  await expect
+    .poll(async () => (await page.locator('#permission-effective').textContent()) || '',
+      { message: 'effectivePermissions.source 应为 host' })
+    .toMatch(/"source":\s*"host"/);
   await expect(page.locator('#permission-state')).toContainText('主机配置已应用');
   await page.locator('#settings-advanced summary').click();
   await expect(page.locator('#permission-effective')).toContainText('workspaceWrite');
