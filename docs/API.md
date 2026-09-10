@@ -39,7 +39,7 @@
 | `needs-you:snapshot` | — | `{ok:true, revision, needs}`，仅含 pending / unknown 项 |
 | `conn:ping` | — | `{ok:true, t}`；无业务副作用，待审批设备也可调用 |
 
-`user:message` 的可选 `turn` 覆盖当前 runtime 的 CLI 对等项，并写入 `turn/start`：`model`、`effort`、`approvalPolicy`（`untrusted` / `on-failure` / `on-request` / `never`）、`sandbox`（`read-only` / `workspace-write` / `danger-full-access`，会转成 `sandboxPolicy`）、`serviceTier`。非法值会被丢掉，消息本身仍会发送。同一 `clientRequestId` 的指纹包含这些覆盖项。页面上选中「标准」速度档时不带 `serviceTier`——上游通常把标准档表示成未设置态，所以在 wire 上「选了标准」和「没选过」不可区分。
+`user:message` 的可选 `turn.permission` 使用 `{mode:"ask"|"auto-review"|"full-access"|"host"|"custom", custom?}`。custom 包含 approvalPolicy、approvalsReviewer 和 sandbox。服务端按预设生成协议字段并检查主机限制，无效显式权限返回 `invalid_settings`。语义设置随 outbox 保存并参与 clientRequestId 指纹；旧 flat model、effort、approvalPolicy、sandbox、serviceTier 仍兼容。跟随主机配置每轮重新解析当前 cwd 的权限配置，当前运行中的 steer 不修改权限。上游只列加速档时，页面标准速度对应不发送 serviceTier。
 
 `user:message` 的 `text` 上限为 50,000 字符。`attachments` 只能缺省、为 `null` 或为数组；其他类型立即 ACK `invalid_attachments`。`attachments[]` 每项为 `{name, mimeType, data}`，其中 `data` 是严格 base64；最多 10 个、单个 10 MiB、合计 20 MiB。Socket.IO `maxHttpBufferSize` 为 32 MiB，仅用于容纳最大合法附件的 base64/JSON wire 开销，不改变业务上限。文件先写入 0700 的 `.ccm-uploads/`（文件 0600），再转换为 app-server 结构化 `UserInput`：
 
@@ -82,7 +82,7 @@
 | `thread:history` | `threadId`、`cwd` | `{ok:true, thread, messages, source:"thread/read"}` |
 | `thread:archive` / `thread:unarchive` / `thread:delete` | `threadId`、`cwd` | `{ok:true, threadId}` |
 | `thread:rename` | `threadId`、`name`、`cwd` | `{ok:true, threadId, name}` |
-| `thread:collaborationMode` | `mode`（`default` / `plan`）、`threadId`、`cwd` | `{ok:true, mode, applied, deferred?, threadId}`。有 thread 时探测 `thread/settings/update`；方法不可用或尚无 thread 则 `deferred:true`，下一轮 `turn/start` 再带 `collaborationMode` |
+| `thread:collaborationMode` | `mode`（`default` / `plan`）、`threadId`、`cwd` | 兼容实验适配；`applied:false` / `deferred:true` 不代表下一轮会应用。Web Plan 入口禁用，稳定 `turn/start` 不包含 `collaborationMode` |
 | `thread:compact` | `threadId`、`cwd` | `{ok:true, threadId}` |
 | `thread:rollback` | `threadId`、`numTurns`、`cwd` | `{ok:true, thread}` |
 
@@ -101,6 +101,7 @@
 | 事件 | 参数 | ACK |
 |---|---|---|
 | `models:read` | `cwd`、`includeHidden` | `{ok:true, models, nextCursor, capabilities}` |
+| `session-settings:read` | `cwd` | `{ok:true, effective, available:{permissionModes:[{id,enabled,reason}], collaborationModes}, restrictions}`；只返回权限相关字段，读取失败时禁用权限选项 |
 | `fs:readDirectory` | `cwd`、`path`（默认 WORK_DIR） | `{ok:true, entries, path}`；`path` 必须落在工作区内，否则拒绝 |
 | `fs:readFile` | `cwd`、`path` | `{ok:true, dataBase64, path}`；同上 |
 | `devices:list` | — | `{ok:true, devices}`，每项含 `deviceRef`（16 位引用）、`ip`、`userAgent`、`approvedAt`、`lastSeenAt`、`pushSubscribed`、`current` |
@@ -215,7 +216,7 @@ flag 默认关闭；关闭时 ACK 为 `feature_disabled`。
 | `needs_you_changed` | 跨 thread 待办的 opened/resolved/revoked/expired 版本变化 |
 | `status` / `thread_status` / `status_line` | runtime 状态、原生 `thread/status/changed`、git/context 状态栏；host-scope 状态带 `payload.scope:"host"` 与 revision |
 | `thread_event` | archived、unarchived、deleted、name_updated 等原生 thread 变化 |
-| `collaboration_mode` | Chat/Plan 生效或降级为下一轮覆盖项 |
+| `collaboration_mode` | Chat/Plan 的上游确认；只有 `applied:true` 才更新 UI，deferred 不视为已生效 |
 | `user_message` / `queued_message` / `dequeued_message` / `queue_cleared` | 用户输入和内存队列状态 |
 | `message_receipt` | `clientRequestId` 的 queued/submitted/steered/rejected 状态推进 |
 | `text_delta` / `reasoning` | 助手文本增量 / summary 或 full reasoning 增量 |

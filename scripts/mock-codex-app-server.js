@@ -514,6 +514,14 @@ rl.on('line', async (line) => {
         });
         break;
 
+      case 'configRequirements/read':
+        respond(msg.id, { requirements: null });
+        break;
+      case 'config/read':
+        respond(msg.id, { config: { approval_policy: 'on-request', approvals_reviewer: 'user',
+          sandbox_mode: 'workspace-write', sandbox_workspace_write: { network_access: false, writable_roots: [] } },
+        origins: {}, layers: null });
+        break;
       case 'model/list':
         respond(msg.id, {
           data: [

@@ -57,7 +57,8 @@ import {
   effectiveComposerSettings,
   formatModelBadge,
   formatPermissionBadge,
-  formatComposerPermission,
+  permissionModeForSettings,
+  PERMISSION_PRESETS,
   formatComposerModel,
   formatComposerEffort,
   GRANULAR_APPROVAL_KEYS,
@@ -702,12 +703,24 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   let selectedServiceTier = storedCliSettings.serviceTier || '';
   let selectedApproval = storedCliSettings.approvalPolicy || '';
   // null = 未启用细粒度，走三个字符串档；对象 = 五个开关整体替换 approvalPolicy。
-  let granularApproval = null;
+  let granularApproval = storedCliSettings.approvalPolicy?.granular || null;
+  let selectedReviewer = storedCliSettings.approvalsReviewer || 'user';
+  let selectedPermission = permissionModeForSettings(storedCliSettings);
+  let settingsCapabilities = null;
+  let permissionSelectionPending = true;
+  let permissionThreadId = null;
+  const permissionOptions = [
+    { id: 'ask', title: '请求批准', desc: '访问工作区外文件或网络时向你询问', iconName: 'hand' },
+    { id: 'auto-review', title: '帮我批准', desc: '由自动审查评估并批准或拒绝请求', iconName: 'shield' },
+    { id: 'full-access', title: '完全访问', desc: '允许访问本机文件和网络，无需逐次批准', iconName: 'warning' },
+    { id: 'host', title: '跟随主机配置', desc: '下一轮重新读取当前项目的主机权限配置', iconName: 'refresh' },
+  ];
   // 本轮的客观素材：聚合 diff 与已结束的命令。turn 结束时汇总成验收摘要后清空。
   let turnDiff = '';
   let turnCommands = [];
   let selectedSandbox = storedCliSettings.sandbox || '';
-  let selectedMode = storedCliSettings.collaborationMode || '';
+  // 历史本地 Plan 选择不代表上游已应用；只接受本次连接的确认通知。
+  let selectedMode = '';
   let availableModels = [];
 
   const miInput = $('model-input');
@@ -742,6 +755,13 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
       sandbox: selectedSandbox,
       serviceTier: selectedServiceTier,
       collaborationMode: selectedMode,
+      permission: selectedPermission === 'custom'
+        ? { mode: 'custom', custom: {
+          approvalPolicy: granularApproval ? { granular: granularApproval } : selectedApproval || sessionStatus?.approvalPolicy || 'on-request',
+          approvalsReviewer: selectedReviewer,
+          sandbox: selectedSandbox || sessionStatus?.sandbox || 'workspace-write',
+        } }
+        : { mode: selectedPermission },
     });
   }
 
@@ -771,25 +791,41 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     if (permSelect) permSelect.value = selectedApproval;
   }
 
-  function applyCollaborationMode(mode) {
+  function adoptEffectivePermission(applied) {
+    const sandbox = { readOnly: 'read-only', workspaceWrite: 'workspace-write', dangerFullAccess: 'danger-full-access' }[applied?.sandboxPolicy?.type];
+    if (!sandbox || !applied.approvalPolicy) return;
+    selectedApproval = applied.approvalPolicy;
+    granularApproval = applied.approvalPolicy?.granular || null;
+    selectedReviewer = applied.approvalsReviewer || 'user';
+    selectedSandbox = sandbox;
+    selectedPermission = applied.source === 'host' ? 'host' : permissionModeForSettings({
+      approvalPolicy: selectedApproval, approvalsReviewer: selectedReviewer, sandbox,
+    });
+  }
+
+  async function applyCollaborationMode(mode) {
     const next = normalizeCollaborationMode(mode);
-    if (!next) return;
-    selectedMode = next;
-    persistComposerSettings();
-    renderCliSettingsPopovers();
-    if (!isTransportConnected()) return;
-    socket.emit('thread:collaborationMode', withTarget({
+    if (!next) return false;
+    if (!settingsCapabilities?.available?.collaborationModes?.includes(next)) {
+      appendSystem('当前连接不支持切换此会话模式', true);
+      return false;
+    }
+    if (next === selectedMode || (next === 'default' && !selectedMode)) return true;
+    if (!isTransportConnected()) return false;
+    return new Promise(resolve => socket.timeout(5000).emit('thread:collaborationMode', withTarget({
       mode: next,
       cwd: serverCwd,
-    }, viewTarget()), ack => {
-      if (!ack?.ok) {
+    }, viewTarget()), (error, ack) => {
+      if (error || !ack?.ok || !ack.applied) {
         appendSystem(ack?.error || '切换会话模式失败', true);
+        resolve(false);
         return;
       }
       if (ack.mode) selectedMode = ack.mode;
       persistComposerSettings();
       renderCliSettingsPopovers();
-    });
+      resolve(true);
+    }));
   }
 
   function popoverIconHtml(item) {
@@ -802,20 +838,36 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   function renderPopoverItems(container, items, dataAttr, selectedId) {
     if (!container) return;
     container.innerHTML = items.map(item => `
-      <div class="popover-item${item.id === selectedId ? ' selected' : ''}" data-${dataAttr}="${escHtml(item.id)}">
+      <button type="button" class="popover-item${item.id === selectedId ? ' selected' : ''}" data-${dataAttr}="${escHtml(item.id)}" ${item.disabled ? 'disabled' : ''}>
         <span class="popover-item-icon">${popoverIconHtml(item)}</span>
         <div class="popover-item-details">
           <span class="popover-item-title">${escHtml(item.title)}</span>
           ${item.desc ? `<span class="popover-item-desc">${escHtml(item.desc)}</span>` : ''}
         </div>
         <span class="popover-item-check">✓</span>
-      </div>
+      </button>
     `).join('');
   }
 
   function renderCliSettingsPopovers() {
     const modelRecord = currentModelRecord();
     const effective = effectiveTurnSettings();
+    renderPopoverItems($('permission-list'), permissionOptions.map(item => {
+      const capability = settingsCapabilities?.available?.permissionModes?.find(mode => mode.id === item.id);
+      return { ...item, disabled: !capability?.enabled, desc: capability && !capability.enabled ? capability.reason : item.desc };
+    }), 'permission', selectedPermission);
+    renderPopoverItems($('reviewer-list'), [
+      { id: 'user', title: '由我审批' }, { id: 'auto_review', title: '自动审查' },
+    ], 'reviewer', selectedReviewer);
+    const applied = sessionStatus?.effectivePermissions;
+    const requested = buildPermissionPreview();
+    $('permission-state').textContent = selectedPermission === 'host' && applied?.source === 'host'
+      ? '主机配置已应用；下一轮重新读取'
+      : applied && requested === JSON.stringify({
+      approvalPolicy: applied.approvalPolicy, approvalsReviewer: applied.approvalsReviewer,
+      sandbox: applied.sandboxPolicy?.type,
+    }) ? '当前已生效' : '所选设置将在下一轮生效';
+    $('permission-effective').textContent = applied ? JSON.stringify(applied, null, 2) : '等待当前会话返回配置';
     syncAttachAffordance(modelRecord);
     renderPopoverItems($('approval-list'), APPROVAL_OPTIONS, 'approval', effective.approvalPolicy);
     renderPopoverItems($('sandbox-list'), SANDBOX_OPTIONS, 'sandbox', effective.sandbox);
@@ -869,20 +921,15 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
         effective.serviceTier,
       );
     }
-    const bypassList = $('bypass-list');
-    if (bypassList) {
-      const active = selectedApproval === 'never' && selectedSandbox === 'danger-full-access';
-      bypassList.innerHTML = `
-        <div class="popover-item${active ? ' selected' : ''}" data-bypass="1">
-          <span class="popover-item-icon">${icon('skull')}</span>
-          <div class="popover-item-details">
-            <span class="popover-item-title">绕过批准与沙箱</span>
-            <span class="popover-item-desc">危险全开</span>
-          </div>
-          <span class="popover-item-check">✓</span>
-        </div>`;
-    }
+    const customEnabled = settingsCapabilities?.available?.permissionModes?.find(mode => mode.id === 'custom')?.enabled;
+    for (const button of $('settings-advanced').querySelectorAll('button')) button.disabled = !customEnabled;
     updateFloatingBadges();
+  }
+
+  function buildPermissionPreview() {
+    const current = currentTurnSettings();
+    return JSON.stringify({ approvalPolicy: current.approvalPolicy, approvalsReviewer: current.approvalsReviewer,
+      sandbox: { 'read-only': 'readOnly', 'workspace-write': 'workspaceWrite', 'danger-full-access': 'dangerFullAccess' }[current.sandbox] });
   }
 
   // 模型不收图片就把入口禁掉并说明原因——让用户选完照片、上传完再失败，是最差的顺序。
@@ -907,6 +954,13 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   function loadComposerModels() {
     renderCliSettingsPopovers();
     if (!socket.connected) return;
+    const requestedCwd = serverCwd;
+    settingsCapabilities = null;
+    socket.emit('session-settings:read', { cwd: requestedCwd }, ack => {
+      if (serverCwd !== requestedCwd) return;
+      settingsCapabilities = ack?.ok ? ack : null;
+      renderCliSettingsPopovers();
+    });
     socket.emit('models:read', { cwd: serverCwd }, ack => {
       if (!ack?.ok) return;
       availableModels = ack.models || [];
@@ -924,10 +978,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   function updateFloatingBadges() {
     const permTextEl = $('perm-trigger-text');
     if (permTextEl) {
-      permTextEl.textContent = formatComposerPermission({
-        approvalPolicy: selectedApproval || sessionStatus?.approvalPolicy || '',
-        sandbox: selectedSandbox || sessionStatus?.sandbox || '',
-      });
+      permTextEl.textContent = permissionOptions.find(item => item.id === selectedPermission)?.title || '自定义';
     }
 
     const modelTextEl = $('model-trigger-text');
@@ -991,10 +1042,41 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     if (event.target === sessionSettings) closeSessionSettings();
   });
 
+  $('permission-list').addEventListener('click', async event => {
+    const item = event.target.closest('[data-permission]');
+    if (!item || item.disabled) return;
+    const mode = item.dataset.permission;
+    if (mode === 'full-access' && selectedPermission !== mode
+      && !await confirmDialog.confirm({ title: '允许完全访问？', body: '此会话可以访问本机文件和网络，操作无需逐次批准。', confirmText: '允许完全访问' })) return;
+    const capability = settingsCapabilities?.available?.permissionModes?.find(option => option.id === mode);
+    if (!capability?.enabled) return;
+    selectedPermission = mode;
+    permissionSelectionPending = true;
+    const preset = PERMISSION_PRESETS[mode];
+    selectedApproval = preset?.approvalPolicy || '';
+    selectedSandbox = preset?.sandbox || '';
+    selectedReviewer = preset?.approvalsReviewer || 'user';
+    granularApproval = null;
+    persistComposerSettings();
+    renderCliSettingsPopovers();
+    reportPolicyChange(permissionOptions.find(option => option.id === mode)?.title);
+  });
+  $('reviewer-list').addEventListener('click', event => {
+    const item = event.target.closest('[data-reviewer]');
+    if (!item || item.disabled) return;
+    selectedPermission = 'custom';
+    permissionSelectionPending = true;
+    selectedReviewer = item.dataset.reviewer;
+    persistComposerSettings();
+    renderCliSettingsPopovers();
+  });
   $('approval-list')?.addEventListener('click', event => {
     const item = event.target.closest('[data-approval]');
     if (!item) return;
     selectedApproval = item.dataset.approval;
+    permissionSelectionPending = true;
+    selectedPermission = 'custom';
+    granularApproval = null;
     persistComposerSettings();
     renderCliSettingsPopovers();
   });
@@ -1002,13 +1084,8 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     const item = event.target.closest('[data-sandbox]');
     if (!item) return;
     selectedSandbox = item.dataset.sandbox;
-    persistComposerSettings();
-    renderCliSettingsPopovers();
-  });
-  $('bypass-list')?.addEventListener('click', event => {
-    if (!event.target.closest('[data-bypass]')) return;
-    selectedApproval = 'never';
-    selectedSandbox = 'danger-full-access';
+    permissionSelectionPending = true;
+    selectedPermission = 'custom';
     persistComposerSettings();
     renderCliSettingsPopovers();
   });
@@ -1016,6 +1093,8 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     const item = event.target.closest('[data-granular]');
     if (!item) return;
     const key = item.dataset.granular;
+    permissionSelectionPending = true;
+    selectedPermission = 'custom';
     // 第一次点开任意一项就进入细粒度模式；全部关掉则退回三个字符串档，不留一个五项全 false
     // 的空壳——那等于把审批全关，而用户以为自己只是取消了勾选。
     const next = { ...(granularApproval || {}) };
@@ -1024,16 +1103,6 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     persistComposerSettings();
     renderCliSettingsPopovers();
     reportPolicyChange(granularApproval ? '细粒度审批' : '审批档');
-  });
-  $('approval-reset')?.addEventListener('click', () => {
-    // 协议里策略覆盖的语义是 for this turn and subsequent turns，会一直继承。没有这个入口，
-    // 为一个任务临时调松之后所有任务都是松的，而用户不会察觉。
-    selectedApproval = '';
-    selectedSandbox = '';
-    granularApproval = null;
-    persistComposerSettings();
-    renderCliSettingsPopovers();
-    reportPolicyChange('恢复宿主机默认');
   });
   $('model-list')?.addEventListener('click', event => {
     const item = event.target.closest('[data-model]');
@@ -1231,7 +1300,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
         handleThreadStatus(ev.payload);
         break;
       case 'collaboration_mode':
-        if (ev.payload?.mode) {
+        if (ev.payload?.mode && ev.payload?.applied) {
           selectedMode = ev.payload.mode;
           persistComposerSettings();
           renderCliSettingsPopovers();
@@ -1729,6 +1798,18 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   }
 
   function handleStatus(payload) {
+    const changedThread = permissionThreadId && payload?.sessionId && permissionThreadId !== payload.sessionId;
+    if (changedThread) {
+      permissionSelectionPending = false;
+      selectedPermission = 'ask';
+      selectedApproval = 'on-request';
+      selectedReviewer = 'user';
+      selectedSandbox = 'workspace-write';
+      granularApproval = null;
+    }
+    if (payload?.sessionId) permissionThreadId = payload.sessionId;
+    if (!permissionSelectionPending && payload?.effectivePermissions) adoptEffectivePermission(payload.effectivePermissions);
+    if (payload?.reason === 'settings_applied') permissionSelectionPending = false;
     sessionStatus = payload || null;
     if (payload?.sessionId) {
       rememberCurrentThread(payload.sessionId);
@@ -1737,6 +1818,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     renderSessionMeta();
     renderInstanceTabs();
     updateFloatingBadges();
+    renderCliSettingsPopovers();
     checkEmptyState();
   }
 
@@ -3684,7 +3766,11 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     if (interruptPending) return;
     const modeSlash = parseCollaborationModeSlash(inputEl.value);
     if (modeSlash) {
-      applyCollaborationMode(modeSlash.mode);
+      if (!settingsCapabilities?.available?.collaborationModes?.includes(modeSlash.mode)) {
+        appendSystem('当前连接不支持此模式，草稿已保留', true);
+        return;
+      }
+      if (!await applyCollaborationMode(modeSlash.mode)) return;
       inputEl.value = modeSlash.rest;
       applyComposerMode();
       if (!modeSlash.rest && !currentAttachments.length && !currentInputParts.length) return;

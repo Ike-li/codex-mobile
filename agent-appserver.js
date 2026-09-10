@@ -18,6 +18,7 @@ import {
   isUnsupportedCollaborationModeError,
   normalizeCollaborationMode,
   sanitizeTurnOverrides,
+  PERMISSION_PRESETS,
 } from './public/js/cli-settings.js';
 
 const BUFFER_CAP = 500;
@@ -120,16 +121,94 @@ export class ThreadRuntime {
     // 审批/沙箱（仅 app-server 后端）：默认 on-request + workspace-write，可经环境变量覆盖。
     this.approvalPolicy = process.env.CODEX_APPROVAL_POLICY || 'on-request';
     this.sandbox = process.env.CODEX_SANDBOX || 'workspace-write';
+    this.approvalsReviewer = 'user';
+    this.resolvedHostPolicy = null;
     this.turnOverrides = {};
   }
 
   applyTurnOverrides(turn) {
     const clean = sanitizeTurnOverrides(turn);
     if (!Object.keys(clean).length) return clean;
+    if (clean.permission) {
+      for (const key of ['approvalPolicy', 'approvalsReviewer', 'sandbox', 'permission']) delete this.turnOverrides[key];
+      this.resolvedHostPolicy = null;
+    } else if (clean.approvalPolicy || clean.approvalsReviewer || clean.sandbox) {
+      delete this.turnOverrides.permission;
+      this.resolvedHostPolicy = null;
+    }
     this.turnOverrides = { ...this.turnOverrides, ...clean };
     if (clean.approvalPolicy) this.approvalPolicy = clean.approvalPolicy;
     if (clean.sandbox) this.sandbox = clean.sandbox;
+    if (clean.approvalsReviewer) this.approvalsReviewer = clean.approvalsReviewer;
     return clean;
+  }
+
+  async resolveHostPermissions() {
+    if (this.turnOverrides.permission?.mode !== 'host') return;
+    await this.ensureInitialized();
+    const response = await this.request('config/read', { cwd: this.cwd, includeLayers: false });
+    const config = response?.config;
+    const clean = sanitizeTurnOverrides({ approvalPolicy: config?.approval_policy,
+      approvalsReviewer: config?.approvals_reviewer || 'user', sandbox: config?.sandbox_mode });
+    if (!clean.approvalPolicy || !clean.sandbox || !clean.approvalsReviewer) throw new Error('无法解析主机权限配置，请选择明确的权限模式');
+    const wire = buildTurnStartOverrides(clean);
+    const workspace = config?.sandbox_workspace_write;
+    if (clean.sandbox === 'workspace-write' && workspace) {
+      wire.sandboxPolicy = { ...wire.sandboxPolicy,
+        writableRoots: Array.isArray(workspace.writable_roots) ? workspace.writable_roots : [],
+        networkAccess: workspace.network_access === true,
+        excludeTmpdirEnvVar: workspace.exclude_tmpdir_env_var === true,
+        excludeSlashTmp: workspace.exclude_slash_tmp === true };
+    }
+    this.resolvedHostPolicy = wire;
+    this.approvalPolicy = clean.approvalPolicy;
+    this.approvalsReviewer = clean.approvalsReviewer;
+    this.sandbox = clean.sandbox;
+  }
+
+  async readSessionSettings() {
+    await this.ensureInitialized();
+    const results = await Promise.allSettled([
+      this.request('configRequirements/read', undefined),
+      this.request('config/read', { cwd: this.cwd, includeLayers: false }),
+    ]);
+    const requirementsKnown = results[0].status === 'fulfilled'
+      && Object.hasOwn(results[0].value || {}, 'requirements');
+    const requirements = requirementsKnown ? results[0].value.requirements : null;
+    const config = results[1].status === 'fulfilled' ? results[1].value?.config : null;
+    const profilesOnly = Boolean(requirements?.allowedPermissionProfiles);
+    const allowed = preset => (!requirements?.allowedSandboxModes
+      || requirements.allowedSandboxModes.includes(preset.sandbox))
+      && (!requirements?.allowedApprovalPolicies
+        || requirements.allowedApprovalPolicies.some(p => JSON.stringify(p) === JSON.stringify(preset.approvalPolicy)));
+    const modes = Object.entries(PERMISSION_PRESETS).map(([id, preset]) => ({
+      id, enabled: requirementsKnown && !profilesOnly && allowed(preset),
+      reason: !requirementsKnown ? '无法读取主机权限限制' : profilesOnly ? '主机要求使用指定权限配置' : allowed(preset) ? '' : '主机策略不允许此模式',
+    }));
+    const hostKnown = Boolean(config?.approval_policy && config?.sandbox_mode);
+    const hostAllowed = hostKnown && allowed({ approvalPolicy: config.approval_policy, sandbox: config.sandbox_mode });
+    modes.push({ id: 'host', enabled: requirementsKnown && hostAllowed && !profilesOnly,
+      reason: !requirementsKnown ? '无法读取主机权限限制' : !hostKnown ? '无法解析主机默认权限' : profilesOnly ? '暂不支持主机命名权限配置' : !hostAllowed ? '主机策略不允许此默认配置' : '' });
+    modes.push({ id: 'custom', enabled: requirementsKnown && !profilesOnly,
+      reason: profilesOnly ? '主机要求使用指定权限配置' : !requirementsKnown ? '无法读取主机权限限制' : '' });
+    return {
+      effective: this.effectivePermissions || null,
+      available: { permissionModes: modes, collaborationModes: ['default'] },
+      restrictions: requirements ? {
+        allowedApprovalPolicies: requirements.allowedApprovalPolicies,
+        allowedSandboxModes: requirements.allowedSandboxModes,
+      } : null,
+    };
+  }
+
+  rememberEffectivePermissions(response) {
+    if (!response?.approvalPolicy || !response?.sandbox) return;
+    this.effectivePermissions = {
+      approvalPolicy: response.approvalPolicy,
+      approvalsReviewer: response.approvalsReviewer || 'user',
+      sandboxPolicy: response.sandbox,
+      source: this.turnOverrides.permission?.mode === 'host' ? 'host' : 'session',
+    };
   }
 
   // ---- 子进程与 JSON-RPC 底层 ----
@@ -497,21 +576,25 @@ export class ThreadRuntime {
           cwd: this.cwd,
           approvalPolicy: this.approvalPolicy,
           sandbox: this.sandbox,
+          approvalsReviewer: this.approvalsReviewer,
         };
         if (this.turnOverrides.model) resumeParams.model = this.turnOverrides.model;
         if (this.turnOverrides.serviceTier) resumeParams.serviceTier = this.turnOverrides.serviceTier;
         if (process.env.LOG_STDERR) console.error('[appserver] thread/resume', resumeParams);
-        await this.request('thread/resume', resumeParams);
+        const resumed = await this.request('thread/resume', resumeParams);
+        this.rememberEffectivePermissions(resumed);
       } else {
         const startParams = {
           cwd: this.cwd,
           approvalPolicy: this.approvalPolicy,
           sandbox: this.sandbox,
+          approvalsReviewer: this.approvalsReviewer,
         };
         if (this.turnOverrides.model) startParams.model = this.turnOverrides.model;
         if (this.turnOverrides.serviceTier) startParams.serviceTier = this.turnOverrides.serviceTier;
         if (process.env.LOG_STDERR) console.error('[appserver] thread/start', startParams);
         const r = await this.request('thread/start', startParams);
+        this.rememberEffectivePermissions(r);
         this.sessionId = r?.thread?.id ?? r?.threadId ?? null;
         if (this.sessionId) this.onSessionId?.(this.sessionId, this.firstMessage);
       }
@@ -598,6 +681,8 @@ export class ThreadRuntime {
   }
 
   async startTurnDispatch(text, savedAttachments, parts, clientRequestId, turn) {
+    const previousSettings = { turnOverrides: { ...this.turnOverrides }, approvalPolicy: this.approvalPolicy,
+      sandbox: this.sandbox, approvalsReviewer: this.approvalsReviewer, resolvedHostPolicy: this.resolvedHostPolicy };
     this.applyTurnOverrides(turn);
     const turnEpoch = this.turnEpoch;
     this.busy = true;
@@ -615,6 +700,17 @@ export class ThreadRuntime {
     this.emitStatus('turn_started');
 
     try {
+      if (this.turnOverrides.permission) {
+        const settings = await this.readSessionSettings();
+        const mode = settings.available.permissionModes.find(item => item.id === this.turnOverrides.permission.mode);
+        if (!mode?.enabled) throw new Error(mode?.reason || '权限模式不可用');
+        const limits = settings.restrictions;
+        if (mode.id === 'custom' && ((limits?.allowedSandboxModes && !limits.allowedSandboxModes.includes(this.sandbox))
+          || (limits?.allowedApprovalPolicies && !limits.allowedApprovalPolicies.some(p => JSON.stringify(p) === JSON.stringify(this.approvalPolicy))))) {
+          throw new Error('主机策略不允许此自定义权限');
+        }
+      }
+      await this.resolveHostPermissions();
       await this.ensureReady();
       if (this.disposed || this.turnEpoch !== turnEpoch) {
         return {
@@ -631,9 +727,15 @@ export class ThreadRuntime {
         cwd: this.cwd,
         input: buildUserInputs({ text, attachments: savedAttachments, parts }),
         ...buildTurnStartOverrides(this.turnOverrides),
+        ...this.resolvedHostPolicy,
       };
       if (clientRequestId) params.clientUserMessageId = clientRequestId;
       const turnStart = await this.request('turn/start', params);
+      if (params.approvalPolicy && params.sandboxPolicy) {
+        this.rememberEffectivePermissions({ approvalPolicy: params.approvalPolicy,
+          approvalsReviewer: params.approvalsReviewer || this.approvalsReviewer, sandbox: params.sandboxPolicy });
+        this.emitStatus('settings_applied');
+      }
       const turnId = turnStart?.turn?.id ?? turnStart?.turnId ?? null;
       // abort 落在 turn/start 的在途窗口里：turn 已经在 app-server 上起来了，但既没进
       // currentTurnId 的追踪、也不会被后续任何 interrupt 命中——用户会看到「已中断」而
@@ -669,6 +771,7 @@ export class ThreadRuntime {
       this.emitMessageReceipt(outcome);
       return outcome;
     } catch (err) {
+      Object.assign(this, previousSettings);
       this.busy = false;
       this.emit('error', { message: `turn/start 失败：${sanitize(String(err?.message || err))}`, recoverable: true });
       this.emitStatus('turn_start_failed');
@@ -882,6 +985,8 @@ export class ThreadRuntime {
         });
         break;
       case 'thread/settings/updated':
+        this.rememberEffectivePermissions({ ...params.threadSettings, sandbox: params.threadSettings?.sandboxPolicy });
+        this.emitStatus('settings_updated');
         this.emitCollaborationMode(params.threadId, collaborationModeFromThreadSettings(params.threadSettings), {
           applied: true,
         });
@@ -1695,6 +1800,8 @@ export class ThreadRuntime {
       approvalPolicy: this.approvalPolicy,
       sandbox: this.sandbox,
       childRunning: Boolean(this.child),
+      approvalsReviewer: this.approvalsReviewer,
+      effectivePermissions: this.effectivePermissions || null,
       lastActivity: this.lastActivity,
       rpcStats: { ...this.rpcStats }
     };

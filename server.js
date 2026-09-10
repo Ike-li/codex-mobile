@@ -1980,7 +1980,13 @@ io.on('connection', socket => {
     const attachmentFingerprints = clientRequestId
       ? await canonicalAttachmentFingerprints(attachments, decodedAttachments.decoded)
       : [];
-    const turnOverrides = sanitizeTurnOverrides(payload?.turn);
+    let turnOverrides;
+    try {
+      turnOverrides = sanitizeTurnOverrides(payload?.turn);
+    } catch (error) {
+      if (typeof ack === 'function') ack({ ok: false, errorCode: 'invalid_settings', error: error.message, retryable: false });
+      return;
+    }
     const requestFingerprint = clientRequestId
       ? createHash('sha256').update(JSON.stringify({
         text: text.trim(),
@@ -2460,6 +2466,15 @@ io.on('connection', socket => {
       ackOk(ack, { thread: response?.thread || null });
     } catch (err) {
       ackError(ack, err);
+    }
+  });
+
+  on(socket, 'session-settings:read', async (payload = {}, ack) => {
+    try {
+      const ai = ensureControlAgent(payload?.cwd, socket);
+      ackOk(ack, await ai.readSessionSettings());
+    } catch (error) {
+      ackError(ack, error);
     }
   });
 

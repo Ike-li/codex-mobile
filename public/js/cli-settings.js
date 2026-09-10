@@ -365,6 +365,21 @@ export function formatComposerEffort(effort) {
   return optionById(FALLBACK_REASONING_OPTIONS, id)?.title || '';
 }
 
+export const PERMISSION_PRESETS = Object.freeze({
+  ask: { approvalPolicy: 'on-request', approvalsReviewer: 'user', sandbox: 'workspace-write' },
+  'auto-review': { approvalPolicy: 'on-request', approvalsReviewer: 'auto_review', sandbox: 'workspace-write' },
+  'full-access': { approvalPolicy: 'never', approvalsReviewer: 'user', sandbox: 'danger-full-access' },
+});
+
+export function permissionModeForSettings(settings = {}) {
+  if (settings.permission?.mode) return settings.permission.mode;
+  for (const [mode, preset] of Object.entries(PERMISSION_PRESETS)) {
+    if (settings.approvalPolicy === preset.approvalPolicy && settings.sandbox === preset.sandbox
+      && (settings.approvalsReviewer || 'user') === preset.approvalsReviewer) return mode;
+  }
+  return settings.approvalPolicy || settings.sandbox ? 'custom' : 'ask';
+}
+
 export function sanitizeTurnOverrides(input = {}) {
   if (!input || typeof input !== 'object') return {};
   const out = {};
@@ -373,12 +388,36 @@ export function sanitizeTurnOverrides(input = {}) {
   if (effort) out.effort = effort;
   // 细粒度优先：它一旦开启，三个字符串档就不再适用——协议的 approvalPolicy 是联合类型，
   // 同一个字段只能是其中一种形态。
-  const granular = granularApprovalPolicy(input.granularApproval);
+  const granular = granularApprovalPolicy(input.granularApproval || input.approvalPolicy?.granular);
   const approvalPolicy = normalizeApprovalPolicy(input.approvalPolicy);
   if (granular) out.approvalPolicy = granular;
   else if (approvalPolicy) out.approvalPolicy = approvalPolicy;
   const sandbox = normalizeSandbox(input.sandbox);
   if (sandbox) out.sandbox = sandbox;
+  if (['user', 'auto_review', 'guardian_subagent'].includes(input.approvalsReviewer)) {
+    out.approvalsReviewer = input.approvalsReviewer;
+  }
+  if (input.permission !== undefined) {
+    const mode = input.permission?.mode;
+    const preset = Object.hasOwn(PERMISSION_PRESETS, mode || '') ? PERMISSION_PRESETS[mode] : null;
+    if (!preset && mode !== 'host' && mode !== 'custom') throw new Error('Invalid permission mode');
+    delete out.approvalPolicy;
+    delete out.approvalsReviewer;
+    delete out.sandbox;
+    out.permission = { mode };
+    if (preset) Object.assign(out, preset);
+    if (mode === 'custom') {
+      const custom = input.permission.custom;
+      if (!custom || custom.permission !== undefined) throw new Error('Invalid custom permission');
+      const clean = sanitizeTurnOverrides(custom);
+      if (!clean.approvalPolicy || !clean.sandbox || !clean.approvalsReviewer) {
+        throw new Error('Incomplete custom permission');
+      }
+      const values = { approvalPolicy: clean.approvalPolicy, approvalsReviewer: clean.approvalsReviewer, sandbox: clean.sandbox };
+      Object.assign(out, values);
+      out.permission.custom = values;
+    }
+  }
   if (typeof input.serviceTier === 'string' && input.serviceTier.trim()) {
     out.serviceTier = input.serviceTier.trim();
   }
@@ -437,7 +476,7 @@ export function loadCliSettings(storage) {
 
 export function saveCliSettings(storage, settings) {
   if (!storage || typeof storage.setItem !== 'function') return;
-  storage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(sanitizeTurnOverrides(settings)));
+  storage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ version: 2, ...sanitizeTurnOverrides(settings) }));
 }
 
 // 把「存下来的选择」补齐成「当前真正生效的设置」：用户没选过的项回落到服务端 status
@@ -454,7 +493,8 @@ export function effectiveComposerSettings(stored = {}, { status = null, models =
   return {
     ...source,
     model,
-    approvalPolicy: normalizeApprovalPolicy(source.approvalPolicy)
+    approvalPolicy: granularApprovalPolicy(source.approvalPolicy?.granular)
+      || normalizeApprovalPolicy(source.approvalPolicy)
       || normalizeApprovalPolicy(status?.approvalPolicy)
       || '',
     sandbox: normalizeSandbox(source.sandbox)
@@ -471,6 +511,7 @@ export function buildTurnStartOverrides(settings = {}) {
   if (clean.model) out.model = clean.model;
   if (clean.effort) out.effort = clean.effort;
   if (clean.approvalPolicy) out.approvalPolicy = clean.approvalPolicy;
+  if (clean.approvalsReviewer) out.approvalsReviewer = clean.approvalsReviewer;
   if (clean.serviceTier) out.serviceTier = clean.serviceTier;
   const sandboxPolicy = sandboxPolicyFromMode(clean.sandbox);
   if (sandboxPolicy) out.sandboxPolicy = sandboxPolicy;

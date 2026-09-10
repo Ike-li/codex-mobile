@@ -36,9 +36,9 @@
 
 ![模型与思考强度切换](assets/showcase/05-model.png)
 
-## 审批策略与沙箱
+## 权限模式
 
-同一张会话设置 sheet 里切换 CLI 审批策略（`untrusted` / `on-failure` / `on-request` / `never`）和沙箱（`read-only` / `workspace-write` / `danger-full-access`），控制 Codex 能碰什么——安全边界始终握在你手里。
+会话设置提供请求批准、帮我批准、完全访问和跟随主机配置。完全访问需要确认；沙箱与细粒度审批位于折叠的高级设置中。下图为旧版原始审批入口，当前布局以 [Web UI 地图](WEB_UI_MAP.md) 为准。
 
 ![审批策略切换](assets/showcase/06-permissions.png)
 

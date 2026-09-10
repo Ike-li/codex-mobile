@@ -566,9 +566,12 @@ test('session settings panel HTML contracts define compact grid layouts and nece
     'mode-list',
     'approval-list',
     'granular-list',
-    'approval-reset',
+    'permission-list',
+    'settings-advanced',
+    'reviewer-list',
+    'permission-state',
+    'permission-effective',
     'sandbox-list',
-    'bypass-list',
     'model-list',
     'reasoning-list',
     'speed-section-label',
@@ -592,4 +595,3 @@ test('session settings panel HTML contracts define compact grid layouts and nece
   assert.ok(modelIdx < reasoningIdx, '模型应排在思考强度之前');
   assert.ok(reasoningIdx < approvalIdx, '思考强度应排在审批策略之前');
 });
-

@@ -2245,3 +2245,18 @@ body {
 .slash-item:active { background: var(--hover-wash-strong); }
 .popover-item:active { background: var(--hover-wash-strong); }
 .attach-chip-remove:active { transform: scale(0.88); }
+/* Session permission controls retain native keyboard and disabled semantics. */
+#session-settings button.popover-item {
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  width: 100%;
+}
+#session-settings button.popover-item:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+#settings-advanced summary { cursor: pointer; }
+#permission-state { font-size: 12px; color: var(--text-secondary, #737373); }
+#permission-effective { white-space: pre-wrap; overflow-wrap: anywhere; }
+#speed-list[hidden], #speed-section-label[hidden] { display: none; }

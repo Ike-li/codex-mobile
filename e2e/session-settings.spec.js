@@ -1,0 +1,55 @@
+import { test, expect } from '@playwright/test';
+
+test('permission presets require confirmation, persist and keep advanced controls collapsed', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('[data-testid="composer-defaults"]').click();
+  const full = page.locator('[data-permission="full-access"]');
+  await expect(full).toBeEnabled();
+  await expect(page.locator('#granular-list')).toBeHidden();
+  await page.screenshot({ path: test.info().outputPath('settings-overview.png') });
+  await full.click();
+  await expect(page.locator('#confirm-modal')).toBeVisible();
+  await page.locator('#confirm-modal').getByRole('button', { name: /取消/ }).click();
+  await expect(full).not.toHaveClass(/selected/);
+  await page.locator('[data-permission="auto-review"]').click();
+  await expect(page.locator('#perm-trigger-text')).toHaveText('帮我批准');
+  await page.reload();
+  await expect(page.locator('#perm-trigger-text')).toHaveText('帮我批准');
+  await page.locator('[data-testid="composer-defaults"]').click();
+  await expect(page.locator('[data-mode="plan"]')).toBeDisabled();
+  await page.locator('#settings-advanced summary').click();
+  await page.locator('[data-granular="rules"]').click();
+  await expect(page.locator('#perm-trigger-text')).toHaveText('自定义');
+  await page.reload();
+  await page.locator('[data-testid="composer-defaults"]').click();
+  await page.locator('#settings-advanced summary').click();
+  await expect(page.locator('[data-granular="rules"]')).toHaveClass(/selected/);
+  await page.screenshot({ path: test.info().outputPath('session-settings.png') });
+});
+
+test('full access and host reset become effective only after a new turn', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('[data-testid="composer-defaults"]').click();
+  await page.locator('[data-permission="full-access"]').click();
+  await page.locator('#confirm-ok').click();
+  await expect(page.locator('#permission-state')).toContainText('下一轮');
+  await page.locator('#session-settings-close').click();
+  await page.locator('#msg-input').fill('hello permissions');
+  await page.locator('#msg-input').press('Enter');
+  await expect(page.locator('.msg.user')).toHaveCount(1);
+  await expect(page.locator('#state-label')).toHaveText('idle');
+  await page.locator('[data-testid="composer-defaults"]').click();
+  await expect(page.locator('#permission-state')).toHaveText('当前已生效');
+  await expect(page.locator('#permission-effective')).toContainText('dangerFullAccess');
+  await page.locator('[data-permission="host"]').click();
+  await page.locator('#session-settings-close').click();
+  await page.locator('#msg-input').fill('hello host defaults');
+  await page.locator('#msg-input').press('Enter');
+  await expect(page.locator('.msg.user')).toHaveCount(2);
+  await expect(page.locator('#state-label')).toHaveText('idle');
+  await page.locator('[data-testid="composer-defaults"]').click();
+  await expect(page.locator('#permission-state')).toContainText('主机配置已应用');
+  await page.locator('#settings-advanced summary').click();
+  await expect(page.locator('#permission-effective')).toContainText('workspaceWrite');
+  await expect(page.locator('#permission-effective')).not.toContainText('dangerFullAccess');
+});

@@ -76,13 +76,13 @@ Labs 和远程图片默认关闭，需要服务端显式启用。宿主配置没
 ### 可以点击什么
 
 - 主按钮：空闲且有内容时发送；turn 进行中变成停止，精确中断当前目标 turn；进行中再输入时旁边出现第二颗发送钮，把内容 `steer` 进当前 turn 或排进该 runtime FIFO；停止会丢掉未执行的队列；
-- Chat / Plan：会话设置 sheet 里的模式入口；有 thread 时走 `thread/settings/update`，没有 thread 或方法不可用时记为下一轮 `turn/start.collaborationMode`。都不会把 `/chat` 或 `/plan` 写进对话；
+- Chat / Plan：稳定协议尚无已验证的模式写入能力，Plan 入口禁用；输入不支持的 `/plan` 时提示原因并保留草稿，不会把余下任务按 Chat 静默发送。本地历史选中态不视为上游已生效；
 - 模型选择：读取本机 `model/list`，对应 CLI `-m/--model`；
 - 思考强度：使用该模型的 `supportedReasoningEfforts`（`none` / `minimal` / `low` / `medium` / `high` / `xhigh` / `max` / `ultra`），对应 `model_reasoning_effort`；
 - 速度（服务档位）：仅当模型返回 `serviceTiers` 时显示，是一组普通单选。上游通常只列加速档，此时「标准」会补成显式一项排在首位并默认选中，选它等于不下发 `serviceTier`；
-- 权限：审批策略对应 CLI `-a/--ask-for-approval`（`untrusted` / `on-request` / `never`，另含协议值 `on-failure`）；沙箱对应 `-s/--sandbox`（`read-only` / `workspace-write` / `danger-full-access`）。也可一键对应 `--dangerously-bypass-approvals-and-sandbox`。
+- 权限：请求批准使用 `on-request + user + workspace-write`；帮我批准只把审批者改为 `auto_review`；完全访问使用 `never + user + danger-full-access`，选择时需要确认。跟随主机配置每轮按 cwd 读取权限默认值。高级设置保留原始审批策略、审批者、细粒度审批与沙箱；`untrusted` 仅为旧协议兼容值。
 
-这些选择只更新下一条 `user:message` 的 `turn` 覆盖项，不会把 `/model` 或 `/reasoning` 写进对话。没有在页面上选过的项不会发送，因此会继续沿用本机 `config.toml` / 环境变量。
+这些选择更新下一条新 turn 的设置；当前运行中的追加指令不会修改已有 turn 的权限。页面区分下一轮选择和已生效配置。设置保存在版本 2 的浏览器记录中，兼容旧记录并保留模型、思考和速度；细粒度对象可经刷新和可靠投递完整恢复。新选择默认请求批准，只有明确选择跟随主机配置才重新读取主机默认。
 
 模型最终是否可用，以本机 app-server 返回的模型列表和账号权限为准，而不是只看页面上的标签。
 
@@ -225,7 +225,7 @@ receipt ledger 是 gateway 进程内状态，因此项目不保证 gateway 重�
 
 工作区只能在 `.env` 配置的 `WORK_DIR` 和 `WORK_DIRS` allowlist 中切换，不能从页面任意跳到其他目录。`WORK_DIRS` 可以是逗号分隔的目录，也可以是一个 JSON 数组文件（例如 `workdirs.json`）。
 
-模型、思考强度、审批策略和沙箱会作为目标 runtime 的 `turn/start` 覆盖项（`model`、`effort`、`approvalPolicy`、`sandboxPolicy`、`serviceTier`）。它们只作用于目标 runtime。实际支持范围取决于本机 Codex 版本、账号、`model/list` 和 `config.toml`。
+模型、思考强度和权限作为目标 runtime 的 `turn/start` 覆盖项（`model`、`effort`、`approvalPolicy`、`approvalsReviewer`、`sandboxPolicy`、`serviceTier`）。服务端按权限预设生成字段，并检查 `configRequirements/read` 的限制。要求使用命名权限配置的主机目前显示不支持，读取限制失败时不能启用权限选项。跟随主机配置会保留工作区额外可写目录和网络配置，不修改主机配置文件。
 
 ## 原生控制面板
 

@@ -291,14 +291,15 @@
       <button type="button" id="session-settings-close" class="native-mini-btn" style="margin-left:auto">关闭</button>
     </div>
     <div id="session-settings-body" class="workspace-body" style="padding-bottom:8px;">
-      <div class="popover-section-label">模型 <span class="label-sub">-m / --model</span></div>
+      <div class="popover-section-label">如何批准操作</div>
+      <div class="popover-list" id="permission-list"></div>
+      <p id="permission-state" role="status"></p>
+      <div class="popover-section-label">模型</div>
       <div class="popover-list model-list settings-grid-2" id="model-list"></div>
-      <div class="popover-section-label bordered">思考强度 <span class="label-sub">effort</span></div>
+      <div class="popover-section-label bordered">思考强度</div>
       <div class="popover-list reasoning-list settings-wrap-row" id="reasoning-list"></div>
-      <div class="popover-section-label bordered" id="speed-section-label">速度 <span class="label-sub">serviceTier</span></div>
+      <div class="popover-section-label bordered" id="speed-section-label">速度</div>
       <div class="popover-list speed-list settings-wrap-row" id="speed-list"></div>
-      <div class="popover-section-label bordered">审批策略 <span class="label-sub">-a / --ask-for-approval</span></div>
-      <div class="popover-list settings-grid-3" id="approval-list"></div>
       <div class="popover-section-label bordered">会话模式</div>
       <div class="popover-list settings-grid-2" id="mode-list">
         <div class="popover-item selected" data-mode="default">
@@ -309,29 +310,28 @@
           </div>
           <span class="popover-item-check">✓</span>
         </div>
-        <div class="popover-item" data-mode="plan">
+        <button type="button" class="popover-item" data-mode="plan" disabled title="当前稳定协议尚未提供已验证的模式切换能力">
           <span class="popover-item-icon" data-icon="clipboard"></span>
           <div class="popover-item-details">
             <span class="popover-item-title">计划模式 (Plan)</span>
-            <span class="popover-item-desc">只规划提问，不改代码</span>
+            <span class="popover-item-desc">当前连接暂不支持</span>
           </div>
           <span class="popover-item-check">✓</span>
-        </div>
+        </button>
       </div>
+      <details id="settings-advanced">
+      <summary class="popover-section-label bordered">高级设置</summary>
+      <div class="popover-section-label">审批策略</div>
+      <div class="popover-list settings-grid-3" id="approval-list"></div>
+      <div class="popover-section-label">由谁审批</div>
+      <div class="popover-list settings-grid-2" id="reviewer-list"></div>
       <div class="popover-section-label bordered">细粒度审批 <span class="label-sub">granular</span></div>
       <div class="popover-list settings-grid-2" id="granular-list"></div>
       <div class="popover-section-label bordered">沙箱环境 <span class="label-sub">-s / --sandbox</span></div>
       <div class="popover-list settings-grid-3" id="sandbox-list"></div>
-      <div class="settings-actions-row">
-        <div class="popover-item" id="approval-reset" role="button" tabindex="0">
-          <span class="popover-item-icon" data-icon="refresh"></span>
-          <div class="popover-item-details">
-            <span class="popover-item-title">恢复宿主机默认</span>
-            <span class="popover-item-desc">交回 config.toml</span>
-          </div>
-        </div>
-        <div id="bypass-list"></div>
-      </div>
+      <div class="popover-section-label">当前生效配置</div>
+      <pre id="permission-effective" class="tool-output"></pre>
+      </details>
     </div>
   </div>
 </div>

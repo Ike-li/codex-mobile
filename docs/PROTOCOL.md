@@ -76,7 +76,8 @@ app-server 发起且必须响应的交互：
 
 - 账号：`account/read`、`account/usage/read`、`account/rateLimits/read`、`account/login/start`、`account/login/cancel`
 - 模型：`model/list`、`modelProvider/capabilities/read`
-- 会话模式：B1 可读取 `thread/settings/updated.collaborationMode`；写入走实验方法 `thread/settings/update`（探测失败则降级为下一轮 `turn/start.collaborationMode`）
+- 会话模式：B1 可读取 `thread/settings/updated.collaborationMode`；实验写入适配保留，但 Web Plan 入口禁用，稳定 `turn/start` 不发送 `collaborationMode`，不承诺 deferred 会在下一轮应用。
+- 权限设置：`config/read` 按 cwd 解析默认值，`configRequirements/read` 提供限制；权限预设经服务端映射为 `approvalPolicy`、`approvalsReviewer`、`sandboxPolicy`。跟随主机配置显式替换旧覆盖并保留工作区可写目录和网络设置。
 - 只读资源：`fs/readFile`、`fs/readDirectory`、`mcpServerStatus/list`、`skills/list`、`externalAgentConfig/detect`、`externalAgentConfig/import`
 - 需要逐动作确认的宿主机写操作：`config/value/write`、`config/batchWrite`、`fs/writeFile`、`fs/remove`、`fs/copy`、`plugin/install`、`plugin/uninstall`、`marketplace/add`、`marketplace/remove`、`marketplace/upgrade`、`mcpServer/tool/call`、`account/logout`
 

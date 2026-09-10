@@ -4,6 +4,8 @@
 
 ## 必跑门禁
 
+会话设置聚焦用例：`test/permission-settings.test.mjs` 与 `e2e/session-settings.spec.js` 覆盖预设字段、granular 清洗和持久化、outbox、主机默认恢复、失败不污染运行时、外部设置通知及移动端确认操作。
+
 ```bash
 npm run lint
 npm test

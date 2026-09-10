@@ -54,7 +54,8 @@
 | 确认/输入 sheet | 默认 | 删除、重命名、回退、重试 | 替代原生 confirm/prompt | 不持久化 |
 | Skill | 条件于 enabled skills | Skills | skill input | 发送前重新校验 |
 | 模型/思考强度/审批/沙箱 | 条件于账号/模型 | 输入区弹层 | `turn/start` 覆盖项 | 当前 runtime |
-| 会话模式 Chat/Plan | 默认入口；真正写入取决于 app-server | 会话设置 / `/plan` `/chat` | 优先 `thread/settings/update`，否则下一轮 `turn/start.collaborationMode` | 当前 runtime；无 thread 时先记意图 |
+| 会话模式 Chat/Plan | Plan 禁用，等待已验证的写入能力 | 会话设置 / `/plan` `/chat` | 不支持时提示并保留草稿；不伪报下一轮应用 | 只认上游确认，不恢复本地 Plan 选中态 |
+| 权限预设 | 主机限制读取成功且允许该组合 | 会话设置 | 下一轮 `approvalPolicy` / `approvalsReviewer` / `sandboxPolicy` | 浏览器版本 2 记录；服务端检查限制，状态区显示已生效值 |
 | Files/Account/MCP/Skills | 默认只读，取决于 app-server | 抽屉 | 原生数据面板 | 不复制为第二事实源 |
 | 外部配置 Import | 条件于检测结果 | Import | importId/状态事件 | app-server 管理 |
 | PWA | 条件于安全上下文 | 浏览器安装 | standalone 页面 | 浏览器安装状态 |

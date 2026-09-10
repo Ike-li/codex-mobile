@@ -60,5 +60,4 @@ test('settings option icons are names consumed by renderPopoverItems', () => {
   assert.match(appJs, /function renderPopoverItems/);
   assert.match(appJs, /if \(item\.iconName\) return icon\(item\.iconName\)/);
   assert.match(appJs, /iconName:\s*model\.isDefault\s*\?\s*'star'\s*:\s*'bot'/);
-  assert.match(appJs, /icon\('skull'\)/);
 });

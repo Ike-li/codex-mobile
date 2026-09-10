@@ -61,14 +61,14 @@ test.describe('Popovers And Slash Suggestions', () => {
     const defaultsBox = await defaults.boundingBox();
     expect(defaultsBox.height, 'composer chips must stay on one line').toBeLessThanOrEqual(40);
     await expect(page.locator('#model-trigger-text')).not.toHaveText('');
-    await expect(page.locator('#perm-trigger-text')).toHaveText(/按请求|权限|默认/);
+    await expect(page.locator('#perm-trigger-text')).toHaveText('请求批准');
 
     await defaults.click();
     await expect(page.locator('#session-settings')).toBeVisible();
     await expect(page.locator('#mode-list .popover-item[data-mode="default"]')).toBeVisible();
-    await page.locator('#mode-list .popover-item[data-mode="plan"]').click();
-    await expect(page.locator('#mode-list .popover-item[data-mode="plan"]')).toHaveClass(/selected/);
-    await expect(page.locator('#mode-trigger-text')).toHaveText('计划');
+    await expect(page.locator('#mode-list .popover-item[data-mode="plan"]')).toBeDisabled();
+    await expect(page.locator('#mode-trigger-text')).toHaveText('对话');
+    await page.locator('#settings-advanced summary').click();
     await expect(page.locator('.msg.user')).toHaveCount(0);
     await expect(page.locator('#state-label')).toHaveText('idle');
     // 遍历真实选项而不是重述清单：协议增删一个档位不该让这条断言失效或漏检。
@@ -89,8 +89,8 @@ test.describe('Popovers And Slash Suggestions', () => {
     await input.fill('/plan');
     await input.press('Enter');
     await expect(page.locator('.msg.user')).toHaveCount(0);
-    await expect(page.locator('#msg-input')).toHaveValue('');
-    await expect(page.locator('#mode-trigger-text')).toHaveText('计划');
+    await expect(page.locator('#msg-input')).toHaveValue('/plan');
+    await expect(page.locator('#mode-trigger-text')).toHaveText('对话');
 
     expectNoForbiddenRuntimeErrors(runtimeErrors);
   });
@@ -152,6 +152,7 @@ test.describe('细粒度审批与恢复默认', () => {
     await page.locator('[data-testid="composer-defaults"]').click();
     await expect(page.locator('#session-settings')).toBeVisible();
 
+    await page.locator('#settings-advanced summary').click();
     const sandboxApproval = page.locator('#granular-list [data-granular="sandbox_approval"]');
     await expect(sandboxApproval).toBeVisible();
     await expect(sandboxApproval).not.toHaveClass(/selected/);
@@ -163,7 +164,7 @@ test.describe('细粒度审批与恢复默认', () => {
       await expect(page.locator(`#granular-list [data-granular="${key}"]`)).toBeVisible();
     }
 
-    await page.locator('#approval-reset').click();
+    await page.locator('[data-permission="host"]').click();
     await expect(sandboxApproval).not.toHaveClass(/selected/);
   });
 });

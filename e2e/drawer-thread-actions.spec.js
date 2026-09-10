@@ -18,6 +18,7 @@ async function seedOneThread(page) {
   await page.locator('#msg-input').fill('hello');
   await page.locator('#send-btn').click();
   await expect(page.locator('#messages .bubble').first()).toBeVisible({ timeout: 10000 });
+  await expect(page.locator('.msg.codex').filter({ hasText: 'Mock response to: hello' }).last()).toBeVisible({ timeout: 10000 });
   // 必须等这一轮真的结束:turn 收尾会再触发一次列表刷新,不等它就会拿到中间态的行数。
   // (mock server 跨用例共享 threadHistory,基线取错会让相对计数整条崩掉。)
   await expect(page.locator('#send-btn')).toHaveAttribute('data-mode', 'send', { timeout: 10000 });
@@ -30,6 +31,8 @@ async function firstSessionRow(page) {
   if (!alreadyOpen) await expander.click();
   const row = page.locator('#drawer-projects .session-item').first();
   await expect(row).toBeVisible({ timeout: 10000 });
+  // 等新建的当前会话进入列表；旧会话先可见时不能提前记录行数基线。
+  await expect(page.locator('#drawer-projects .session-item.active')).toBeVisible({ timeout: 10000 });
   return row;
 }
 
