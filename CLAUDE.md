@@ -26,6 +26,7 @@ npm run test:e2e
 - `README.md`：项目概览、配置项、本地运行（中文）。
 - `LICENSE`：AGPL-3.0 全文，与 package.json 的 `license` 字段保持一致。
 - `ROADMAP.md`：已完成 / 进行中 / 候选。
+- `docs/FEATURES.md`：功能清单（按最小单位拆分，每条带代码出处）。改功能时同步这里。
 - `docs/ARCHITECTURE.md`：当前架构和安全模型。
 - `docs/PROTOCOL.md`：Codex app-server 协议参考。
 - `docs/API.md`：接口参考（HTTP + Socket.IO 事件签名）。
