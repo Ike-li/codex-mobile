@@ -6,8 +6,10 @@ node_modules/
 *.log
 data/
 workdirs.json
-.codex-chat-approval-audit.jsonl
-.codex-chat-rpc.jsonl
+# 带 * 是因为这两个日志会轮转：只写 .jsonl 时，8.8MB 的 .jsonl.1 会一直
+# 挂在 untracked 列表里等着被 `git add -A` 收进版本库（2026-09-10 实际发生过）。
+.codex-chat-approval-audit.jsonl*
+.codex-chat-rpc.jsonl*
 
 # Generated test/coverage artifacts
 coverage/

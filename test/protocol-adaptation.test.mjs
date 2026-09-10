@@ -4,11 +4,11 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { CodexAppServerSession } from '../agent-appserver.js';
+import { ThreadRuntime } from '../agent-appserver.js';
 
 function makeSession(overrides = {}) {
   const events = [];
-  const session = new CodexAppServerSession({
+  const session = new ThreadRuntime({
     instanceId: 'inst_protocol',
     resumeId: null,
     cwd: '/tmp/work',

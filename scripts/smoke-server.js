@@ -1,5 +1,5 @@
 // scripts/smoke-server.js —— 全栈端到端：启动 server.js + socket.io-client 跑一轮。
-// 验证 server.js 的 Socket.IO 契约、CodexAppServerSession 协同。
+// 验证 server.js 的 Socket.IO 契约、ThreadRuntime 协同。
 // 用法：node scripts/smoke-server.js   （需 codex 已登录；会消耗少量额度）
 import { spawn } from 'node:child_process';
 import { io } from 'socket.io-client';

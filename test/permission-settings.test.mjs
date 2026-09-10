@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { sanitizeTurnOverrides, buildTurnStartOverrides, effectiveComposerSettings,
   saveCliSettings, loadCliSettings, SETTINGS_STORAGE_KEY } from '../public/js/cli-settings.js';
 import { createMessageRequest } from '../public/js/message-request.js';
-import { CodexAppServerSession } from '../agent-appserver.js';
+import { ThreadRuntime } from '../agent-appserver.js';
 
 test('permission presets override conflicting raw values through repeated sanitation', () => {
   const clean = sanitizeTurnOverrides({ permission: { mode: 'auto-review' },
@@ -51,7 +51,7 @@ test('invalid explicit permissions fail instead of silently inheriting previous 
 });
 
 test('permission requirements disable forbidden presets and fail closed when unreadable', async () => {
-  const session = new CodexAppServerSession({ instanceId: 'caps', cwd: '/tmp/work',
+  const session = new ThreadRuntime({ instanceId: 'caps', cwd: '/tmp/work',
     codexBin: process.execPath, onEvent: () => {} });
   session.ensureInitialized = async () => {};
   session.request = async method => {
@@ -70,7 +70,7 @@ test('permission requirements disable forbidden presets and fail closed when unr
 
 test('runtime resets sticky permissions to cwd-resolved host config on the next turn', async () => {
   const calls = [];
-  const session = new CodexAppServerSession({ instanceId: 'permission-test', resumeId: 'thread-test',
+  const session = new ThreadRuntime({ instanceId: 'permission-test', resumeId: 'thread-test',
     cwd: '/tmp/work', codexBin: process.execPath, onEvent: () => {} });
   session.ensureInitialized = async () => {};
   session.request = async (method, params) => {
@@ -95,7 +95,7 @@ test('runtime resets sticky permissions to cwd-resolved host config on the next 
 });
 
 test('forbidden permission cannot start a turn or replace the accepted runtime selection', async () => {
-  const session = new CodexAppServerSession({ instanceId: 'denied', cwd: '/tmp/work',
+  const session = new ThreadRuntime({ instanceId: 'denied', cwd: '/tmp/work',
     codexBin: process.execPath, onEvent: () => {} });
   session.applyTurnOverrides({ permission: { mode: 'ask' } });
   session.ensureInitialized = async () => {};
@@ -113,7 +113,7 @@ test('forbidden permission cannot start a turn or replace the accepted runtime s
 
 test('external thread settings update publishes actual permission changes', () => {
   const events = [];
-  const session = new CodexAppServerSession({ instanceId: 'updated', cwd: '/tmp/work',
+  const session = new ThreadRuntime({ instanceId: 'updated', cwd: '/tmp/work',
     codexBin: process.execPath, onEvent: event => events.push(event) });
   session.handleNotification('thread/settings/updated', { threadId: 'thread', threadSettings: {
     approvalPolicy: 'on-request', approvalsReviewer: 'auto_review', sandboxPolicy: { type: 'workspaceWrite', networkAccess: false },

@@ -43,7 +43,6 @@ npm run test:e2e
 - `docs/TESTING.md`：测试门禁、验收矩阵和手工冒烟清单。
 - `docs/SMOKE_MATRIX.md`：71 条可视化验收用例（判据为可见画面，人与浏览器智能体通用）。
 - `docs/PROTOCOL_UPGRADE.md`：Codex app-server 协议升级流程。
-- `docs/archive/`：历史存档，不再维护，不作为事实来源。
 
 `test/acceptance-doc.test.mjs` 守两类东西：**客观缺陷**（死链、引用了不存在的图片/文档、许可证与 package.json 不一致、CONTRIBUTING 提到的 npm script 不存在）和**具体教训**（每条注释里写明是哪一次踩坑）。
 

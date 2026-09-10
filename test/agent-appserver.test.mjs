@@ -1,4 +1,4 @@
-// test/agent-appserver.test.mjs —— CodexAppServerSession 对 app-server JSON-RPC 通知的映射契约。
+// test/agent-appserver.test.mjs —— ThreadRuntime 对 app-server JSON-RPC 通知的映射契约。
 // 真实通知形状（已探针采样 / 官方 README）：
 //   item/agentMessage/delta  {threadId,turnId,itemId,delta}
 //   item/started|completed    {item:{type,id,...}, threadId, turnId}
@@ -11,11 +11,11 @@
 // Items now covered: agentMessage / commandExecution / fileChange / mcpToolCall / webSearch / reasoning
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CodexAppServerSession } from '../agent-appserver.js';
+import { ThreadRuntime } from '../agent-appserver.js';
 
 function makeSession(overrides = {}) {
   const events = [];
-  const session = new CodexAppServerSession({
+  const session = new ThreadRuntime({
     instanceId: 'inst_test',
     resumeId: null,
     cwd: '/tmp/work',

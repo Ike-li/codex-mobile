@@ -13,7 +13,7 @@ import { watch } from 'node:fs';
 import express from 'express';
 import compression from 'compression';
 import { Server } from 'socket.io';
-import { ThreadRuntime } from './thread-runtime.js';
+import { ThreadRuntime } from './agent-appserver.js';
 import { ThreadRegistry } from './thread-registry.js';
 import { AppServerHost } from './app-server-host.js';
 import { MessageReceiptLedger } from './message-receipt-ledger.js';
@@ -290,9 +290,6 @@ function canonicalInputPartFingerprints(parts) {
     return { kind: part?.kind ?? null };
   });
 }
-// 仅 app-server 后端（长驻 JSON-RPC，原生流式/审批）
-const SessionClass = ThreadRuntime;
-
 // ---- 启动预检 ----
 const versions = { codex: 'unknown' };
 
@@ -1310,7 +1307,7 @@ function createAgent(resumeId = null, cwd = WORK_DIR) {
   }
   const instanceId = newInstanceId();
   let agent;
-  agent = new SessionClass({
+  agent = new ThreadRuntime({
     instanceId,
     resumeId,
     cwd,

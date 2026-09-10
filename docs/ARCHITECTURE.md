@@ -19,7 +19,7 @@ server.js（鉴权、设备、可靠投递、视图路由、恢复、Push）
 - `AppServerTransport` 拥有子进程生命周期、全局 JSON-RPC request id、pending response map 和 NDJSON 帧。
 - `AppServerHost` 只初始化一次共享进程，并按 thread、turn、request、process/login correlation 把入站通知和 server request 交给唯一 owner。无法确定 owner 的定向 server request 会 fail-closed，应答 JSON-RPC 错误而不是广播或挂起。
 - `ThreadRegistry` 维护 `instanceId`、`threadId`、`turnId`、`requestId` 的交叉 ownership；标识未知、过期或指向不同 runtime 时拒绝路由。
-- `ThreadRuntime`（语义入口 `thread-runtime.js`，当前实现在 `agent-appserver.js`）管理单个 thread 的 start/resume/turn、队列、中断、审批和事件映射，不拥有独立 app-server 子进程。
+- `ThreadRuntime`（`agent-appserver.js`）管理单个 thread 的 start/resume/turn、队列、中断、审批和事件映射，不拥有独立 app-server 子进程。
 - `server.js` 管理 HTTP/Socket.IO、工作区 allowlist、每个 socket 的当前视图、消息 receipt、恢复、设备、Push 和 feature flags。
 
 前端由 `public/index.html` 的 HTML shell、外部样式表 `public/css/app.css`、外部主应用模块 `public/js/app.js`，以及 `public/js/` 下的 outbox、ACK、恢复和视图路由小模块组成。它渲染文本增量、thinking/reasoning、命令与工具卡片、diff、审批、提问、状态栏和未知事件的 raw fallback。

@@ -115,8 +115,8 @@ This is a control plane for a real development machine — treat any remote expo
 
 - `server.js` — HTTP/Socket.IO gateway, authentication, receipts, routing, recovery, Push, and needs-you aggregation
 - `app-server-transport.js` / `app-server-host.js` — the single stdio transport and shared app-server multiplexer
-- `thread-runtime.js` / `thread-registry.js` — per-thread semantics and exact ownership/routing
-- `agent-appserver.js` — `ThreadRuntime` implementation and Codex event mapping
+- `thread-registry.js` — exact ownership/routing across instance/thread/turn/request
+- `agent-appserver.js` — `ThreadRuntime`: per-thread semantics and Codex event mapping
 - `public/index.html` — mobile SPA/PWA HTML shell (markup only; no inline `<style>`)
 - `public/css/app.css` — the application stylesheet, linked after the two highlight.js themes so its overrides win
 - `public/js/app.js` — external browser application module: UI interactions, approval cards, and native panels

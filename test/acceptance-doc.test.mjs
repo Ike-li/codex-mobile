@@ -81,22 +81,6 @@ test('双语 README 互相链接，且英文版不混入中文小节', () => {
     'README.md 里出现了中文小节标题 —— 两份 README 被改串了');
 });
 
-test('归档文档仍然存在，且自称不再维护', () => {
-  // 归档目录是「不作为事实来源」的声明地。文件被删掉而 CLAUDE.md 还指着它，
-  // 会让读者以为那里有答案。
-  const archiveReadme = readDoc('../docs/archive/README.md');
-  assert.match(archiveReadme, /不再维护/);
-
-  for (const name of [
-    'codex-app-server-interface-map-gpt-5-codex.md',
-    'codex-app-server-接口地图-合并版-claude-fable-5+gpt-5-codex.md',
-    'codex-app-server-接口对照清单-claude-fable-5.md',
-    'codex-app-server-架构设计-claude-fable-5.md',
-  ]) {
-    assert.ok(existsSync(new URL(`../docs/archive/${name}`, import.meta.url)), `归档文档 ${name} 不见了`);
-  }
-});
-
 test('LICENSE 与 package.json 的许可证声明一致', () => {
   // 这两处不一致是法律层面的真错误，不是文档风格问题。
   assert.match(readDoc('../LICENSE'), /GNU AFFERO GENERAL PUBLIC LICENSE/);
@@ -124,15 +108,14 @@ test('文档里点名的 scripts/ 脚本都真实存在', () => {
   // 此前只守了一种。读者照着去找会扑空，和死链是同一类客观缺陷。
   //
   // 扫描面是递归的而不是手写文档清单：手写清单挡不住「新文档引用了不存在的脚本」，
-  // 而那正是这条要防的形态。docs/archive/ 除外——它自称不再维护、不作为事实来源，
-  // 历史文档指向已删除的脚本是预期内的，为它变红只会逼人去改归档。
+  // 而那正是这条要防的形态。
   const roots = [['..', false], ['../docs', true]];
   const docs = [];
   for (const [rel, recurse] of roots) {
     const walk = dir => {
       for (const entry of readdirSync(new URL(dir, import.meta.url), { withFileTypes: true })) {
         if (entry.isDirectory()) {
-          if (recurse && entry.name !== 'archive') walk(`${dir}/${entry.name}`);
+          if (recurse) walk(`${dir}/${entry.name}`);
           continue;
         }
         if (entry.name.endsWith('.md')) docs.push(`${dir}/${entry.name}`);

@@ -1,7 +1,6 @@
 // agent-appserver.js —— 单 thread 语义 runtime（app-server 是唯一后端）。
 // 生产环境由 AppServerHost/AppServerTransport 共享一个 stdio JSON-RPC 子进程；
 // 本类负责 start/resume/turn、队列、中断、事件映射和审批。
-// CodexAppServerSession 仅保留为迁移期兼容导出名。
 import { closeSync, constants, fstatSync, mkdirSync, openSync, renameSync, rmSync, writeSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { AppServerTransport } from './app-server-transport.js';
@@ -1921,9 +1920,6 @@ function normalizeServerRequestParams(runtime, rpcId, method, params) {
     itemId,
   };
 }
-
-// Compatibility export for existing integrations while the runtime split rolls out.
-export { ThreadRuntime as CodexAppServerSession };
 
 function definedParams(params) {
   return Object.fromEntries(Object.entries(params).filter(([, value]) => value !== undefined));

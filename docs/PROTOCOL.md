@@ -146,7 +146,7 @@ server.js ── ThreadRuntime(instances)
 | JSONL 传输 | 单子进程、frame 编解码、request/response | `app-server-transport.js` |
 | 共享宿主 | 初始化单飞、owner correlation、入站分派 | `app-server-host.js` |
 | 精确索引 | instance/thread/turn/request 唯一所有权 | `thread-registry.js` |
-| thread runtime | 协议方法、队列、状态、事件映射 | `agent-appserver.js` / `thread-runtime.js` |
+| thread runtime | 协议方法、队列、状态、事件映射 | `agent-appserver.js` |
 | 浏览器网关 | HTTP、Socket、设备视图、catch-up、Push/宿主配置 | `server.js` |
 | 可靠请求 | receipt ledger 与客户端 outbox | `message-receipt-ledger.js` / `public/js/message-outbox.js` |
 | 跨会话待办 | needs-you 状态机与精确决议 | `needs-you-registry.js` |

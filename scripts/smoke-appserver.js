@@ -1,14 +1,14 @@
-// scripts/smoke-appserver.js —— 用真实 codex app-server 驱动 CodexAppServerSession 一次。
+// scripts/smoke-appserver.js —— 用真实 codex app-server 驱动 ThreadRuntime 一次。
 // 验证：JSON-RPC 握手 + thread/start + turn/start + 流式 delta + turn/completed。
 // 用法：node scripts/smoke-appserver.js [cwd]   （需 codex 已登录；会消耗少量额度）
-import { CodexAppServerSession } from '../agent-appserver.js';
+import { ThreadRuntime } from '../agent-appserver.js';
 
 const cwd = process.argv[2] || process.cwd();
 const events = [];
 let settle;
 const done = new Promise(r => { settle = r; });
 
-const session = new CodexAppServerSession({
+const session = new ThreadRuntime({
   instanceId: 'smoke',
   cwd,
   codexBin: process.env.CODEX_BIN || 'codex',

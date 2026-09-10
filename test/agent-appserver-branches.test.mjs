@@ -1,4 +1,4 @@
-// test/agent-appserver-branches.test.mjs —— 补齐 CodexAppServerSession 此前未覆盖的
+// test/agent-appserver-branches.test.mjs —— 补齐 ThreadRuntime 此前未覆盖的
 // 错误路径、进程生命周期、JSON-RPC 请求/响应闭环与边界分支。
 // 与 agent-appserver.test.mjs(通知映射契约)互补,聚焦「可观察行为」而非镜像实现:
 // 失败恢复、resume vs 新建、队列满、进程死亡、附件路径不外泄等。
@@ -7,11 +7,11 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { CodexAppServerSession } from '../agent-appserver.js';
+import { ThreadRuntime } from '../agent-appserver.js';
 
 function makeSession(overrides = {}) {
   const events = [];
-  const session = new CodexAppServerSession({
+  const session = new ThreadRuntime({
     instanceId: 'inst_branch',
     resumeId: null,
     cwd: '/tmp/work',
@@ -44,7 +44,7 @@ async function waitFor(predicate, timeoutMs = 100) {
 // ---- 构造默认值 ----
 
 test('constructor: 缺省 codexBin/idleTimeout 使用默认值', () => {
-  const s = new CodexAppServerSession({ instanceId: 'i', cwd: '/tmp', onEvent() {}, onSessionId() {}, onExit() {} });
+  const s = new ThreadRuntime({ instanceId: 'i', cwd: '/tmp', onEvent() {}, onSessionId() {}, onExit() {} });
   assert.equal(s.codexBin, 'codex');
   assert.equal(s.idleTimeoutMs, 600000);
 });
@@ -565,7 +565,7 @@ test('spawnIfNeeded: 启动失败(ENOENT)→ emit error(不可恢复)', async ()
   const events = [];
   let seen;
   const errored = new Promise(res => { seen = res; });
-  const session = new CodexAppServerSession({
+  const session = new ThreadRuntime({
     instanceId: 'enoent', cwd: '/tmp', codexBin: '/nonexistent/codex-xxx', idleTimeoutMs: 600000,
     onEvent: e => { events.push(e); if (e.type === 'error') seen(); },
     onSessionId() {}, onExit() {},

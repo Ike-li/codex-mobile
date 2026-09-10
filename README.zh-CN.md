@@ -101,8 +101,8 @@ npm run test:ci
 
 - `server.js`：HTTP/Socket.IO 网关、鉴权、ACK、路由、恢复、Push 和 needs-you 聚合。
 - `app-server-transport.js` / `app-server-host.js`：唯一 stdio 传输和共享 app-server 多路复用。
-- `thread-runtime.js` / `thread-registry.js`：单 thread 语义与精确 ownership/routing。
-- `agent-appserver.js`：`ThreadRuntime` 实现和 Codex 事件映射。
+- `thread-registry.js`：instance/thread/turn/request 的精确 ownership/routing。
+- `agent-appserver.js`：`ThreadRuntime`——单 thread 语义和 Codex 事件映射。
 - `public/index.html`：移动端 SPA/PWA 的 HTML shell（只有 markup，无内联 `<style>`）。
 - `public/css/app.css`：应用样式表，在两个 highlight.js 主题之后加载，确保覆盖生效。
 - `public/js/app.js`：外部浏览器应用模块，负责 UI 交互、审批卡片和 native 面板。
