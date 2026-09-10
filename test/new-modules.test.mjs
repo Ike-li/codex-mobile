@@ -201,59 +201,6 @@ test('statusline buildStatusLine: null agent yields basic payload', async () => 
   assert.equal(payload.ctx, undefined, 'no ctx without agent usage');
 });
 
-// ---- server.js routing (agents Map) ----
-// 路由逻辑不需要完整 server 启动——直接测核心函数模式
-
-test('server routing: routeCwd pattern validates whitelist', () => {
-  // routeCwd logic: (typeof cwd === 'string' && workDirs.includes(cwd)) ? cwd : WORK_DIR
-  const workDirs = ['/a', '/b'];
-  const WORK_DIR = '/a';
-  const routeCwd = cwd => (typeof cwd === 'string' && workDirs.includes(cwd)) ? cwd : WORK_DIR;
-
-  assert.equal(routeCwd('/a'), '/a');
-  assert.equal(routeCwd('/b'), '/b');
-  assert.equal(routeCwd('/evil'), '/a', 'rejects non-whitelisted dir');
-  assert.equal(routeCwd(null), '/a', 'rejects null');
-  assert.equal(routeCwd(undefined), '/a', 'rejects undefined');
-});
-
-test('server routing: resolveInstanceId pattern returns valid or null', () => {
-  const agents = new Map();
-  agents.set('i1', { instanceId: 'i1', busy: false });
-  const resolveInstanceId = id => agents.has(id) ? id : null;
-
-  assert.equal(resolveInstanceId('i1'), 'i1');
-  assert.equal(resolveInstanceId('i99'), null, 'unknown ids fail closed');
-  assert.equal(resolveInstanceId(null), null);
-});
-
-test('server routing: broadcastInstances shape', () => {
-  const agents = new Map();
-  agents.set('i1', {
-    instanceId: 'i1', sessionId: 's1', cwd: '/work', busy: true,
-    inputQueue: ['msg1'],
-    statusPayload: () => ({ state: 'running', busy: true, queueLength: 1 })
-  });
-  agents.set('i2', {
-    instanceId: 'i2', sessionId: null, cwd: '/work', busy: false,
-    inputQueue: [],
-    statusPayload: () => ({ state: 'idle', busy: false, queueLength: 0 })
-  });
-
-  const list = [];
-  for (const [id, a] of agents) {
-    const sp = typeof a.statusPayload === 'function' ? a.statusPayload('test') : {};
-    list.push({ instanceId: id, sessionId: a.sessionId, cwd: a.cwd, state: sp.state || 'idle', busy: a.busy, queueLength: (a.inputQueue || []).length });
-  }
-
-  assert.equal(list.length, 2);
-  assert.equal(list[0].state, 'running');
-  assert.equal(list[0].busy, true);
-  assert.equal(list[0].queueLength, 1);
-  assert.equal(list[1].state, 'idle');
-  assert.equal(list[1].busy, false);
-});
-
 // ---- agent-appserver.js 结构化附件 ----
 import { ThreadRuntime } from '../agent-appserver.js';
 

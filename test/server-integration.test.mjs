@@ -3773,6 +3773,43 @@ test('user:message forwards CLI turn overrides onto turn/start', async () => {
   }
 });
 
+// routeCwd 决定一条请求落在哪个工作区：不在 workDirs 里就回落到 WORK_DIR。它被 9 处
+// 调用，是工作区隔离的入口。
+//
+// 【为什么补这条】此前 test/new-modules.test.mjs 里有一条名叫
+// 「server routing: routeCwd pattern validates whitelist」的测试，但它不 import server.js
+// ——而是把那行逻辑抄进测试文件再测那个副本：
+//     const routeCwd = cwd => (typeof cwd === 'string' && workDirs.includes(cwd)) ? cwd : WORK_DIR;
+//     assert.equal(routeCwd('/evil'), '/a');
+// 副本和生产代码当时逐字相同，所以它一直是绿的；但生产代码改成什么样它都不会红。
+// 一个安全边界看起来有覆盖、实际没有，比明确没有更危险。那三条自测自写的测试已删。
+//
+// 这条走真实 socket：session:new 的 ACK 直接回传 routeCwd 的结果，是干净的观测点。
+test('非白名单 cwd 回落到 WORK_DIR，白名单内的按原样接受', async () => {
+  const fixture = await startIsolatedServer();
+  try {
+    const socket = await connectSocket(fixture.url, fixture.authToken);
+    try {
+      const evil = await emitWithAck(socket, 'session:new', { cwd: '/evil/not/allowed' });
+      assert.equal(evil.ok, true);
+      assert.equal(evil.cwd, fixture.workDir, '非白名单 cwd 必须回落，不能按原样使用');
+
+      const allowed = await emitWithAck(socket, 'session:new', { cwd: fixture.altWorkDir });
+      assert.equal(allowed.cwd, fixture.altWorkDir, '白名单内的工作区不能被误伤');
+
+      // 非字符串同样回落——payload 来自浏览器，类型不可信。
+      for (const bad of [null, undefined, 42, { path: fixture.altWorkDir }]) {
+        const ack = await emitWithAck(socket, 'session:new', { cwd: bad });
+        assert.equal(ack.cwd, fixture.workDir, `cwd=${JSON.stringify(bad)} 应回落到 WORK_DIR`);
+      }
+    } finally {
+      socket.disconnect();
+    }
+  } finally {
+    await fixture.close();
+  }
+});
+
 // admin 门是安全剧场：解锁口令是源码常量 ENABLE ADMIN，任何能打开页面的设备都能解锁，
 // 而且绕行路径至少三条（让 agent 去做、改 config.toml、走 fs 写入）。按「唯一的安全边界是
 // 设备 token，功能层不设防」拆掉解锁机制，保留逐动作确认——那防的是误触，不是攻击者。
