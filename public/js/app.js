@@ -1873,20 +1873,6 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     });
   }
 
-  // eslint-disable-next-line no-unused-vars -- drawer fork trigger is not in main chrome yet
-  function forkCurrentSession() {
-    socket.emit('session:fork', { instanceId: currentViewingId }, ack => {
-      if (!ack?.ok) {
-        appendSystem(ack?.error || '会话分叉失败', true);
-        return;
-      }
-      applyTargetAck(ack);
-      clearMessages();
-      appendSystem('已分叉当前会话', false);
-      refreshNativeThreads();
-    });
-  }
-
   function paintHeaderChanges(git) {
     const el = $('header-changes');
     if (!el) return;
