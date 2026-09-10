@@ -27,6 +27,7 @@ npm run test:e2e
 - `LICENSE`：AGPL-3.0 全文，与 package.json 的 `license` 字段保持一致。
 - `ROADMAP.md`：已完成 / 进行中 / 候选。
 - `docs/FEATURES.md`：功能清单（按最小单位拆分，每条带代码出处）。改功能时同步这里。
+- `docs/UI_SURFACE.md`：界面上真的看得见的交互面，按屏幕区域拆分；末尾记着「HTML 里有但看不到」的元素。
 - `docs/ARCHITECTURE.md`：当前架构和安全模型。
 - `docs/PROTOCOL.md`：Codex app-server 协议参考。
 - `docs/API.md`：接口参考（HTTP + Socket.IO 事件签名）。
