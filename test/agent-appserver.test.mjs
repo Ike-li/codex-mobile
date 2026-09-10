@@ -410,6 +410,22 @@ test('thread/tokenUsage/updated: → usage', () => {
   assert.deepEqual(byType(events, 'usage')[0].payload.usage, { totalTokens: 10 });
 });
 
+// modelContextWindow 只在完整的 tokenUsage 上，不在 .last 里。状态栏要算
+// 「还剩多少上下文」就必须拿到它——只留 .last 等于把分母丢了。
+test('thread/tokenUsage/updated: 保留 modelContextWindow 给状态栏', () => {
+  const { session, events } = makeSession();
+  session.handleNotification('thread/tokenUsage/updated', {
+    tokenUsage: {
+      last: { totalTokens: 82491 },
+      total: { totalTokens: 250000 },
+      modelContextWindow: 272000,
+    },
+  });
+  assert.equal(session.tokenUsage.modelContextWindow, 272000);
+  assert.equal(session.tokenUsage.last.totalTokens, 82491);
+  assert.equal(byType(events, 'usage').at(-1).payload.tokenUsage.modelContextWindow, 272000);
+});
+
 test('未接管的通知被安全忽略', () => {
   const { session, events } = makeSession();
   for (const m of ['mcpServer/unknown']) {

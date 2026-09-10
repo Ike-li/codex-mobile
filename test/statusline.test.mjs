@@ -100,43 +100,66 @@ test('git 状态: 非 git 目录返回 null', async () => {
   }
 });
 
-// ---- contextCost 测试 (通过 agent.lastUsage) ----
+// ---- contextCost 测试 (通过 agent.tokenUsage) ----
+// 字段名必须对齐 .protocol/stable/v2/TokenUsageBreakdown.ts 的 camelCase。
+// 2026-09-10：这里曾断言 Anthropic Messages API 的 snake_case(input_tokens /
+// cache_creation_input_tokens / cache_read_input_tokens)——那是从旧的
+// `codex exec --json` 方案迁到 app-server 时留下的残留。测试镜像了实现，
+// 于是三个字段在线上全部落到 `undefined || 0`，header 永远显示 0.0k 且不报错。
 
-test('context usage: 计算总 token 和缓存命中率', async () => {
+test('context usage: 用协议的 camelCase 字段算上下文占用', async () => {
   const agent = {
     statusPayload: () => ({ state: 'idle' }),
-    lastUsage: {
-      input_tokens: 1000,
-      cache_creation_input_tokens: 500,
-      cache_read_input_tokens: 300,
+    tokenUsage: {
+      last: {
+        totalTokens: 82491,
+        inputTokens: 80000,
+        cachedInputTokens: 60000,
+        cacheWriteInputTokens: 1200,
+        outputTokens: 2491,
+        reasoningOutputTokens: 800,
+      },
+      total: { totalTokens: 250000 },
+      modelContextWindow: 272000,
     },
   };
   const payload = await buildStatusLine({ agent, cwd: null, versions: null });
   assert.ok(payload.ctx);
-  assert.equal(payload.ctx.totalInputTokens, 1800);
-  assert.equal(payload.ctx.in, 1000);
-  assert.equal(payload.ctx.w, 500);
-  assert.equal(payload.ctx.r, 300);
-  assert.equal(payload.ctx.cacheHitPct, Math.round((300 / 1800) * 100));
+  assert.equal(payload.ctx.contextTokens, 82491);
+  assert.equal(payload.ctx.contextWindow, 272000);
+  assert.equal(payload.ctx.usedPct, Math.round((82491 / 272000) * 100));
 });
 
 test('context usage: 无 usage 时不设置 ctx', async () => {
   const agent = {
     statusPayload: () => ({ state: 'idle' }),
-    lastUsage: null,
+    tokenUsage: null,
   };
   const payload = await buildStatusLine({ agent, cwd: null, versions: null });
   assert.equal(payload.ctx, undefined);
 });
 
-test('context usage: 零 token 时缓存命中率为 0', async () => {
+// 字段名再次漂移时必须是「不显示」，不能是「显示一个可信的 0」——
+// 后者正是上一版 bug 藏了这么久的原因。
+test('context usage: 认不出字段时返回 null 而不是全零', async () => {
   const agent = {
     statusPayload: () => ({ state: 'idle' }),
-    lastUsage: { input_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 },
+    tokenUsage: { last: { input_tokens: 1000, cache_read_input_tokens: 300 } },
+  };
+  const payload = await buildStatusLine({ agent, cwd: null, versions: null });
+  assert.equal(payload.ctx, undefined);
+});
+
+test('context usage: 缺 modelContextWindow 时仍报告绝对值，百分比为 null', async () => {
+  const agent = {
+    statusPayload: () => ({ state: 'idle' }),
+    tokenUsage: { last: { totalTokens: 1800 }, modelContextWindow: null },
   };
   const payload = await buildStatusLine({ agent, cwd: null, versions: null });
   assert.ok(payload.ctx);
-  assert.equal(payload.ctx.cacheHitPct, 0);
+  assert.equal(payload.ctx.contextTokens, 1800);
+  assert.equal(payload.ctx.contextWindow, null);
+  assert.equal(payload.ctx.usedPct, null);
 });
 
 // ---- git 缓存测试 ----

@@ -636,7 +636,7 @@ test('tokenUsage 无 .last → 直接用 tokenUsage', () => {
   const { session, events } = makeSession();
   session.handleNotification('thread/tokenUsage/updated', { tokenUsage: { totalTokens: 42 } });
   assert.deepEqual(byType(events, 'usage').at(-1).payload.usage, { totalTokens: 42 });
-  assert.deepEqual(session.lastUsage, { totalTokens: 42 });
+  assert.deepEqual(session.tokenUsage, { totalTokens: 42 });
 });
 
 test('plan 缺失 → 空数组', () => {

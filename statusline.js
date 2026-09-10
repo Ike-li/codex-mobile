@@ -1,6 +1,9 @@
 // statusline.js —— web 状态栏：git 状态 + context 用量。
 // 纯 JS 组装结构化状态，经 status_line 事件投前端。
 import { execFile } from 'node:child_process';
+// 协议字段名只在 token-usage.js 里出现一次，前端也 import 同一份——
+// 上一版两边各写一遍，statusline 这侧漂到 snake_case 后静默显示了很久的 0。
+import { contextFromTokenUsage } from './public/js/token-usage.js';
 
 // ---- git 状态（per-cwd 短 TTL 缓存）----
 const GIT_TTL_MS = 5_000;
@@ -70,23 +73,6 @@ async function collectGitStatus(cwd) {
   return data;
 }
 
-// ---- context 用量（从 agent session 的 lastUsage 提取）----
-// usage: { input_tokens, cache_creation_input_tokens, cache_read_input_tokens }
-function contextCost(usage) {
-  if (!usage) return null;
-  const in_ = usage.input_tokens || 0;
-  const w = usage.cache_creation_input_tokens || 0;
-  const r = usage.cache_read_input_tokens || 0;
-  const total = in_ + w + r;
-  return {
-    totalInputTokens: total,
-    in: in_,
-    w,
-    r,
-    cacheHitPct: total > 0 ? Math.round((r / total) * 100) : 0
-  };
-}
-
 // ---- 组装 status_line payload ----
 export async function buildStatusLine({ agent, cwd, versions }) {
   const p = { ts: Date.now() };
@@ -109,10 +95,8 @@ export async function buildStatusLine({ agent, cwd, versions }) {
   const git = await gitStatus(cwd);
   if (git) p.git = git;
   // context usage
-  if (agent?.lastUsage) {
-    const ctx = contextCost(agent.lastUsage);
-    if (ctx) p.ctx = ctx;
-  }
+  const ctx = contextFromTokenUsage(agent?.tokenUsage);
+  if (ctx) p.ctx = ctx;
   // versions
   if (versions) p.versions = versions;
   return p;

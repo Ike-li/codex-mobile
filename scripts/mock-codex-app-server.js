@@ -58,6 +58,33 @@ async function sleep(ms) {
   return new Promise(r => setTimeout(r, ms));
 }
 
+// 真实 Codex 在一个 turn 内每次调模型都推一次 tokenUsage：实测日志里
+// 101 条 thread/tokenUsage/updated 对 7 个 turn（约每轮 14 条）。
+// mock 每轮发 3 条就足以暴露「把状态当事件 append」的渲染问题。
+const MOCK_CONTEXT_WINDOW = 272000;
+let mockContextTokens = 0;
+
+function notifyTokenUsage(targetThreadId, turnId) {
+  mockContextTokens += 12000;
+  const breakdown = {
+    totalTokens: mockContextTokens,
+    inputTokens: Math.max(0, mockContextTokens - 500),
+    cachedInputTokens: Math.floor(mockContextTokens * 0.7),
+    cacheWriteInputTokens: 200,
+    outputTokens: 500,
+    reasoningOutputTokens: 120,
+  };
+  notify('thread/tokenUsage/updated', {
+    threadId: targetThreadId,
+    turnId,
+    tokenUsage: {
+      last: breakdown,
+      total: { ...breakdown, totalTokens: mockContextTokens * 2 },
+      modelContextWindow: MOCK_CONTEXT_WINDOW,
+    },
+  });
+}
+
 async function simulateSlowTurn(input, targetThreadId = threadId) {
   turnCount++;
   const turnId = `turn_${turnCount}`;
@@ -140,6 +167,11 @@ async function simulateTurn(input, targetThreadId = threadId) {
     threadId: targetThreadId, turnId,
     item: { type: 'agentMessage', id: `msg_${turnCount}`, text: responseText }
   });
+
+  // 一个 turn 内多次用量更新（工具循环的每一步都会推）
+  notifyTokenUsage(targetThreadId, turnId);
+  notifyTokenUsage(targetThreadId, turnId);
+  notifyTokenUsage(targetThreadId, turnId);
 
   // Complete the turn
   notify('turn/completed', {

@@ -32,6 +32,7 @@ import { createTranscriptStream } from '/js/transcript-stream.js';
 import { commandCard, fileChangeCard } from '/js/tool-cards.js';
 import { resolveConnectionBanner, resolveInsecureTransportBanner } from '/js/connection-banner.js';
 import { formatRttChip, formatWorkspaceChangeBadge } from '/js/header-chrome.js';
+import { contextFromTokenUsage, formatContextMeter } from '/js/token-usage.js';
 import { createConfirmController } from '/js/confirm-dialog.js';
 import { threadActionConfirm, threadActionErrorMessage } from '/js/thread-actions.js';
 import { summarizeTextChange } from '/js/file-diff-summary.js';
@@ -94,6 +95,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   const stateLabel = $('state-label');
   const sessionMetaEl = $('session-meta');
   const statusDetail = $('status-detail');
+  const contextMeterEl = $('context-meter');
   const drawerOverlay = $('drawer-overlay');
   const drawer = $('drawer');
 
@@ -1913,9 +1915,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
       if (g.insertions || g.deletions) gitStr += ` +${g.insertions}/-${g.deletions}`;
       parts.push(gitStr);
     }
-    if (payload.ctx) {
-      parts.push(`${(payload.ctx.totalInputTokens / 1000).toFixed(1)}k`);
-    }
+    if (payload.ctx) renderContextMeter(payload.ctx);
     if (payload.sessionId) {
       parts.push(`${(payload.sessionId || '').slice(0, 8)}`);
     }
@@ -1991,10 +1991,20 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     appendSystem(`External config import ${payload?.status || 'updated'}: ${payload?.importId || ''}`, false);
   }
 
+  // token 用量是状态不是事件：`last.totalTokens` 是当前上下文的快照，每次请求
+  // 都重发全部历史所以单调递增，compact 后又会掉下来。一个 turn 内会推十几次
+  // （实测 101 条对 7 个 turn）。原地更新 composer 上的 meter，不往消息流里追加。
   function handleUsage(payload) {
-    const usage = payload?.usage || {};
-    const total = usage.totalTokens || usage.total_tokens || usage.total || null;
-    if (total) appendSystem(`Token usage: ${total}`, false);
+    const ctx = contextFromTokenUsage(payload?.tokenUsage);
+    if (ctx) renderContextMeter(ctx);
+  }
+
+  // 服务端 status_line 每 4 秒推一次 ctx；本地 tokenUsage 事件更快，两边都调这里。
+  function renderContextMeter(ctx) {
+    const meter = formatContextMeter(ctx);
+    contextMeterEl.hidden = !meter.visible;
+    contextMeterEl.textContent = meter.label;
+    contextMeterEl.dataset.tone = meter.tone;
   }
 
   function renderSessionMeta() {

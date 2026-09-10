@@ -955,8 +955,12 @@ export class ThreadRuntime {
         this.handleItem(params.item, true);
         break;
       case 'thread/tokenUsage/updated':
-        this.lastUsage = params.tokenUsage?.last ?? params.tokenUsage;
-        this.emit('usage', { usage: params.tokenUsage?.last ?? params.tokenUsage });
+        // 存完整的 ThreadTokenUsage：modelContextWindow 只在顶层，状态栏要用它做分母。
+        this.tokenUsage = params.tokenUsage ?? null;
+        this.emit('usage', {
+          usage: params.tokenUsage?.last ?? params.tokenUsage,
+          tokenUsage: this.tokenUsage,
+        });
         break;
       case 'thread/status/changed':
         if (params.threadId && this.sessionId && params.threadId !== this.sessionId) break;
