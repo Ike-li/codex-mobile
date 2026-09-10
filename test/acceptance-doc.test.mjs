@@ -22,15 +22,35 @@ const testingDoc = readDoc('../docs/TESTING.md');
 // 一、客观缺陷：链接和引用必须解析得到
 // ---------------------------------------------------------------------------
 
-test('文档里的本地图片引用都指向真实文件', () => {
-  const targets = [
-    ['../README.md', '..'],
-    ['../README.zh-CN.md', '..'],
-    ['../docs/SHOWCASE.md', '../docs'],
-  ];
+// 扫描面是递归的而不是手写清单：手写清单在文档增删时会静默失配，而 2026-09-10
+// 那次把 docs/ 从 16 份砍到 6 份，手写清单里有 6 个条目直接 ENOENT。
+function allDocs() {
+  const found = [];
+  const walk = (dir, base) => {
+    for (const entry of readdirSync(new URL(dir, import.meta.url), { withFileTypes: true })) {
+      if (entry.isDirectory()) {
+        walk(`${dir}/${entry.name}`, `${base}/${entry.name}`);
+      } else if (entry.name.endsWith('.md')) {
+        found.push([`${dir}/${entry.name}`, base]);
+      }
+    }
+  };
+  for (const [dir, base] of [['..', '..'], ['../docs', '../docs']]) {
+    if (dir === '..') {
+      // 根目录不递归：node_modules、.git 之类不该进来。
+      for (const entry of readdirSync(new URL(dir, import.meta.url), { withFileTypes: true })) {
+        if (!entry.isDirectory() && entry.name.endsWith('.md')) found.push([`${dir}/${entry.name}`, base]);
+      }
+    } else {
+      walk(dir, base);
+    }
+  }
+  return found;
+}
 
+test('文档里的本地图片引用都指向真实文件', () => {
   let checked = 0;
-  for (const [docPath, base] of targets) {
+  for (const [docPath, base] of allDocs()) {
     for (const [, target] of readDoc(docPath).matchAll(/!\[[^\]]*\]\(([^)\s]+)/g)) {
       if (/^https?:/.test(target)) continue;
       checked += 1;
@@ -41,23 +61,12 @@ test('文档里的本地图片引用都指向真实文件', () => {
     }
   }
   // 扫描器本身失配时上面的循环会平凡通过。这条确保它真的扫到了东西。
-  assert.ok(checked >= 8, `图片扫描器只检出 ${checked} 个本地引用，疑似失配`);
+  assert.ok(checked >= 2, `图片扫描器只检出 ${checked} 个本地引用，疑似失配`);
 });
 
 test('文档之间的相对链接都指向真实文件', () => {
-  const docs = [
-    ['../README.md', '..'],
-    ['../README.zh-CN.md', '..'],
-    ['../CONTRIBUTING.md', '..'],
-    ['../SECURITY.md', '..'],
-    ['../docs/TESTING.md', '../docs'],
-    ['../docs/SMOKE_MATRIX.md', '../docs'],
-    ['../docs/TROUBLESHOOTING.md', '../docs'],
-    ['../docs/REMOTE_ACCESS.md', '../docs'],
-  ];
-
   let checked = 0;
-  for (const [docPath, base] of docs) {
+  for (const [docPath, base] of allDocs()) {
     for (const [, target] of readDoc(docPath).matchAll(/(?<!!)\[[^\]]*\]\(([^)\s#]+\.md)(?:#[^)\s]*)?\)/g)) {
       if (/^https?:/.test(target)) continue;
       checked += 1;
@@ -67,18 +76,7 @@ test('文档之间的相对链接都指向真实文件', () => {
       );
     }
   }
-  assert.ok(checked >= 15, `链接扫描器只检出 ${checked} 条本地链接，疑似失配`);
-});
-
-test('双语 README 互相链接，且英文版不混入中文小节', () => {
-  const readmeEn = readDoc('../README.md');
-  const readmeZh = readDoc('../README.zh-CN.md');
-
-  assert.match(readmeEn, /\((?:\.\/)?README\.zh-CN\.md\)/, 'README.md 必须链到中文版');
-  assert.match(readmeZh, /\((?:\.\/)?README\.md\)/, 'README.zh-CN.md 必须链回英文版');
-  // 两份 README 曾被同一次编辑改串。语言混入是客观错误，不是措辞偏好。
-  assert.doesNotMatch(readmeEn, /^## (当前形态|本地运行|常用命令|核心文件|文档规则)$/m,
-    'README.md 里出现了中文小节标题 —— 两份 README 被改串了');
+  assert.ok(checked >= 8, `链接扫描器只检出 ${checked} 条本地链接，疑似失配`);
 });
 
 test('LICENSE 与 package.json 的许可证声明一致', () => {
@@ -88,44 +86,26 @@ test('LICENSE 与 package.json 的许可证声明一致', () => {
   assert.match(readDoc('../README.md'), /AGPL-3\.0/, 'README.md 必须声明许可证');
 });
 
-test('CONTRIBUTING 列出的门禁命令与 package.json 的脚本真实存在', () => {
-  // 贡献者会照抄这些命令。指向不存在的 script 是可执行的错误，不是措辞。
-  const contributing = readDoc('../CONTRIBUTING.md');
+test('文档里点名的 npm script 都真实存在', () => {
+  // README 里的命令会被照抄执行。指向不存在的 script 是可执行的错误，不是措辞。
   const scripts = JSON.parse(readDoc('../package.json')).scripts;
-
-  const cited = [...contributing.matchAll(/npm run ([a-z0-9:]+)/g)].map(m => m[1]);
-  assert.ok(cited.length >= 3, `CONTRIBUTING.md 只提到 ${cited.length} 条 npm run 命令，疑似扫描失配`);
-  for (const name of new Set(cited)) {
-    assert.ok(scripts[name], `CONTRIBUTING.md 让贡献者跑 npm run ${name}，但 package.json 里没有这个脚本`);
+  let checked = 0;
+  for (const [docPath] of allDocs()) {
+    for (const [, name] of readDoc(docPath).matchAll(/npm run ([a-z0-9:]+)/g)) {
+      checked += 1;
+      assert.ok(scripts[name], `${docPath} 让人跑 npm run ${name}，但 package.json 里没有这个脚本`);
+    }
   }
-  assert.match(contributing, /npm test/, 'CONTRIBUTING.md 必须写明单测入口');
+  assert.ok(checked >= 4, `npm script 扫描器只检出 ${checked} 处，疑似失配`);
 });
 
 test('文档里点名的 scripts/ 脚本都真实存在', () => {
-  // 【为什么上面那条抓不到】CONTRIBUTING.md 一度让贡献者去看 `scripts/check-coverage.js`
-  // 判断覆盖率门禁——那个文件不存在，只有 check-coverage-delta.js。上面那条扫的是
-  // 命令名（/npm run ([a-z0-9:]+)/），文件路径完全在它视野外。同一份文档里两种引用形态，
+  // 【为什么上面那条抓不到】文档一度让人去看 `scripts/check-coverage.js` 判断覆盖率
+  // 门禁——那个文件不存在，只有 check-coverage-delta.js。上面那条扫的是命令名
+  // （/npm run ([a-z0-9:]+)/），文件路径完全在它视野外。同一份文档里两种引用形态，
   // 此前只守了一种。读者照着去找会扑空，和死链是同一类客观缺陷。
-  //
-  // 扫描面是递归的而不是手写文档清单：手写清单挡不住「新文档引用了不存在的脚本」，
-  // 而那正是这条要防的形态。
-  const roots = [['..', false], ['../docs', true]];
-  const docs = [];
-  for (const [rel, recurse] of roots) {
-    const walk = dir => {
-      for (const entry of readdirSync(new URL(dir, import.meta.url), { withFileTypes: true })) {
-        if (entry.isDirectory()) {
-          if (recurse) walk(`${dir}/${entry.name}`);
-          continue;
-        }
-        if (entry.name.endsWith('.md')) docs.push(`${dir}/${entry.name}`);
-      }
-    };
-    walk(rel);
-  }
-
   let checked = 0;
-  for (const docPath of docs) {
+  for (const [docPath] of allDocs()) {
     // 路径段要允许多级：门禁在 scripts/gates/ 下，只认单层会让那三个引用静默不被检查——
     // 而扫描面收窄不会让塌陷断言变红（其余引用照样够数），是这条自己差点犯的错。
     for (const [, target] of readDoc(docPath).matchAll(/\b(scripts\/(?:[A-Za-z0-9._-]+\/)*[A-Za-z0-9._-]+\.(?:js|mjs|sh))/g)) {
@@ -137,7 +117,9 @@ test('文档里点名的 scripts/ 脚本都真实存在', () => {
     }
   }
   // 扫到 0 个和「全都存在」在断言上无法区分，前者意味着这道检查已经失明。
-  assert.ok(checked >= 12, `脚本引用扫描器只检出 ${checked} 处，疑似失配`);
+  // 阈值 12 → 6：2026-09-10 把 docs/ 从 16 份砍到 6 份，实际引用数从 12 降到 8。
+  // 留余量是因为这条要区分的是「失明(0)」和「正常」，不是把当前数字焊死。
+  assert.ok(checked >= 6, `脚本引用扫描器只检出 ${checked} 处，疑似失配`);
 });
 
 // ---------------------------------------------------------------------------
@@ -149,8 +131,7 @@ test('文档里点名的 scripts/ 脚本都真实存在', () => {
 // 这里不再切片比对标题（上一版靠精确标题切段落，改一个字就崩），只守两件事：
 // 提到了首选方案，且给了其他方案的去处。
 test('入门路径的首选方案唯一，其余方案有统一去处', () => {
-  for (const path of ['../README.md', '../README.zh-CN.md',
-    '../docs/GETTING_STARTED.md', '../docs/GUIDE.md']) {
+  for (const path of ['../README.md']) {
     const doc = readDoc(path);
     assert.match(doc, /Tailscale Serve/, `${path} 必须给出首选的手机接入方案`);
     assert.match(doc, /REMOTE_ACCESS\.md/, `${path} 必须把其他代理方案指向 REMOTE_ACCESS.md`);
@@ -171,7 +152,7 @@ test('入门路径的首选方案唯一，其余方案有统一去处', () => {
 // public/js/app.js（只走 websocket，RFC 6455 要求 WS 握手一律带 Origin），
 // 行为由 e2e/remote-origin-handshake.spec.js 守着；这里守的是**排查建议不再合并这两者**。
 test('origin_required 与 origin_not_allowed 被记成两个不同的失败', () => {
-  for (const name of ['TROUBLESHOOTING.md', 'REMOTE_ACCESS.md']) {
+  for (const name of ['REMOTE_ACCESS.md']) {
     const doc = readDoc(`../docs/${name}`);
     for (const code of ['origin_required', 'origin_not_allowed']) {
       assert.ok(doc.includes(code), `${name} 没有提到 ${code}`);
@@ -200,72 +181,3 @@ test('测试文档记录无头 Linux 的验收路径', () => {
   }
 });
 
-// ---------------------------------------------------------------------------
-// 三、可视化验收文档的方法论约束
-//
-// SMOKE_MATRIX.md 的全部价值来自「判据是肉眼可见的画面」这一条。一旦判据里混进
-// DOM 检查，它就退化成一份没人能手工执行的开发者脚本，而那正是 E2E 已经在做的事。
-// 所以这里守的不是它长什么样，是它**还能不能被一个人照着执行**。
-// ---------------------------------------------------------------------------
-
-test('可视化用例的判据是画面，不是 DOM 检查', () => {
-  const doc = readDoc('../docs/SMOKE_MATRIX.md');
-  const blocks = doc.split(/^#### VC-/m).slice(1);
-  assert.ok(blocks.length >= 55, `只有 ${blocks.length} 条可视化用例，疑似解析失配`);
-
-  const ids = blocks.map(b => b.slice(0, 6));
-  assert.equal(new Set(ids).size, ids.length, '存在重复的用例编号');
-
-  for (const block of blocks) {
-    const id = block.slice(0, 6);
-
-    // 四件套缺一条就不能被照着执行。
-    for (const field of ['**覆盖点**', '**前置**', '**步骤**', '**看到什么**', '**判定**', '**定位参考**']) {
-      assert.ok(block.includes(field), `VC-${id} 缺少 ${field}`);
-    }
-
-    // selector 只允许待在「定位参考」那一行供自动化定位用，不能当判据。
-    const seen = block.indexOf('**看到什么**');
-    const anchor = block.indexOf('**定位参考**');
-    assert.ok(seen >= 0 && anchor > seen, `VC-${id} 段落顺序不对`);
-    const verdict = block.slice(seen, anchor);
-    for (const banned of ['localStorage', 'querySelector', 'getComputedStyle', 'IndexedDB',
-      'offsetParent', 'classList', 'dataset.']) {
-      assert.ok(!verdict.includes(banned),
-        `VC-${id} 的判据里出现了 ${banned} —— 判据必须是肉眼可见的画面，不是 DOM 检查`);
-    }
-  }
-});
-
-// 上一版这两条的前置写的是「需要第二台设备」「服务端配置允许远程接入」，于是它们连着两轮
-// 被整条跳过 —— 而 VC-A02 恰恰是唯一一条用肉眼守设备闸的用例（未批准的设备不该看到任何
-// 会话内容）。更糟的是那个前置是错的：真搬第二台设备来、走明文 HTTP，照样是 426
-// https_required，压根到不了配对画面。所以前置必须落到**可照抄的配置项名**上。
-// 配方本身由 test/server-security.test.mjs 的两条测试守着，加了新闸会先在那边红。
-test('远程接入用例的前置写明配置项，而不是含糊指向服务端配置', () => {
-  const doc = readDoc('../docs/SMOKE_MATRIX.md');
-  const blocks = new Map(doc.split(/^#### (?=VC-)/m).slice(1).map(b => [b.slice(0, 6), b]));
-
-  for (const id of ['VC-A02', 'VC-H05']) {
-    const block = blocks.get(id);
-    assert.ok(block, `${id} 不见了`);
-    for (const knob of ['HOST', 'AUTH_TOKEN', 'CODEX_ALLOW_INSECURE_REMOTE', 'CODEX_ALLOWED_ORIGINS']) {
-      assert.ok(block.includes(knob), `${id} 的前置没写 ${knob}，照着它配不出能跑的环境`);
-    }
-  }
-
-  // J01 卡在真 HTTPS 上，ALLOW_INSECURE 对它无效——Push API 要的是浏览器侧的 secure
-  // context，不是服务端放行。不写清楚，下一个人会拿 ALLOW_INSECURE 再试一次。
-  assert.match(blocks.get('VC-J01'), /secure context|CODEX_ALLOW_INSECURE_REMOTE/,
-    'VC-J01 没说明为什么服务端放行开关对它不管用');
-});
-
-// 有一轮把 11 处送往浏览器的错误插值统一做了脱敏，但 71 条用例里一条判据都没盯着它 ——
-// 而「错误条里出现 /Users/xxx」是纯肉眼可见的，正是这份文档该管的形态。
-test('宿主机路径泄漏被当成一条横切的可见失败', () => {
-  const doc = readDoc('../docs/SMOKE_MATRIX.md');
-  assert.match(doc, /^## 贯穿所有用例的判据$/m, 'SMOKE_MATRIX.md 缺少横切判据一节');
-  const section = doc.slice(doc.indexOf('## 贯穿所有用例的判据'));
-  assert.match(section.slice(0, 1200), /宿主机绝对路径|\/Users\//,
-    '横切判据里没有「界面不得出现宿主机绝对路径」这一条');
-});

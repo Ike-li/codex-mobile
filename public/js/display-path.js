@@ -1,8 +1,8 @@
 // 路径在界面上的显示形态。
 //
-// 界面上出现宿主机绝对路径是一条横切的失败判据（docs/SMOKE_MATRIX.md
-// 「贯穿所有用例的判据」）：/Users/<用户名>/… 会把网关运行者的身份和目录结构
-// 一起送到浏览器里，而浏览器可能正跑在另一台设备上、由别人拿着。
+// 界面上出现宿主机绝对路径是一条横切的失败判据：/Users/<用户名>/… 会把网关
+// 运行者的身份和目录结构一起送到浏览器里，而浏览器可能正跑在另一台设备上、
+// 由别人拿着。
 export function compactPath(path) {
   if (!path) return '';
   const parts = String(path).split('/').filter(Boolean);

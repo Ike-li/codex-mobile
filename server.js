@@ -1602,7 +1602,7 @@ function hostConfigSummary(action, payload = {}) {
 
 // admin 解锁曾是安全剧场：口令是源码常量，任何能打开页面的设备都能解锁，而且至少有三条
 // 绕行路径（让 agent 去做、改 config.toml、走 fs 写入）。功能层设限挡不住攻击者，只会让人
-// 误以为有保护——安全边界是设备 token，见 SECURITY.md。
+// 误以为有保护——安全边界是设备 token。
 //
 // 保留下来的是逐动作确认：它防的是手机上误触高危操作，与攻击者无关，那是真实价值。
 function requireActionConfirm(socket, ack, action, payload = {}) {

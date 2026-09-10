@@ -117,7 +117,7 @@ test('只打包暗色 hljs 主题，且第三方登记与实际打包一致', ()
 
 test('客户端不得裸调 crypto.randomUUID —— 非 secure context 里它不存在', () => {
   // 后果不是报错，是**静默失败**：明文远程接入（CODEX_ALLOW_INSECURE_REMOTE=1，
-  // 即 SMOKE_MATRIX 里 VC-A02 / VC-H05 的本机验收路径）下 randomUUID 是 undefined，
+  // 的本机远程验收路径）下 randomUUID 是 undefined，
   // 发消息抛 TypeError，文字留在输入框，状态还显示 idle，界面上没有任何提示。
   const offenders = scanClientSources(line => {
     if (!/\brandomUUID\b/.test(line)) return false;
@@ -153,14 +153,14 @@ test('客户端不得用 Math.random 生成凭证或请求 id', () => {
 
 test('Web 端不重新引入 ChatGPT 账号登录', () => {
   // 账号登录是有意移除的：本网关的信任模型是「设备配对 + AUTH_TOKEN」，
-  // 在 Web 端再开一条账号登录通道会引入第二套身份，与 SECURITY.md 的威胁模型冲突。
+  // 在 Web 端再开一条账号登录通道会引入第二套身份，与 ARCHITECTURE.md 的威胁模型冲突。
   // 服务端推来的 account_* 事件仍要能渲染（Codex App 那边可能已登录），
   // 但**发起**登录的入口不该存在。
   const initiators = scanClientSources(line =>
     /account:loginStart|account:loginCancel|startChatgptDeviceLogin/.test(line));
   assert.deepEqual(initiators, [],
     'Web 端重新出现了发起 ChatGPT 登录的代码 —— 这会引入第二套身份，'
-    + '与 SECURITY.md 的「设备配对 + AUTH_TOKEN」模型冲突：\n' + initiators.join('\n'));
+    + '与 ARCHITECTURE.md 的「设备配对 + AUTH_TOKEN」模型冲突：\n' + initiators.join('\n'));
 
   assert.doesNotMatch(html, /id="account-login-btn"|id="account-login-panel"/,
     'index.html 里重新出现了账号登录入口');

@@ -219,7 +219,7 @@ test('socket handshake security rejects a remote origin outside the exact allowl
   assert.equal(result.normalizedOrigin, 'https://evil.example');
 });
 
-// docs/SMOKE_MATRIX.md 的 VC-A02 / VC-H05 要在本机复现「远程设备接入」，靠的是一份
+// 在本机复现「远程设备接入」靠的是一份
 // 四项配置的配方。这条测试守的不是某一道闸，而是**那份配方仍然是完整的**：四项配齐就放行，
 // 拿掉任何一项就被挡在对应的那道闸上。将来若新增第五道闸，「配齐即放行」这半边会先红，
 // 提醒同步改文档 —— 否则文档会静默过期，而过期的前置比没有前置更贵：上一版写的是

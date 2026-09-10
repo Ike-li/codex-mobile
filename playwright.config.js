@@ -25,7 +25,7 @@ export default defineConfig({
     //
     // ⚠ 它验不了 iOS 真机上最容易挂的那几件事：PWA 安装（iOS 的路径是分享→添加到
     // 主屏幕）、真实 Web Push（要 16.4+ 且已添加主屏）、软键盘几何、Safari 的存储驱逐。
-    // 那些是 docs/SMOKE_MATRIX.md 第 8 幕的人工用例，别把这条 project 当成它们的替代。
+    // 那些只能在 iOS 真机上人工验证，别把这条 project 当成它们的替代。
     {
       name: 'mobile-webkit',
       use: { ...devices['iPhone 13'] },

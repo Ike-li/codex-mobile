@@ -2,7 +2,7 @@
 //
 // 这是本产品的主用途（手机连开发机），却一直没有任何测试覆盖，因为整套 E2E 都跑在
 // loopback 上 —— 而 loopback 恰好走的是 evaluateSocketHandshakeSecurity 里**另一条**分支。
-// 实跑 docs/SMOKE_MATRIX.md 的 VC-A02 时才发现：远程端的 socket 握手一律 403
+// 实跑远程设备接入验收时才发现：远程端的 socket 握手一律 403
 // origin_required，页面停在断线横幅，永远到不了设备配对画面。
 //
 // 成因是三件事叠加，单看每一件都正常：
@@ -104,7 +104,7 @@ test('一台远程设备能连上网关并停在设备配对画面', async ({ pa
   expect(rejections, 'socket 握手不应当出现 4xx').toEqual([]);
 });
 
-// docs/SMOKE_MATRIX.md 的 VC-A02 + VC-H05 —— 远程设备的完整信任生命周期。
+// 远程设备的完整信任生命周期。
 //
 // 这两条此前被同一个错误理由（「需第二台真机」）挡了两轮，从没执行过。补跑 VC-A02 时
 // 撞出了上面那个握手缺陷；补跑 VC-H05 时又撞出「非 secure context 下发消息静默失败」。

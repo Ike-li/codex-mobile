@@ -65,7 +65,7 @@ test('允许清单里的每一项都仍在被使用', () => {
 });
 
 test('会话、投递账本和 needs-you 注册表都不落盘', () => {
-  // 这三样是内存态，重启即失。SECURITY.md 明确写了这一点，用户据此理解
+  // 这三样是内存态，重启即失。ARCHITECTURE.md 明确写了这一点，用户据此理解
   // 「重启会清掉哪些保护和状态」。任何一处改成落盘都会改变那个承诺。
   for (const [module, symbol] of [
     ['message-receipt-ledger.js', '投递账本'],
@@ -76,7 +76,7 @@ test('会话、投递账本和 needs-you 注册表都不落盘', () => {
     assert.doesNotMatch(
       source,
       /writeFileSync|appendFileSync|writeOwnerOnlyFile|appendOwnerOnlyFile/,
-      `${symbol}（${module}）开始落盘了 —— 它是重启即失的内存态，SECURITY.md 据此描述重启语义`,
+      `${symbol}（${module}）开始落盘了 —— 它是重启即失的内存态，ARCHITECTURE.md 据此描述重启语义`,
     );
   }
 });

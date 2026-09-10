@@ -180,7 +180,7 @@ flag 默认关闭；关闭时 ACK 为 `feature_disabled`。
 
 每一项都必须带 `confirmAction: <事件名>`（值与事件名完全相同），否则拒绝执行——那是防手机误触，不是防攻击者。成功返回 `{ok:true, result}`；成功、失败与缺确认均写 owner-only 脱敏审计（`data/host-config-audit.jsonl`），MCP arguments 和账号凭证不落明文。
 
-历史：这些事件曾名为 `admin:*` 并藏在解锁机制后（`admin:unlock` / `admin:lock`、`CODEX_ADMIN_ENABLED`、TTL 与失败限流）。口令是源码常量 `ENABLE ADMIN`，任何能打开页面的设备都能解锁，且至少有三条绕行路径——功能层设限挡不住攻击者，只会让人误以为有保护，因此整套拆除而非加固。安全边界是设备凭证，见 SECURITY.md。
+历史：这些事件曾名为 `admin:*` 并藏在解锁机制后（`admin:unlock` / `admin:lock`、`CODEX_ADMIN_ENABLED`、TTL 与失败限流）。口令是源码常量 `ENABLE ADMIN`，任何能打开页面的设备都能解锁，且至少有三条绕行路径——功能层设限挡不住攻击者，只会让人误以为有保护，因此整套拆除而非加固。安全边界是设备凭证。
 
 ### 工作区路径作用域
 
@@ -242,7 +242,7 @@ flag 默认关闭；关闭时 ACK 为 `feature_disabled`。
 - **宿主配置**：没有开关也没有解锁步骤；每个动作需要 `confirmAction`，缺失即拒绝并记审计。
 - **Labs**：默认关闭；需 `CODEX_P3_EXPERIMENTAL=1`，共享 app-server 初始化时才声明 `experimentalApi:true`。
 
-详见 [../SECURITY.md](../SECURITY.md) 与 [REMOTE_ACCESS.md](REMOTE_ACCESS.md)。
+详见 [REMOTE_ACCESS.md](REMOTE_ACCESS.md)。
 
 ## 契约测试位置
 

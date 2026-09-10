@@ -6,8 +6,7 @@
 // 而 crypto.getRandomValues 两种情况下都在。
 //
 // 直接调 randomUUID 的后果不是报错，是**静默失败**：明文远程接入
-// （CODEX_ALLOW_INSECURE_REMOTE=1，即 docs/SMOKE_MATRIX.md 里 VC-A02 / VC-H05 的本机
-// 验收路径）下发消息会抛 TypeError，文字留在输入框，状态还显示 idle，界面上没有任何提示。
+// （CODEX_ALLOW_INSECURE_REMOTE=1 的本机远程验收路径）下发消息会抛 TypeError，文字留在输入框，状态还显示 idle，界面上没有任何提示。
 export function randomId() {
   const webCrypto = globalThis.crypto;
   if (typeof webCrypto?.randomUUID === 'function') return webCrypto.randomUUID();
