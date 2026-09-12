@@ -1048,7 +1048,9 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     if (!item || item.disabled) return;
     const mode = item.dataset.permission;
     if (mode === 'full-access' && selectedPermission !== mode
-      && !await confirmDialog.confirm({ title: '允许完全访问？', body: '此会话可以访问本机文件和网络，操作无需逐次批准。', confirmText: '允许完全访问' })) return;
+      // danger: true 不能省——这是本应用权限最大的一次确认，没有它 OK 按钮是黑色
+      // 实心主按钮，视觉上最突出、在鼓励点击，和「取消」的层级正好反了。
+      && !await confirmDialog.confirm({ title: '允许完全访问？', body: '此会话可以访问本机文件和网络，操作无需逐次批准。', confirmText: '允许完全访问', danger: true })) return;
     const capability = settingsCapabilities?.available?.permissionModes?.find(option => option.id === mode);
     if (!capability?.enabled) return;
     selectedPermission = mode;
@@ -1611,10 +1613,22 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
         const action = need.state === 'unknown'
           ? '<span class="tool-output tool-err" style="background:transparent;padding:0;">结果未知，等待上游终态</span>'
           : '<button class="native-mini-btn" type="button" data-need-action="open">处理</button>';
-        return `<div class="needs-you-row" data-need-id="${escHtml(need.needId)}">
+        // 显示会话名而不是内部 threadId：`mock_thread_1789224943799` 对用户没有任何
+        // 意义，而「需要你」正是用户最需要快速判断「这是哪个会话在等我」的地方。
+        // 回退策略跟 openNeed 保持一致，避免两处对同一个 thread 给出不同的名字。
+        // 回退带「会话」前缀：appThreads 来自 thread/list，刚创建的 thread 还没进去，
+        // 这时只能拿到 id。裸 id 片段看起来像乱码（实测显示成 `mock_thr`），加上前缀
+        // 至少让用户知道这是个会话标识而不是渲染出错。
+        // 待改进：当前活跃 thread 的标题没有独立来源，要拿到它得改数据流。
+        const thread = appThreads.find(item => item.id === need.target?.threadId);
+        const threadLabel = thread?.title
+          || (need.target?.threadId ? `会话 ${need.target.threadId.slice(0, 8)}` : '');
+        // threadId 走 data 属性：深链恢复需要完整 id，让它搭显示文本的便车会把
+        // 「给人看的文案」和「给机器读的数据」焊死——改文案就得改测试。
+        return `<div class="needs-you-row" data-need-id="${escHtml(need.needId)}" data-thread-id="${escHtml(need.target?.threadId || '')}">
           <div class="needs-you-copy">
             <div class="needs-you-summary">${escHtml(summary)}</div>
-            <div class="needs-you-thread">${escHtml(need.target?.threadId || '')}</div>
+            <div class="needs-you-thread">${escHtml(threadLabel)}</div>
           </div>
           ${action}
         </div>`;

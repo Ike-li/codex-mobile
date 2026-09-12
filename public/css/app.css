@@ -1843,10 +1843,16 @@ body {
   color: var(--text-muted);
 }
 .pending-btns { display: flex; gap: var(--space-3); }
+/* 审批决策是本应用误触代价最高的操作之一（批准即执行命令），命中区必须到
+   iOS HIG 的 44×44。原来是 55×31，宽度够、高度差 13px。 */
 .approve-btn, .deny-btn {
   border: 1px solid transparent;
   border-radius: 999px;
-  padding: var(--space-2) 14px;
+  /* 水平内边距跟着高度一起加：只提 min-height 会把 999px 圆角的胶囊拉成椭圆
+     （实测 55×44 看着像被纵向拉伸过）。绊线只管尺寸够不够，比例得靠看图。 */
+  padding: var(--space-2) 22px;
+  min-width: 44px;
+  min-height: 44px;
   font-size: var(--font-sm);
   font-weight: 600;
   cursor: pointer;
@@ -1952,6 +1958,10 @@ body {
 .native-danger {
   color: var(--error);
   border-color: var(--error-border);
+  /* 危险操作（Delete / 宿主配置 / 撤销设备 / Logout）的命中区到 44×44。普通按钮
+     保持 28px 的紧凑密度不动——那是产品选择；但误触这几个的代价不一样。 */
+  min-width: 44px;
+  min-height: 44px;
 }
 .native-input {
   width: 100%;

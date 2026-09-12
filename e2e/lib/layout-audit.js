@@ -17,6 +17,22 @@ const SQUEEZE_MAX_WIDTH = 140;
 /** 少于这些字符的元素不判：单个图标字符本来就可能是竖的。 */
 const SQUEEZE_MIN_CHARS = 4;
 
+/** 高风险操作的触控目标下限（iOS HIG 基线）。 */
+const TAP_MIN = 44;
+
+/**
+ * 高风险操作的语义标记。
+ *
+ * 只守这一类，不守全部按钮：实测抽屉一屏 26 个可点击元素里 22 个低于 44×44，模式是
+ * 全局按钮高度就是 28px——那是产品的视觉密度选择，不是 bug，把它们全报出来只会让
+ * 这条规则被整条忽略。而误触「批准执行命令」「Delete」「允许完全访问」的代价和误触
+ * 一个普通按钮完全不是一回事，这几类必须够大。
+ *
+ * 判据从**语义标记**派生，不列举具体元素：新增一个危险按钮只要带上 .native-danger，
+ * 就自动被这条守住，不依赖谁记得往清单里补一行。
+ */
+const HIGH_RISK_SELECTOR = '.native-danger, [data-danger="true"], .approve-btn, .deny-btn';
+
 /**
  * 允许盖住正文的浮层。键是选择器，值必须写明「为什么这个遮挡是有意的」。
  *
@@ -56,7 +72,7 @@ export async function auditLayout(page, scope) {
   }
 
   return loc.evaluate(
-    (root, { scopeSel, ratio, maxW, minChars, allowOverlays }) => {
+    (root, { scopeSel, ratio, maxW, minChars, allowOverlays, highRiskSel, tapMin }) => {
       const issues = [];
       let scanned = 0;
 
@@ -207,6 +223,25 @@ export async function auditLayout(page, scope) {
         }
       }
 
+      // 规则：高风险操作的触控目标太小。
+      for (const el of [root, ...root.querySelectorAll('*')]) {
+        if (!el.matches(highRiskSel)) continue;
+
+        const r = el.getBoundingClientRect();
+        if (r.width < 1 || r.height < 1) continue;
+        const cs = getComputedStyle(el);
+        if (cs.visibility === 'hidden' || cs.display === 'none') continue;
+
+        if (r.width < tapMin || r.height < tapMin) {
+          issues.push({
+            rule: 'tap-target-too-small',
+            text: (el.textContent || '').trim().slice(0, 20),
+            detail: `${Math.round(r.width)}×${Math.round(r.height)}px，低于高风险操作的 ${tapMin}×${tapMin} 下限`
+              + `——误触这个按钮的代价和误触普通按钮不是一回事`,
+          });
+        }
+      }
+
       // 区域里有文字，体检却一个元素都没扫到 —— 那是扫描器失明，不是「全部合规」。
       // 反过来，没有文字的区域（纯图片、纯图标）扫到 0 个是正常的，不报。
       if (scanned === 0 && (root.textContent || '').trim()) {
@@ -225,6 +260,8 @@ export async function auditLayout(page, scope) {
       maxW: SQUEEZE_MAX_WIDTH,
       minChars: SQUEEZE_MIN_CHARS,
       allowOverlays: [...OVERLAY_ALLOWLIST.keys()],
+      highRiskSel: HIGH_RISK_SELECTOR,
+      tapMin: TAP_MIN,
     },
   );
 }

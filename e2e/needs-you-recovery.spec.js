@@ -43,7 +43,12 @@ test('a needs-you deep link opens the exact pending approval', async ({ page, br
     const row = freshPage.locator('#needs-you-panel [data-need-id]').filter({ hasText: 'approve needs-you deep link' });
     await expect(row).toBeVisible({ timeout: 10000 });
     const needId = await row.getAttribute('data-need-id');
-    const threadId = (await row.locator('.needs-you-thread').innerText()).trim();
+    // 从 data 属性读，不从显示文本读：那一行给用户看的是会话名，不是内部 id。
+    const threadId = await row.getAttribute('data-thread-id');
+
+    // 面板上不该出现内部 threadId —— 它对用户没有任何意义，而「需要你」正是用户
+    // 最需要快速判断「是哪个会话在等我」的地方。
+    await expect(row.locator('.needs-you-thread')).not.toHaveText(threadId);
 
     await freshPage.goto(`http://localhost:3232/?thread=${encodeURIComponent(threadId)}&need=${encodeURIComponent(needId)}`);
     const recoveredCard = freshPage.locator('.tool-card').filter({ hasText: 'approve needs-you deep link' }).last();
