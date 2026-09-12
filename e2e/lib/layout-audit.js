@@ -18,6 +18,21 @@ const SQUEEZE_MAX_WIDTH = 140;
 const SQUEEZE_MIN_CHARS = 4;
 
 /**
+ * 允许盖住正文的浮层。键是选择器，值必须写明「为什么这个遮挡是有意的」。
+ *
+ * 默认值落在「遮挡就是缺陷」那一侧——加一条豁免之前先问：真的没有不遮挡的做法吗？
+ * 写不出理由的，就是还没想清楚，不该进这个表。
+ */
+const OVERLAY_ALLOWLIST = new Map([
+  ['#jump-to-latest',
+    '「有新内容 ↓」浮动提示。它显示的前提就是用户没滚到底部，那一刻可视区底部正显示'
+    + '消息流中段的内容——给 #messages 加 padding-bottom 保护的是内容末尾，和这个遮挡'
+    + '在不同的坐标系里，实测无效。浮在内容上是这类控件的通行做法（Telegram / 微信同款）：'
+    + '代价是盖住一行，换来的是不占常驻空间。'
+    + '待改进：它是 left: 50% 居中，正好压在正文中央；移到右侧只会盖住行尾空白。'],
+]);
+
+/**
  * 在浏览器里跑一遍布局体检，返回发现的问题。
  *
  * @param {import('@playwright/test').Page} page
@@ -41,7 +56,7 @@ export async function auditLayout(page, scope) {
   }
 
   return loc.evaluate(
-    (root, { scopeSel, ratio, maxW, minChars }) => {
+    (root, { scopeSel, ratio, maxW, minChars, allowOverlays }) => {
       const issues = [];
       let scanned = 0;
 
@@ -71,6 +86,13 @@ export async function auditLayout(page, scope) {
         if (cs.visibility === 'hidden' || cs.opacity === '0') continue;
         // 真的想竖排的元素不算缺陷。
         if (cs.writingMode && cs.writingMode.startsWith('vertical')) continue;
+        // 屏读器专用标签的经典形态是 width:1px;height:1px;overflow:hidden —— 它本来
+        // 就该看不见，下面每一条规则（被截断、被盖住）对它都成立，全是误报。
+        //
+        // 判尺寸必须用 boundingRect 而不是 clientWidth/clientHeight：后者对 inline 元素
+        // 恒为 0，用它做门槛会把 <code>/<span>/<a> 里的文字整类排除掉——实测把代码块
+        // 「复制」按钮压住正文这个真缺陷也一起压没了，漏报比误报更糟。
+        if (r.width < 4 || r.height < 4) continue;
 
         scanned++;
 
@@ -86,6 +108,103 @@ export async function auditLayout(page, scope) {
               + `${text.length} 个字符被压进 ${Math.round(r.width)}px 宽——正文被挤成了竖条`,
           });
         }
+
+        // 规则：文本被截断，而用户不知道自己少看了东西。
+        //
+        // 三条豁免，每条都是为了让这条规则值得保留：
+        //  - overflow-x: auto 也截，但能滑到，信息没丢。
+        //  - 横向截断 + text-overflow: ellipsis：用户看得到省略号，知道后面还有。
+        //    ellipsis 是合法且常见的设计手段，报它等于禁用它，规则会被学会忽略。
+        //  - 15% 的门槛放过一两个字符的边界抖动。
+        //
+        // 纵向截断不豁免 ellipsis：line-clamp 是整行整行地吃内容，用户只在最后一行
+        // 末尾看到一个省略号，损失的量级和「一行末尾少几个字」完全不是一回事——
+        // 实测安全档位说明「只有 ls、cat 等信任命令自动执行；其余一律询问」被吃掉半句。
+        const clipX = el.scrollWidth > el.clientWidth * 1.15;
+        const clipY = el.scrollHeight > el.clientHeight * 1.15;
+        const scrollableX = cs.overflowX === 'auto' || cs.overflowX === 'scroll';
+        const scrollableY = cs.overflowY === 'auto' || cs.overflowY === 'scroll';
+        const badX = clipX && !scrollableX && cs.textOverflow !== 'ellipsis';
+        const badY = clipY && !scrollableY;
+        if (badX || badY) {
+          const axis = badX ? '横向' : '纵向';
+          const shown = badX ? el.clientWidth : el.clientHeight;
+          const total = badX ? el.scrollWidth : el.scrollHeight;
+          issues.push({
+            rule: 'clipped-text',
+            text: text.slice(0, 30),
+            detail: `${axis}只显示了 ${shown}/${total}px（${Math.round(shown / total * 100)}%），`
+              + `overflow 是 ${axis === '横向' ? cs.overflowX : cs.overflowY}，剩下的内容用户没有任何办法看到`,
+          });
+        }
+      }
+
+      // 规则：浮动控件盖住正文。
+      //
+      // 从**遮挡物**出发，不从被遮挡的正文出发。反过来做会漏：正文可能是个 527px 宽的
+      // inline 元素（代码块的 <code>，rect 是所有行的并集），按 0.25/0.5/0.75 采样得到的
+      // x 正好跳过 32px 宽的「复制」按钮，实测一条都报不出来。浮动控件数量少、尺寸小，
+      // 从它采样密度天然够。
+      //
+      // 「什么算遮挡物」也因此有了准确定义：只有脱离普通流的元素才可能浮在别人上面。
+      // #header-context、<summary> 这些普通流元素根本不进候选，之前那两条误报自然消失，
+      // 不需要给它们写豁免。
+      for (const overlay of [root, ...root.querySelectorAll('*')]) {
+        if (overlay.hasAttribute('data-ui-shot-badge')) continue;
+        if (allowOverlays.some(sel => overlay.matches(sel))) continue;
+
+        const ov = getComputedStyle(overlay);
+        if (ov.position !== 'absolute' && ov.position !== 'fixed' && ov.position !== 'sticky') continue;
+        if (ov.visibility === 'hidden' || ov.opacity === '0') continue;
+        // 透明的浮层不影响阅读（透明点击热区很常见）。
+        if (ov.backgroundColor === 'transparent' || /rgba\(.*,\s*0\)$/.test(ov.backgroundColor)) continue;
+
+        const or = overlay.getBoundingClientRect();
+        if (or.width < 4 || or.height < 4) continue;
+        // 覆盖大半个视口的是模态遮罩/lightbox，盖住下面是它的本职工作。
+        if (or.width * or.height > window.innerWidth * window.innerHeight * 0.5) continue;
+
+        // 在浮层内部采样：中心 + 四角内缩，抓得住只压住一行的小按钮。
+        const pts = [
+          [or.left + or.width / 2, or.top + or.height / 2],
+          [or.left + or.width * 0.2, or.top + or.height * 0.2],
+          [or.right - or.width * 0.2, or.top + or.height * 0.2],
+          [or.left + or.width * 0.2, or.bottom - or.height * 0.2],
+          [or.right - or.width * 0.2, or.bottom - or.height * 0.2],
+        ];
+
+        let reported = false;
+        for (const [x, y] of pts) {
+          if (reported) break;
+          if (x < 0 || y < 0 || x >= window.innerWidth || y >= window.innerHeight) continue;
+
+          const stack = document.elementsFromPoint(x, y);
+          const idx = stack.indexOf(overlay);
+          if (idx < 0) continue;
+
+          for (const below of stack.slice(idx + 1)) {
+            // 祖先出现在栈里是必然的（浮层画在它里面），不算它被盖住。
+            if (below.contains(overlay)) continue;
+
+            const belowText = [...below.childNodes]
+              .filter(node => node.nodeType === 3)
+              .map(node => node.textContent)
+              .join('')
+              .trim();
+            if (belowText.length < minChars) continue;
+
+            issues.push({
+              rule: 'occluded-text',
+              text: belowText.slice(0, 30),
+              detail: `被 <${overlay.tagName.toLowerCase()}${overlay.id ? '#' + overlay.id : ''}`
+                + `${typeof overlay.className === 'string' && overlay.className ? '.' + overlay.className.split(/\s+/)[0] : ''}>`
+                + `（${ov.position} 定位，文字「${(overlay.textContent || '').trim().slice(0, 12)}」）`
+                + `盖住，遮挡点 (${Math.round(x)}, ${Math.round(y)})`,
+            });
+            reported = true;
+            break;
+          }
+        }
       }
 
       // 区域里有文字，体检却一个元素都没扫到 —— 那是扫描器失明，不是「全部合规」。
@@ -100,8 +219,19 @@ export async function auditLayout(page, scope) {
 
       return { scanned, issues };
     },
-    { scopeSel: label, ratio: SQUEEZE_RATIO, maxW: SQUEEZE_MAX_WIDTH, minChars: SQUEEZE_MIN_CHARS },
+    {
+      scopeSel: label,
+      ratio: SQUEEZE_RATIO,
+      maxW: SQUEEZE_MAX_WIDTH,
+      minChars: SQUEEZE_MIN_CHARS,
+      allowOverlays: [...OVERLAY_ALLOWLIST.keys()],
+    },
   );
+}
+
+/** 豁免清单，供守护用例检查每条都写了理由。 */
+export function overlayAllowlist() {
+  return OVERLAY_ALLOWLIST;
 }
 
 /** 把体检结果格式化成一条能直接读懂的失败消息。 */

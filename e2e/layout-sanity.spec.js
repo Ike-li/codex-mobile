@@ -5,7 +5,7 @@
 // 这里放的是「读不读得了」那一类判据，和 markdown-typography.spec.js 的「会不会崩」
 // 互补。后者曾经四条断言全绿，而宽表格的中文列被挤到 49px 宽、压成一根竖条。
 import { test, expect } from '@playwright/test';
-import { auditLayout, formatIssues } from './lib/layout-audit.js';
+import { auditLayout, formatIssues, overlayAllowlist } from './lib/layout-audit.js';
 
 async function sendAndRender(page, prompt, ready) {
   await page.goto('/');
@@ -25,4 +25,17 @@ test('宽表格的每一列都读得了，没有被挤成竖条的正文', async
   // 这块区域确实满是文字，扫到 0 个就是失明。auditLayout 内部也会把这种情况报成
   // scan-collapsed，这里再钉一次是因为 fixture 一旦被改空，上面那条会平凡地通过。
   expect(scanned, '富文本气泡里应该扫到大量文本元素').toBeGreaterThan(10);
+});
+
+test('允许遮挡正文的浮层，每条都写明了理由', async () => {
+  const allow = overlayAllowlist();
+  // 扫到 0 条和「每条都合规」在断言上无法区分，而前者意味着清单被整个删空了。
+  expect(allow.size, '豁免清单是空的——要么真的没有豁免，要么这道检查失明了').toBeGreaterThan(0);
+
+  for (const [sel, reason] of allow) {
+    // 「因为它遮挡」不是理由。要求足够长，逼人写出为什么这个遮挡是有意的、
+    // 以及试过什么别的做法——否则这个表会变成堆放「懒得修」的地方。
+    expect(reason?.length ?? 0, `${sel} 的豁免理由太短，说不清为什么这个遮挡是有意的`)
+      .toBeGreaterThan(40);
+  }
 });
