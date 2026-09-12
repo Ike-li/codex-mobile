@@ -591,4 +591,37 @@ test.describe('UI_SURFACE 截图', () => {
 
     await shotArea(page, '22-dark-mode', ['#header', '#messages'], { top: 4, bottom: 4 });
   });
+
+  // §3.3 深色下的卡片分档。22 那张只有 Markdown 正文，看不到 data-card 的色带，
+  // 于是分档在深色模式下长期只有探针数据、没有一张能用肉眼核对的图。
+  // 审批卡先发、工具卡后发，再把审批卡滚到视口顶部，四档才会自上而下依次入画。
+  test('22b 深色模式：卡片分档色带', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'dark' });
+    await connect(page);
+    // 开一条干净会话再发：整轮 e2e 共享一个 mock server，跑到这里时当前 thread
+    // 已经堆了前面 25 个用例的 turn，直接发会撞上「已中断 / 已被运行时拒绝」。
+    await page.locator('#header-new').click();
+    await expect(page.locator('#empty-state')).toBeVisible({ timeout: 8000 });
+
+    // 工具卡必须先发：审批挂起时再发消息会中断当前 turn，审批卡随即变成
+    // 「已超时失效」，decision 档就截不到了（第一版就是这么失败的）。
+    await send(page, 'TOOL_CARDS_FIXTURE');
+    // 等最后一张卡真正渲染出来，而不是等 #state-label 变 idle：后者在 turn 中途
+    // 会短暂回到 idle，接着发下一条就会把这个 turn 打断，实测只渲染出计划和 MCP
+    // 两张卡就「已中断」。判据要落在用户看得见的产物上。
+    await expect(page.locator('.tool-card').filter({ hasText: 'Raw' })).toBeVisible({ timeout: 15000 });
+    await idle(page);
+    await send(page, 'approve this command');
+    const approval = page.locator('.tool-card').filter({ hasText: '需要审批' }).last();
+    // 等决策按钮出现，而不是等卡片可见：卡片会先以加载态出现在视口边缘，
+    // 那一刻截图只能拍到它顶部的一条色带。
+    await expect(approval.locator('.deny-btn')).toBeVisible({ timeout: 10000 });
+    await approval.evaluate(el => el.scrollIntoView({ block: 'end' }));
+    await settle(page, approval);
+
+    await shotArea(page, '22b-dark-card-accents', '#messages', { top: 4, bottom: 4 });
+
+    // 截完就处理掉：挂着不管的审批会堆进「需要你」，把 needs-you-recovery 搅乱。
+    await approval.locator('.deny-btn').click();
+  });
 });
