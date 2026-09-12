@@ -51,4 +51,13 @@ export default [
       globals: { ...globals.browser, io: 'readonly' },
     },
   },
+  {
+    // e2e 的截图辅助模块：文件本身是 Node 侧的 ESM，但主体是一段传给
+    // page.evaluate 的函数，在浏览器上下文里执行，用 document / window。
+    // 两套 globals 都放开，代价是这个文件里 Node 部分误用浏览器 API 抓不到。
+    files: ['e2e/lib/*.js'],
+    languageOptions: {
+      globals: { ...globals.node, ...globals.browser },
+    },
+  },
 ];

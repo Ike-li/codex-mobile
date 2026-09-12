@@ -35,6 +35,19 @@ const RICH_MARKDOWN = [
   '- 列表项二',
 ].join('\n');
 
+// 代码块单独一个 fixture 而不是并进 RICH_MARKDOWN：那一份被 markdown-typography
+// 和 markdown-sanitization 拿来量排版，往里塞东西会改掉它们量的对象。
+const CODE_BLOCK_MARKDOWN = [
+  '给你一段实现：',
+  '',
+  '```js',
+  'export function summarizeTurnOutcome({ diff = "", commands = [] } = {}) {',
+  '  const { files, added, removed } = parseUnifiedDiff(diff);',
+  '  return { files, added, removed, hasChanges: files.length > 0 };',
+  '}',
+  '```',
+].join('\n');
+
 function respond(id, result) {
   process.stdout.write(JSON.stringify({ id, result }) + '\n');
 }
@@ -138,6 +151,8 @@ async function simulateTurn(input, targetThreadId = threadId) {
     // RICH 分支必须排在 MARKDOWN_FIXTURE 之前:后者是前者的子串。
     : input.includes('RICH_MARKDOWN_FIXTURE')
       ? RICH_MARKDOWN
+    : input.includes('CODE_BLOCK_FIXTURE')
+      ? CODE_BLOCK_MARKDOWN
     : input.includes('MARKDOWN_FIXTURE')
       ? 'Here is **bold** and `code`.\n\n- item one\n- item two'
     : input.includes('/status')
@@ -344,6 +359,80 @@ async function simulateApproval(command, targetThreadId = threadId) {
   });
 }
 
+// 一次推出四种此前 mock 从来造不出来的卡片：计划、MCP 调用、搜索结果，以及
+// 协议里没见过的 item 走 raw 降级。agent-appserver.js 按 item.type 分派
+// （mcpToolCall / webSearch / default→raw_item），turn/plan/updated 出计划卡。
+//
+// 加这个 fixture 是因为 docs/UI_SURFACE.md 把这四张卡列成了界面上存在的东西，
+// 而在此之前没有任何 E2E 或截图能证明它们真的渲染得出来。
+async function simulateToolCards(input, targetThreadId = threadId) {
+  turnCount++;
+  const turnId = `turn_${turnCount}`;
+  activeTurnId = turnId;
+  notify('turn/started', {
+    threadId: targetThreadId, turn: { id: turnId, status: 'inProgress' },
+  });
+
+  notify('turn/plan/updated', {
+    threadId: targetThreadId, turnId,
+    plan: [
+      { step: '读取工作区结构', status: 'completed' },
+      { step: '定位失败的测试', status: 'inProgress' },
+      { step: '提交修复', status: 'pending' },
+    ],
+  });
+
+  // started 出 mcp_use（参数），completed 出 mcp_result（结果），两条并成一张卡。
+  const mcpItem = {
+    type: 'mcpToolCall',
+    id: `mcp_${turnId}`,
+    serverName: 'filesystem',
+    toolName: 'read_file',
+    arguments: { path: 'src/app.js' },
+  };
+  notify('item/started', { threadId: targetThreadId, turnId, item: mcpItem });
+  await sleep(20);
+  notify('item/completed', {
+    threadId: targetThreadId, turnId,
+    item: { ...mcpItem, result: 'export {}\n' },
+  });
+
+  notify('item/completed', {
+    threadId: targetThreadId, turnId,
+    item: {
+      type: 'webSearch',
+      id: `search_${turnId}`,
+      query: 'playwright screenshot clip',
+      results: [
+        {
+          title: 'Page | Playwright',
+          url: 'https://playwright.dev/docs/api/class-page',
+          snippet: 'screenshot() 支持 clip 参数，按矩形区域裁剪截图。',
+        },
+        {
+          title: 'Screenshots | Playwright',
+          url: 'https://playwright.dev/docs/screenshots',
+          snippet: '整页截图、元素截图与遮罩的用法说明。',
+        },
+      ],
+    },
+  });
+
+  notify('item/completed', {
+    threadId: targetThreadId, turnId,
+    item: {
+      type: 'somethingProtocolAddedLater',
+      id: `raw_${turnId}`,
+      note: '未识别的 item 会降级成 Raw 卡片，而不是被静默丢弃',
+    },
+  });
+
+  notify('turn/completed', {
+    threadId: targetThreadId, turn: { id: turnId, status: 'completed' },
+  });
+  activeTurnId = null;
+}
+
 async function simulateFileChange(input, targetThreadId = threadId) {
   turnCount++;
   const turnId = `turn_${turnCount}`;
@@ -512,6 +601,8 @@ rl.on('line', async (line) => {
           simulateTurnGroup(input, targetThreadId).catch(() => {});
         } else if (input.includes('SLOW_TURN')) {
           simulateSlowTurn(input, targetThreadId).catch(() => {});
+        } else if (input.includes('TOOL_CARDS_FIXTURE')) {
+          simulateToolCards(input, targetThreadId).catch(() => {});
         } else if (input.includes('FILE_CHANGE_FIXTURE')) {
           simulateFileChange(input, targetThreadId).catch(() => {});
         } else if (input.includes('approve') || input.includes('echo')) {

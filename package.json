@@ -28,6 +28,7 @@
     "test": "node scripts/gates/check-test-summary.js --test-concurrency=1 test/*.test.mjs",
     "test:local": "node --test --test-isolation=none test/*.test.mjs",
     "test:e2e": "playwright test",
+    "shots": "UI_SHOTS=write playwright test ui-shots --project=mobile-chrome",
     "test:all": "npm test && npm run test:e2e",
     "test:ci": "npm run lint && npm run protocol:check && npm test && node scripts/gates/check-coverage-delta.js && npm run test:e2e",
     "coverage": "c8 node --test test/*.test.mjs",
