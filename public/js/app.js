@@ -2848,6 +2848,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   function renderCommandCard(model) {
     const card = document.createElement('div');
     card.className = 'tool-card command-card';
+    card.dataset.card = 'action';
     if (model.ok === true) card.dataset.ok = 'true';
     else if (model.ok === false) card.dataset.ok = 'false';
     const command = model.command || 'streaming output';
@@ -2971,6 +2972,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
 
     const card = document.createElement('div');
     card.className = 'tool-card';
+    card.dataset.card = 'outcome';
     card.innerHTML = `<div class="tool-name">${icon('clipboard')} 本轮结果</div>`
       + `<pre class="tool-cmd" style="white-space:pre-wrap;font-size:11px;">${escHtml(lines.join('\n'))}</pre>`;
     appendRaw(card, 'codex');
@@ -2988,6 +2990,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     const sessionDecision = decisions.includes('acceptForSession') ? `<button class="approve-btn" data-d="acceptForSession">本会话批准</button>` : '';
     const card = document.createElement('div');
     card.className = 'tool-card';
+    card.dataset.card = 'decision';
     card.innerHTML = `<div class="tool-name">${icon('warning')} 需要审批</div>`
       + `<div class="tool-cmd">${escHtml(payload.command || payload.kind || '需要确认的操作')}</div>`
       + renderApprovalDetails(payload)
@@ -3066,6 +3069,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     const questions = payload.questions || [];
     const card = document.createElement('div');
     card.className = 'tool-card';
+    card.dataset.card = 'decision';
     card.innerHTML = `<div class="tool-name">${icon('question')} 需要回答</div>`
       + questions.map(q => renderQuestion(q)).join('')
       + (payload.autoResolutionMs ? `<div class="tool-output" style="opacity:.7;background:transparent;color:var(--text-muted);">autoResolutionMs: ${escHtml(String(payload.autoResolutionMs))}</div>` : '')
@@ -3159,6 +3163,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     if (!model.files.length) return;
     const card = document.createElement('div');
     card.className = 'tool-card file-change-card';
+    card.dataset.card = 'outcome';
     card.innerHTML = `<div class="tool-name">${escHtml(model.title)}</div>`
       + model.files.map(file => {
         const line = `${file.kindLabel}: ${file.path}`;
@@ -3173,6 +3178,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     finalizeStream();
     const card = document.createElement('div');
     card.className = 'tool-card';
+    card.dataset.card = 'meta';
     const label = payload?.item?.type || payload?.envelopeType || 'raw';
     card.innerHTML = `<div class="tool-name">${icon('receipt')} Raw</div>`
       + `<details><summary class="tool-cmd">${escHtml(label)}</summary><pre class="tool-output">${escHtml(JSON.stringify(payload.item || payload, null, 2))}</pre></details>`;
@@ -3192,8 +3198,11 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     }[s] || '•');
     const card = document.createElement('div');
     card.className = 'tool-card';
+    card.dataset.card = 'outcome';
     card.innerHTML = `<div class="tool-name">${icon('clipboard')} 计划</div>`
-      + plan.map(p => `<div class="tool-cmd">${planStatusIcon(p.status)} ${escHtml(p.step || '')}</div>`).join('');
+      // 计划步骤是自然语言的待办项，不是命令：保留 .tool-cmd 的块样式（浅底 + 圆角），
+      // 用 .tool-note 覆盖掉等宽字体和 break-all 断词。
+      + plan.map(p => `<div class="tool-cmd tool-note">${planStatusIcon(p.status)} ${escHtml(p.step || '')}</div>`).join('');
     appendRaw(card, 'codex');
     scrollBottom();
   }
@@ -3205,6 +3214,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     if (!appendReasoning.card) {
       const card = document.createElement('div');
       card.className = 'tool-card reasoning-card';
+      card.dataset.card = 'meta';
       card.dataset.streaming = 'true';
       card.innerHTML = '<details class="reasoning-fold"><summary class="reasoning-toggle"><span class="reasoning-label">思考中</span></summary><div class="reasoning-stack"></div></details>';
       appendRaw(card, 'codex');
@@ -3239,6 +3249,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     finalizeStream();
     const card = document.createElement('div');
     card.className = 'tool-card';
+    card.dataset.card = 'action';
     card.innerHTML = `<div class="tool-name">${icon('tools')} ${escHtml(payload.serverName)}/${escHtml(payload.toolName)}</div><div class="tool-cmd">${escHtml(payload.inputSummary || '')}</div>`;
     appendRaw(card, 'codex');
     pendingMcpCards[payload.toolUseId] = card;
@@ -3264,8 +3275,11 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     if (!payload.query && !results.length) return;
     const card = document.createElement('div');
     card.className = 'tool-card';
+    card.dataset.card = 'action';
     card.innerHTML = `<div class="tool-name">${icon('search')} 搜索: ${escHtml(payload.query || '')}</div>`
-      + results.map(r => `<div class="tool-cmd" style="margin-bottom:4px;"><a href="${escHtml(r.url)}" target="_blank" style="color:var(--accent-text);text-decoration:none;font-weight:600;">${escHtml(r.title)}</a><br><span class="tool-output" style="background:transparent;color:var(--text-muted);padding:4px 0 0;">${escHtml(r.snippet || '')}</span></div>`).join('');
+      // 摘要是一句话说明，不是终端输出。原先借 .tool-output 再用内联 style 把背景、
+      // 颜色、padding 逐个盖掉，只为拿它的字号，等宽是顺带继承的副作用。
+      + results.map(r => `<div class="tool-cmd tool-note" style="margin-bottom:4px;"><a href="${escHtml(r.url)}" target="_blank" style="color:var(--accent-text);text-decoration:none;font-weight:600;">${escHtml(r.title)}</a><br><span class="tool-note search-snippet">${escHtml(r.snippet || '')}</span></div>`).join('');
     appendRaw(card, 'codex');
     scrollBottom();
   }
@@ -3277,6 +3291,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     finalizeStream();
     const card = document.createElement('div');
     card.className = 'tool-card';
+    card.dataset.card = 'outcome';
     card.innerHTML = `<div class="tool-name">${icon('chart')} 变更摘要</div><pre class="tool-cmd" style="white-space:pre-wrap;font-size:11px;max-height:200px;overflow:auto;">${escHtml(payload.diff)}</pre>`;
     appendRaw(card, 'codex');
     scrollBottom();

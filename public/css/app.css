@@ -984,9 +984,20 @@ body {
 }
 
 /* Tool and Output Cards */
+/* 左边框是消息流唯一的语义编码位：整圈边框只做轮廓，类型和状态都编码在左边那一条。
+   两个维度分开之前，命令卡用整圈变绿表示成功，而成功是常态、不该被高亮，结果是
+   滚动时满屏绿框、真正要注意的东西反而不突出。
+
+   分档按「用户需要做什么」而不是「这是什么技术类型」：
+     decision  需要你决策（审批 / 提问）—— 用 warn 系，和「需要你」面板同色呼应
+     outcome   产出物（结果 / 文件变更 / 计划 / 变更摘要）—— 用户会回看
+     action    执行动作（命令 / MCP / 搜索）—— 信息性，保持低调
+     meta      过程与兜底（reasoning / Raw）—— 可跳过，权重最低 */
 .tool-card {
   background: var(--surface);
   border: 1px solid var(--tool-border);
+  border-left-width: 3px;
+  border-left-color: var(--border);
   border-radius: 14px;
   padding: var(--space-5) 14px;
   font-size: var(--font-md);
@@ -1098,8 +1109,36 @@ body {
   border-radius: 6px;
   border: 1px solid var(--border-light);
 }
+/* 卡片里的自然语言：计划步骤、搜索结果摘要。
+   和 .tool-cmd / .tool-output 的差别是语义——那两个装代码和终端输出，等宽是为了对齐；
+   这里装的是给人读的句子，等宽只换来「技术感」，代价是小字号下辨识度下降。
+   word-break 必须复位：.tool-cmd 的 break-all 对路径是必需的，对句子会把英文单词
+   从中间劈开（实测「screenshot() 支持 clip 参数」里的 screenshot 会被劈）。
+   overflow-wrap: anywhere 兜住超长 token，不至于撑破卡片。 */
+.tool-note {
+  font-family: inherit;
+  font-size: var(--font-xs);
+  line-height: 1.5;
+  word-break: normal;
+  overflow-wrap: anywhere;
+}
+/* 搜索结果摘要：块级、次要色。原先借用 .tool-output 再拿内联 style 把背景、颜色、
+   padding 逐个盖掉——只为了拿它的字号，等宽字体是顺带继承来的副作用。 */
+.search-snippet {
+  display: block;
+  color: var(--text-muted);
+  padding-top: 4px;
+}
+
 .tool-output {
   margin-top: var(--space-1);
+  /* 贴到卡片边缘，拿回卡片自己的 14px 水平 padding。三层容器（#messages 16px +
+     .tool-card 14px + 这里 12px）连续吃掉 84px，393px 视口下终端内容只剩 307px。
+     终端块本来就是深色的，贴边反而更像终端。
+     拿回 28px ≈ 4 列（46 → 50）。这不解决「终端输出按 80 列设计」的根本问题——
+     393px 视口下 11px 等宽最多约 53 列，那是物理限制，这里只是少折几行。 */
+  margin-left: -14px;
+  margin-right: -14px;
   padding: var(--space-3) 12px;
   border-radius: 8px;
   background: #1e1e1e; /* Dark theme terminal looks amazing */
@@ -1113,8 +1152,15 @@ body {
 }
 .tool-ok { color: #87e0a2; }
 .tool-err { color: #ff8888; }
-.command-card[data-ok="true"] { border-color: var(--success-border); }
-.command-card[data-ok="false"] { border-color: var(--error-border); }
+.tool-card[data-card="decision"] { border-left-color: var(--warn-text); }
+.tool-card[data-card="outcome"] { border-left-color: var(--accent-text); }
+.tool-card[data-card="action"] { border-left-color: var(--border); }
+.tool-card[data-card="meta"] { border-left-color: var(--border-light); }
+
+/* 失败覆盖类型色——命令跑挂了比「这是一张命令卡」重要得多，要能在滚动中一眼找到。
+   成功刻意不改色：exit code 已经在卡片里用绿字标过一次，边框再标是冗余，而且
+   成功是常态，占用视觉权重只会稀释真正需要注意的东西。 */
+.command-card[data-ok="false"] { border-left-color: var(--error); }
 .tool-exit {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: var(--font-xs);
