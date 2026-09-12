@@ -23,15 +23,20 @@ test.describe('助手回复的 Markdown 排版', () => {
     await sendAndRender(page, 'RICH_MARKDOWN_FIXTURE', p => p.locator('.msg.codex .bubble.md table').last());
 
     const bubble = page.locator('.msg.codex .bubble.md').last();
-    const table = bubble.locator('table');
+    // 滚动容器是表格外面那层 .table-scroll,不是 <table> 自己。合成一个元素时
+    // (display: block + max-width: 100%),max-width 夹住的是内部表格算法的可用宽度,
+    // 表格不知道外面能滚,于是在阅读栏宽度里硬分列,中文列被压到 49px 成一根竖条。
+    const scroller = bubble.locator('.table-scroll');
 
-    const overflow = await table.evaluate(el => {
+    const overflow = await scroller.evaluate(el => {
       const win = el.ownerDocument.defaultView;
       return {
         scrollWidth: el.scrollWidth,
         clientWidth: el.clientWidth,
         overflowX: win.getComputedStyle(el).overflowX,
         cellWordBreak: win.getComputedStyle(el.querySelector('tbody td')).wordBreak,
+        // 表格自己必须取 max-content,不被容器夹窄——这才是列宽不被挤压的前提。
+        tableWidth: Math.round(el.querySelector('table').getBoundingClientRect().width),
       };
     });
     // .bubble 的 word-break: break-word 会继承进单元格,把 min-content 压到一个字符宽,
@@ -41,7 +46,9 @@ test.describe('助手回复的 Markdown 排版', () => {
     // 再证明这份 fixture 真的够宽 —— 否则"没撑破"会平凡地成立。
     expect(overflow.scrollWidth, '表格内容应宽于其可视宽度,fixture 才有守护意义')
       .toBeGreaterThan(overflow.clientWidth);
-    expect(overflow.overflowX, '溢出应由表格自己横向滚动消化').toBe('auto');
+    expect(overflow.overflowX, '溢出应由滚动容器横向滚动消化').toBe('auto');
+    expect(overflow.tableWidth, '表格应取 max-content 宽度,而不是被夹到容器宽度后挤压列')
+      .toBeGreaterThan(overflow.clientWidth);
 
     // 破版的判据:表格撑破消息 ⇒ #messages 出现横向溢出。
     const messages = await page.locator('#messages').evaluate(el => ({

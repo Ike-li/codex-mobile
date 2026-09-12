@@ -19,6 +19,7 @@ import { test, expect } from '@playwright/test';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { annotate } from './lib/annotate.js';
+import { auditLayout, formatIssues } from './lib/layout-audit.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = 'docs/assets/ui';
@@ -118,7 +119,15 @@ async function shotArea(page, name, selectors, pad = {}) {
   const x = Math.max(0, left0 - left);
   const y = Math.max(0, top0 - top);
 
-  // 到这里为止的 settle / annotate / 断言都已经跑过，门禁效果与写盘无关。
+  // 布局体检。挂在这里而不是单独写用例，是因为这 25 个 test 已经把界面驱动到了
+  // 29 个状态——体检点因此自动跟着截图长，新增一张图就自动多守一块区域，
+  // 不需要谁记得补一条对应的体检用例。
+  for (const sel of list) {
+    const { issues } = await auditLayout(page, sel);
+    expect(issues, `截图 ${name}：${formatIssues(sel, issues)}`).toEqual([]);
+  }
+
+  // 到这里为止的 settle / annotate / 体检 / 断言都已经跑过，门禁效果与写盘无关。
   if (!WRITE_SHOTS) return;
 
   await page.screenshot({

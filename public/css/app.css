@@ -877,16 +877,24 @@ body {
 .codex .bubble.md strong { font-weight: 650; }
 .codex .bubble.md em { font-style: italic; }
 
-/* 表格自己横向滚动:阅读栏只有 720px(手机上约 360px),宽表格若按 display: table
+/* 宽表格横向滚动:阅读栏只有 720px(手机上约 360px),宽表格若按 display: table
    参与外层布局,要么把消息撑破,要么被挤成一堆断词。overscroll-behavior-x 把横向
-   滚动链截断在表格上,滑到头不会继续带动页面。 */
-.codex .bubble.md table {
-  display: block;
-  width: max-content;
+   滚动链截断在容器上,滑到头不会继续带动页面。
+
+   滚动容器和表格必须是两个元素。合成一个(给 table 设 display: block + max-width: 100%)
+   时,max-width 夹住的是**内部表格算法的可用宽度**——表格不知道外面能滚,于是在
+   361px 里硬分 4 列:不可断行的 ASCII 路径 min-content 很大、抢光空间,中文的
+   min-content 是一个字,于是「说明」列被压到 49px,21 个字压成一根竖条、把整行撑到 286px。
+   四条排版断言当时全绿(没撑破、能滚动、overflow 值对),它们问的是「会不会崩」,
+   没有一条问「读不读得了」。现在由 e2e/layout-sanity.spec.js 守后者。 */
+.codex .bubble.md .table-scroll {
   max-width: 100%;
   margin: 0 0 0.75em;
   overflow-x: auto;
   overscroll-behavior-x: contain;
+}
+.codex .bubble.md table {
+  width: max-content;
   border-collapse: collapse;
   font-size: 0.92em;
 }
