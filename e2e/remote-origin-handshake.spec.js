@@ -190,6 +190,8 @@ test('远程设备的信任生命周期：批准前隔离、批准后可用、�
 
     // 撤销：立即失效，不是等到下次刷新。
     await A.locator('#menu-btn').click();
+    // 设备入口已收进抽屉底部的「设置与状态」sheet。
+    await A.locator('#btn-general-settings').click();
     await A.locator('#native-devices-btn').click();
     const revoke = A.locator('#native-panel [data-revoke-device]');
     await expect(revoke.first(), 'A 的设备面板里应当能看到 B').toBeVisible({ timeout: 20000 });

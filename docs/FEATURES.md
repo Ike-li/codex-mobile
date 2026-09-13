@@ -249,6 +249,9 @@
 | 9.6 | 外部 agent 配置探测 / 导入（AGENTS.md、CLAUDE.md） | `externalAgentConfig:*` |
 | 9.7 | 分层连接诊断 | `health-diagnosis.js` |
 | 9.8 | 状态栏（工作区、沙箱、审批策略、git、上下文占用） | `statusline.js` |
+| 9.9 | 「设置与状态」面板：本机偏好 + 账号/主机入口，抽屉底部进入 | `#settings-sheet` |
+| 9.10 | 本机 UI 偏好持久化（存储损坏/不可用时回落默认，不抛） | `ui-preferences.js` |
+| 9.11 | MCP 启动状态默认不进消息流，出错不受开关影响 | `shouldAnnounceMcpStatus` |
 
 ---
 

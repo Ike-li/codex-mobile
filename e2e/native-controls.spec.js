@@ -52,14 +52,22 @@ async function clickNativeControl(page, selector) {
     await page.locator('#menu-btn').click();
     await expect(drawer).toHaveClass(/open/);
   }
+  // 账号 / 主机状态那批入口又往下收了一层,进了抽屉底部的「设置与状态」sheet。
+  // 判据是「抽屉里看不见就往下一层找」,不在这里硬编码哪几个按钮搬了家——
+  // 名单以后还会变,这条规则不会。
+  const target = page.locator(selector);
+  if (!(await target.isVisible())) {
+    await page.locator('#btn-general-settings').click();
+    await expect(page.locator('#settings-sheet')).toBeVisible();
+  }
   // 用真实 click 而不是 dispatchEvent：后者直接把事件派发到元素上，绕过可见性检查，
   // 于是按钮即便对用户完全不可见，这些断言照样是绿的——工具面板整块被 hidden 的那段
   // 时间里就是如此。判据必须是「用户点得到」，不是「元素存在」。
-  await page.locator(selector).click();
+  await target.click();
 }
 
 test.describe('Native Controls Browser Panels', () => {
-  test('工具面板在抽屉里对用户可见', async ({ page }) => {
+  test('工具入口在抽屉与设置两处都对用户可见', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('#state-label')).not.toHaveText('offline', { timeout: 10000 });
     await page.locator('#menu-btn').click();
@@ -68,25 +76,44 @@ test.describe('Native Controls Browser Panels', () => {
     await expect(page.locator('#drawer-tools')).toBeVisible();
 
     // 名单从 DOM 派生，不写死。此前这里硬编码了三个按钮，于是另外八个工具入口
-    // （compact / devices / host-config / import / mcp / models / rollback / skills）
     // 一个都没有可达性覆盖，新加一个工具也不会自动被守住 —— 而「面板在、里面点不到」
     // 正是这个文件开头那段注释记录的那次事故。
-    const buttons = page.locator('#drawer-tools button');
-    const count = await buttons.count();
-    expect(count, '工具面板里应当有按钮；一个都没有说明渲染没跑或选择器失配').toBeGreaterThan(5);
+    //
+    // 入口拆成两处后（抽屉留会话/工作区工具，账号与主机进设置 sheet），这里跟着
+    // 扫两处：只扫抽屉会让搬走的 7 个入口重新失去覆盖，正是上面那段要防的事。
+    async function countReachable(scope, label) {
+      const buttons = page.locator(`${scope} button`);
+      const count = await buttons.count();
+      expect(count, `${label}里一个按钮都没有，说明渲染没跑或选择器失配`).toBeGreaterThan(0);
 
-    let reachable = 0;
-    for (let i = 0; i < count; i += 1) {
-      const button = buttons.nth(i);
-      const id = (await button.getAttribute('id')) || `第 ${i + 1} 个`;
-      // 2026-09-10 Labs 删除后这里不再有 hidden 按钮，因此不再跳过任何一个：
-      // 工具面板里的每个按钮都必须可见。将来若真要藏一个，这条会红——那是对的。
-      await expect(button, `${id} 存在但用户点不到`).toBeVisible();
-      const box = await button.boundingBox();
-      expect(box?.height ?? 0, `${id} 高度为 0，视觉上不存在`).toBeGreaterThan(0);
-      reachable += 1;
+      let reachable = 0;
+      for (let i = 0; i < count; i += 1) {
+        const button = buttons.nth(i);
+        const id = (await button.getAttribute('id')) || `第 ${i + 1} 个`;
+        // 条件渲染的入口按 [hidden] 属性跳过，不按 id 白名单——#push-subscribe-btn
+        // 要浏览器支持推送且 VAPID 三项配齐才出现，mock 下恒为 hidden。按属性判断
+        // 的话，将来再加条件入口不用回来改这里。
+        if (await button.evaluate(el => el.hidden)) continue;
+        await expect(button, `${label}的 ${id} 存在但用户点不到`).toBeVisible();
+        const box = await button.boundingBox();
+        expect(box?.height ?? 0, `${label}的 ${id} 高度为 0，视觉上不存在`).toBeGreaterThan(0);
+        reachable += 1;
+      }
+      return reachable;
     }
-    expect(reachable, '所有未被特性开关隐藏的工具入口都应当可达').toBeGreaterThan(5);
+
+    const inDrawer = await countReachable('#drawer-tools', '抽屉工具面板');
+
+    await page.locator('#btn-general-settings').click();
+    await expect(page.locator('#settings-sheet')).toBeVisible();
+    const inSettings = await countReachable('#settings-sheet-body', '设置与状态');
+
+    // 两处加起来不能比收编前少。只断言各自「有按钮」的话，搬家途中漏掉一个入口
+    // 不会有任何东西变红——那正是这次改动最容易犯的错。
+    expect(
+      inDrawer + inSettings,
+      `可达入口共 ${inDrawer + inSettings} 个（抽屉 ${inDrawer} + 设置 ${inSettings}），少于收编前的 11 个`,
+    ).toBeGreaterThanOrEqual(11);
   });
 
   test('Native Controls Browser Panels', async ({ page }) => {

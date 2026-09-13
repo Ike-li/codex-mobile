@@ -60,6 +60,9 @@
     <div id="drawer-projects"></div>
   </div>
   <div id="drawer-tools">
+    <!-- 这里只留「对当前会话/工作区做事」的按钮。账号、主机状态、设备这类
+         与某个会话无关的入口收进了 #settings-sheet——12 个按钮平铺时没有分组，
+         找一个要扫一遍全部。 -->
     <div class="drawer-section-label"><span class="drawer-section-icon" data-icon="tools"></span> 工具面板</div>
     <div id="native-controls">
       <button id="native-thread-refresh" class="native-control-btn" title="刷新原生会话">Threads</button>
@@ -67,16 +70,56 @@
       <button id="native-rollback-btn" class="native-control-btn" title="回退当前会话">Rollback</button>
       <button id="native-models-btn" class="native-control-btn" title="读取模型能力">Models</button>
       <button id="native-files-btn" class="native-control-btn" title="只读文件选择">Files</button>
-      <button id="native-account-btn" class="native-control-btn" title="账号与用量">Account</button>
-      <button id="native-mcp-btn" class="native-control-btn" title="MCP 状态">MCP</button>
-      <button id="native-health-btn" class="native-control-btn" title="连接与运行诊断">诊断</button>
-      <button id="native-devices-btn" class="native-control-btn" title="已接入的设备">设备</button>
-      <button id="native-skills-btn" class="native-control-btn" title="Skills 状态">Skills</button>
-      <button id="native-import-btn" class="native-control-btn" title="导入 AGENTS/CLAUDE 配置">Import</button>
-      <button id="native-host-config-btn" class="native-control-btn native-danger" title="宿主配置：改动 Codex 配置、插件与账号">宿主配置</button>
     </div>
   </div>
-  <button id="push-subscribe-btn" type="button" hidden>开启推送通知</button>
+  <button id="btn-general-settings" type="button" title="本机偏好、账号与主机状态" aria-label="打开设置与状态">
+    <span class="drawer-section-icon" data-icon="gear"></span>
+    <span>设置与状态</span>
+    <span class="settings-entry-chevron">›</span>
+  </button>
+</div>
+
+<!-- 设置与状态。与底栏的会话设置(#session-settings)按**作用域**分开：那边是
+     model·permission·effort，换台设备打开同一会话仍然成立；这边是本机偏好与主机状态，
+     换台设备就该重新选。两者混在一起用户会找不到开关。 -->
+<div id="settings-sheet-overlay" hidden></div>
+<div id="settings-sheet" hidden role="dialog" aria-modal="true" aria-labelledby="settings-sheet-title">
+  <div id="settings-sheet-header">
+    <h2 id="settings-sheet-title">设置与状态</h2>
+    <button type="button" id="settings-sheet-close" title="关闭" aria-label="关闭设置">
+      <span class="drawer-section-icon" data-icon="x"></span>
+    </button>
+  </div>
+  <div id="settings-sheet-body">
+    <section class="settings-group">
+      <h3 class="settings-group-title">消息流</h3>
+      <label class="settings-toggle-row" for="pref-mcp-status">
+        <span class="settings-toggle-text">
+          <span class="settings-toggle-title">MCP 启动状态</span>
+          <span class="settings-toggle-desc">每个 MCP 服务启动、就绪时各在消息流里播报一条。关掉后只有起不来才提示。</span>
+        </span>
+        <input type="checkbox" id="pref-mcp-status" class="settings-toggle" role="switch">
+      </label>
+      <button id="push-subscribe-btn" type="button" class="settings-action-btn" hidden>开启推送通知</button>
+    </section>
+    <section class="settings-group">
+      <h3 class="settings-group-title">账号与主机</h3>
+      <div class="settings-actions">
+        <button id="native-account-btn" class="settings-action-btn" title="账号与用量">Account</button>
+        <button id="native-mcp-btn" class="settings-action-btn" title="MCP 状态">MCP</button>
+        <button id="native-health-btn" class="settings-action-btn" title="连接与运行诊断">诊断</button>
+        <button id="native-devices-btn" class="settings-action-btn" title="已接入的设备">设备</button>
+        <button id="native-skills-btn" class="settings-action-btn" title="Skills 状态">Skills</button>
+        <button id="native-import-btn" class="settings-action-btn" title="导入 AGENTS/CLAUDE 配置">Import</button>
+      </div>
+    </section>
+    <section class="settings-group">
+      <h3 class="settings-group-title">危险操作</h3>
+      <div class="settings-actions">
+        <button id="native-host-config-btn" class="settings-action-btn native-danger" title="宿主配置：改动 Codex 配置、插件与账号">宿主配置</button>
+      </div>
+    </section>
+  </div>
 </div>
 
 <!-- Header -->
