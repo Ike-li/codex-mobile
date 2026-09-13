@@ -21,22 +21,50 @@
   --tool-border: #e3e3e5;
   --error: #df1c1c;
   --system: #676767;
-  --radius: 24px;
-  --radius-sm: 12px;
-  --radius-lg: 32px;
-  /* 字号/间距 scale:等价值替换用,计算后 px 不变。 */
-  --font-3xs: 8px;
-  --font-2xs: 10px;
-  --font-xs: 11px;
-  --font-sm: 12px;
-  --font-md: 13px;
-  --font-body: 14px;
-  --font-user: 15px;
-  --font-lg: 16px;
-  --font-xl: 18px;
-  --font-2xl: 20px;
-  --font-3xl: 22px;
-  --font-4xl: 24px;
+  /* 圆角 scale。上一版 --radius(24px) 和 --radius-lg(32px) 定义了但全项目零引用,
+     真正在用的是散落的 9 个硬编码值:6/8/10/12/14/16/18/20/22px —— 2px 一档,
+     和字号 scale 一样密到没有意义,元素之间因此看不出属于同一套形状语言。
+     按用途归成 4 档,每档的归并幅度都在 2px 以内(6→8、10→12、14→16、18/22→20),
+     单看某个元素察觉不到,合起来才是一致的形状。 */
+  --radius-xs: 8px;   /* 内嵌块:代码块、终端输出、小控件 */
+  --radius-sm: 12px;  /* 按钮、列表条目、输入框 */
+  --radius: 16px;     /* 卡片与面板 */
+  --radius-lg: 20px;  /* 气泡、浮层、输入区容器 */
+  --radius-pill: 999px;
+  /* 字号 scale。
+     上一版是 8/10/11/12/13/14/15/16 —— 8 个档挤在 8px 区间里,每档差 1px。两个后果:
+     档之间的差别肉眼不可辨(定它们等于没定),而低端三档承载了大量中文。实测界面上
+     35 处含汉字的文本落在 10px 与 11px,其中包括会话设置里「只有 ls、cat 等信任命令
+     自动执行;其余一律询问」这类必须读懂才能安全操作的说明。
+     汉字笔画密度远高于拉丁字母,10px 下抗锯齿会把字糊成灰块 —— 同尺寸的 `26ms`
+     照样认得出,所以这是中文特有的问题,不是「字小」这么简单。
+
+     新 scale 把含中文的档全部抬到 12px 以上(判据见 e2e/lib/layout-audit.js 的
+     cjk-font-too-small)。抬升是连锁的:xs 从 11 抬到 13 就超过了 sm 的 12,
+     命名与值会倒挂,所以必须一路往上推,不是范围蔓延。
+     --font-3xs 是唯一保留在 12px 以下的档:它只用于 .badge-dot 的纯数字角标。
+     --font-lg 用在 #msg-input,只能 ≥16px —— iOS Safari 对字号低于 16px 的输入框
+     会在聚焦时强制缩放整个页面。 */
+  --font-3xs: 10px;
+  --font-2xs: 12px;
+  --font-xs: 13px;
+  --font-sm: 14px;
+  --font-md: 15px;
+  --font-body: 16px;
+  --font-user: 17px;
+  --font-lg: 18px;
+  --font-xl: 20px;
+  --font-2xl: 22px;
+  --font-3xl: 26px;
+  --font-4xl: 28px;
+  /* 等宽终端档,刻意不跟随上面的 scale 抬升。终端输出的可读性取决于**一行放得下多少
+     列**,不是字号:抬到 13px 会让 393px 视口从 46 列掉到 42 列,命令输出的对齐结构被
+     多折的行毁掉,比字小更难读。装的又是路径和命令这类拉丁字符,11px 等宽完全认得出。
+     范围刻意只到 .tool-output(终端 stdout)和 .tool-exit(退出码,纯数字)。同一批卡片里
+     另外两类都跟随 scale:.tool-note 装人话;.tool-cmd 看着像纯命令,实际还装
+     「新增: src/example.js」这种中文标签行和参数 JSON —— 先把它一起划进终端档,
+     结果 cjk-font-too-small 在文件变更卡和 Raw 卡上立刻报了出来。 */
+  --font-terminal: 11px;
   --space-1: 4px;
   --space-2: 6px;
   --space-3: 8px;
@@ -89,6 +117,11 @@
   --hover-wash: rgba(0, 0, 0, 0.02);
   --hover-wash-hover: rgba(0, 0, 0, 0.03);
   --hover-wash-strong: rgba(0, 0, 0, 0.06);
+  /* 卡片与背景的分层。浅色下 --surface(#fff) 和 --bg(#f8f9fa) 只差约 7 个灰阶,再配
+     1px 的 --border(#e3e3e3),分层信号弱到卡片像一叠平铺的纸片。两层阴影:1px 那层
+     交代边缘,8px 那层给出离开背景的高度,都压到 4% 以内 —— 再深就从「浮起」变成
+     「打了个灰框」。深色见下面的覆盖。 */
+  --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -137,6 +170,9 @@
     --hover-wash: rgba(255, 255, 255, 0.04);
     --hover-wash-hover: rgba(255, 255, 255, 0.06);
     --hover-wash-strong: rgba(255, 255, 255, 0.1);
+    /* 深色下不给阴影:黑底上的黑影是不可见的,加了只是白付出一层合成。这里的分层已经
+       由表面亮度承担 —— --surface(#1c1c1c) 本来就比 --bg(#121212) 亮一档。 */
+    --card-shadow: none;
   }
 }
 
@@ -196,7 +232,12 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* 拉丁字体在前、CJK 在后：前面几个都不含中文字形,浏览器会自行继续往后找,于是
+     拉丁走 SF/Segoe/Roboto、中文走 PingFang/鸿蒙/Noto,两套各自拿到设计过的字形。
+     补 CJK 档之前中文完全由平台兜底决定:iOS 靠 -apple-system 恰好能兜到 PingFang SC,
+     Android 落到 Roboto(无 CJK)后就交给 UA 了,渲染不受控。 */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'PingFang SC', 'HarmonyOS Sans SC', 'Noto Sans CJK SC', 'Noto Sans SC', sans-serif;
   background: var(--bg);
   background-image: var(--bg-gradient);
   color: var(--text);
@@ -220,7 +261,7 @@ body {
   }
   #messages::-webkit-scrollbar-thumb, .tool-output::-webkit-scrollbar-thumb {
     background: var(--scrollbar-thumb);
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
   }
   #messages::-webkit-scrollbar-track, .tool-output::-webkit-scrollbar-track {
     background: var(--scrollbar-track);
@@ -250,7 +291,7 @@ body {
   position: relative;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   width: 36px;
   height: 36px;
   flex-shrink: 0;
@@ -273,7 +314,7 @@ body {
   align-items: center;
   min-height: 22px;
   padding: 0 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--bg);
   border: 1px solid var(--border-light);
   color: var(--text-muted);
@@ -307,7 +348,7 @@ body {
   gap: var(--space-2);
   min-height: 32px;
   padding: 0 12px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--bg);
   border: 1px solid var(--border-light);
   color: var(--text);
@@ -321,7 +362,11 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: var(--font-sm);
+  /* 不跟随 scale 抬升,留在 12px。顶栏 393px 里塞着五个元素,这里装的又是目录名 ——
+     拉丁字符加连字符,12px 完全认得出(12px 下限只对汉字成立)。抬到 14px 实测把
+     可显示长度从 14 个字符压到 11 个,`ccm-e2e-USgARH` 被截成 `ccm-e2e-Y1K…`,
+     而项目名正是用户用来区分工作区的那条信息,换 2px 字号不划算。 */
+  font-size: var(--font-2xs);
   font-weight: 700;
 }
 #header-changes {
@@ -331,7 +376,7 @@ body {
   min-width: 16px;
   height: 16px;
   padding: 0 4px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--text);
   color: var(--surface);
   font-size: var(--font-2xs);
@@ -373,7 +418,7 @@ body {
   max-width: 95%;
   background: var(--bg);
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: 1px solid var(--border-light);
 }
 
@@ -386,7 +431,7 @@ body {
   margin-top: var(--space-1);
   background: var(--bg);
   padding: var(--space-1) 10px;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border-light);
   max-width: 95%;
   word-break: break-all;
@@ -499,7 +544,7 @@ body {
   color: var(--text);
   cursor: pointer;
   padding: 0;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
 }
 #drawer-close svg { width: 18px; height: 18px; }
 #drawer-close:active { background: var(--hover-wash-strong); }
@@ -516,7 +561,7 @@ body {
   width: 100%;
   padding: 6px 8px;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-xs);
   background: transparent;
   color: var(--text-muted);
   font-size: var(--font-xs);
@@ -583,7 +628,7 @@ body {
   width: 28px;
   height: 28px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-xs);
   background: var(--surface);
   color: var(--text-muted);
   cursor: pointer;
@@ -704,7 +749,8 @@ body {
   appearance: none;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  box-shadow: var(--card-shadow);
+  border-radius: var(--radius);
   padding: var(--space-6) 12px 12px;
   min-height: 88px;
   display: flex;
@@ -756,7 +802,7 @@ body {
 
 .bubble {
   padding: var(--space-3) 14px;
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   font-size: var(--font-user);
   line-height: 1.55;
   word-break: break-word;
@@ -767,7 +813,7 @@ body {
 .user .bubble {
   background: var(--user-bg);
   color: var(--user-text);
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   box-shadow: none;
   font-size: var(--font-body);
   line-height: 1.45;
@@ -792,7 +838,7 @@ body {
   width: 2px;
   height: 1em;
   margin-left: 3px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--accent-light);
   vertical-align: -0.14em;
   animation: streamCaret 1s ease-in-out infinite;
@@ -816,7 +862,7 @@ body {
   padding: var(--space-4) 12px;
   overflow: auto;
   overscroll-behavior: contain;
-  border-radius: 8px;
+  border-radius: var(--radius-xs);
   background: #1e1e1e;
   color: #f1f1f1;
   font-size: var(--font-sm);
@@ -844,9 +890,15 @@ body {
 }
 /* 首个块级元素的上外边距会在气泡顶部凭空撑出一段空白。 */
 .codex .bubble.md > :first-child { margin-top: 0; }
-.codex .bubble.md h1 { font-size: 1.3em; }
-.codex .bubble.md h2 { font-size: 1.15em; }
-.codex .bubble.md h3 { font-size: 1.05em; }
+/* 上一版是 1.3 / 1.15 / 1.05em,相邻级别只差 13%,而字重、颜色全都一样 —— 只有一个
+   维度在区分。中文比拉丁文更吃这一点:汉字是等宽方块,没有 x-height 和升降部可以
+   参照,一屏方块里 2.5px 的差根本看不出来(深色模式截图上「顶层标题」和「次级标题」
+   看着一样大)。拉开到 1.4 / 1.2em,并给 h1 单独加一档字重当第二个维度。
+   h3 退到和正文同字号、只靠 650 的字重区分:对话流里 h3 已经是很细的分节,
+   再占一档字号会和 h2 挤在一起,反而更难扫读。 */
+.codex .bubble.md h1 { font-size: 1.4em; font-weight: 700; }
+.codex .bubble.md h2 { font-size: 1.2em; }
+.codex .bubble.md h3 { font-size: 1em; }
 .codex .bubble.md h4,
 .codex .bubble.md h5,
 .codex .bubble.md h6 { font-size: 1em; }
@@ -872,7 +924,7 @@ body {
 .codex .bubble.md img {
   max-width: 100%;
   height: auto;
-  border-radius: 8px;
+  border-radius: var(--radius-xs);
 }
 .codex .bubble.md strong { font-weight: 650; }
 .codex .bubble.md em { font-style: italic; }
@@ -992,7 +1044,7 @@ body {
   display: inline-flex;
   margin-top: var(--space-2);
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: var(--space-1) 9px;
   background: transparent;
   color: inherit;
@@ -1006,7 +1058,7 @@ body {
   margin-top: var(--space-2);
   margin-left: var(--space-2);
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: var(--space-1) 9px;
   background: transparent;
   color: inherit;
@@ -1032,13 +1084,13 @@ body {
   border: 1px solid var(--tool-border);
   border-left-width: 3px;
   border-left-color: var(--border);
-  border-radius: 14px;
+  border-radius: var(--radius);
   padding: var(--space-5) 14px;
   font-size: var(--font-md);
   margin-top: 0;
   width: 100%;
   max-width: 100%;
-  box-shadow: none;
+  box-shadow: var(--card-shadow);
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
@@ -1140,7 +1192,7 @@ body {
   word-break: break-all;
   background: var(--bg);
   padding: var(--space-2) 10px;
-  border-radius: 6px;
+  border-radius: var(--radius-xs);
   border: 1px solid var(--border-light);
 }
 /* 卡片里的自然语言：计划步骤、搜索结果摘要。
@@ -1174,15 +1226,22 @@ body {
   margin-left: -14px;
   margin-right: -14px;
   padding: var(--space-3) 12px;
-  border-radius: 8px;
+  border-radius: var(--radius-xs);
   background: #1e1e1e; /* Dark theme terminal looks amazing */
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: var(--font-xs);
+  font-size: var(--font-terminal);
   color: #f1f1f1;
   white-space: pre-wrap;
   max-height: 150px;
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+/* 协议数据的 JSON dump（Raw 卡片）。借 .tool-output 的暗底与滚动，但不跟它一起留在
+   11px 终端档：JSON 的可读性靠缩进层级，不靠一行放得下多少列，而它装的是上游原样
+   回传的 item —— 字段值里出现中文是常态，不是 fixture 造出来的边角情况
+   （实测 mock 的 note 字段就是「未识别的 item 会降级成 Raw 卡片…」）。 */
+.tool-json {
+  font-size: var(--font-xs);
 }
 .tool-ok { color: #87e0a2; }
 .tool-err { color: #ff8888; }
@@ -1197,7 +1256,7 @@ body {
 .command-card[data-ok="false"] { border-left-color: var(--error); }
 .tool-exit {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: var(--font-xs);
+  font-size: var(--font-terminal);
   font-weight: 700;
 }
 .file-change-card details summary.tool-cmd { cursor: pointer; }
@@ -1249,7 +1308,7 @@ body {
   background: var(--surface);
   border: 1px solid var(--border);
   color: var(--text-muted);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: var(--space-1) 12px;
   font-size: var(--font-xs);
   font-weight: 600;
@@ -1276,7 +1335,7 @@ body {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border);
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   box-shadow: 0 8px 32px rgba(0,0,0,0.08);
   z-index: 50;
   overflow: hidden;
@@ -1336,7 +1395,7 @@ body {
   left: 50%;
   transform: translateX(-50%);
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 7px 12px;
   background: var(--surface);
   color: var(--text-muted);
@@ -1352,7 +1411,7 @@ body {
 #msg-input-container {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 22px;
+  border-radius: var(--radius-lg);
   padding: var(--space-4) 10px 8px;
   display: flex;
   flex-direction: column;
@@ -1403,7 +1462,7 @@ body {
   max-width: min(100%, 68vw);
   height: 36px;
   padding: 0 0.75rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--bg);
   border: 1px solid var(--border-light);
   color: var(--text-muted);
@@ -1429,7 +1488,7 @@ body {
   height: 36px;
   margin-left: 0.375rem;
   padding: 0 0.625rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--bg);
   border: 1px solid var(--border-light);
   color: var(--text-muted);
@@ -1489,7 +1548,7 @@ body {
   transition: color 0.15s, transform 0.1s, background 0.15s;
   box-shadow: none;
   flex-shrink: 0;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   padding: 0;
 }
 #attach-btn svg { width: 22px; height: 22px; }
@@ -1656,7 +1715,7 @@ body {
   align-items: center;
   gap: var(--space-3);
   padding: 8px 10px;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border-light);
   background: var(--surface);
   cursor: pointer;
@@ -1697,20 +1756,22 @@ body {
   width: 100%;
 }
 .settings-grid-3 .popover-item-desc {
-  font-size: 10px;
-  line-height: 1.2;
+  font-size: var(--font-2xs);
+  line-height: 1.35;
   white-space: normal;
   display: -webkit-box;
   /* 2 行装不下最长的那条档位说明（「只有 ls、cat 等信任命令自动执行；其余一律询问」
-     实测只显示 24/36px），而这是安全档位，说明被吃掉半句的代价是用户选错权限。 */
-  -webkit-line-clamp: 3;
+     实测只显示 24/36px），而这是安全档位，说明被吃掉半句的代价是用户选错权限。
+     字号从 10px 抬到 12px 后 3 行又装不下（实测 49/65px），同样的理由再放一行。
+     这个值跟着字号走，不是个能一劳永逸定死的常数——clipped-text 会在它不够时变红。 */
+  -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
 /* 思考强度与速度等横向药丸微调 */
 .settings-wrap-row .popover-item {
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 5px 12px;
   gap: 5px;
   min-height: 30px;
@@ -1740,7 +1801,7 @@ body {
   font-weight: 600;
 }
 #granular-list .popover-item-desc {
-  font-size: 9.5px;
+  font-size: var(--font-2xs);
   color: var(--text-muted);
 }
 
@@ -1756,11 +1817,11 @@ body {
   line-height: 1.25;
 }
 .model-list .popover-item-desc {
-  font-size: 10px;
+  font-size: var(--font-2xs);
   color: var(--text-muted);
   opacity: 0.85;
   margin-top: 1px;
-  line-height: 1.2;
+  line-height: 1.3;
 }
 
 /* 快捷操作栏磁贴 */
@@ -1773,7 +1834,7 @@ body {
   font-weight: 600;
 }
 .settings-actions-row .popover-item-desc {
-  font-size: 9.5px;
+  font-size: var(--font-2xs);
   display: none;
 }
 
@@ -1845,7 +1906,7 @@ body {
 .attach-chip {
   display: flex; align-items: center; gap: var(--space-1);
   background: var(--surface); border: 1px solid var(--border);
-  border-radius: 999px; padding: var(--space-1) 10px; font-size: var(--font-xs);
+  border-radius: var(--radius-pill); padding: var(--space-1) 10px; font-size: var(--font-xs);
   max-width: 180px; overflow: hidden;
   box-shadow: 0 1px 2px rgba(0,0,0,0.02);
 }
@@ -1865,7 +1926,7 @@ body {
   padding: var(--space-3) 16px;
   background: var(--banner-warn);
   border: 1px solid var(--warn-border);
-  border-radius: 14px;
+  border-radius: var(--radius);
   align-self: center;
   flex-shrink: 0;
 }
@@ -1886,7 +1947,7 @@ body {
   padding: var(--space-4) 16px;
   background: var(--banner-warn);
   border: 1px solid var(--warn-border);
-  border-radius: 14px;
+  border-radius: var(--radius);
   align-self: center;
   flex-shrink: 0;
 }
@@ -1927,7 +1988,7 @@ body {
    iOS HIG 的 44×44。原来是 55×31，宽度够、高度差 13px。 */
 .approve-btn, .deny-btn {
   border: 1px solid transparent;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   /* 水平内边距跟着高度一起加：只提 min-height 会把 999px 圆角的胶囊拉成椭圆
      （实测 55×44 看着像被纵向拉伸过）。绊线只管尺寸够不够，比例得靠看图。 */
   padding: var(--space-2) 22px;
@@ -1981,7 +2042,7 @@ body {
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text);
-  border-radius: 8px;
+  border-radius: var(--radius-xs);
   height: 28px;
   padding: 0 10px;
   font: inherit;
@@ -2015,7 +2076,7 @@ body {
 }
 .native-list-row {
   border: 1px solid var(--border-light);
-  border-radius: 8px;
+  border-radius: var(--radius-xs);
   padding: var(--space-3);
   margin-bottom: var(--space-2);
   background: var(--bg);
@@ -2046,7 +2107,7 @@ body {
 .native-input {
   width: 100%;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-xs);
   padding: 7px 8px;
   font: var(--font-sm)/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
   color: var(--text);
@@ -2138,7 +2199,7 @@ body {
   font-size: var(--font-sm);
   font-weight: 600;
   border: 1px solid transparent;
-  border-radius: 14px;
+  border-radius: var(--radius);
   align-self: center;
 }
 #conn-banner[hidden] { display: none !important; }
@@ -2149,7 +2210,7 @@ body {
   margin-left: auto;
   border: 1px solid var(--border);
   background: var(--surface);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: var(--space-1) 10px;
   font: inherit;
   font-size: var(--font-xs);
@@ -2182,7 +2243,7 @@ body {
 .sheet-handle {
   width: 36px;
   height: 4px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--border);
   margin: 0 auto 10px;
 }
@@ -2199,7 +2260,7 @@ body {
   flex: 1;
   border: 1px solid var(--border);
   background: var(--surface);
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   padding: var(--space-4);
   font: inherit;
   font-weight: 600;
@@ -2219,7 +2280,7 @@ body {
 #confirm-input {
   width: 100%;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   padding: var(--space-4);
   font: inherit;
   margin-bottom: var(--space-5);
@@ -2232,7 +2293,7 @@ body {
 .workspace-tab {
   border: 1px solid var(--border);
   background: var(--surface);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   padding: var(--space-2) 10px;
   font: inherit;
   font-size: var(--font-sm);
@@ -2255,7 +2316,7 @@ body {
 .workspace-row-action, .workspace-mention-btn {
   border: 1px solid var(--border);
   background: var(--surface);
-  border-radius: 8px;
+  border-radius: var(--radius-xs);
   padding: var(--space-1) 8px;
   font-size: var(--font-xs);
   cursor: pointer;
@@ -2288,7 +2349,7 @@ body {
   bottom: calc(88px + var(--keyboard-inset) + env(safe-area-inset-bottom));
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   max-height: 220px;
   overflow: auto;
   overscroll-behavior: contain;
@@ -2315,7 +2376,7 @@ body {
   padding: var(--space-7);
 }
 #attach-preview-modal[hidden] { display: none !important; }
-#attach-preview-img { max-width: 100%; max-height: 85vh; object-fit: contain; border-radius: 8px; }
+#attach-preview-img { max-width: 100%; max-height: 85vh; object-fit: contain; border-radius: var(--radius-xs); }
 
 .code-block-wrap { position: relative; }
 /* 给复制按钮留出完整高度（top: 0.35rem + 32px = 37.6px），否则它压在第一行代码上。
@@ -2335,7 +2396,7 @@ body {
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text-muted);
-  border-radius: 6px;
+  border-radius: var(--radius-xs);
   font-size: var(--font-xs);
   cursor: pointer;
 }

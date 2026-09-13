@@ -3181,7 +3181,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     card.dataset.card = 'meta';
     const label = payload?.item?.type || payload?.envelopeType || 'raw';
     card.innerHTML = `<div class="tool-name">${icon('receipt')} Raw</div>`
-      + `<details><summary class="tool-cmd">${escHtml(label)}</summary><pre class="tool-output">${escHtml(JSON.stringify(payload.item || payload, null, 2))}</pre></details>`;
+      + `<details><summary class="tool-cmd">${escHtml(label)}</summary><pre class="tool-output tool-json">${escHtml(JSON.stringify(payload.item || payload, null, 2))}</pre></details>`;
     appendRaw(card, 'codex');
     scrollBottom();
   }

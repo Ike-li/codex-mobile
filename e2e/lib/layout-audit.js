@@ -21,6 +21,22 @@ const SQUEEZE_MIN_CHARS = 4;
 const TAP_MIN = 44;
 
 /**
+ * 含汉字的文本的字号下限。
+ *
+ * 为什么只卡汉字、不卡所有文本：同样是 10px，`26ms` 和「延迟」的可读性不是一回事。
+ * 汉字的笔画密度远高于拉丁字母——「懂」在 10px 下的一撇一捺不足半个像素，抗锯齿糊成
+ * 一团灰；拉丁字母只有 26 个字形、笔画少，10px 仍能靠轮廓辨认。一刀切禁止小字号会把
+ * token 计数、延迟毫秒这些纯数字标签一起报掉，那是产品的信息密度选择，不是缺陷。
+ *
+ * 12px 的依据：Material Design 的 caption 档是 12sp，iOS HIG 最小可用字号 11pt；
+ * 中文排版通行的手机端下限也是 12px。低于它的汉字在移动端普遍认为不可读，不是审美问题。
+ */
+const CJK_MIN_FONT_PX = 12;
+
+/** 汉字区间：基本区 + 扩展 A。标点和全角符号不算——它们没有笔画密度问题。 */
+const CJK_PATTERN = /[一-鿿㐀-䶿]/;
+
+/**
  * 高风险操作的语义标记。
  *
  * 只守这一类，不守全部按钮：实测抽屉一屏 26 个可点击元素里 22 个低于 44×44，模式是
@@ -46,6 +62,13 @@ const OVERLAY_ALLOWLIST = new Map([
     + '在不同的坐标系里，实测无效。浮在内容上是这类控件的通行做法（Telegram / 微信同款）：'
     + '代价是盖住一行，换来的是不占常驻空间。'
     + '待改进：它是 left: 50% 居中，正好压在正文中央；移到右侧只会盖住行尾空白。'],
+  ['#slash-popup',
+    '斜杠命令面板。用户在输入框敲 `/` 才出现，那一刻的任务就是「从列表里挑一个命令」，'
+    + '被盖住的空状态建议卡片不属于当前任务；选完或删掉 `/` 面板即消失，内容完整恢复。'
+    + '不遮挡的做法是把面板做成推挤布局，但那会让每敲一个字符整个界面上下跳动，'
+    + '比遮挡更糟——Slack、Discord、VS Code 的命令面板都是浮层，没有例外。'
+    + '补这条豁免的直接原因：字号 scale 抬升后面板变高，第一次盖到了建议卡片的文字。'
+    + '遮挡范围仍限于面板自身高度，没有蔓延。'],
 ]);
 
 /**
@@ -72,7 +95,8 @@ export async function auditLayout(page, scope) {
   }
 
   return loc.evaluate(
-    (root, { scopeSel, ratio, maxW, minChars, allowOverlays, highRiskSel, tapMin }) => {
+    (root, { scopeSel, ratio, maxW, minChars, allowOverlays, highRiskSel, tapMin, cjkMin, cjkSrc }) => {
+      const cjkRe = new RegExp(cjkSrc);
       const issues = [];
       let scanned = 0;
 
@@ -123,6 +147,19 @@ export async function auditLayout(page, scope) {
             detail: `${Math.round(r.width)}×${Math.round(r.height)}px（高宽比 ${(r.height / r.width).toFixed(1)}），`
               + `${text.length} 个字符被压进 ${Math.round(r.width)}px 宽——正文被挤成了竖条`,
           });
+        }
+
+        // 规则：汉字被排到读不清的字号。
+        if (cjkRe.test(text)) {
+          const fontPx = parseFloat(cs.fontSize);
+          if (fontPx < cjkMin) {
+            issues.push({
+              rule: 'cjk-font-too-small',
+              text: text.slice(0, 30),
+              detail: `字号 ${fontPx}px，低于含汉字文本的 ${cjkMin}px 下限`
+                + `——汉字笔画密度高，这个尺寸下会糊成灰块`,
+            });
+          }
         }
 
         // 规则：文本被截断，而用户不知道自己少看了东西。
@@ -262,6 +299,9 @@ export async function auditLayout(page, scope) {
       allowOverlays: [...OVERLAY_ALLOWLIST.keys()],
       highRiskSel: HIGH_RISK_SELECTOR,
       tapMin: TAP_MIN,
+      cjkMin: CJK_MIN_FONT_PX,
+      // 正则不能跨 evaluate 边界序列化，传 source 进去在页面里重建。
+      cjkSrc: CJK_PATTERN.source,
     },
   );
 }
