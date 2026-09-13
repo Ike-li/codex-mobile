@@ -72,6 +72,89 @@ export function wrapTables(html) {
   );
 }
 
+/**
+ * 宽表格边缘渐隐：内容比容器宽时给 .table-scroll 挂 can-scroll-right / can-scroll-left，
+ * CSS 用 mask 把那一侧淡出。不在 wrapTables 里做，因为它只产出 HTML 字符串；
+ * 真正的 overflow 要等表格进 DOM、完成布局之后才知道。
+ *
+ * 在模块加载时观察 DOM，是因为 renderMarkdown 的调用点不止一处（流式结束、
+ * 历史回放），每个调用点再手动 bind 一次一定会漏。
+ *
+ * 阈值 1px：亚像素下 scrollWidth 常常比 clientWidth 大 0.5，不当成溢出。
+ */
+const TABLE_SCROLL_HINT_PX = 1;
+const boundTableScrolls = new WeakSet();
+
+function applyTableScrollHint(el) {
+  const max = el.scrollWidth - el.clientWidth;
+  el.classList.toggle(
+    'can-scroll-left',
+    max > TABLE_SCROLL_HINT_PX && el.scrollLeft > TABLE_SCROLL_HINT_PX,
+  );
+  el.classList.toggle(
+    'can-scroll-right',
+    max > TABLE_SCROLL_HINT_PX && max - el.scrollLeft > TABLE_SCROLL_HINT_PX,
+  );
+}
+
+function bindTableScroll(el, resizeObserver) {
+  if (boundTableScrolls.has(el)) {
+    applyTableScrollHint(el);
+    return;
+  }
+  boundTableScrolls.add(el);
+  el.addEventListener('scroll', () => applyTableScrollHint(el), { passive: true });
+  resizeObserver?.observe(el);
+  applyTableScrollHint(el);
+}
+
+function bindTableScrollTree(root, resizeObserver) {
+  if (!root) return;
+  if (root.nodeType === 1 && root.classList?.contains('table-scroll')) {
+    bindTableScroll(root, resizeObserver);
+  }
+  if (root.querySelectorAll) {
+    for (const el of root.querySelectorAll('.table-scroll')) {
+      bindTableScroll(el, resizeObserver);
+    }
+  }
+}
+
+function startTableScrollObserver() {
+  if (typeof document === 'undefined' || typeof MutationObserver === 'undefined') return;
+
+  const resizeObserver = typeof ResizeObserver === 'function'
+    ? new ResizeObserver(entries => {
+      for (const entry of entries) applyTableScrollHint(entry.target);
+    })
+    : null;
+
+  const flush = () => bindTableScrollTree(document, resizeObserver);
+
+  new MutationObserver(mutations => {
+    for (const m of mutations) {
+      for (const n of m.addedNodes) {
+        if (n.nodeType === 1) bindTableScrollTree(n, resizeObserver);
+      }
+    }
+  }).observe(document.documentElement || document, { childList: true, subtree: true });
+
+  const start = () => {
+    flush();
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(flush);
+  };
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start, { once: true });
+  } else {
+    start();
+  }
+
+  window.addEventListener('resize', flush);
+  document.fonts?.ready?.then(flush);
+}
+
+startTableScrollObserver();
+
 export function renderMarkdown(raw, deps = globalThis) {
   const marked = deps.marked;
   const DOMPurify = deps.DOMPurify;

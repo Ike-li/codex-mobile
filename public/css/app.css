@@ -892,6 +892,40 @@ body {
   margin: 0 0 0.75em;
   overflow-x: auto;
   overscroll-behavior-x: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-clip: padding-box;
+  mask-clip: padding-box;
+}
+/* 溢出提示：用 mask 把容器边缘淡出，不另挂 position:absolute 元素。
+   遮挡检测把 absolute/fixed/sticky 当候选，渐变层会压到单元格上被判 occluded-text。
+   mask 画在容器自己身上，深色模式不用换色（black 只当 alpha，用户看见的是背后的 --bg）。
+   can-scroll-* 由 markdown.js 按 scrollLeft 开关；滑到头或没有溢出时 class 卸掉，提示消失。 */
+.codex .bubble.md .table-scroll.can-scroll-right {
+  -webkit-mask-image: linear-gradient(to right, black calc(100% - var(--space-9)), transparent);
+  mask-image: linear-gradient(to right, black calc(100% - var(--space-9)), transparent);
+}
+.codex .bubble.md .table-scroll.can-scroll-left {
+  -webkit-mask-image: linear-gradient(to right, transparent, black var(--space-9));
+  mask-image: linear-gradient(to right, transparent, black var(--space-9));
+}
+.codex .bubble.md .table-scroll.can-scroll-left.can-scroll-right {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    black var(--space-9),
+    black calc(100% - var(--space-9)),
+    transparent
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black var(--space-9),
+    black calc(100% - var(--space-9)),
+    transparent
+  );
 }
 .codex .bubble.md table {
   width: max-content;

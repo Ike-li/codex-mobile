@@ -18,6 +18,79 @@ async function sendAndRender(page, prompt, ready) {
   await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
 }
 
+// 横滑提示的判据：那条边上的像素，在提示样式生效和被关掉时必须不一样。
+// 只断言 class / mask-image 字符串会让「HTML 里有、屏幕上没有」再绿一次。
+async function edgeHintPaints(page, scroller, side) {
+  await scroller.scrollIntoViewIfNeeded();
+  const box = await scroller.boundingBox();
+  expect(box, '.table-scroll 应在视口里才能拍到边缘').toBeTruthy();
+
+  const strip = 20;
+  const height = 28;
+  const vp = page.viewportSize();
+  const clip = {
+    x: Math.round(side === 'right' ? box.x + box.width - strip : box.x),
+    y: Math.round(box.y + Math.min(box.height * 0.55, Math.max(0, box.height - height))),
+    width: strip,
+    height,
+  };
+  clip.x = Math.max(0, Math.min(clip.x, vp.width - clip.width));
+  clip.y = Math.max(0, Math.min(clip.y, vp.height - clip.height));
+
+  // 对照态是**全不透明的 mask**，不是「没有 mask」。这条差别决定这个仪器是否可用：
+  // 把 mask 清成 none 会让元素退出离屏合成，文字从灰度抗锯齿切回子像素抗锯齿，于是
+  // 任何含文字的区域两张都不一样——反向断言（「此处不该有提示」）因此系统性假红。
+  // 实测：最左端左边缘本无左侧渐隐，清 mask 法仍报 667/727 字节不同、maxDelta 254；
+  // 而同一方法在无文字的边缘（滑到尽头后的右缘）diffBytes=0，正是「差异来自文字重绘」的指纹。
+  // 换成全不透明 mask 后两张都带着合成层，唯一变量才真的只剩「渐隐与否」。
+  const opaque = 'linear-gradient(to right, black, black)';
+  // 拍第一张前先补齐条件：本来没有 mask 的（窄表、滑到尽头的那一侧）也挂上全不透明 mask，
+  // 否则第一张无合成层、第二张有，又把那个变量放回来了。
+  await scroller.evaluate((el, mask) => {
+    if (globalThis.getComputedStyle(el).maskImage === 'none') {
+      el.style.maskImage = mask;
+      el.style.webkitMaskImage = mask;
+    }
+  }, opaque);
+  await page.evaluate(() => new Promise(r => globalThis.requestAnimationFrame(r)));
+  const painted = await page.screenshot({ clip });
+
+  await scroller.evaluate((el, mask) => {
+    // 三种常见提示画法都取消：渐变遮罩换成全不透明、inset 阴影与贴边背景清掉。
+    // 改的是这一帧的内联覆盖，不是源码；源码里的提示样式被删时，两张截图会变得一样。
+    el.style.maskImage = mask;
+    el.style.webkitMaskImage = mask;
+    el.style.boxShadow = 'none';
+    el.style.backgroundImage = 'none';
+  }, opaque);
+  await page.evaluate(() => new Promise(r => globalThis.requestAnimationFrame(r)));
+  const cleared = await page.screenshot({ clip });
+
+  await scroller.evaluate(el => {
+    el.style.maskImage = '';
+    el.style.webkitMaskImage = '';
+    el.style.boxShadow = '';
+    el.style.backgroundImage = '';
+  });
+  await page.evaluate(() => new Promise(r => globalThis.requestAnimationFrame(r)));
+  return !painted.equals(cleared);
+}
+
+async function mountNarrowTable(page) {
+  await page.evaluate(async () => {
+    const { renderMarkdown } = await import('/js/markdown.js');
+    const host = globalThis.document.createElement('div');
+    host.className = 'msg codex';
+    host.id = 'narrow-table-probe';
+    host.innerHTML = `<div class="bubble md">${renderMarkdown('| a | b |\n| --- | --- |\n| 1 | 2 |', globalThis)}</div>`;
+    globalThis.document.querySelector('#messages').append(host);
+    await new Promise(r => globalThis.requestAnimationFrame(() => globalThis.requestAnimationFrame(r)));
+  });
+  const scroller = page.locator('#narrow-table-probe .table-scroll');
+  await expect(scroller).toBeVisible();
+  return scroller;
+}
+
 test.describe('助手回复的 Markdown 排版', () => {
   test('宽表格自己横向滚动,不撑破阅读栏', async ({ page }) => {
     await sendAndRender(page, 'RICH_MARKDOWN_FIXTURE', p => p.locator('.msg.codex .bubble.md table').last());
@@ -63,6 +136,68 @@ test.describe('助手回复的 Markdown 排版', () => {
     const bubbleBox = await bubble.boundingBox();
     const messagesBox = await page.locator('#messages').boundingBox();
     expect(bubbleBox.width).toBeLessThanOrEqual(messagesBox.width + 1);
+  });
+
+  test('宽表格溢出时右侧有横滑提示，滑到尽头消失，窄表没有', async ({ page }) => {
+    await sendAndRender(page, 'RICH_MARKDOWN_FIXTURE', p => p.locator('.msg.codex .bubble.md table').last());
+
+    const scroller = page.locator('.msg.codex .bubble.md .table-scroll').last();
+    await scroller.scrollIntoViewIfNeeded();
+
+    const overflow = await scroller.evaluate(el => ({
+      scrollWidth: el.scrollWidth,
+      clientWidth: el.clientWidth,
+    }));
+    expect(overflow.scrollWidth, '这份 fixture 必须真的溢出，否则提示断言会平凡通过')
+      .toBeGreaterThan(overflow.clientWidth + 8);
+
+    // class 只用来等 JS 把 overflow 算完；真正的判据是下面的像素对比。
+    await expect(scroller).toHaveClass(/can-scroll-right/);
+    await expect(scroller).not.toHaveClass(/can-scroll-left/);
+
+    // 判据是像素，不是 class：class 写在 HTML 里用户看不见。把右侧 20px 拍下来，
+    // 再把提示用的 mask/阴影清掉拍一张，两张不一样 ⇒ 提示真的画在了那条边上。
+    expect(
+      await edgeHintPaints(page, scroller, 'right'),
+      '表格右侧被截断时，用户应能看出右边还有内容',
+    ).toBe(true);
+    expect(
+      await edgeHintPaints(page, scroller, 'left'),
+      '还在最左端时，左侧不应出现「还能往左滑」的假信号',
+    ).toBe(false);
+
+    await scroller.evaluate(el => {
+      el.scrollLeft = el.scrollWidth;
+    });
+    await expect(scroller).not.toHaveClass(/can-scroll-right/);
+    await expect(scroller).toHaveClass(/can-scroll-left/);
+    expect(
+      await edgeHintPaints(page, scroller, 'right'),
+      '滑到最右端后右侧提示必须消失，否则就是常亮的假信号',
+    ).toBe(false);
+    expect(
+      await edgeHintPaints(page, scroller, 'left'),
+      '已经滑走后，左侧应提示左边还有内容',
+    ).toBe(true);
+
+    const narrow = await mountNarrowTable(page);
+    const narrowOverflow = await narrow.evaluate(el => el.scrollWidth - el.clientWidth);
+    expect(narrowOverflow, '探针表必须挤得下，才测得到「没有溢出时不提示」').toBeLessThanOrEqual(1);
+    expect(await edgeHintPaints(page, narrow, 'right'), '窄表格右侧不应出现横滑提示').toBe(false);
+    expect(await edgeHintPaints(page, narrow, 'left'), '窄表格左侧不应出现横滑提示').toBe(false);
+  });
+
+  test('深色模式下宽表格的横滑提示同样成立', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'dark' });
+    await sendAndRender(page, 'RICH_MARKDOWN_FIXTURE', p => p.locator('.msg.codex .bubble.md table').last());
+
+    const scroller = page.locator('.msg.codex .bubble.md .table-scroll').last();
+    await scroller.scrollIntoViewIfNeeded();
+    await expect(scroller).toHaveClass(/can-scroll-right/);
+    expect(
+      await edgeHintPaints(page, scroller, 'right'),
+      '深色模式下溢出表格右侧仍应有横滑提示',
+    ).toBe(true);
   });
 
   test('标题层级克制,引用/分隔线/列表都有设计样式', async ({ page }) => {

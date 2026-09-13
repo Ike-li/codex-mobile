@@ -51,7 +51,7 @@
 |---|---|---|
 | 2.1 | Markdown 渲染（表格、标题、引用、列表、分隔线） | `markdown.js` |
 | 2.2 | 代码块语法高亮 + 复制按钮 | `enhanceCodeBlocks` |
-| 2.3 | 宽表格独立横向滚动，不撑破消息 | `app.css` |
+| 2.3 | 宽表格独立横向滚动，不撑破消息；溢出时边缘渐隐提示可横滑 | `wrapTables` / `.table-scroll` |
 | 2.4 | XSS 消毒（脚本、事件属性、`javascript:`、iframe 全部剥离） | `sanitizer.js` |
 | 2.5 | ANSI 转义序列转 HTML（终端色彩） | `ansi-html.js` |
 | 2.6 | thinking / reasoning 折叠卡片 | `appendReasoning` |
