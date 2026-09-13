@@ -53,25 +53,42 @@ test('消息流的卡片按优先级分档，四档的左边框色两两不同',
   await expect(page.locator('.tool-card').filter({ hasText: '需要审批' })).toBeVisible({ timeout: 10000 });
 
   const r = await page.evaluate(() => {
-    const cards = [...globalThis.document.querySelectorAll('.tool-card')];
+    const all = [...globalThis.document.querySelectorAll('.tool-card')];
     const byKind = new Map();
     const missing = [];
-    for (const c of cards) {
+    const borderedRows = [];
+    for (const c of all) {
       const kind = c.dataset.card;
       if (!kind) { missing.push((c.textContent || '').trim().slice(0, 16)); continue; }
+      // 活动行是统一的低权重过程，不参与分色——它们的左边框必须是 0。
+      if (c.classList.contains('activity-row')) {
+        if (parseFloat(globalThis.getComputedStyle(c).borderLeftWidth) > 0) {
+          borderedRows.push((c.textContent || '').trim().slice(0, 16));
+        }
+        continue;
+      }
       if (!byKind.has(kind)) byKind.set(kind, globalThis.getComputedStyle(c).borderLeftColor);
     }
-    return { total: cards.length, missing, kinds: Object.fromEntries(byKind) };
+    return { total: all.length, missing, borderedRows, kinds: Object.fromEntries(byKind) };
   });
 
   expect(r.total, '没渲染出卡片，这条用例什么都没验到').toBeGreaterThan(3);
   // 新增一类卡片却忘了分档时在这里红——默认值落在「必须显式分档」那一侧。
+  // 活动行同样要带 data-card，所以这条仍覆盖全部 .tool-card。
   expect(r.missing, `这些卡片没有 data-card 分档：${r.missing.join(' / ')}`).toEqual([]);
 
-  // 四档必须真的产生视觉差异。只断言「属性值不同」是不够的——
-  // CSS 没写时属性齐全而颜色全一样，那正是这条规则要防的状态。
+  // 工具活动压成一行灰字之后，「过程」这一层就不该再有颜色语义了——给某一类活动行
+  // 单独描个边，等于把刚降下去的视觉权重又提回来。
+  expect(r.borderedRows, `这些活动行带了左边框，破坏了过程层的统一低权重：${r.borderedRows.join(' / ')}`)
+    .toEqual([]);
+
+  // 剩下的卡片（审批、计划、变更摘要）必须真的产生视觉差异。只断言「属性值不同」
+  // 是不够的——CSS 没写时属性齐全而颜色全一样，那正是这条规则要防的状态。
+  //
+  // 阈值从 >2 降到 >=2：过程类不再分档之后，有边框的就只剩 decision 和 outcome 两档。
+  // 这不是放松，是档位总数真的变少了。
   const kinds = Object.keys(r.kinds);
-  expect(kinds.length, `只出现了 ${kinds.length} 档卡片，覆盖不足`).toBeGreaterThan(2);
+  expect(kinds.length, `只出现了 ${kinds.length} 档卡片，覆盖不足`).toBeGreaterThanOrEqual(2);
   const colors = Object.values(r.kinds);
   expect(new Set(colors).size, `分档 ${JSON.stringify(r.kinds)} 的左边框色有重复——分了档但看不出来`)
     .toBe(colors.length);
@@ -88,11 +105,38 @@ test('终端输出块贴到卡片边缘，不被三层 padding 连续吃掉宽�
   await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
   await page.locator('#msg-input').fill('TOOL_CARDS_FIXTURE');
   await page.locator('#send-btn').click();
-  await expect(page.locator('.tool-output').first()).toBeVisible({ timeout: 10000 });
+  // 判据要落在本轮的产物上。只等 #state-label 变 idle 是不够的——发送后它还没
+  // 转成 busy 时这条就立即通过了，后面的测量会跑在一个还没渲染任何东西的页面上
+  // （实测 .tool-output 一个都扫不到，用例平凡地失败在可见性上而不是宽度上）。
+  // 「用时 N 秒」是 turn 收完尾才插入的，等它同时保证了内容齐全和 turn 结束。
+  await expect(page.locator('.worked-for').last()).toBeVisible({ timeout: 20000 });
   await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 20000 });
 
+  // 活动行收起后终端块没有 layout box，量不到宽度。这条量的是 CSS 布局不是交互，
+  // 所以直接把所有折叠层摊开——逐层模拟点击要处理「组里套行」两级嵌套，
+  // 碎在选择器上不产生任何关于宽度的信息。
+  await page.evaluate(() => {
+    for (const d of globalThis.document.querySelectorAll('#messages details')) d.open = true;
+    // .msg 带 content-visibility: auto：视口外的子树整个跳过渲染，量出来的宽度是 0，
+    // 而且滚进视口后要等一帧才解冻。量尺寸之前先解冻——这不改变元素真实进入视口后的
+    // 布局，只是让测量不依赖渲染时序。
+    for (const m of globalThis.document.querySelectorAll('#messages .msg')) {
+      m.style.contentVisibility = 'visible';
+    }
+  });
+  // 取本轮最后一个终端块，不取 first()：整轮 e2e 共享 mock server，goto 会把前面
+  // spec 的历史一起恢复，first() 会落在视口外的历史消息上——那里的 .msg 带
+  // content-visibility: auto，跳过渲染的子树没有 layout box，连滚过去都做不到。
+  //
+  // 排除 .tool-json 是因为它是 JSON dump，字号比终端块大一档，拿它算列数
+  // 量的不是同一个东西。
+  const out = page.locator('#messages .tool-output:not(.tool-json)').last();
+  await out.scrollIntoViewIfNeeded();
+  await expect(out).toBeVisible({ timeout: 10000 });
+
   const m = await page.evaluate(() => {
-    const out = globalThis.document.querySelector('.tool-output');
+    const list = globalThis.document.querySelectorAll('#messages .tool-output:not(.tool-json)');
+    const out = list[list.length - 1];
     const card = out.closest('.tool-card');
     const cs = globalThis.getComputedStyle(out);
     const probe = globalThis.document.createElement('span');
@@ -144,9 +188,10 @@ test('卡片里的自然语言不套用代码样式', async ({ page }) => {
     // 计划步骤：自然语言的待办项，不是命令。
     const plan = [...globalThis.document.querySelectorAll('.tool-card')]
       .find(c => (c.querySelector('.tool-name')?.textContent || '').includes('计划'));
-    // 搜索结果摘要：一句话说明，不是终端输出。
+    // 搜索结果摘要：一句话说明，不是终端输出。搜索改成活动行之后标题挪进了
+    // .activity-label，原来的 .tool-name 只剩计划这类卡片还在用。
     const snippet = [...globalThis.document.querySelectorAll('.tool-card')]
-      .find(c => (c.querySelector('.tool-name')?.textContent || '').includes('搜索'));
+      .find(c => (c.querySelector('.activity-label')?.textContent || '').includes('已搜索网页'));
     return {
       planSteps: plan ? [...plan.children].slice(1).map(pick) : [],
       snippets: snippet ? [...snippet.querySelectorAll('.tool-note, .tool-output')].map(pick) : [],

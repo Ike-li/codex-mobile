@@ -555,30 +555,45 @@ test.describe('UI_SURFACE 截图', () => {
     await shotArea(page, '23-code-block', ['.msg.user', '.msg.codex'], { top: 20, bottom: 14 });
   });
 
-  // §3.2 第 8–11 行：MCP 调用、搜索结果、计划、Raw 降级，四张卡一次推出来。
-  test('24 工具卡片：MCP / 搜索 / 计划 / Raw', async ({ page }) => {
+  // §3.2 第 10、13、14 行（收起态）和第 8、9、11 行（展开态）。
+  // turn 结束后相邻的活动行会折成一句摘要，所以这一组要拆成两张图：收起时过程
+  // 只占一行，点开才是 MCP / 搜索 / Raw 三条。计划不是活动，仍然是卡片。
+  test('24 工具活动：折叠摘要与展开后的三行', async ({ page }) => {
     await connect(page);
     await send(page, 'TOOL_CARDS_FIXTURE');
     await idle(page);
 
-    const cards = page.locator('.tool-card');
-    const plan = cards.filter({ hasText: '计划' }).last();
-    const mcp = cards.filter({ hasText: 'read_file' }).last();
-    const search = cards.filter({ hasText: '搜索:' }).last();
-    const raw = cards.filter({ hasText: 'Raw' }).last();
-    for (const card of [plan, mcp, search, raw]) {
-      await expect(card).toBeVisible({ timeout: 10000 });
+    const plan = page.locator('.tool-card').filter({ hasText: '计划' }).last();
+    const group = page.locator('.activity-group').last();
+    const worked = page.locator('.worked-for').last();
+    for (const el of [plan, group, worked]) {
+      await expect(el).toBeVisible({ timeout: 10000 });
     }
+    // 折叠标题必须是过去时的归并说法，不是某一条活动自己的标题。
+    await expect(group.locator(":scope > .activity-toggle")).toContainText('已搜索网页');
 
-    // 四张卡加起来正好在一屏内，一张图收完，不必拆。
     await plan.scrollIntoViewIfNeeded();
+    await annotate(page, [
+      { sel: await tag(plan, 'plan'), n: 10, place: 'tl' },
+      { sel: await tag(group, 'group'), n: 13, place: 'tl' },
+      { sel: await tag(worked, 'worked'), n: 14, place: 'tr' },
+    ]);
+    await shotArea(page, '24-tool-cards', '#messages', { top: 4, bottom: 4 });
+
+    await group.locator(":scope > .activity-toggle").click();
+    const rows = group.locator('.activity-row');
+    const mcp = rows.filter({ hasText: 'read_file' }).last();
+    const search = rows.filter({ hasText: '已搜索网页' }).last();
+    const raw = rows.filter({ hasText: 'Raw' }).last();
+    for (const row of [mcp, search, raw]) {
+      await expect(row).toBeVisible({ timeout: 10000 });
+    }
     await annotate(page, [
       { sel: await tag(mcp, 'mcp'), n: 8, place: 'tl' },
       { sel: await tag(search, 'search'), n: 9, place: 'tl' },
-      { sel: await tag(plan, 'plan'), n: 10, place: 'tl' },
       { sel: await tag(raw, 'raw'), n: 11, place: 'tl' },
     ]);
-    await shotArea(page, '24-tool-cards', '#messages', { top: 4, bottom: 4 });
+    await shotArea(page, '24b-tool-cards-expanded', '#messages', { top: 4, bottom: 4 });
   });
 
   // §8 深色模式跟随系统。
@@ -594,7 +609,10 @@ test.describe('UI_SURFACE 截图', () => {
 
   // §3.3 深色下的卡片分档。22 那张只有 Markdown 正文，看不到 data-card 的色带，
   // 于是分档在深色模式下长期只有探针数据、没有一张能用肉眼核对的图。
-  // 审批卡先发、工具卡后发，再把审批卡滚到视口顶部，四档才会自上而下依次入画。
+  // 审批卡先发、工具卡后发，再把审批卡滚到视口顶部，各档才会自上而下依次入画。
+  //
+  // 工具活动压成一行灰字之后，这张图上的色带只剩 outcome（计划）和 decision
+  // （审批）两档——过程那一层刻意没有色带，这正是要用肉眼核对的东西之一。
   test('22b 深色模式：卡片分档色带', async ({ page }) => {
     await page.emulateMedia({ colorScheme: 'dark' });
     await connect(page);
@@ -606,10 +624,11 @@ test.describe('UI_SURFACE 截图', () => {
     // 工具卡必须先发：审批挂起时再发消息会中断当前 turn，审批卡随即变成
     // 「已超时失效」，decision 档就截不到了（第一版就是这么失败的）。
     await send(page, 'TOOL_CARDS_FIXTURE');
-    // 等最后一张卡真正渲染出来，而不是等 #state-label 变 idle：后者在 turn 中途
-    // 会短暂回到 idle，接着发下一条就会把这个 turn 打断，实测只渲染出计划和 MCP
-    // 两张卡就「已中断」。判据要落在用户看得见的产物上。
-    await expect(page.locator('.tool-card').filter({ hasText: 'Raw' })).toBeVisible({ timeout: 15000 });
+    // 等收尾产物出现，而不是等 #state-label 变 idle：后者在 turn 中途会短暂回到
+    // idle，接着发下一条就会把这个 turn 打断，实测只渲染出计划和 MCP 两张卡就
+    // 「已中断」。判据要落在用户看得见的产物上——「用时 N 秒」是 turn 真正收完尾
+    // 才会插入的那一条，比原来等 Raw 卡更准（Raw 现在会被折进活动组，收尾后反而不可见）。
+    await expect(page.locator('.worked-for').last()).toBeVisible({ timeout: 15000 });
     await idle(page);
     await send(page, 'approve this command');
     const approval = page.locator('.tool-card').filter({ hasText: '需要审批' }).last();

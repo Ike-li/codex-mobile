@@ -28,10 +28,14 @@ test.describe('P0 协议桥、审批与 Socket.IO', () => {
     // 3. Click approve.
     await approveCard.getByRole('button', { name: '批准' }).click();
     await expect(approveCard).toContainText('已批准');
-    await expect(page.getByText('exit: 0').last()).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('.command-card').last()).toContainText('命令');
-    await expect(page.getByText('command approved and executed').last()).toBeVisible();
     await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
+    // 命令活动行跑完就收起：行上只留命令本身，退出码和输出折在里面。
+    // 标题不再是「命令」两个字——那是卡片时代的固定表头，现在这一行写的是命令正文。
+    const commandRow = page.locator('.command-card').last();
+    await expect(commandRow).toHaveAttribute('data-ok', 'true');
+    await commandRow.locator('.activity-toggle').click();
+    await expect(commandRow.getByText('exit: 0')).toBeVisible({ timeout: 10000 });
+    await expect(commandRow).toContainText('command approved and executed');
 
     // 4. Send approve this command again.
     const approvalCountBeforeDecline = await approvalCards.count();

@@ -184,10 +184,16 @@ test.describe('关键用户旅程', () => {
     await expect(turn.locator(':scope > .bubble.md').last()).toContainText('After the tool.');
     await expect(turn).not.toHaveAttribute('data-active', 'true');
 
-    const order = await turn.locator(':scope > *').evaluateAll(elements => elements.map(element => (
-      element.classList.contains('tool-card') ? 'tool' : 'text'
-    )));
-    expect(order).toEqual(['text', 'tool', 'text']);
+    // turn 收尾会在活动区和最终回复之间插一条「用时 N 秒」，末尾再挂一排操作按钮。
+    // 这条守的仍是正文与工具的相对顺序——divider 和操作条单独分类，免得它们被
+    // 归进 'text' 之后，顺序断言看起来还是对的，实际上已经分不清谁是谁。
+    const order = await turn.locator(':scope > *').evaluateAll(elements => elements.map(element => {
+      if (element.classList.contains('tool-card')) return 'tool';
+      if (element.classList.contains('worked-for')) return 'divider';
+      if (element.classList.contains('turn-actions')) return 'actions';
+      return 'text';
+    }));
+    expect(order).toEqual(['text', 'tool', 'divider', 'text', 'actions']);
   });
 
   test('reasoning 默认紧凑且尊重用户展开状态', async ({ page }) => {
@@ -200,13 +206,16 @@ test.describe('关键用户旅程', () => {
     const fold = page.locator('.assistant-turn .reasoning-fold').last();
     await expect(fold).toBeAttached({ timeout: 10000 });
     await expect(fold).not.toHaveAttribute('open', '');
-    await expect(fold.locator('.reasoning-label')).toHaveText('思考中');
+    await expect(fold.locator('.reasoning-label')).toHaveText('正在思考');
 
     await fold.locator('.reasoning-toggle').click();
     await expect(fold).toHaveAttribute('open', '');
     await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
     await expect(fold).toHaveAttribute('open', '');
-    await expect(fold.locator('.reasoning-label')).toHaveText('思考过程');
+    // 完成态带耗时（「已思考 4秒」）；mock 下这一轮可能不到一秒，那时退回
+    // 「已完成思考」。两种都以「已」开头——这条守的是时态从现在时切到了过去时，
+    // 钉死某个秒数只会变成一条随机红的用例。
+    await expect(fold.locator('.reasoning-label')).toHaveText(/^已(思考 .+|完成思考)$/);
   });
 
   test('输入区域元素存在', async ({ page }) => {
@@ -288,8 +297,13 @@ test.describe('关键用户旅程', () => {
     // Wait for the turn to complete (command executed after approval)
     await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 15000 });
 
-    // Should see the tool result with exit: 0 (command executed successfully)
-    await expect(page.getByText('exit: 0').last()).toBeVisible({ timeout: 10000 });
+    // 命令跑完后活动行会收起，退出码折在里面。成功不在行上留标记是有意的：
+    // 成功是常态，每条都缀一个 ✓ 只会淹没真正需要注意的失败（失败走 data-ok=false，
+    // 行首变红并缀「· 失败」）。所以这里点开再验退出码。
+    const row = page.locator('.command-card').last();
+    await expect(row).toHaveAttribute('data-ok', 'true', { timeout: 10000 });
+    await row.locator('.activity-toggle').click();
+    await expect(row.getByText('exit: 0')).toBeVisible({ timeout: 10000 });
   });
 
   test('审批流程：拒绝审批', async ({ page }) => {

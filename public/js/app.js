@@ -30,6 +30,7 @@ import { loadExpandedDirs, persistExpandedDirs, toggleExpandedDir } from '/js/dr
 import { renderMarkdown } from '/js/markdown.js';
 import { createTranscriptStream } from '/js/transcript-stream.js';
 import { commandCard, fileChangeCard } from '/js/tool-cards.js';
+import { activeLabel, groupSummary, workedForLabel, thoughtLabel } from '/js/agent-activity.js';
 import { resolveConnectionBanner, resolveInsecureTransportBanner } from '/js/connection-banner.js';
 import { formatRttChip, formatWorkspaceChangeBadge } from '/js/header-chrome.js';
 import { contextFromTokenUsage, formatContextMeter } from '/js/token-usage.js';
@@ -175,6 +176,9 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     onFinish(text) {
       if (!streamingEl) return;
       streamingEl.innerHTML = renderMarkdown(text);
+      // 留住 markdown 原文：复制按钮要给的是源码，不是渲染完的纯文本——
+      // 从 textContent 拿回来的东西，标题、列表、代码围栏全没了。
+      streamingEl.dataset.raw = text;
       delete streamingEl.dataset.streaming;
       streamingEl = null;
       scrollBottom();
@@ -719,6 +723,11 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   // 本轮的客观素材：聚合 diff 与已结束的命令。turn 结束时汇总成验收摘要后清空。
   let turnDiff = '';
   let turnCommands = [];
+  // 本轮的工具活动行：收尾时要把连续的几行折进同一个 <details>，并算出「用时 N 秒」。
+  // 只存元素——归并摘要需要的 type/count/label 都挂在元素的 dataset 上，
+  // 另存一份平行数组只会多一个会和 DOM 走神的真相源。
+  let turnActivityEls = [];
+  let turnStartedAt = 0;
   let selectedSandbox = storedCliSettings.sandbox || '';
   // 历史本地 Plan 选择不代表上游已应用；只接受本次连接的确认通知。
   let selectedMode = '';
@@ -2845,21 +2854,107 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     return true;
   }
 
+  // 工具活动行。抄 ChatGPT 的形态：一行灰字说明在做什么，详情折进去，默认收起。
+  // 原先一个工具一张带边框的卡片，TOOL_CARDS_FIXTURE 那三张就吃满一屏 Pixel 5。
+  function activityRow({ type, label, iconName = '', detailHtml = '', count = 1, open = false }) {
+    const row = document.createElement('div');
+    row.className = 'tool-card activity-row';
+    row.dataset.card = 'action';
+    row.dataset.activity = type;
+    const head = `${iconName ? icon(iconName) : ''}<span class="activity-label">${escHtml(label)}</span>`;
+    row.innerHTML = detailHtml
+      // data-auto-opened 记的是「这是程序为了看实时输出替你打开的」，收尾时只收这些。
+      // 用户自己点开的没有这个标记，turn 结束后保持展开。
+      ? `<details class="activity-fold"${open ? ' open data-auto-opened="true"' : ''}><summary class="activity-toggle">${head}</summary>`
+        + `<div class="activity-detail">${detailHtml}</div></details>`
+      : `<div class="activity-toggle activity-static">${head}</div>`;
+    row.dataset.activityCount = String(count);
+    turnActivityEls.push(row);
+    return row;
+  }
+
+  // turn 收尾：把本轮的活动行折进一句过去时摘要，再在活动区和最终回复之间插一条
+  // 「用时 N 秒」——ChatGPT 那条 divider 的 description 写明就是这个位置。
+  function collapseTurnActivities() {
+    const rows = turnActivityEls.filter(el => el.isConnected);
+    const elapsed = turnStartedAt ? Date.now() - turnStartedAt : 0;
+    turnActivityEls = [];
+    turnStartedAt = 0;
+    if (!rows.length) return;
+
+    // 只折 DOM 上真正相邻的活动行。正文会穿插在工具之间，跨过正文去折会把
+    // 「先说话、再动手、再说话」的顺序搅乱。
+    const groups = [];
+    for (const row of rows) {
+      const tail = groups[groups.length - 1];
+      if (tail && tail[tail.length - 1].nextElementSibling === row) tail.push(row);
+      else groups.push([row]);
+    }
+
+    // 跑完就收起：进行中为了看实时输出而展开的命令行，留着只是占地方。
+    for (const row of rows) {
+      const fold = row.querySelector(':scope > .activity-fold[data-auto-opened="true"]');
+      if (!fold) continue;
+      fold.removeAttribute('open');
+      delete fold.dataset.autoOpened;
+    }
+
+    const blocks = groups.map(group => (group.length < 2 ? group[0] : foldActivityGroup(group)));
+    const divider = document.createElement('div');
+    divider.className = 'worked-for';
+    divider.textContent = workedForLabel(elapsed);
+    blocks[blocks.length - 1].insertAdjacentElement('afterend', divider);
+  }
+
+  function foldActivityGroup(group) {
+    const summary = groupSummary(group.map(el => ({
+      type: el.dataset.activity,
+      count: Number(el.dataset.activityCount) || 1,
+      label: el.querySelector('.activity-label')?.textContent || '',
+    })));
+    const fold = document.createElement('details');
+    fold.className = 'activity-fold activity-group';
+    fold.innerHTML = `<summary class="activity-toggle"><span class="activity-label">${escHtml(summary || '做了几件事')}</span></summary>`;
+    const body = document.createElement('div');
+    body.className = 'activity-group-body';
+    group[0].replaceWith(fold);
+    for (const row of group) body.appendChild(row);
+    fold.appendChild(body);
+    return fold;
+  }
+
+  function setActivityLabel(row, label) {
+    const el = row?.querySelector('.activity-label');
+    if (el) el.textContent = label;
+  }
+
   function renderCommandCard(model) {
-    const card = document.createElement('div');
-    card.className = 'tool-card command-card';
-    card.dataset.card = 'action';
-    if (model.ok === true) card.dataset.ok = 'true';
-    else if (model.ok === false) card.dataset.ok = 'false';
-    const command = model.command || 'streaming output';
-    const exit = model.exitCode == null
-      ? ''
-      : `<div class="tool-exit ${model.ok ? 'tool-ok' : 'tool-err'}">exit: ${escHtml(String(model.exitCode))}</div>`;
-    card.innerHTML = `<div class="tool-name">${escHtml(model.title)}</div>`
-      + `<details${model.running ? ' open' : ''}><summary class="tool-cmd">${escHtml(command)}</summary></details>`
-      + `<div class="tool-output live-output${model.ok === false ? ' tool-err' : model.ok === true ? ' tool-ok' : ''}">${model.output ? renderAnsi(model.output) : ''}</div>`
-      + exit;
-    return card;
+    const command = model.command || '';
+    const row = activityRow({
+      type: 'command',
+      iconName: 'hammer',
+      label: model.running
+        ? activeLabel({ type: 'command', command })
+        : commandDoneLabel(command, model),
+      // 命令跑的时候输出是流式的，收起来就等于看不见。ChatGPT 同样是进行中展开、
+      // 结束后收起——收起的动作在 collapseTurnActivities 里做。
+      open: model.running,
+      detailHtml: `<div class="tool-cmd">${escHtml(command || 'streaming output')}</div>`
+        + `<div class="tool-output live-output${model.ok === false ? ' tool-err' : model.ok === true ? ' tool-ok' : ''}">${model.output ? renderAnsi(model.output) : ''}</div>`
+        + (model.exitCode == null
+          ? ''
+          : `<div class="tool-exit ${model.ok ? 'tool-ok' : 'tool-err'}">exit: ${escHtml(String(model.exitCode))}</div>`),
+    });
+    row.classList.add('command-card');
+    if (model.ok === true) row.dataset.ok = 'true';
+    else if (model.ok === false) row.dataset.ok = 'false';
+    return row;
+  }
+
+  // 跑挂了的命令不进摘要就没人看得见——退出码非 0 时行首直接写明，不必展开。
+  function commandDoneLabel(command, model) {
+    const name = command || '命令';
+    return model.ok === false ? `${name} · 失败` : name;
   }
 
   function handleToolUse(payload) {
@@ -2883,7 +2978,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     if (!out) {
       out = document.createElement('div');
       out.className = 'tool-output live-output';
-      card.appendChild(out);
+      (card.querySelector('.activity-detail') || card).appendChild(out);
     }
     return out;
   }
@@ -2913,10 +3008,13 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
       card.classList.add('command-card');
       if (model.ok === true) card.dataset.ok = 'true';
       else if (model.ok === false) card.dataset.ok = 'false';
+      // 进行时 → 完成态：「正在运行 npm test」变回「npm test」，失败再缀上标记。
+      setActivityLabel(card, commandDoneLabel(existingCommand, model));
+      const detail = card.querySelector('.activity-detail') || card;
       let out = card.querySelector('.live-output');
       if (!out) {
         out = document.createElement('div');
-        card.appendChild(out);
+        detail.appendChild(out);
       }
       out.className = 'tool-output live-output ' + (model.ok ? 'tool-ok' : 'tool-err');
       const resultHtml = renderAnsi(model.output);
@@ -2927,7 +3025,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
         exit = document.createElement('div');
         exit.className = 'tool-exit ' + (model.ok ? 'tool-ok' : 'tool-err');
         exit.textContent = `exit: ${model.exitCode}`;
-        card.appendChild(exit);
+        detail.appendChild(exit);
       } else if (exit && model.exitCode != null) {
         exit.className = 'tool-exit ' + (model.ok ? 'tool-ok' : 'tool-err');
         exit.textContent = `exit: ${model.exitCode}`;
@@ -2939,6 +3037,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
 
   function handleResult(payload) {
     finalizeStream();
+    collapseTurnActivities();
     finishAssistantTurn();
     announceTurnComplete(payload?.ok === false ? '回复失败' : '回复完成');
     renderTurnOutcome();
@@ -3161,27 +3260,39 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     finalizeStream();
     const model = fileChangeCard({ files: payload.files || [] });
     if (!model.files.length) return;
-    const card = document.createElement('div');
-    card.className = 'tool-card file-change-card';
-    card.dataset.card = 'outcome';
-    card.innerHTML = `<div class="tool-name">${escHtml(model.title)}</div>`
-      + model.files.map(file => {
+    // 一个文件就把路径写在行上——「编辑了一个文件」需要再点开才知道是哪个，
+    // 而路径本身就一行放得下。多个才退回计数说法。
+    const label = model.files.length === 1
+      ? `${model.files[0].kindLabel}: ${model.files[0].path}`
+      : `编辑了 ${model.files.length} 个文件`;
+    const card = activityRow({
+      type: 'file-change',
+      iconName: 'pencil',
+      label,
+      count: model.files.length,
+      detailHtml: model.files.map(file => {
         const line = `${file.kindLabel}: ${file.path}`;
         if (!file.expandable) return `<div class="tool-cmd">${escHtml(line)}</div>`;
         return `<details><summary class="tool-cmd">${escHtml(line)}</summary><pre class="tool-output">${escHtml(file.diff)}</pre></details>`;
-      }).join('');
+      }).join(''),
+    });
+    card.classList.add('file-change-card');
     appendRaw(card, 'codex');
     scrollBottom();
   }
 
   function handleRawItem(payload) {
     finalizeStream();
-    const card = document.createElement('div');
-    card.className = 'tool-card';
-    card.dataset.card = 'meta';
     const label = payload?.item?.type || payload?.envelopeType || 'raw';
-    card.innerHTML = `<div class="tool-name">${icon('receipt')} Raw</div>`
-      + `<details><summary class="tool-cmd">${escHtml(label)}</summary><pre class="tool-output tool-json">${escHtml(JSON.stringify(payload.item || payload, null, 2))}</pre></details>`;
+    // raw 不进「做了什么」摘要：它是没认出来的协议 item，降级显示是为了不静默丢弃，
+    // 不是一件 agent 做过的事。
+    const card = activityRow({
+      type: 'raw',
+      iconName: 'receipt',
+      label: `Raw: ${label}`,
+      detailHtml: `<pre class="tool-output tool-json">${escHtml(JSON.stringify(payload.item || payload, null, 2))}</pre>`,
+    });
+    card.dataset.card = 'meta';
     appendRaw(card, 'codex');
     scrollBottom();
   }
@@ -3216,10 +3327,11 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
       card.className = 'tool-card reasoning-card';
       card.dataset.card = 'meta';
       card.dataset.streaming = 'true';
-      card.innerHTML = '<details class="reasoning-fold"><summary class="reasoning-toggle"><span class="reasoning-label">思考中</span></summary><div class="reasoning-stack"></div></details>';
+      card.innerHTML = '<details class="reasoning-fold"><summary class="reasoning-toggle"><span class="reasoning-label">正在思考</span></summary><div class="reasoning-stack"></div></details>';
       appendRaw(card, 'codex');
       appendReasoning.card = card;
       appendReasoning.sections = {};
+      appendReasoning.startedAt = Date.now();
     }
     const section = ensureReasoningSection(channel);
     if (data.kind === 'summary_part_added' && section.textContent.trim()) {
@@ -3247,10 +3359,12 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   const pendingMcpCards = {};
   function handleMcpUse(payload) {
     finalizeStream();
-    const card = document.createElement('div');
-    card.className = 'tool-card';
-    card.dataset.card = 'action';
-    card.innerHTML = `<div class="tool-name">${icon('tools')} ${escHtml(payload.serverName)}/${escHtml(payload.toolName)}</div><div class="tool-cmd">${escHtml(payload.inputSummary || '')}</div>`;
+    const card = activityRow({
+      type: 'mcp',
+      iconName: 'tools',
+      label: activeLabel({ type: 'mcp', serverName: payload.serverName, toolName: payload.toolName }),
+      detailHtml: `<div class="tool-cmd">${escHtml(payload.inputSummary || '')}</div>`,
+    });
     appendRaw(card, 'codex');
     pendingMcpCards[payload.toolUseId] = card;
     scrollBottom();
@@ -3262,7 +3376,8 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
       const out = document.createElement('div');
       out.className = 'tool-output ' + (payload.ok ? 'tool-ok' : 'tool-err');
       out.textContent = payload.outputSummary || (payload.ok ? '(完成)' : '(出错)');
-      card.appendChild(out);
+      (card.querySelector('.activity-detail') || card).appendChild(out);
+      if (!payload.ok) card.dataset.ok = 'false';
       delete pendingMcpCards[payload.toolUseId];
     }
     scrollBottom();
@@ -3273,13 +3388,16 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     finalizeStream();
     const results = payload.results || [];
     if (!payload.query && !results.length) return;
-    const card = document.createElement('div');
-    card.className = 'tool-card';
-    card.dataset.card = 'action';
-    card.innerHTML = `<div class="tool-name">${icon('search')} 搜索: ${escHtml(payload.query || '')}</div>`
+    // 搜索事件到达时结果已经在手上了，所以直接用完成态说法——和截图里
+    // 「已搜索网页：finance: BTC」一致。
+    const card = activityRow({
+      type: 'search',
+      iconName: 'search',
+      label: payload.query ? `已搜索网页：${payload.query}` : '已搜索网页',
       // 摘要是一句话说明，不是终端输出。原先借 .tool-output 再用内联 style 把背景、
       // 颜色、padding 逐个盖掉，只为拿它的字号，等宽是顺带继承的副作用。
-      + results.map(r => `<div class="tool-cmd tool-note" style="margin-bottom:4px;"><a href="${escHtml(r.url)}" target="_blank" style="color:var(--accent-text);text-decoration:none;font-weight:600;">${escHtml(r.title)}</a><br><span class="tool-note search-snippet">${escHtml(r.snippet || '')}</span></div>`).join('');
+      detailHtml: results.map(r => `<div class="tool-cmd tool-note" style="margin-bottom:4px;"><a href="${escHtml(r.url)}" target="_blank" style="color:var(--accent-text);text-decoration:none;font-weight:600;">${escHtml(r.title)}</a><br><span class="tool-note search-snippet">${escHtml(r.snippet || '')}</span></div>`).join(''),
+    });
     appendRaw(card, 'codex');
     scrollBottom();
   }
@@ -3335,10 +3453,13 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
 
   function sealReasoning() {
     const label = appendReasoning.card?.querySelector('.reasoning-label');
-    if (label) label.textContent = '思考过程';
+    if (label) {
+      label.textContent = thoughtLabel(appendReasoning.startedAt ? Date.now() - appendReasoning.startedAt : 0);
+    }
     if (appendReasoning.card) delete appendReasoning.card.dataset.streaming;
     appendReasoning.card = null;
     appendReasoning.sections = null;
+    appendReasoning.startedAt = 0;
   }
 
   function partDisplayName(part) {
@@ -3348,6 +3469,9 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   }
 
   function appendUserBubble(text, attachments, parts, clientRequestId) {
+    // 一轮的起点是用户按下发送，不是助手开始说话——放在所有 promote 分支之前，
+    // 排队消息转正时同样从这里起表。
+    turnStartedAt = Date.now();
     if (promoteOfflineBubble(clientRequestId)) {
       scrollBottom();
       setBusy(true);
@@ -3395,6 +3519,11 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
 
   function ensureAssistantTurn() {
     if (activeAssistantTurnEl) return activeAssistantTurnEl;
+    // 计时兜底：正常路径由 appendUserBubble 起表。这里只管没有用户气泡的轮次
+    // （推送恢复、历史续跑），已经在计的不要重置——renderTurnOutcome 会另起一个
+    // turn 容器，那一下重置会把下一轮的起点挪到上一轮收尾的时刻。
+    if (!turnStartedAt) turnStartedAt = Date.now();
+    turnActivityEls = [];
     const turn = document.createElement('div');
     turn.className = 'msg codex assistant-turn';
     turn.dataset.active = 'true';
@@ -3409,7 +3538,36 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     if (!activeAssistantTurnEl) return;
     delete activeAssistantTurnEl.dataset.active;
     activeAssistantTurnEl.removeAttribute('aria-busy');
+    appendTurnActions(activeAssistantTurnEl);
     activeAssistantTurnEl = null;
+  }
+
+  // turn 末尾的操作条。ChatGPT 那排是 复制 / 赞 / 踩 / 分享，这里只做复制：
+  // 赞踩要有接收反馈的一端，分享要有公开链接，这个自用客户端两样都没有，
+  // 按上去没反应的按钮比没有按钮更糟。
+  function appendTurnActions(turn) {
+    if (turn.querySelector(':scope > .turn-actions')) return;
+    if (!turn.querySelector('.bubble.md')) return;
+    const bar = document.createElement('div');
+    bar.className = 'turn-actions';
+    bar.innerHTML = `<button type="button" class="turn-action" data-action="copy" aria-label="复制回复">${icon('copy')}</button>`;
+    bar.querySelector('[data-action="copy"]').onclick = () => copyTurnText(turn, bar);
+    turn.appendChild(bar);
+  }
+
+  async function copyTurnText(turn, bar) {
+    const text = [...turn.querySelectorAll('.bubble.md')]
+      .map(el => el.dataset.raw ?? el.textContent ?? '')
+      .join('\n\n')
+      .trim();
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      bar.dataset.copied = 'true';
+      setTimeout(() => { delete bar.dataset.copied; }, 1500);
+    } catch {
+      appendError('复制失败，浏览器拒绝了剪贴板访问');
+    }
   }
 
   function announceTurnComplete(message) {

@@ -54,20 +54,25 @@
 | 2.3 | 宽表格独立横向滚动，不撑破消息；溢出时边缘渐隐提示可横滑 | `wrapTables` / `.table-scroll` |
 | 2.4 | XSS 消毒（脚本、事件属性、`javascript:`、iframe 全部剥离） | `sanitizer.js` |
 | 2.5 | ANSI 转义序列转 HTML（终端色彩） | `ansi-html.js` |
-| 2.6 | thinking / reasoning 折叠卡片 | `appendReasoning` |
-| 2.7 | 命令执行卡片（命令、退出码、输出） | `tool-cards.js` |
+| 2.6 | thinking / reasoning 折叠块，三态：正在思考 / 已思考 N 秒 / 已完成思考 | `appendReasoning` / `thoughtLabel` |
+| 2.7 | 命令活动行（收起时一行，展开看命令、退出码、输出） | `renderCommandCard` / `tool-cards.js` |
 | 2.8 | 命令输出流式增量 | `tool_output_delta` |
-| 2.9 | 文件变更卡片（路径、增删行、diff） | `file-diff-summary.js` |
-| 2.10 | MCP 工具调用卡片 | `mcp_use` / `mcp_result` |
-| 2.11 | Web 搜索结果卡片 | `search` |
+| 2.9 | 文件变更活动行（单文件显示路径，多文件显示计数，展开看 diff） | `handleFileChange` / `file-diff-summary.js` |
+| 2.10 | MCP 工具调用活动行 | `mcp_use` / `mcp_result` |
+| 2.11 | Web 搜索活动行（「已搜索网页：<query>」，展开看结果） | `search` |
 | 2.12 | 计划（plan）卡片 | `handlePlan` |
-| 2.13 | 未识别 item 降级为可见 Raw 卡片，不静默丢弃 | `raw_item` |
+| 2.13 | 未识别 item 降级为可见 Raw 活动行，不静默丢弃 | `raw_item` |
+| 2.13a | 工具活动用进行时/完成时两套文案（正在运行 X → X） | `agent-activity.js` |
+| 2.13b | turn 结束时把相邻活动行折成一句过去时摘要（「已搜索网页、运行了命令」） | `collapseTurnActivities` |
+| 2.13c | 整组同一工具时摘要改用计数（`read_file · 3 次调用`） | `groupSummary` |
+| 2.13d | 活动区与最终回复之间插入「用时 N 秒」分隔 | `workedForLabel` / `.worked-for` |
 | 2.14 | turn 终态摘要（完成/失败/中断） | `turn-outcome.js` |
 | 2.15 | 界面不显示宿主机绝对路径（`/Users/xxx` 收敛） | `display-path.js` |
 | 2.16 | 上下文占用指示（`82.5k/272k`，逼近上限变色） | `token-usage.js` |
 | 2.17 | 「有新内容 ↓」跳转按钮 | `jump-to-latest` |
 | 2.18 | 空会话引导卡片 | `empty-state` |
 | 2.19 | turn 完成的无障碍播报 | `turn-announcer` |
+| 2.20 | turn 末尾的复制按钮，复制 markdown 原文而非渲染后的纯文本 | `appendTurnActions` |
 
 ---
 

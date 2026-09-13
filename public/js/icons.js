@@ -25,6 +25,10 @@ export const ICONS = {
   search: svg(
     '<circle cx="11" cy="11" r="6.5"/><path d="M16.5 16.5 20 20"/>',
   ),
+  copy: svg(
+    '<rect x="9" y="9" width="11" height="11" rx="2"/>'
+    + '<path d="M5 15V5a2 2 0 0 1 2-2h8"/>',
+  ),
   notepad: svg(
     '<path d="M7 4h8l3 3v13H7z"/><path d="M15 4v3h3"/><path d="M9 12h6"/><path d="M9 16h4"/>',
   ),

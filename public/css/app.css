@@ -1253,6 +1253,99 @@ body {
 /* 失败覆盖类型色——命令跑挂了比「这是一张命令卡」重要得多，要能在滚动中一眼找到。
    成功刻意不改色：exit code 已经在卡片里用绿字标过一次，边框再标是冗余，而且
    成功是常态，占用视觉权重只会稀释真正需要注意的东西。 */
+/* 工具活动行。抄 ChatGPT 桌面端：过程降到一行灰字，详情折进去，让最终回复占住
+   视觉重心。原先每个工具一张带边框带底色的卡片，TOOL_CARDS_FIXTURE 的三张在
+   Pixel 5 上就是一整屏——手机端这是最贵的一块面积。 */
+.tool-card.activity-row {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  gap: 0;
+}
+.activity-toggle {
+  list-style: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: var(--font-md);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  user-select: none;
+  min-width: 0;
+}
+.activity-toggle::-webkit-details-marker { display: none; }
+.activity-static { cursor: default; }
+.activity-fold > .activity-toggle::before {
+  content: '▸';
+  font-size: var(--font-xs);
+  flex: 0 0 auto;
+}
+.activity-fold[open] > .activity-toggle::before { content: '▾'; }
+/* 活动行的全部价值在于恒定占一行。命令和路径都可能很长，截断而不是换行——
+   要看全的人会点开，而折行会让这一行重新变成一块。 */
+.activity-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.activity-row .ui-icon { flex: 0 0 auto; }
+.activity-detail {
+  margin-top: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+/* .tool-output 的左右负 margin 是为了抵消卡片的 14px padding。活动行没有 padding，
+   再负出去就直接溢出容器了。这里复位——终端块本来就贴着活动行的边，宽度不亏。 */
+.activity-detail .tool-output {
+  margin-left: 0;
+  margin-right: 0;
+}
+.activity-group-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+/* 失败的命令即使收起来也要能一眼看到——这是唯一一处活动行允许带颜色的地方。 */
+.activity-row[data-ok="false"] > .activity-fold > .activity-toggle { color: var(--error); }
+
+/* turn 末尾的操作条。低权重——它是回复读完之后才会用到的东西，不该和正文抢注意力。
+   32px 不进 44px 的触摸下限，那条只管高风险操作；复制是可逆的，和全局 28px 按钮同档。 */
+.turn-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+.turn-action {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+}
+.turn-actions[data-copied="true"]::after {
+  content: '已复制';
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+}
+
+/* 活动区和最终回复之间的分隔。ChatGPT 管这个叫 workedFor divider，
+   文案「用时 4秒」。 */
+.worked-for {
+  color: var(--text-muted);
+  font-size: var(--font-sm);
+  padding: var(--space-1) 0;
+}
+
 .command-card[data-ok="false"] { border-left-color: var(--error); }
 .tool-exit {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -2421,6 +2514,7 @@ body {
    #composer-defaults 基础规则里的 color)。键盘 :focus-visible 不在此列,
    仍留在各自的组件段落中——触摸设备同样需要焦点态。 */
 @media (hover: hover) {
+  .turn-action:hover { color: var(--text); background: var(--surface); }
   .session-item:hover { background: var(--bg); }
   .badge-pill:hover {
     border-color: var(--text);
