@@ -3,6 +3,8 @@ node_modules/
 
 # Secrets & runtime state
 .env
+# .env 的备份同样含 AUTH_TOKEN。不写 .env.* —— 那会把要入库的 .env.example 一起挡掉。
+.env.bak*
 *.log
 data/
 workdirs.json
