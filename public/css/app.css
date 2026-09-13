@@ -1375,17 +1375,23 @@ body {
   background: transparent;
   width: fit-content;
 }
+/* 原先是 translateY(-6px) 的 bounce —— 位移量正好等于点自身的直径,三个点轮流弹起
+   一个身位,视线被迫跟着上下扫。改成原地的透明度脉动:同样传达「在动」,但不产生
+   位移,而且和流式光标(streamCaret)用上了同一套视觉语言,两者常常前后脚出现。 */
 .typing span {
   width: 6px; height: 6px;
   border-radius: 50%;
   background: var(--text-muted);
-  animation: bounce 1.2s infinite;
+  animation: typingPulse 1.4s ease-in-out infinite;
 }
 .typing span:nth-child(2) { animation-delay: 0.2s; }
 .typing span:nth-child(3) { animation-delay: 0.4s; }
-@keyframes bounce {
-  0%, 80%, 100% { transform: translateY(0); }
-  40% { transform: translateY(-6px); }
+@keyframes typingPulse {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 0.9; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .typing span { animation: none; opacity: 0.6; }
 }
 
 /* Floating Settings Badges */
@@ -2190,7 +2196,10 @@ body {
   margin-top: 7px;
 }
 .native-danger {
-  color: var(--error);
+  /* 取文字档而不是基色 --error：深色下基色 #df1c1c 压在卡片底上实测只有 3.51:1，
+     过不了 AA 正文。--error-text 正是为此存在的（浅色下两者同值，深色沉到 #ff8888
+     ≈ 6.1:1）—— token 一直在，这里一直没用对。 */
+  color: var(--error-text);
   border-color: var(--error-border);
   /* 危险操作（Delete / 宿主配置 / 撤销设备 / Logout）的命中区到 44×44。普通按钮
      保持 28px 的紧凑密度不动——那是产品选择；但误触这几个的代价不一样。 */
@@ -2309,6 +2318,191 @@ body {
   font-size: var(--font-xs);
   cursor: pointer;
 }
+
+/* ── 设置与状态 ──────────────────────────────────────────────────────────
+   抽屉底部入口拉起的底部 sheet。层级夹在抽屉(101)与确认 sheet(150)之间：
+   高于抽屉，因为它是从抽屉里拉起的下一层；低于确认 sheet，因为「宿主配置」
+   会在它之上再弹一次危险确认，那一层必须盖得住它。 */
+#settings-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  background: rgba(0, 0, 0, 0.4);
+}
+#settings-sheet-overlay[hidden] { display: none !important; }
+
+#settings-sheet {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 111;
+  max-height: 85vh;
+  background: var(--surface);
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.16);
+  display: flex;
+  flex-direction: column;
+  animation: sheetUp 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+#settings-sheet[hidden] { display: none !important; }
+@keyframes sheetUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #settings-sheet { animation: none; }
+}
+
+#settings-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-6) 16px var(--space-4);
+  border-bottom: 1px solid var(--border-light);
+  flex-shrink: 0;
+}
+#settings-sheet-title {
+  font-size: var(--font-lg);
+  font-weight: 700;
+}
+#settings-sheet-close {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  width: 44px; height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+#settings-sheet-close:active { background: var(--hover-wash-strong); transform: scale(0.97); }
+#settings-sheet-close .drawer-section-icon { width: 18px; height: 18px; }
+
+#settings-sheet-body {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--space-5) 16px calc(16px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.settings-group { display: flex; flex-direction: column; gap: var(--space-4); }
+.settings-group-title {
+  font-size: var(--font-xs);
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.3px;
+}
+
+/* 开关行整行可点：44px 的判据只守高风险操作，但一个 20px 的小方块谁都不好按。 */
+.settings-toggle-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-6);
+  min-height: 44px;
+  padding: var(--space-4) 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--card-shadow);
+  cursor: pointer;
+}
+.settings-toggle-row:active { background: var(--hover-wash); }
+.settings-toggle-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.settings-toggle-title { font-size: var(--font-sm); font-weight: 600; }
+.settings-toggle-desc {
+  font-size: var(--font-2xs);
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+/* 原生 checkbox 在移动端又小又难点。这里换成轨道+滑块的开关，命中区仍是整行。 */
+.settings-toggle {
+  appearance: none;
+  -webkit-appearance: none;
+  flex-shrink: 0;
+  width: 44px;
+  height: 26px;
+  margin: 0;
+  border-radius: var(--radius-pill);
+  background: var(--border);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.settings-toggle::after {
+  content: '';
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease;
+}
+.settings-toggle:checked { background: var(--accent-text); }
+.settings-toggle:checked::after { transform: translateX(18px); }
+.settings-toggle:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .settings-toggle, .settings-toggle::after { transition: none; }
+}
+
+.settings-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: var(--space-3);
+}
+/* 全部给到 44px：这里面混着 .native-danger（宿主配置），tap-target-too-small
+   守着它不得低于 44×44；让同组按钮共用一个高度，免得后来加的那个忘了。 */
+.settings-action-btn {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  min-height: 44px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: var(--font-xs);
+  font-weight: 600;
+  cursor: pointer;
+}
+.settings-action-btn:active { background: var(--hover-wash-strong); transform: scale(0.98); }
+/* .native-danger 定义在本条之前,两者特异性同为 (0,1,0) —— 靠声明顺序的话,这条会
+   把危险标记的 color / border-color 一起覆盖掉,「宿主配置」和「Account」长得一模一样,
+   而 CSS 不会为此报任何错。组合选择器把特异性抬到 (0,2,0),不再依赖谁写在后面。 */
+.settings-action-btn.native-danger {
+  color: var(--error-text);
+  border-color: var(--error-border);
+}
+
+/* 抽屉底部的入口。和上面的工具按钮拉开：它不是「再来一个工具」，是去下一层。 */
+#btn-general-settings {
+  appearance: none;
+  width: 100%;
+  border: none;
+  border-top: 1px solid var(--border-light);
+  background: var(--surface);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 52px;
+  padding: 0 16px;
+  font: inherit;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+#btn-general-settings:active { background: var(--hover-wash-strong); }
+.settings-entry-chevron { margin-left: auto; color: var(--text-muted); }
 
 .sheet-overlay {
   position: fixed;

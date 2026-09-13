@@ -189,17 +189,40 @@ test.describe('UI_SURFACE 截图', () => {
     );
   });
 
-  // §2.2 工具面板。12 个按钮的名字就印在按钮上，只圈区域不打编号。
+  // §2.2 工具面板。按钮名字就印在按钮上，只圈区域不打编号。
+  // 账号/主机那批已收进设置 sheet，见 03b。
   test('03 抽屉：工具面板', async ({ page }) => {
     await connect(page);
     await page.locator('#menu-btn').click();
     await expect(page.locator('#native-controls')).toBeVisible();
     const buttons = page.locator('#native-controls .native-control-btn');
-    await expect(buttons).toHaveCount(12);
+    await expect(buttons).toHaveCount(5);
     await settle(page, '#drawer');
 
-    await annotate(page, [{ sel: '#native-controls' }]);
-    await shotArea(page, '03-drawer-tools', '#drawer-tools', { top: 14, bottom: 14 });
+    await annotate(page, [{ sel: '#native-controls' }, { sel: '#btn-general-settings' }]);
+    await shotArea(
+      page,
+      '03-drawer-tools',
+      ['#drawer-tools', '#btn-general-settings'],
+      { top: 14, bottom: 14 },
+    );
+  });
+
+  // §2.3 设置与状态。三组的组名印在界面上，同样只圈区域不打编号。
+  test('03b 设置与状态', async ({ page }) => {
+    await connect(page);
+    await page.locator('#menu-btn').click();
+    await page.locator('#btn-general-settings').click();
+    await expect(page.locator('#settings-sheet')).toBeVisible();
+    await expect(page.locator('#settings-sheet-body .settings-group')).toHaveCount(3);
+    await settle(page, '#settings-sheet');
+
+    await annotate(page, [
+      { sel: '.settings-toggle-row', n: 1, place: 'tr' },
+      { sel: '#native-account-btn', n: 2, place: 'tl' },
+      { sel: '#native-host-config-btn', n: 3, place: 'tr' },
+    ]);
+    await shotArea(page, '03b-settings-sheet', '#settings-sheet', { top: 8, bottom: 8 });
   });
 
   // §3.1 空会话

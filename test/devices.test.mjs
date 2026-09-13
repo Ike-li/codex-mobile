@@ -252,9 +252,22 @@ test('device caches include the data file path when stores have identical mtimes
   }
 });
 
+// fixture 必须是**对象**形态。上一版写的是 JSON.stringify([deviceToken])——扁平字符串
+// 数组，那是 R-SEC-1 之前的旧格式（见下一条用例）。旧格式下 CLI 把条目直接塞进模板
+// 字符串恰好能打印出 token，于是这条一直是绿的，而真实数据（对象）打印出来是
+// `ID: [object Object]`，实测到 2026-09-13 才被人眼发现。
+// **fixture 停在已经迁移走的形态，等于这条用例在守一个现实中不再产生的东西。**
+// 旧格式的兼容由 test/device-cli.test.mjs 单独覆盖，那边是纯函数，两种形态都能测。
 test('device CLI list reads trusted devices from CODEX_DATA_DIR', () => {
   const deviceToken = 'trusted-in-configured-data-dir';
-  writeFileSync(join(tempDir, 'trusted-devices.json'), JSON.stringify([deviceToken]));
+  writeFileSync(join(tempDir, 'trusted-devices.json'), JSON.stringify([{
+    deviceToken,
+    ip: '10.0.0.5',
+    userAgent: 'probe-agent',
+    approvedAt: 1789320644069,
+    lastSeenAt: 1789320644069,
+    secretHash: null,
+  }]));
   try {
     const result = spawnSync(process.execPath, ['scripts/device.js', 'list'], {
       cwd: join(import.meta.dirname, '..'),

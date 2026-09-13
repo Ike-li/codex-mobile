@@ -35,6 +35,7 @@ import { resolveConnectionBanner, resolveInsecureTransportBanner } from '/js/con
 import { formatRttChip, formatWorkspaceChangeBadge } from '/js/header-chrome.js';
 import { contextFromTokenUsage, formatContextMeter } from '/js/token-usage.js';
 import { createConfirmController } from '/js/confirm-dialog.js';
+import { readPreferences, writePreference, shouldAnnounceMcpStatus } from '/js/ui-preferences.js';
 import { threadActionConfirm, threadActionErrorMessage } from '/js/thread-actions.js';
 import { summarizeTextChange } from '/js/file-diff-summary.js';
 import { summarizeTurnOutcome } from '/js/turn-outcome.js';
@@ -129,6 +130,9 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   let connBannerTimer = null;
   let atMentionReqId = 0;
   const deviceIdDisplay = $('device-id-display');
+
+  // 本机 UI 偏好。只影响这台设备的显示，不进会话配置。读失败一律回落默认值。
+  let uiPrefs = readPreferences(localStorage);
 
   // Device token
   let deviceToken = localStorage.getItem('codex_device_token');
@@ -1967,7 +1971,11 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     appendSystem(`Rate limits updated: ${limit}`, false);
   }
 
+  // 启动过程默认静默——4 个 server 各报 starting/ready 就是 8 条系统消息，
+  // 实测把「你是谁」的回答整个挤出首屏。想看的话设置面板里能打开，
+  // 抽屉的 MCP 面板也一直能查。出错不受这个开关管，见 ui-preferences.js。
   function handleMcpStatus(payload) {
+    if (!shouldAnnounceMcpStatus(payload, uiPrefs)) return;
     appendSystem(`MCP ${payload?.name || 'server'}: ${payload?.status || 'updated'}`, Boolean(payload?.error));
   }
 
@@ -4053,6 +4061,40 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   drawerOverlay.onclick = closeDrawer;
   $('drawer-close').onclick = closeDrawer;
   $('drawer-archived-toggle').onclick = toggleArchivedThreads;
+
+  // ── 设置与状态 ──────────────────────────────────────────────────────
+  const settingsSheet = $('settings-sheet');
+  const settingsSheetOverlay = $('settings-sheet-overlay');
+  const prefMcpStatus = $('pref-mcp-status');
+
+  function openSettingsSheet() {
+    // 先收抽屉：它是这张 sheet 的来路，留着只会在 sheet 旁边露出一条，
+    // 而且两层都能滚，手指落在哪一层全看运气。
+    closeDrawer();
+    prefMcpStatus.checked = Boolean(uiPrefs.mcpStatusMessages);
+    settingsSheetOverlay.hidden = false;
+    settingsSheet.hidden = false;
+  }
+
+  function closeSettingsSheet() {
+    settingsSheet.hidden = true;
+    settingsSheetOverlay.hidden = true;
+  }
+
+  $('btn-general-settings').onclick = openSettingsSheet;
+  $('settings-sheet-close').onclick = closeSettingsSheet;
+  settingsSheetOverlay.onclick = closeSettingsSheet;
+
+  prefMcpStatus.onchange = () => {
+    uiPrefs = { ...uiPrefs, mcpStatusMessages: prefMcpStatus.checked };
+    writePreference(localStorage, 'mcpStatusMessages', prefMcpStatus.checked);
+  };
+
+  // #native-panel 不是浮层,它插在页面顶部把消息流挤下去 —— sheet 不收起来就看不见它。
+  // 用冒泡而不是逐个包装 onclick:那些按钮的 onclick 早已各自绑定,包装一遍要动 7 处。
+  $('settings-sheet-body').addEventListener('click', ev => {
+    if (ev.target.closest('.settings-action-btn')) closeSettingsSheet();
+  });
 
   $('header-context').onclick = () => {
     workspacePanel.open();
