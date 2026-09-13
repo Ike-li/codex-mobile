@@ -2204,6 +2204,11 @@ body {
   font: inherit;
   font-weight: 600;
   cursor: pointer;
+  /* 44px 是 e2e/lib/layout-audit.js 的 TAP_MIN。「确定」在 danger 档下带
+     data-danger="true"，正属于那条规则只守的高风险操作——误触「允许完全访问」的代价
+     和误触普通按钮不是一回事。padding 撑出来的高度是 10×2+20=40px，差 4px。
+     两个按钮一起抬：它们并排，只抬一个会视觉不对称。 */
+  min-height: 44px;
 }
 #confirm-ok { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
 #confirm-ok[data-danger="true"] {
