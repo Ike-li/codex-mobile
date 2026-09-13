@@ -10,6 +10,9 @@ export default [
       'node_modules/**',
       'coverage/**',
       'test-results/**',
+      // 工具在这里开 git worktree（.claude/worktrees/<name>/），里面是整个仓库的
+      // 另一份 checkout —— 连 public/vendor 的 min.js 一起被扫，实测一下多出 224 条报错。
+      '.claude/**',
       'playwright-report/**',
       'data/**',
       'public/vendor/**',

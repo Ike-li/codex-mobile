@@ -27,3 +27,5 @@ reasonix.toml
 tmp-ui-shots/
 .ccm-uploads
 draft
+# 工具开的 git worktree：整个仓库的另一份 checkout，不该被跟踪
+.claude/worktrees/
