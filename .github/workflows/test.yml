@@ -64,7 +64,13 @@ jobs:
         # webkit 是 playwright.config.js 里 mobile-webkit project 的引擎。产品主设备是
         # 手机，只装 chromium 等于 iOS 侧零覆盖；漏装的症状是 E2E 报
         # "Executable doesn't exist"，读起来像配置坏了而不像少装了浏览器。
-        run: npx playwright install chromium webkit
+        #
+        # --with-deps 不能省：runner 镜像自带 chromium 要的系统库，但没有 webkit 要的
+        # libgtk-4 / libgraphene / libevent / libopus / libgst*。缺它们时浏览器二进制
+        # 装得上、启动即失败（"Host system is missing dependencies"），每条用例 3-4ms
+        # 就红——看起来像用例写坏了，其实一次都没跑起来。webkit 自 6dee6bb 加进矩阵后
+        # 整条腿从未真正执行过，而这一直被前面单测的红挡着，直到 2026-09-13 才显形。
+        run: npx playwright install --with-deps chromium webkit
 
       - name: Run E2E tests
         if: matrix.node-version == 20
