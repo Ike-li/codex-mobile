@@ -272,7 +272,6 @@ test.describe('UI_SURFACE 截图', () => {
     await annotate(page, [
       { sel: '#followup-btn', n: 6, place: 'tl' },
       { sel: '#send-btn', n: 7, place: 'tr' },
-      { sel: '#mini-status-spinner', n: 8, place: 'tl' },
     ]);
     await shotArea(page, '06-composer-running', '#input-area', { top: 26, bottom: 10 });
   });

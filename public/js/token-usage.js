@@ -40,7 +40,9 @@ export function formatTokens(n) {
 
 export function formatContextMeter(ctx) {
   const used = ctx?.contextTokens;
-  if (!Number.isFinite(used) || used <= 0) return { visible: false, label: '', tone: '' };
+  if (!Number.isFinite(used) || used <= 0) {
+    return { visible: false, label: '', tone: '', pct: null, title: '' };
+  }
 
   const window = ctx.contextWindow;
   const hasWindow = Number.isFinite(window) && window > 0;
@@ -54,5 +56,15 @@ export function formatContextMeter(ctx) {
     if (pct >= 90) tone = 'bad';
     else if (pct >= 75) tone = 'warn';
   }
-  return { visible: true, label, tone };
+  // 圆环按 pct 填充，具体数字退到 tooltip——抄 ChatGPT 的
+  // composer.contextWindowUsageTooltip。没有窗口就画不出比例，只报用了多少。
+  const title = hasWindow
+    ? `已用 ${formatTokens(used)} 标记，共 ${formatTokens(window)}`
+    : `已用 ${formatTokens(used)} 标记`;
+  // 环的填充比例必须是合法百分比。长会话的累积用量会超过窗口（实测到过 437%），
+  // 那时 tone 已经是 bad、title 也照实报，环再画出个 437% 只是把一个非法值喂给
+  // conic-gradient。钳在这里而不是 CSS 里：CSS 拿到的是「画多少」，不该由它判断
+  // 数据合不合理。
+  const ringPct = Number.isFinite(pct) ? Math.min(100, Math.max(0, pct)) : null;
+  return { visible: true, label, tone, pct: ringPct, title };
 }

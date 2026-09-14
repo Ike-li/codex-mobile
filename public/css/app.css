@@ -1631,38 +1631,35 @@ body {
 
 /* 上下文占用。放在 composer 而不是 #status-detail —— 后者是 display:none 且
    全表没有任何规则打开它，把用量放进去等于不显示。这里是用户决定「这条要不要
-   发、要不要先 compact」的地方，正是这个数字该在的位置。 */
+   发、要不要先 compact」的地方。
+
+   形态抄 ChatGPT 的 composer.contextUsageIndicator：一个按百分比填充的小圆环，
+   具体数字退到 title。原先是 `24.5k/258.4k` 的数字胶囊，84px 宽——turn 跑起来
+   右边多两个控件就放不下，只能剩半个露在外面。换成 18px 的环之后空间绰绰有余，
+   不必再在 turn 进行中把它藏掉。
+
+   环用 conic-gradient 填、用 mask 挖中心：挖空比盖一个同色圆点可靠，后者要求
+   背景色永远和容器一致，换个主题就露馅。 */
 #context-meter {
-  display: inline-flex;
-  align-items: center;
-  height: 36px;
-  margin-left: 0.375rem;
-  padding: 0 0.625rem;
-  border-radius: var(--radius-pill);
-  background: var(--bg);
-  border: 1px solid var(--border-light);
-  color: var(--text-muted);
-  font-size: var(--font-xs);
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-  white-space: nowrap;
+  --ring-fill: var(--text-muted);
+  --ring-track: var(--border-light);
+  flex: 0 0 auto;
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  margin-right: 0.125rem;
+  border-radius: 50%;
+  background: conic-gradient(var(--ring-fill) calc(var(--pct, 0) * 1%), var(--ring-track) 0);
+  -webkit-mask: radial-gradient(circle, transparent 54%, #000 56%);
+  mask: radial-gradient(circle, transparent 54%, #000 56%);
 }
-/* inline-flex 会盖掉 [hidden] 自带的 display:none，必须显式还原。 */
+/* inline-block 会盖掉 [hidden] 自带的 display:none，必须显式还原。 */
 #context-meter[hidden] { display: none; }
-/* turn 进行中收起：右边多出转圈/追加/停止之后胶囊区放不下，它只会剩半个露在外面。
-   见 setBusy() 里的说明——消息已经发出去时这个数字没有决策价值。 */
-#input-area[data-turn-busy] #context-meter { display: none; }
-#context-meter[data-tone="warn"] {
-  background: var(--warn-surface);
-  border-color: var(--warn-border);
-  color: var(--warn-text);
-}
-#context-meter[data-tone="bad"] {
-  background: var(--error-surface);
-  border-color: var(--error-border);
-  color: var(--error-text);
-}
+/* 拿不到上下文窗口时画不出比例。JS 那边把 --pct 设成 100，这里把填充色也调成
+   轨道色——于是它退化成一个安静的灰圈，而不是一个「用满了」的假警报。 */
+#context-meter[data-unknown] { --ring-fill: var(--ring-track); }
+#context-meter[data-tone="warn"] { --ring-fill: var(--warn-text); }
+#context-meter[data-tone="bad"] { --ring-fill: var(--error); }
 .pill-part {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1764,19 +1761,6 @@ body {
   transform: scale(0.93);
 }
 
-.mini-spinner {
-  width: 14px;
-  height: 14px;
-  border: 2px solid var(--spinner-track);
-  border-top-color: var(--accent-light);
-  border-radius: 50%;
-  animation: mini-spin 0.8s linear infinite;
-  display: inline-block;
-  flex-shrink: 0;
-}
-@keyframes mini-spin {
-  to { transform: rotate(360deg); }
-}
 
 .popover-header {
   padding: var(--space-6) 16px 10px;

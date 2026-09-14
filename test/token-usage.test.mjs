@@ -61,8 +61,9 @@ test('缺窗口时只显示绝对值', () => {
 });
 
 test('无数据时不显示', () => {
-  assert.deepEqual(formatContextMeter(null), { visible: false, label: '', tone: '' });
-  assert.deepEqual(formatContextMeter(undefined), { visible: false, label: '', tone: '' });
+  const empty = { visible: false, label: '', tone: '', pct: null, title: '' };
+  assert.deepEqual(formatContextMeter(null), empty);
+  assert.deepEqual(formatContextMeter(undefined), empty);
 });
 
 // 这个 meter 存在的理由就是回答「我该 compact 了吗」。只显示数字而不在逼近
@@ -77,4 +78,29 @@ test('逼近上限时升级语气', () => {
   assert.equal(at(89), 'warn');
   assert.equal(at(90), 'bad');
   assert.equal(at(99), 'bad');
+});
+
+// 上下文用量从数字胶囊改成圆环（抄 ChatGPT 桌面端的 contextUsageIndicator）：
+// 环按百分比填充，具体数字退到 tooltip。文案取它的
+// composer.contextWindowUsageTooltip「已用 {usedTokens}k 标记，共 {contextWindow}k」。
+
+test('给出百分比和 tooltip 文案，供圆环和悬停用', () => {
+  const meter = formatContextMeter({ contextTokens: 82491, contextWindow: 272000, usedPct: 30 });
+  assert.equal(meter.pct, 30);
+  assert.equal(meter.title, '已用 82.5k 标记，共 272k');
+});
+
+test('缺窗口时没有百分比可画，tooltip 只说用了多少', () => {
+  const meter = formatContextMeter({ contextTokens: 1800, contextWindow: null, usedPct: null });
+  assert.equal(meter.pct, null);
+  assert.equal(meter.title, '已用 1.8k 标记');
+});
+
+// 用量可以超过窗口（长会话累积到 437% 是实测出来的，不是构造的极端值）。
+// 数字胶囊时代它只是显示得奇怪，喂给 conic-gradient 就是非法输入。
+test('用量超出窗口时环钳在 100%，但 tooltip 仍报真实数字', () => {
+  const meter = formatContextMeter({ contextTokens: 1190000, contextWindow: 272000, usedPct: 437 });
+  assert.equal(meter.pct, 100, '环的填充比例必须是合法百分比');
+  assert.equal(meter.tone, 'bad');
+  assert.equal(meter.title, '已用 1190k 标记，共 272k');
 });

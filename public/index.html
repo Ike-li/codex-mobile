@@ -297,10 +297,12 @@
             <span id="effort-trigger-text" class="pill-part"></span>
           </span>
         </button>
-        <span id="context-meter" data-testid="context-meter" title="当前上下文占用 / 模型上下文窗口" hidden></span>
       </div>
       <div class="composer-actions">
-        <div id="mini-status-spinner" class="mini-spinner" style="display: none;"></div>
+        <!-- 上下文用量：圆环在这里、具体数字在 title 里，抄 ChatGPT 的
+             composer.contextUsageIndicator。原先是左边一个 24.5k/258.4k 的数字胶囊，
+             turn 跑起来时右边控件一多就被挤到放不下。 -->
+        <span id="context-meter" data-testid="context-meter" role="img" hidden></span>
         <button id="attach-btn" type="button" title="附件" aria-label="添加附件">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />

@@ -1999,8 +1999,15 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   function renderContextMeter(ctx) {
     const meter = formatContextMeter(ctx);
     contextMeterEl.hidden = !meter.visible;
-    contextMeterEl.textContent = meter.label;
     contextMeterEl.dataset.tone = meter.tone;
+    // 画环的是 CSS 的 conic-gradient，这里只交百分比。拿不到窗口就画不出比例，
+    // 退化成一个满环——那时 title 里只说用了多少，不谎称进度。
+    contextMeterEl.style.setProperty('--pct', meter.pct == null ? 100 : meter.pct);
+    contextMeterEl.toggleAttribute('data-unknown', meter.pct == null);
+    contextMeterEl.title = meter.title;
+    contextMeterEl.setAttribute('aria-label', meter.pct == null
+      ? meter.title
+      : `上下文用量：${meter.pct}%`);
   }
 
   function renderSessionMeta() {
@@ -3680,13 +3687,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     busy = b;
     if (!b) interruptPending = false;
     renderConnectionState();
-    const spinner = $('mini-status-spinner');
-    if (spinner) spinner.style.display = b ? 'inline-block' : 'none';
     if (!b) hideTyping();
-    // turn 跑起来之后右边会多出转圈、追加、停止三个控件，胶囊区被挤到放不下，
-    // 上下文表只剩半个露在外面（实测被裁成「36k/2」）。收起它——这个数字是拿来
-    // 决定「这条要不要发、要不要先 compact」的，消息已经发出去时它没有决策价值。
-    $('input-area')?.toggleAttribute('data-turn-busy', b);
     applyComposerMode();
   }
 

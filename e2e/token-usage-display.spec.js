@@ -44,8 +44,15 @@ test.describe('token 用量的展示位置', () => {
     // 断言全绿而用户什么都看不到。断言「有值」不足以证明「看得见」。
     const meter = page.getByTestId('context-meter');
     await expect(meter).toBeVisible({ timeout: 10000 });
-    // 坏掉的 contextCost 会让这里恒为 "0.0k"——要能区分「真实值」和「可信的零」。
-    await expect(meter).toContainText('/272k');
-    await expect(meter).not.toContainText('0.0k');
+    // 用量从数字胶囊改成了圆环（抄 ChatGPT 的 contextUsageIndicator），环上没有
+    // 文字，具体数字退到 title。坏掉的 contextCost 会让这里恒为「已用 0.0k」——
+    // 要能区分「真实值」和「可信的零」。
+    await expect(meter).toHaveAttribute('title', /共 272k$/);
+    await expect(meter).not.toHaveAttribute('title', /已用 0/);
+    // 还要验环真的按比例画：--pct 是 CSS conic-gradient 的唯一输入，它停在 0
+    // 的话 title 再对也只是一个空心圈。
+    const pct = await meter.evaluate(el => Number(el.style.getPropertyValue('--pct')));
+    expect(pct, `--pct 是 ${pct}，环没有按比例填充`).toBeGreaterThan(0);
+    expect(pct).toBeLessThanOrEqual(100);
   });
 });
