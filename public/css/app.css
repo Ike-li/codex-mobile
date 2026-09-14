@@ -1365,8 +1365,15 @@ body {
 .turn-actions {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  margin-top: var(--space-2);
+  gap: var(--space-1);
+  /* .assistant-turn 的 flex gap 是 12px——那是段落与段落之间的呼吸量。操作条属于
+     上面那条回复，不是下一个独立块；12px 再叠 6px margin 实测 18px，看着像一个
+     图标掉在正文外面。负 margin 收回一半，落到 8px。 */
+  margin-top: calc(var(--space-1) - var(--space-3));
+  /* 按钮 32px 宽、图标 16px 居中，图标左缘因此比正文左缘内缩 8px（实测 9px），
+     一列文字下面挂个缩进的图标，看起来就是没对齐。把这 8px 抵掉——要对齐的是
+     图标本身，不是按钮那个看不见的点击框。 */
+  margin-left: -8px;
 }
 .turn-action {
   background: transparent;
@@ -1379,6 +1386,11 @@ body {
   justify-content: center;
   min-width: 32px;
   min-height: 32px;
+}
+/* 不设的话 SVG 落到 13px，比正文小得多、还偏淡，像个没画完的东西。 */
+.turn-action .ui-icon {
+  width: 16px;
+  height: 16px;
 }
 .turn-actions[data-copied="true"]::after {
   content: '已复制';
