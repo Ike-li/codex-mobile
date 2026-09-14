@@ -3335,7 +3335,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
       card.className = 'tool-card reasoning-card';
       card.dataset.card = 'meta';
       card.dataset.streaming = 'true';
-      card.innerHTML = '<details class="reasoning-fold"><summary class="reasoning-toggle"><span class="reasoning-label">正在思考</span></summary><div class="reasoning-stack"></div></details>';
+      card.innerHTML = '<details class="reasoning-fold"><summary class="reasoning-toggle"><span class="reasoning-label loading-shimmer">正在思考</span></summary><div class="reasoning-stack"></div></details>';
       appendRaw(card, 'codex');
       appendReasoning.card = card;
       appendReasoning.sections = {};
@@ -3463,6 +3463,8 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     const label = appendReasoning.card?.querySelector('.reasoning-label');
     if (label) {
       label.textContent = thoughtLabel(appendReasoning.startedAt ? Date.now() - appendReasoning.startedAt : 0);
+      // 思考结束，微光停下：shimmer 是「还在进行」的信号，留着会一直暗示没完。
+      label.classList.remove('loading-shimmer');
     }
     if (appendReasoning.card) delete appendReasoning.card.dataset.streaming;
     appendReasoning.card = null;
@@ -3515,7 +3517,10 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     if (typingEl) return;
     const el = document.createElement('div');
     el.className = 'msg codex';
-    el.innerHTML = `<div class="typing"><span></span><span></span><span></span></div>`;
+    // ChatGPT 的等待态不是三个点，是「正在思考」这几个字本身被一道微光扫过。
+    // 文案和 reasoning 的进行时一致（reasoningItem.thinking），两者前后脚出现，
+    // 用同一句话就不会让人以为是两件事。
+    el.innerHTML = `<div class="typing"><span class="loading-shimmer">正在思考</span></div>`;
     typingEl = el;
     messagesEl.appendChild(el);
     scrollBottom();

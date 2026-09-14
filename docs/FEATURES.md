@@ -73,6 +73,9 @@
 | 2.18 | 空会话引导卡片 | `empty-state` |
 | 2.19 | turn 完成的无障碍播报 | `turn-announcer` |
 | 2.20 | turn 末尾的复制按钮，复制 markdown 原文而非渲染后的纯文本 | `appendTurnActions` |
+| 2.21 | 等待态是「正在思考」+ 微光横扫，与 reasoning 进行时同一套视觉 | `showTyping` / `.loading-shimmer` |
+| 2.22 | 用户气泡取 ChatGPT 的蓝底深字、16px 超椭圆圆角、宽度贴合内容，含代码块时撑满 | `.user .bubble` |
+| 2.23 | 行距用绝对增量（字号 + 6px）而非倍数，两档字号共用同一条呼吸节奏 | `.bubble` / `.codex .bubble` |
 
 ---
 

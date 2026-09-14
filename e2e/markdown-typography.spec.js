@@ -255,12 +255,25 @@ test.describe('助手回复的 Markdown 排版', () => {
       };
     });
 
-    // 用户消息是紧凑气泡:字号小一档,行高不能沿用为 15px 正文定的 1.55。
+    // 用户消息仍然小一档：两档字号是分开的。
     expect(metrics.user.fontSize).toBeLessThan(metrics.codex.fontSize);
+
+    // 行距判据从「比值」换成「绝对增量」，因为排版规则换了（抄 ChatGPT 的
+    // --markdown-line-height: calc(font-size + 6px)）。倍数行高在字号变化时行距
+    // 等比放大，大字号被推散、小字号又挤；绝对增量让两档保持同一条呼吸节奏。
+    //
+    // 副作用是比值会随字号**反向**变化——6px 在小字号里占比更大，于是用户气泡的
+    // 比值（22/16=1.375）反而高于助手正文（23/17=1.353）。原来那条「紧凑气泡比值
+    // 应更低」在这个公式下恒假，不是回归。守住公式本身才是这里该管的事：
+    // 有人改回倍数行高，这两条立刻红。
     expect(
-      metrics.user.lineHeight / metrics.user.fontSize,
-      '紧凑气泡的行高比应低于长文阅读态',
-    ).toBeLessThan(metrics.codex.lineHeight / metrics.codex.fontSize);
+      metrics.user.lineHeight - metrics.user.fontSize,
+      '用户气泡的行距不是「字号 + 6px」了',
+    ).toBeCloseTo(6, 0);
+    expect(
+      metrics.codex.lineHeight - metrics.codex.fontSize,
+      '助手正文的行距不是「字号 + 6px」了',
+    ).toBeCloseTo(6, 0);
   });
 
   test('reasoning 正文保持无衬线,没有掉回 <pre> 的等宽默认字体', async ({ page }) => {

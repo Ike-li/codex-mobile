@@ -13,8 +13,12 @@
   --accent-light: #10a37f; /* OpenAI Green */
   /* 文字档:on #ffffff = 4.77:1,on --bg #f8f9fa = 4.53:1,两者均过 WCAG AA 正文。 */
   --accent-text: #0d8265;
-  --user-bg: #ececec;
-  --user-text: #0d0d0d;
+  /* 用户气泡取 ChatGPT 桌面端 compact 视图的原值（compact-message-bubble-
+     background / -foreground）。窄窗里它不是灰的——灰气泡和助手正文、工具行
+     一起构成三层灰阶，谁是谁要靠位置分辨；换成蓝之后「这句是我说的」一眼可辨。
+     对比度 #0c274a on #e8f3fe ≈ 12.9:1，远超 AA。 */
+  --user-bg: #e8f3fe;
+  --user-text: #0c274a;
   --codex-bg: transparent;
   --codex-border: transparent;
   --tool-bg: #ffffff;
@@ -136,8 +140,9 @@
     --accent: #f2f2f2;
     /* 深色下装饰档已达 5.33:1(on --surface)/ 5.86:1(on --bg),文字档无需再沉一档。 */
     --accent-text: #10a37f;
-    --user-bg: #2a2a2a;
-    --user-text: #f2f2f2;
+    /* 同上，深色档的原值。#f6fafe on #173e76 ≈ 9.9:1。 */
+    --user-bg: #173e76;
+    --user-text: #f6fafe;
     --tool-bg: #1c1c1c;
     --tool-border: #2e2e2e;
     --system: #9a9a9a;
@@ -788,7 +793,10 @@ body {
   content-visibility: auto;
   contain-intrinsic-size: auto 100px;
 }
-.msg.user { align-self: flex-end; align-items: flex-end; max-width: min(85%, 420px); }
+/* 456px 是 ChatGPT compact 视图给用户气泡定的上限（--user-chat-width）。
+   本项目原来是 min(85%, 420px)：百分比那一档在 393px 视口下只剩 334px，
+   短句还好，一长就提前折行。 */
+.msg.user { align-self: flex-end; align-items: flex-end; max-width: min(456px, 100%); }
 .msg.codex { align-self: stretch; align-items: stretch; max-width: 100%; }
 .msg.system-msg { align-self: center; max-width: 100%; }
 .assistant-turn {
@@ -808,23 +816,37 @@ body {
   word-break: break-word;
   white-space: pre-wrap;
 }
-/* 用户消息是紧凑气泡:字号小一档,行高必须跟着收 —— 沿用 .bubble 里为 15px 正文
-   定的 1.55,两行短句之间会空得像两个段落。 */
+/* 几何全部取 ChatGPT compact 气泡的原值：16px 圆角、8px/12px 内边距、
+   宽度贴合内容。
+
+   corner-shape: superellipse(1) 是把圆角换成超椭圆（iOS 那种连续曲率）。
+   降级很干净——不支持的浏览器整条忽略，留下普通 border-radius。 */
 .user .bubble {
   background: var(--user-bg);
   color: var(--user-text);
-  border-radius: var(--radius-lg);
+  border-radius: 16px;
+  corner-shape: superellipse(1);
   box-shadow: none;
   font-size: var(--font-body);
-  line-height: 1.45;
+  padding: 8px 12px;
+  width: fit-content;
+  line-height: calc(1em + 6px);
+  letter-spacing: -0.01em;
 }
-/* 助手回复是长文阅读态:铺满阅读栏、段落和列表多,行高放宽一档更好扫读。 */
+/* 气泡宽度贴合内容对短句是对的，但代码块被挤成窄条就没法读了。用 :has() 让气泡
+   «看见»自己装了什么再决定宽度——ChatGPT 原样如此。 */
+.user .bubble:has(pre, code) {
+  width: 100%;
+}
+/* 助手正文同样吃这套排版。行高是 calc(1em + 6px) 而不是倍数：倍数在字号变化时
+   行距等比放大，大字号被推散、小字号又挤；绝对增量让不同字号保持同一条呼吸节奏。 */
 .codex .bubble {
   background: transparent;
   color: var(--text);
   border-radius: 0;
   padding: 0;
-  line-height: 1.65;
+  line-height: calc(1em + 6px);
+  letter-spacing: -0.01em;
 }
 .codex .bubble.md {
   white-space: normal;
@@ -1149,16 +1171,42 @@ body {
   font-size: var(--font-xs);
 }
 .reasoning-fold[open] .reasoning-toggle::before { content: '▾ '; }
-.reasoning-card[data-streaming="true"] .reasoning-label {
-  animation: reasoningPulse 1.4s ease-in-out infinite;
+/* 「还在进行」的统一信号：文字被一道微光从左扫到右。等待态和 reasoning 进行时
+   共用它（.loading-shimmer 由 JS 挂上/摘掉），因为这两者前后脚出现，用两套动效
+   会让人以为是两件不同的事。
+
+   数值照抄 ChatGPT 桌面端的 .loading-shimmer：2s 一个周期、渐变带宽只占文字的
+   50%、background-position 从 -100% 走到 250%。关键是 steps(48, end)——微光走
+   48 级阶梯而不是平滑滑过，看起来像逐字点亮；ChatGPT 管这个叫 cadenced（有节奏），
+   换成线性就变成一道平淡的反光，那个「正在一个字一个字想」的感觉就没了。 */
+@keyframes loadingShimmer {
+  0% { background-position: -100% 0; }
+  100% { background-position: 250% 0; }
 }
-@keyframes reasoningPulse {
-  0%, 100% { opacity: 0.55; }
-  50% { opacity: 1; }
+.loading-shimmer {
+  display: inline-block;
+  background: var(--text-muted) linear-gradient(
+    to right,
+    transparent 0%,
+    var(--text) 40%,
+    var(--text) 60%,
+    transparent 100%
+  );
+  background-position: -100% 0;
+  background-repeat: no-repeat;
+  background-size: 50% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: loadingShimmer 2s steps(48, end) infinite;
 }
+/* 关掉动画还不够：text-fill-color 是透明的，只停动画会留下一行看不见的字。
+   必须把颜色填回来。 */
 @media (prefers-reduced-motion: reduce) {
-  .reasoning-card[data-streaming="true"] .reasoning-label {
+  .loading-shimmer {
     animation: none;
+    background: none;
+    -webkit-text-fill-color: var(--text-muted);
   }
 }
 .reasoning-stack { margin-top: var(--space-2); }
@@ -1368,30 +1416,14 @@ body {
 .ansi-muted { color: #868e96; }
 
 /* Typing indicator */
+/* 等待态。原先是三个脉动的圆点——它只说明「在动」，不说明在做什么，而且和后面
+   紧接着出现的 reasoning「正在思考」是两套视觉语言。ChatGPT 桌面端这里放的就是
+   文字本身，由 .loading-shimmer 扫光，所以这里只管排版，动效交给那个类。 */
 .typing {
-  display: flex;
-  gap: var(--space-1);
   padding: var(--space-3) 0;
-  background: transparent;
+  font-size: var(--font-md);
+  line-height: 1.5;
   width: fit-content;
-}
-/* 原先是 translateY(-6px) 的 bounce —— 位移量正好等于点自身的直径,三个点轮流弹起
-   一个身位,视线被迫跟着上下扫。改成原地的透明度脉动:同样传达「在动」,但不产生
-   位移,而且和流式光标(streamCaret)用上了同一套视觉语言,两者常常前后脚出现。 */
-.typing span {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: var(--text-muted);
-  animation: typingPulse 1.4s ease-in-out infinite;
-}
-.typing span:nth-child(2) { animation-delay: 0.2s; }
-.typing span:nth-child(3) { animation-delay: 0.4s; }
-@keyframes typingPulse {
-  0%, 100% { opacity: 0.25; }
-  50% { opacity: 0.9; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .typing span { animation: none; opacity: 0.6; }
 }
 
 /* Floating Settings Badges */
