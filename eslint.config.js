@@ -17,7 +17,6 @@ export default [
       'data/**',
       'public/vendor/**',
       '_shot.mjs',
-      'tmp-ui-shots/**',
     ],
   },
   js.configs.recommended,
