@@ -1022,6 +1022,8 @@ body {
   padding: var(--space-1) 8px;
   font-weight: 500;
 }
+/* /help 是一张命令表，逐行长度不一；沿用系统消息的居中会让左边缘参差。 */
+.system-msg.slash-help .bubble { text-align: left; }
 .error-msg .bubble {
   background: var(--error-surface);
   color: var(--error-text);

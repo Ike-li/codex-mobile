@@ -970,6 +970,76 @@ test('P1 native controls call stable app-server methods with protocol params', a
   });
 });
 
+// review 默认走 inline：审查跑在当前 thread 上，事件沿用现有的 turn 事件流。
+// detached 会开一条新 thread，手机端得订阅并在两条流之间切换——那是另一件事。
+test('startReview 默认审未提交改动，inline 跑在当前 thread 上', async () => {
+  const { session } = makeSession();
+  const calls = [];
+  session.request = async (method, params) => {
+    calls.push({ method, params });
+    return { turn: { id: 'turn_1' }, reviewThreadId: 'thr_source' };
+  };
+
+  const result = await session.startReview({ threadId: 'thr_source' });
+  session.dispose();
+
+  assert.deepEqual(calls.at(-1), {
+    method: 'review/start',
+    params: {
+      threadId: 'thr_source',
+      target: { type: 'uncommittedChanges' },
+      delivery: 'inline',
+    },
+  });
+  assert.equal(result.reviewThreadId, 'thr_source');
+});
+
+test('startReview 带指令时改用 custom target，指令原样透传给模型', async () => {
+  const { session } = makeSession();
+  const calls = [];
+  session.request = async (method, params) => {
+    calls.push({ method, params });
+    return { turn: { id: 'turn_1' }, reviewThreadId: 'thr_source' };
+  };
+
+  await session.startReview({ threadId: 'thr_source', instructions: '  重点看并发安全  ' });
+  session.dispose();
+
+  assert.deepEqual(calls.at(-1).params, {
+    threadId: 'thr_source',
+    target: { type: 'custom', instructions: '重点看并发安全' },
+    delivery: 'inline',
+  });
+});
+
+test('startReview 缺 threadId 时直接报错，不发出没有目标的请求', async () => {
+  const { session } = makeSession();
+  const calls = [];
+  session.request = async (method, params) => {
+    calls.push({ method, params });
+    return {};
+  };
+
+  await assert.rejects(() => session.startReview({ threadId: '' }), /threadId/);
+  session.dispose();
+  assert.equal(calls.some(c => c.method === 'review/start'), false);
+});
+
+// 必须在**观察到响应**这一刻就记下 turn，不能等 request() 的 await 返回：响应和该
+// turn 的第一条通知可能在同一个 stdout chunk 里，而 host 给带 turnId 的通知找 owner
+// 时会回落到 currentTurnId 比对。晚一个 microtask，第一条通知就被判成无主帧丢掉——
+// 表现是审查结果稳定少掉第一个字符。
+test('review/start 的响应一被观察到就记下 currentTurnId', () => {
+  const { session } = makeSession();
+  session.observeTransportFrame({
+    direction: 'inbound',
+    method: 'review/start',
+    frame: { id: 1, result: { turn: { id: 'turn-r' }, reviewThreadId: 'thr-a' } },
+  });
+  assert.equal(session.currentTurnId, 'turn-r');
+  session.dispose();
+});
+
 test('updateThreadCollaborationMode writes built-in plan settings without starting a turn', async () => {
   const { session } = makeSession();
   const calls = [];

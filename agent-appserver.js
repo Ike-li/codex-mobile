@@ -347,7 +347,12 @@ export class ThreadRuntime {
     // 所以此前只有通知流会推进 lastActivity——RPC 往返（thread/resume、command/exec）
     // 和 inbound 审批请求都不算，而 checkIdle 与 isReclaimable 都建立在这个信号上。
     this.lastActivity = Date.now();
-    if (direction === 'inbound' && (method === 'turn/start' || method === 'turn/steer')) {
+    // review/start 和 turn/start 一样开一个 turn。必须在**观察到响应**这一刻就登记，
+    // 不能等 request() 的 await 返回：mock 与真实 app-server 都可能把响应和该 turn 的
+    // 第一条通知放进同一个 stdout chunk，而 host 给带 turnId 的通知找 owner 时会回落到
+    // currentTurnId 比对——晚一个 microtask，第一条通知就被判成无主帧丢掉，
+    // 表现是审查结果稳定少掉第一个字符。
+    if (direction === 'inbound' && (method === 'turn/start' || method === 'turn/steer' || method === 'review/start')) {
       this.recordCurrentTurn(frame?.result);
     }
     const details = {
@@ -1405,6 +1410,37 @@ export class ThreadRuntime {
   async compactThread(threadId = this.sessionId) {
     await this.ensureInitialized();
     return this.request('thread/compact/start', { threadId: requireThreadId(threadId, 'compact') });
+  }
+
+  // delivery 固定 inline：审查跑在当前 thread 上，结果沿用现有的 turn 事件流，
+  // 前端不用为一条 review thread 单独订阅和切换。
+  async startReview(options = {}) {
+    // ensureReady 而不是 ensureInitialized：审的是工作区改动，空会话里也该能发起，
+    // 而 thread 是懒建的（session:new 只给 instanceId，threadId 要等第一个 turn）。
+    await this.ensureReady();
+    const instructions = String(options.instructions || '').trim();
+    // 先构造再广播：requireThreadId 抛在这一步的话，前端还没被推进 busy。
+    const params = {
+      threadId: requireThreadId(options.threadId || this.sessionId, 'review'),
+      target: instructions
+        ? { type: 'custom', instructions }
+        : { type: 'uncommittedChanges' },
+      delivery: 'inline',
+    };
+    // inline review 就是当前 thread 上的一个 turn，状态广播要和 turn/start 一致：
+    // 少了这一步前端不进 busy，随后的 delta 也没有 turn 容器可落，审查结果会凭空消失。
+    this.busy = true;
+    this.emitStatus('turn_started');
+    try {
+      const response = await this.request('review/start', params);
+      this.recordCurrentTurn(response);
+      this.emitStatus('turn_submitted');
+      return response;
+    } catch (err) {
+      this.busy = false;
+      this.emitStatus('turn_start_failed');
+      throw err;
+    }
   }
 
   async rollbackThread(options = {}) {

@@ -14,7 +14,7 @@ import { truncate } from './text-utils.js';
 
 export const RPC_SUMMARY_CAP = 240;
 export const SENSITIVE_RPC_KEY_RE = /(token|secret|password|passwd|credential|authorization|api[_-]?key|private[_-]?key|refreshToken|accessToken|chatgptAuthTokens|dataBase64)/i;
-export const CONTENT_RPC_KEY_RE = /^(text|input|prompt|content|delta|aggregatedOutput|output|diff|data)$/i;
+export const CONTENT_RPC_KEY_RE = /^(text|input|prompt|content|delta|aggregatedOutput|output|diff|data|instructions)$/i;
 
 // 高频增量通知：正文按 CONTENT_RPC_KEY_RE 打码后只剩长度信息，逐帧留档没有意义。
 export function isDeltaNotification(frame, method) {

@@ -67,7 +67,6 @@ import {
   GRANULAR_APPROVAL_KEYS,
   formatComposerMode,
   normalizeCollaborationMode,
-  parseCollaborationModeSlash,
   loadCliSettings,
   modelAcceptsImages,
   reasoningOptionsForModel,
@@ -77,6 +76,7 @@ import {
   serviceTiersForModel,
   visibleModels,
 } from '/js/cli-settings.js';
+import { resolveSlashCommand, slashHelpLines } from '/js/slash-commands.js';
 import { icon, hydrateIcons } from '/js/icons.js';
 // 沿用 escHtml 这个本地名字：94 处调用点原样不动，改名不是这次搬迁的目的。
 import { escapeHtml as escHtml } from '/js/html-escape.js';
@@ -1236,19 +1236,12 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
 
   document.querySelectorAll('.slash-item').forEach(item => {
     item.onclick = () => {
-      const cmd = item.dataset.cmd;
       hideSlashPopup();
-      const modeSlash = parseCollaborationModeSlash(cmd);
-      if (modeSlash) {
-        applyCollaborationMode(modeSlash.mode);
-        inputEl.value = '';
-        applyComposerMode();
-        return;
-      }
-      inputEl.value = cmd + ' ';
-      inputEl.focus();
-      inputEl.style.height = 'auto';
-      inputEl.style.height = Math.min(inputEl.scrollHeight, 140) + 'px';
+      // 点条目 = 提交这条命令。分发只留 sendMessage 一份，免得 popup 和手打命令
+      // 走出两套行为——旧代码就是这么漂出 bug 的：popup 只把文本塞回输入框，
+      // 于是 /compact 变成了发给模型的一句话。
+      inputEl.value = item.dataset.cmd;
+      sendMessage();
     };
   });
 
@@ -2213,6 +2206,26 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     socket.emit('thread:compact', { threadId: currentSessionId, cwd: serverCwd }, ack => {
       if (!ack?.ok) return appendSystem(ack?.error || 'Compact failed', true);
       appendSystem('Compact requested', false);
+    });
+  }
+
+  // inline 审查：结果作为当前会话的一个 turn 流回来，所以这里只管发起和报错，
+  // 渲染交给现有的 turn 事件流。
+  async function startReview(instructions = '') {
+    // 审的是工作区改动，不是对话——空会话里直接发起也成立，所以先把会话建出来，
+    // 而不是像 compact 那样要求用户先说过一句话。
+    try {
+      await ensureViewTarget();
+    } catch (error) {
+      appendSystem(error.message || '无法建立会话目标', true);
+      return;
+    }
+    // 先贴提示再发：ack 回来的时机晚于 turn 的事件流，等 ack 会让「已发起」
+    // 落到审查结果后面。失败时下面那条错误会紧跟着出现。
+    appendSystem(instructions ? `已发起审查：${instructions}` : '已发起未提交改动审查', false);
+    // threadId 可能还是空的（thread 懒建），服务端会用 agent 自己的 thread 兜住。
+    socket.emit('thread:review', { threadId: currentSessionId, cwd: serverCwd, instructions }, ack => {
+      if (!ack?.ok) appendSystem(ack?.error || '发起审查失败', true);
     });
   }
 
@@ -3623,9 +3636,9 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     return wrapper;
   }
 
-  function appendSystem(msg, isError) {
+  function appendSystem(msg, isError, extraClass) {
     const el = document.createElement('div');
-    el.className = 'msg system-msg' + (isError ? ' error-msg' : '');
+    el.className = 'msg system-msg' + (isError ? ' error-msg' : '') + (extraClass ? ` ${extraClass}` : '');
     el.innerHTML = `<div class="bubble">${escHtml(msg)}</div>`;
     messagesEl.appendChild(el);
     scrollBottom();
@@ -3824,18 +3837,54 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     applyComposerMode();
   });
 
+  // 斜杠命令的副作用绑定。解析在 slash-commands.js（纯函数、可单测），这里只把
+  // action id 接到已有的面板/socket 动作上——第一档全是现成函数，没有新协议调用。
+  function runSlashAction(action, args = '') {
+    switch (action) {
+      case 'review': startReview(args); return;
+      // 命令表逐行长度不一，系统消息默认居中会让左边参差不齐，单独左对齐。
+      case 'help': appendSystem(`手机端可用命令：\n${slashHelpLines().join('\n')}`, false, 'slash-help'); return;
+      case 'session-settings': openSessionSettings(); return;
+      case 'diff': workspacePanel.open(); return;
+      case 'compact': startCompact(); return;
+      case 'new-session': createNewSession(); return;
+      case 'files': openFileBrowser(serverCwd); return;
+      case 'mcp': loadMcpPanel(); return;
+      case 'skills': loadSkillsPanel(); return;
+      case 'account': loadAccountPanel(); return;
+      // 分发表里加了命令却忘了接线时，宁可报错也不要静默——静默正是旧 popup 的失败形态。
+      default: appendSystem(`命令未接线：${action}`, true);
+    }
+  }
+
   async function sendMessage() {
     if (interruptPending) return;
-    const modeSlash = parseCollaborationModeSlash(inputEl.value);
-    if (modeSlash) {
-      if (!settingsCapabilities?.available?.collaborationModes?.includes(modeSlash.mode)) {
+    const slash = resolveSlashCommand(inputEl.value);
+    if (slash?.kind === 'unknown') {
+      appendSystem(`未知命令 ${slash.cmd}。用 /help 看可用命令，草稿已保留`, true);
+      return;
+    }
+    if (slash?.kind === 'unsupported') {
+      appendSystem(`${slash.cmd} 在手机端用不了：${slash.reason}。草稿已保留`, true);
+      return;
+    }
+    if (slash?.kind === 'action') {
+      runSlashAction(slash.action, slash.args);
+      inputEl.value = '';
+      inputEl.style.height = 'auto';
+      hideSlashPopup();
+      applyComposerMode();
+      return;
+    }
+    if (slash?.kind === 'mode') {
+      if (!settingsCapabilities?.available?.collaborationModes?.includes(slash.mode)) {
         appendSystem('当前连接不支持此模式，草稿已保留', true);
         return;
       }
-      if (!await applyCollaborationMode(modeSlash.mode)) return;
-      inputEl.value = modeSlash.rest;
+      if (!await applyCollaborationMode(slash.mode)) return;
+      inputEl.value = slash.rest;
       applyComposerMode();
-      if (!modeSlash.rest && !currentAttachments.length && !currentInputParts.length) return;
+      if (!slash.rest && !currentAttachments.length && !currentInputParts.length) return;
     }
     const text = inputEl.value.trim();
     const hasAttachments = currentAttachments.length > 0;

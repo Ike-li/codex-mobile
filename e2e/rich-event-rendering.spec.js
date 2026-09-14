@@ -48,12 +48,11 @@ test.describe('P0 协议桥、审批与 Socket.IO', () => {
     await expect(page.locator('.error-msg').last()).toContainText('Approval declined by user', { timeout: 10000 });
     await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
 
-    // 5. Send /status.
-    await sendMessage(page, '/status');
-    await expect(page.getByText('当前没有活跃目标').last()).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
+    // 原第 5 步发 /status 等模型回话，靠的是 mock 对这段文本的特判——而 /status
+    // 现在是本地命令，不再产生 turn。这条 spec 测的是富事件渲染，下面那步发普通
+    // 消息已经覆盖同一条「发送→流式响应」路径，不必再造一个像消息的斜杠文本。
 
-    // 6. Send a normal message.
+    // 5. Send a normal message.
     await sendMessage(page, 'rich event plain message');
     await expect(page.locator('.msg.user').last()).toContainText('rich event plain message');
     await expect(page.locator('.msg.codex').last()).toContainText('Mock response to: rich event plain message', { timeout: 10000 });

@@ -28,23 +28,23 @@ test.describe('关键用户旅程', () => {
     await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
   });
 
-  test('斜杠命令 /status', async ({ page }) => {
+  // 这条过去断言的是「发 /status 给模型、模型回一句话」——那是 bug 期的行为：
+  // app-server 不解析斜杠命令，那一发只是往对话里塞了句 "/status"。
+  test('斜杠命令 /status 打开会话设置，而不是发给模型', async ({ page }) => {
     await page.goto('/');
 
     // Wait for connection and idle state
     await expect(page.locator('#state-label')).not.toHaveText('offline', { timeout: 10000 });
     await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
 
-    // Send /status command
     const input = page.locator('#msg-input');
     await input.fill('/status');
     await page.locator('#send-btn').click();
 
-    // Wait for idle again (response complete)
+    await expect(page.locator('#session-settings')).toBeVisible();
+    await expect(input).toHaveValue('');
+    await expect(page.locator('.msg.user')).toHaveCount(0);
     await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
-
-    // Should receive status response - use text locator to find the specific message
-    await expect(page.getByText('当前没有活跃目标').last()).toBeVisible({ timeout: 10000 });
   });
 
   test('发送中断信号', async ({ page }) => {

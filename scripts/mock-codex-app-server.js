@@ -155,8 +155,8 @@ async function simulateTurn(input, targetThreadId = threadId) {
       ? CODE_BLOCK_MARKDOWN
     : input.includes('MARKDOWN_FIXTURE')
       ? 'Here is **bold** and `code`.\n\n- item one\n- item two'
-    : input.includes('/status')
-      ? '当前没有活跃目标或正在执行的任务。'
+      // 这里曾有条 /status 分支，模拟「模型收到 /status 这段文本并回话」。
+      // 斜杠命令现在在前端就被分发掉了，留着它只会让人以为 /status 该发给模型。
       : `Mock response to: ${input}`;
   const streamDelayMs = input.includes('STREAMING_MARKDOWN_FIXTURE')
     ? 40
@@ -626,6 +626,20 @@ rl.on('line', async (line) => {
           itemId: `steer_${turnCount}`,
           delta: ` [steer:${input}]`,
         });
+        break;
+      }
+
+      // inline review：审查结果就是当前 thread 上的一个普通 turn，
+      // 所以这里响应完直接走 simulateTurn，前端不需要为它另开一条流。
+      case 'review/start': {
+        const target = msg.params?.target || {};
+        const targetThreadId = msg.params?.threadId || threadId;
+        respond(msg.id, {
+          turn: { id: `turn_${turnCount + 1}`, status: 'inProgress' },
+          reviewThreadId: targetThreadId,
+        });
+        const label = target.type === 'custom' ? `按指令审查 ${target.instructions}` : '未提交改动审查';
+        simulateTurn(`REVIEW_FIXTURE ${label}`, targetThreadId).catch(() => {});
         break;
       }
 

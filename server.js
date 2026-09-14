@@ -2452,6 +2452,19 @@ io.on('connection', socket => {
     }
   });
 
+  // 审查走 inline：结果作为当前 thread 的一个 turn 流回来，和普通回复同一条路径。
+  on(socket, 'thread:review', async (payload = {}, ack) => {
+    try {
+      const response = await ensureControlAgent(payload?.cwd, socket).startReview({
+        threadId: payload?.threadId,
+        instructions: payload?.instructions,
+      });
+      ackOk(ack, { reviewThreadId: response?.reviewThreadId || null });
+    } catch (err) {
+      ackError(ack, err);
+    }
+  });
+
   on(socket, 'thread:rollback', async (payload = {}, ack) => {
     try {
       const response = await ensureControlAgent(payload?.cwd, socket).rollbackThread({

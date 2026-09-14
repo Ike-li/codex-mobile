@@ -34,7 +34,9 @@ test('键名像凭证时整个值被抹掉，无论它是什么类型', () => {
 
 // 正文只留长度：诊断时「有多长」有用，内容本身不该落盘。
 test('键名是正文时只留长度，不留内容', () => {
-  for (const key of ['text', 'input', 'prompt', 'content', 'delta', 'aggregatedOutput', 'output', 'diff', 'data']) {
+  // instructions 是 review/start 的自定义审查指令——用户自由输入的一句话，
+  // 和 prompt 同类。它跟着 /review 一起进 RPC，不能原样落盘。
+  for (const key of ['text', 'input', 'prompt', 'content', 'delta', 'aggregatedOutput', 'output', 'diff', 'data', 'instructions']) {
     assert.equal(redactRpcValue('hello world', key), '<redacted:11 chars>', key);
     assert.equal(redactRpcValue([1, 2, 3, 4], key), '<redacted:4 items>', `${key}（数组留条数）`);
   }

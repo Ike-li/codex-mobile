@@ -3619,6 +3619,8 @@ test('server exposes P1 native app-server controls over Socket.IO', async () => 
       assert.equal((await emitWithAck(socket, 'thread:archive', { threadId: 'thr_fake' })).ok, true);
       assert.equal((await emitWithAck(socket, 'thread:unarchive', { threadId: 'thr_fake' })).ok, true);
       assert.equal((await emitWithAck(socket, 'thread:compact', { threadId: 'thr_fake' })).ok, true);
+      assert.equal((await emitWithAck(socket, 'thread:review', { threadId: 'thr_fake' })).ok, true);
+      assert.equal((await emitWithAck(socket, 'thread:review', { threadId: 'thr_fake', instructions: '看并发' })).ok, true);
       assert.equal((await emitWithAck(socket, 'thread:rollback', { threadId: 'thr_fake', numTurns: 2 })).ok, true);
 
       const compact = await waitForAgentEvent(socket, 'compact');
@@ -3693,6 +3695,7 @@ test('server exposes P1 native app-server controls over Socket.IO', async () => 
         'thread/archive',
         'thread/unarchive',
         'thread/compact/start',
+        'review/start',
         'thread/rollback',
         'model/list',
         'modelProvider/capabilities/read',
@@ -3709,6 +3712,15 @@ test('server exposes P1 native app-server controls over Socket.IO', async () => 
       ]) {
         assert.ok(methods.includes(method), `expected ${method}`);
       }
+
+      // review 的目标和投递方式要真的落到 app-server：inline 决定审查结果走当前
+      // thread 的事件流，手机端才不用为一条 review thread 单独订阅。
+      const reviews = calls.filter(call => call.method === 'review/start' && call.params);
+      assert.deepEqual(reviews[0].params.target, { type: 'uncommittedChanges' });
+      assert.equal(reviews[0].params.delivery, 'inline');
+      // 这份日志是 fake bin 记的 app-server 侧原始入参，指令必须原样抵达；
+      // 我们自己落盘那份的打码由 rpc-log-redaction 的单测守。
+      assert.deepEqual(reviews[1].params.target, { type: 'custom', instructions: '看并发' });
     } finally {
       socket.disconnect();
     }
@@ -4281,6 +4293,9 @@ rl.on('line', line => {
 	    send({ id: message.id, result: {} });
 	    setTimeout(() => send({ method: 'thread/compacted', params: { threadId: message.params.threadId, turnId } }), 5);
 	    return;
+	  }
+	  if (message.method === 'review/start') {
+	    return send({ id: message.id, result: { turn: { id: turnId, threadId: message.params.threadId, status: 'inProgress', items: [] }, reviewThreadId: message.params.threadId } });
 	  }
 	  if (message.method === 'thread/rollback') return send({ id: message.id, result: { thread: { id: message.params.threadId, turns: [] } } });
 	  if (message.method === 'model/list') return send({ id: message.id, result: { data: [{ id: 'model_1', model: 'gpt-5.5', displayName: 'GPT-5.5', hidden: false, supportedReasoningEfforts: [], defaultReasoningEffort: 'medium', inputModalities: ['text'], serviceTiers: [], defaultServiceTier: null, isDefault: true }], nextCursor: null } });
