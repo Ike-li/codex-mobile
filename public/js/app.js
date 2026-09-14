@@ -98,6 +98,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   const sessionMetaEl = $('session-meta');
   const statusDetail = $('status-detail');
   const contextMeterEl = $('context-meter');
+  const contextMeterDetailEl = $('context-meter-detail');
   const drawerOverlay = $('drawer-overlay');
   const drawer = $('drawer');
 
@@ -1260,6 +1261,9 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     if (atMentionPopup && !atMentionPopup.contains(e.target) && e.target !== inputEl) {
       hideAtMentionPopup();
     }
+    // 用量气泡同理。环自己的 onclick 负责 toggle，冒泡到这里时 target 还是环，
+    // contains 为真所以不会被当场关掉。
+    if (!contextMeterEl.contains(e.target)) setContextDetailOpen(false);
   });
 
   // Empty state Suggestion cards
@@ -2001,13 +2005,22 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     contextMeterEl.hidden = !meter.visible;
     contextMeterEl.dataset.tone = meter.tone;
     // 画环的是 CSS 的 conic-gradient，这里只交百分比。拿不到窗口就画不出比例，
-    // 退化成一个满环——那时 title 里只说用了多少，不谎称进度。
+    // 退化成一个满环——那时文案里只说用了多少，不谎称进度。
     contextMeterEl.style.setProperty('--pct', meter.pct == null ? 100 : meter.pct);
     contextMeterEl.toggleAttribute('data-unknown', meter.pct == null);
+    // title 留着给桌面浏览器的 hover；手机上够不着，真正的通道是点开的气泡。
     contextMeterEl.title = meter.title;
     contextMeterEl.setAttribute('aria-label', meter.pct == null
       ? meter.title
       : `上下文用量：${meter.pct}%`);
+    contextMeterDetailEl.textContent = meter.title;
+    // 用量在 turn 之间会更新，气泡开着时文本跟着变；环整个消失了就别留个孤儿气泡。
+    if (!meter.visible) setContextDetailOpen(false);
+  }
+
+  function setContextDetailOpen(open) {
+    contextMeterDetailEl.hidden = !open;
+    contextMeterEl.setAttribute('aria-expanded', String(open));
   }
 
   function renderSessionMeta() {
@@ -3941,6 +3954,10 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     };
   }
   initPush();
+
+  // ---- 上下文用量 ----
+  // 环上画的是比例，具体数字点开才有。触屏上这是唯一的通道——title 弹不出来。
+  contextMeterEl.onclick = () => setContextDetailOpen(contextMeterDetailEl.hidden);
 
   // ---- 附件 ----
   attachBtn.onclick = () => fileInput.click();

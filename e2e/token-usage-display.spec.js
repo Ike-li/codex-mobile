@@ -55,4 +55,30 @@ test.describe('token 用量的展示位置', () => {
     expect(pct, `--pct 是 ${pct}，环没有按比例填充`).toBeGreaterThan(0);
     expect(pct).toBeLessThanOrEqual(100);
   });
+
+  // 2026-09-13：环上线当天就被反馈「根本看不出什么东西，就是一个环」。上一版把
+  // 数字退到 title 抄的是 ChatGPT 桌面端，但 title 在 iOS Safari / Android Chrome
+  // 上**永远不会弹出来**——触屏没有 hover，长按出的是系统菜单。桌面端那笔
+  // 「数字换 hover」的等价交换搬到手机上就是单方面删掉数字。
+  // 所以这里断言的是 tap 这条触屏唯一能用的通道，不是 title 有没有值。
+  test('点环能看到具体数字', async ({ page }) => {
+    await connect(page);
+    await sendMessage(page, 'context meter detail should be tappable');
+    await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
+
+    const meter = page.getByTestId('context-meter');
+    await expect(meter).toBeVisible({ timeout: 10000 });
+
+    const detail = page.getByTestId('context-meter-detail');
+    await expect(detail).toBeHidden();
+
+    await meter.click();
+    await expect(detail).toBeVisible();
+    await expect(detail).toContainText('272k');
+    await expect(detail).not.toContainText('已用 0');
+
+    // 再点收起：只能展开不能收的话，它就永久占住了输入框上方那块地方。
+    await meter.click();
+    await expect(detail).toBeHidden();
+  });
 });

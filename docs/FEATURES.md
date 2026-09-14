@@ -68,7 +68,7 @@
 | 2.13d | 活动区与最终回复之间插入「用时 N 秒」分隔 | `workedForLabel` / `.worked-for` |
 | 2.14 | turn 终态摘要（完成/失败/中断） | `turn-outcome.js` |
 | 2.15 | 界面不显示宿主机绝对路径（`/Users/xxx` 收敛） | `display-path.js` |
-| 2.16 | 上下文占用环（按百分比填充的 18px 圆环，逼近上限变色；数字在 tooltip） | `token-usage.js` |
+| 2.16 | 上下文占用环（按百分比填充的 18px 圆环，逼近上限变色；点环弹出具体数字） | `token-usage.js` |
 | 2.17 | 「有新内容 ↓」跳转按钮 | `jump-to-latest` |
 | 2.18 | 空会话引导卡片 | `empty-state` |
 | 2.19 | turn 完成的无障碍播报 | `turn-announcer` |

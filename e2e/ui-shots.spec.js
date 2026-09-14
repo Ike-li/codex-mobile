@@ -250,11 +250,29 @@ test.describe('UI_SURFACE 截图', () => {
     await annotate(page, [
       { sel: '#msg-input', n: 1, place: 'tl' },
       { sel: '#composer-defaults', n: 2, place: 'bl' },
-      { sel: '#context-meter', n: 3, place: 'tr' },
+      // tl 而不是 tr：环的命中区从 18px 扩到 40px 之后，它的右上角正好压在附件
+      // 按钮的左上角上，两个编号气泡叠成一团。
+      { sel: '#context-meter', n: 3, place: 'tl' },
       { sel: '#attach-btn', n: 4, place: 'tl' },
       { sel: '#send-btn', n: 5, place: 'tr' },
     ]);
     await shotArea(page, '05-composer', '#input-area', { top: 26, bottom: 10 });
+  });
+
+  // §4 点环弹出的具体数字。单独一张是因为它是瞬态的，05 那张截不到；而这个气泡
+  // 是触屏上唯一能看到数字的通道——title 在 iOS Safari / Android Chrome 上不弹。
+  // 气泡自带文字，按本文件约定 2 不打编号。
+  test('05b 输入区：点开上下文用量', async ({ page }) => {
+    await connect(page);
+    await send(page, '让上下文表出现');
+    await idle(page);
+    await expect(page.locator('#context-meter')).toBeVisible({ timeout: 8000 });
+    await page.locator('#msg-input').fill('接下来我们该写什么代码');
+    await page.locator('#context-meter').click();
+    await expect(page.locator('#context-meter-detail')).toBeVisible();
+
+    // top 给到 40：气泡浮在输入框卡片外侧上方，26px 只够它露出小半截。
+    await shotArea(page, '05b-context-usage', '#input-area', { top: 40, bottom: 10 });
   });
 
   // §4 输入区里只在 turn 进行中出现的三个控件。

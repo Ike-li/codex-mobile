@@ -264,4 +264,15 @@ test('turn 跑起来时输入区不窜高：控件挤不下要横向让位，不
     return box.left < row.left - 1 || box.right > row.right + 1;
   });
   expect(ringClipped, '上下文用量环被切掉了一部分').toBe(false);
+
+  // 环是可点的（点开具体数字），命中区不能只剩视觉上那 18px。上一版它是个 18px
+  // 的 span，margin-right 只有 2px，右边就是附件按钮那 40px 的透明命中区（图标
+  // 才 22px，左右各余 9px）——指尖接触面远大于 18px，2026-09-13 实测「点环打开了
+  // 附件」。守的是「可点的东西不小于同排按钮」，而不是某个具体像素值。
+  const hit = await page.evaluate(() => {
+    const box = sel => globalThis.document.querySelector(sel).getBoundingClientRect();
+    return { meter: box('#context-meter').width, attach: box('#attach-btn').width };
+  });
+  expect(hit.meter, `用量环的命中区只有 ${hit.meter}px，同排的附件按钮是 ${hit.attach}px`)
+    .toBeGreaterThanOrEqual(hit.attach);
 });
