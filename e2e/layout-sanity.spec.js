@@ -209,3 +209,64 @@ test('卡片里的自然语言不套用代码样式', async ({ page }) => {
     expect(item.breakAll, `「${item.text}」用了 word-break: break-all，英文单词会被劈开`).toBe(false);
   }
 });
+
+test('turn 跑起来时输入区不窜高：控件挤不下要横向让位，不是换行', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
+  // 先跑一轮，让上下文表出现——它只在拿到用量之后才渲染，而它正是把这一行挤爆的那一个。
+  await page.locator('#msg-input').fill('让上下文表出现');
+  await page.locator('#send-btn').click();
+  await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 20000 });
+  await expect(page.locator('#context-meter')).toBeVisible({ timeout: 8000 });
+
+  const rowHeight = () => page.locator('.input-controls-row')
+    .evaluate(el => Math.round(el.getBoundingClientRect().height));
+  const idleHeight = await rowHeight();
+
+  // 最坏情况由 JS 直接摆出来，不去等真实 turn 的时序：这条测的是「CSS 在控件全部
+  // 在场时还能不能保持单行」，而按时序抓这一瞬极易变成偶发红（实测 #state-label
+  // 在 turn 真正开始前就已经是 idle）。
+  //
+  // 关键是**同时**留着上下文表：turn 进行中它本来会被收起，胶囊区只剩一个元素、
+  // 怎么排都不会换行，于是这条断言测不到 composer-chips 的 flex 布局——第一版就是
+  // 这样，把 display:flex 摘掉仍然全绿。这里显式把它放回场上，让胶囊区真的放不下。
+  await page.locator('#msg-input').fill('打字中的内容');
+  await page.evaluate(() => {
+    const doc = globalThis.document;
+    doc.querySelector('#input-area').toggleAttribute('data-turn-busy', true);
+    doc.querySelector('#mini-status-spinner').style.display = 'flex';
+    doc.querySelector('#followup-btn').hidden = false;
+    doc.querySelector('#send-btn-container').hidden = false;
+    const send = doc.querySelector('#send-btn');
+    send.hidden = false;
+    send.disabled = false;
+    send.dataset.mode = 'stop';
+  });
+
+  const crowdedHeight = await page.evaluate(() => {
+    const doc = globalThis.document;
+    const meter = doc.querySelector('#context-meter');
+    const restore = meter.style.display;
+    meter.style.display = 'inline-flex';
+    const h = Math.round(doc.querySelector('.input-controls-row').getBoundingClientRect().height);
+    meter.style.display = restore;
+    return h;
+  });
+  // 改动前这里会从 40px 变成 80px：composer-chips 曾经是 block 容器，里面两个
+  // inline-flex 胶囊放不下就换行，把整个输入区顶高一截。
+  expect(crowdedHeight, `控件行从 ${idleHeight}px 窜到 ${crowdedHeight}px——胶囊换行了`)
+    .toBe(idleHeight);
+
+  const busyHeight = await rowHeight();
+  expect(busyHeight, '收起上下文表之后仍然应当是单行').toBe(idleHeight);
+
+  // 而且不能剩半个胶囊露在外面被右侧控件切掉：放不下就整个收起。
+  const meterClipped = await page.evaluate(() => {
+    const m = globalThis.document.querySelector('#context-meter');
+    const box = m.getBoundingClientRect();
+    if (!box.width) return false; // 已收起，符合预期
+    const chips = globalThis.document.querySelector('#composer-chips').getBoundingClientRect();
+    return box.right > chips.right + 1;
+  });
+  expect(meterClipped, '上下文表只剩半个露在胶囊区外，被右侧控件切掉了').toBe(false);
+});

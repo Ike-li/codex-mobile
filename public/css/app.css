@@ -1588,9 +1588,16 @@ body {
   min-width: 0;
 }
 
+/* display: flex + nowrap 是这里的关键，不是装饰。原先是 block 容器，里面的设置
+   胶囊和上下文表都是 inline-flex——行内元素放不下时会**换行**，而不是触发这里
+   的 overflow-x。于是 turn 一开始跑（多出 loading 和停止按钮），两个胶囊就掉成
+   上下两行，整个输入区窜高一截。改成 flex 之后放不下才真的横向滚动。 */
 .composer-chips {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
   overflow-x: auto;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
@@ -1643,6 +1650,9 @@ body {
 }
 /* inline-flex 会盖掉 [hidden] 自带的 display:none，必须显式还原。 */
 #context-meter[hidden] { display: none; }
+/* turn 进行中收起：右边多出转圈/追加/停止之后胶囊区放不下，它只会剩半个露在外面。
+   见 setBusy() 里的说明——消息已经发出去时这个数字没有决策价值。 */
+#input-area[data-turn-busy] #context-meter { display: none; }
 #context-meter[data-tone="warn"] {
   background: var(--warn-surface);
   border-color: var(--warn-border);
