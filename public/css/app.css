@@ -13,6 +13,11 @@
   --accent-light: #10a37f; /* OpenAI Green */
   /* 文字档:on #ffffff = 4.77:1,on --bg #f8f9fa = 4.53:1,两者均过 WCAG AA 正文。 */
   --accent-text: #0d8265;
+  /* 发送/停止按钮的主操作蓝，取自桌面端截图里那颗按钮的众数像素（canvas 统计，
+     发送态和停止态同色）。深浅两套主题共用一个值：白图标 on 它 = 3.64:1，它
+     on --surface 浅色 #ffffff = 3.64:1、深色 #1c1c1c = 4.68:1，三处都过非文本
+     3:1。按钮上只有图标没有文字，不需要 4.5:1 那一档。 */
+  --send-accent: #3a83f7;
   /* 用户气泡取 ChatGPT 桌面端 compact 视图的原值（compact-message-bubble-
      background / -foreground）。窄窗里它不是灰的——灰气泡和助手正文、工具行
      一起构成三层灰阶，谁是谁要靠位置分辨；换成蓝之后「这句是我说的」一眼可辨。
@@ -1771,9 +1776,14 @@ body {
   color: var(--text);
   padding: 0;
 }
+/* 主操作：蓝底白图标，发送态和停止态同一颗按钮、只换图标，对齐桌面端。
+   白色写死而不是走变量：它压在 --send-accent 上，而那个蓝深浅两套主题共用。 */
 #send-btn {
   position: absolute;
   inset: 2px;
+  background: var(--send-accent);
+  border-color: transparent;
+  color: #fff;
 }
 #send-btn svg,
 #followup-btn svg {
@@ -1785,8 +1795,9 @@ body {
 #send-btn[data-mode="stop"] .icon-send { display: none; }
 #send-btn[data-mode="stop"] .icon-stop { display: block; }
 #send-btn[hidden] { display: none !important; }
+/* 唯一会看到 disabled 的时机是停止钮的 interruptPending（中断已发出、还没生效）。
+   只降透明度，不改 color——蓝底上把图标换成 --text-muted 会糊成一团。 */
 #send-btn:disabled {
-  color: var(--text-muted);
   opacity: 0.5;
   cursor: not-allowed;
 }
@@ -2801,7 +2812,14 @@ body {
     color: var(--text);
     background: var(--bg);
   }
-  #send-btn:hover:not(:disabled),
+  /* 主操作按钮悬停压深一档，不能跟着 #followup-btn 变浅灰——那会让蓝底整个
+     消失。追加钮仍是次要样式，保持原来的浅灰。
+     写死而不是 color-mix(var(--send-accent) 88%, #000)：本项目基线约
+     Safari 15.4 / Chrome 108，低于 color-mix 的支持线（见文件上方 @supports
+     那段）。这个值就是那个混合的结果，白图标压在上面 4.57:1。 */
+  #send-btn:hover:not(:disabled) {
+    background: #3373d9;
+  }
   #followup-btn:hover {
     background: var(--border-light);
   }
