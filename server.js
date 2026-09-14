@@ -2318,6 +2318,9 @@ io.on('connection', socket => {
         limit: clampThreadListLimit(payload?.limit),
         cursor: payload?.cursor,
         searchTerm: typeof payload?.searchTerm === 'string' ? payload.searchTerm : undefined,
+        // 空数组是「不按 provider 过滤」；省略或 null 都会退回 app-server 的默认——只列
+        // model_provider=openai 的会话，自定义 base_url 网关跑的会话会整体从抽屉里消失。
+        modelProviders: [],
       });
       ackOk(ack, {
         threads: (response?.data || []).map(thread => {

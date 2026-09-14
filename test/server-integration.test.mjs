@@ -4814,6 +4814,34 @@ test('thread:list clamps an out-of-range limit before forwarding it', async () =
   }
 });
 
+test('thread:list forwards an empty modelProviders filter so third-party gateways stay visible', async () => {
+  // 省略 modelProviders 时 app-server 只回 model_provider=openai 的会话：2026-09-14 实测
+  // 同一个 cwd 省略=44 条、传 []=62 条，差的 18 条全是自定义 base_url 网关跑出来的。
+  // 空数组是「空过滤器」而不是「过滤到空」——null 和省略才等于默认只给 openai。
+  const root = mkdtempSync(join(tmpdir(), 'ccm-thread-list-providers-test-'));
+  const rpcLog = join(root, 'rpc.jsonl');
+  const codexBin = createFakeCodexBin(root);
+  const fixture = await startIsolatedServer({ codexBin, rpcLog });
+  try {
+    const socket = await connectSocket(fixture.url, fixture.authToken);
+    try {
+      await waitForAgentEvent(socket, 'init');
+      await emitWithAck(socket, 'thread:list', { cwd: fixture.workDir });
+      const forwarded = readFileSync(rpcLog, 'utf8').trim().split('\n')
+        .filter(Boolean)
+        .map(line => JSON.parse(line))
+        .filter(message => message.method === 'thread/list')
+        .map(message => message.params?.modelProviders);
+      assert.deepEqual(forwarded, [[]], '不传该参数会让第三方网关的会话整体从抽屉里消失');
+    } finally {
+      socket.disconnect();
+    }
+  } finally {
+    await fixture.close();
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test('an out-of-range idle TTL falls back to the default instead of reclaiming everything', async () => {
   // 曾经为了测试方便接受 >= 0，于是 CODEX_AGENT_IDLE_TTL_MS=0 会让任何一个断开连接
   // 的会话在下一个 5 分钟 tick 里立刻被回收。测试现在注入时钟，不再需要这个口子。
