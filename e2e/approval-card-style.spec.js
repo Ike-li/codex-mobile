@@ -6,7 +6,7 @@ import { test, expect } from '@playwright/test';
 const HARSH_RED = 'rgb(223, 28, 28)';
 
 test.describe('审批卡按钮视觉层级', () => {
-  test('拒绝按钮为克制的次要样式,批准按钮为主操作绿', async ({ page }) => {
+  test('拒绝按钮为克制的次要样式,批准按钮为实心主操作色', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('#state-label')).not.toHaveText('offline', { timeout: 10000 });
 
@@ -21,11 +21,22 @@ test.describe('审批卡按钮视觉层级', () => {
     );
     expect(denyBg, '拒绝按钮不应是刺眼的实心大红').not.toBe(HARSH_RED);
 
-    // 批准是主操作,保持 OpenAI 绿实心 —— 白字压底改用文字档 var(--accent-text) #0d8265(4.77:1)。
-    const approveBg = await card.locator('.approve-btn').first().evaluate(
-      el => el.ownerDocument.defaultView.getComputedStyle(el).backgroundColor,
-    );
-    expect(approveBg, '批准按钮应保持主操作绿').toBe('rgb(13, 130, 101)');
+    // 批准是主操作:实心的中性 accent（2026-09-14 去绿前是 OpenAI 绿）。
+    // 判据取「等于 --accent token 的实际渲染值」而不是钉死一个 rgb 字面量——
+    // 见 docs/TESTING.md 里 feature-flags 那条教训：--accent 深浅两套主题反相
+    // （#0d0d0d / #f2f2f2），钉死一套会让另一套恒红，而「批准是主操作色」两套都成立。
+    const { approveBg, accentBg } = await card.locator('.approve-btn').first().evaluate(el => {
+      const doc = el.ownerDocument;
+      const win = doc.defaultView;
+      const probe = doc.createElement('div');
+      probe.style.background = 'var(--accent)';
+      doc.body.append(probe);
+      const accent = win.getComputedStyle(probe).backgroundColor;
+      probe.remove();
+      return { approveBg: win.getComputedStyle(el).backgroundColor, accentBg: accent };
+    });
+    expect(approveBg, '批准按钮应是实心的主操作色 --accent').toBe(accentBg);
+    expect(approveBg, '批准按钮和拒绝按钮的底色应拉开层级').not.toBe(denyBg);
 
     const cardBox = await card.boundingBox();
     const messagesBox = await page.locator('#messages').boundingBox();

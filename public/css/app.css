@@ -7,12 +7,14 @@
   --text: #0d0d0d;
   --text-muted: #676767;
   --accent: #0d0d0d;
-  /* 装饰档:仅用于状态点/图标/边框/流式光标等非文本元素。
-     实测 on #ffffff = 3.20:1,on --bg #f8f9fa = 3.03:1 —— 距 3:1 非文本标准只剩 0.03 余量,
-     任何对 --bg 的提亮都会让它跌破 3:1。文字请一律用 --accent-text。 */
-  --accent-light: #10a37f; /* OpenAI Green */
-  /* 文字档:on #ffffff = 4.77:1,on --bg #f8f9fa = 4.53:1,两者均过 WCAG AA 正文。 */
-  --accent-text: #0d8265;
+  /* 2026-09-14 去绿：强调色并入中性 --accent(#0d0d0d 浅 / #f2f2f2 深)。两个名字
+     保留不是摆设——装饰档(状态点/图标/边框/流式光标)和文字档(链接/实心按钮底)
+     的调用点语义不同，将来要再分档时不必回头翻 18 处引用。
+     并入 --accent 顺带解决了旧绿的一个结构问题：--accent-text 不随主题反相，
+     它的反色字 --on-accent-text 因此被钉死成白；现在两者都跟着 --accent 走。
+     对比度从旧绿的 3.20:1 / 4.77:1 抬到 18:1 上下，两档都远超标准。 */
+  --accent-light: var(--accent);
+  --accent-text: var(--accent);
   /* 发送/停止按钮的主操作蓝，取自桌面端截图里那颗按钮的众数像素（canvas 统计，
      发送态和停止态同色）。深浅两套主题共用一个值：白图标 on 它 = 3.64:1，它
      on --surface 浅色 #ffffff = 3.64:1、深色 #1c1c1c = 4.68:1，三处都过非文本
@@ -90,7 +92,9 @@
      之外的规则(#status-dot.busy 等)直接引用,放进去会让不支持的引擎读到 undefined。 */
   --info: #2f7fd6;
   --warn: #e09a10;
-  --success: #1a9d6d;
+  /* 去绿后「成功」不再有专属色相，跟着中性 accent 走。红(--error)/琥珀(--warn)
+     仍在，所以「出事了」照样一眼可辨；失去的是「一切正常」的绿色确认感。 */
+  --success: var(--accent);
   /* 派生档的硬编码 fallback:color-mix 不可用时原样保留迁移前的手调值。 */
   --info-surface: #e8f4ff;
   --info-border: #c5dff5;
@@ -98,22 +102,24 @@
   --warn-surface: #fff4e0;
   --warn-border: #f0d49a;
   --warn-text: #6e4c00;
-  --success-surface: #e8f7ef;
-  --success-border: #9ad8b2;
-  --success-text: #0d6b45;
+  --success-surface: #e2e2e2;
+  --success-border: #8b8b8b;
+  --success-text: #0d0d0d;
   /* 向后兼容别名:5 处 var(--banner-*) 引用零改动。var() 惰性求值,别名只需声明一次,
      无论 --*-surface 后面被 @supports 还是深色块覆盖都会自动跟随。 */
   --banner-info: var(--info-surface);
   --banner-warn: var(--warn-surface);
   --banner-success: var(--success-surface);
-  --diff-add: rgba(16,163,127,0.12);
+  --diff-add: rgba(13,13,13,0.12);
   --diff-del: rgba(223,28,28,0.1);
-  /* 实心底上的反色字:--accent 会随主题反相,--accent-text(绿)与 --error 不会。 */
+  /* 实心底上的反色字。--accent-text 去绿后也跟着 --accent 反相了，所以它的反色字
+     直接取 --on-accent，不再需要一个钉死成白的独立值——旧的那个在深色下会白底白字。
+     --error 仍然不反相，--on-error 因此保持写死。 */
   --on-accent: #ffffff;
-  --on-accent-text: #ffffff;
+  --on-accent-text: var(--on-accent);
   --on-error: #ffffff;
   --accent-pressed: #232323;
-  --accent-text-pressed: #0b7259;
+  --accent-text-pressed: var(--accent-pressed);
   /* 玻璃/微交互/滚动条:浅色写死白或黑透明,深色必须换档,否则发亮或消失。 */
   --glass: rgba(255, 255, 255, 0.9);
   --glass-soft: rgba(255, 255, 255, 0.6);
@@ -143,32 +149,29 @@
     --text: #f2f2f2;
     --text-muted: #9a9a9a;
     --accent: #f2f2f2;
-    /* 深色下装饰档已达 5.33:1(on --surface)/ 5.86:1(on --bg),文字档无需再沉一档。 */
-    --accent-text: #10a37f;
-    /* 同上，深色档的原值。#f6fafe on #173e76 ≈ 9.9:1。 */
+    /* 去绿后 --accent-light / --accent-text 都是 var(--accent) 的别名，这里覆盖
+       --accent 一处，两个别名自动跟到 #f2f2f2，深色块不再需要单独列它们。 */
+    /* 用户气泡取 ChatGPT 桌面端 compact 视图的深色档原值。#f6fafe on #173e76 ≈ 9.9:1。 */
     --user-bg: #173e76;
     --user-text: #f6fafe;
     --tool-bg: #1c1c1c;
     --tool-border: #2e2e2e;
     --system: #9a9a9a;
-    /* 绿基色深色下单独下沉一档:浅色的 #1a9d6d 明度不够,和 --text 怎么混都出不来
-       深色下 #87e0a2 那种高亮薄荷绿文字。蓝/琥珀基色两模式共用,不在这里覆盖。 */
-    --success: #2ecc71;
+    /* --success 去绿后是 var(--accent) 的别名，深色下自动跟到 #f2f2f2，
+       不再需要「绿基色深色下单独下沉一档」那条覆盖。 */
     --info-surface: #163044;
     --info-border: #2a4a66;
     --warn-surface: #3a2c14;
     --warn-border: #5a4520;
     --warn-text: #e0b05a;
-    --success-surface: #163226;
-    --success-border: #24543a;
-    --success-text: #87e0a2;
-    --diff-add: rgba(16,163,127,0.2);
+    --success-surface: #363636;
+    --success-border: #636363;
+    --success-text: #f2f2f2;
+    --diff-add: rgba(242,242,242,0.2);
     --diff-del: rgba(223,28,28,0.18);
     --on-accent: #0d0d0d;
-    --on-accent-text: #ffffff;
     --on-error: #ffffff;
     --accent-pressed: #e0e0e0;
-    --accent-text-pressed: #0b7259;
     --glass: rgba(28, 28, 28, 0.92);
     --glass-soft: rgba(28, 28, 28, 0.72);
     --scrollbar-thumb: rgba(255, 255, 255, 0.2);
@@ -194,8 +197,10 @@
    background 直接变成 unset —— 横幅会完全没有底色。
    因此上面 :root / 深色块里的硬编码值是必须保留的 fallback,派生层整体关进 @supports。
 
-   --diff-* 的 rgba 精确等于既有语义色(#10a37f = --accent-light、#df1c1c = --error),
-   这一组是零观感变化的等价替换。 */
+   --diff-* 的 rgba 精确等于既有语义色(--accent-light、#df1c1c = --error),
+   这一组是零观感变化的等价替换。2026-09-14 去绿后 --accent-light 成了 --accent
+   的别名,新增行底色因此跟着变成中性灰 —— 删除行仍是红,这一对不再对称,是
+   「全部换掉,含 diff」这个选择的已知代价。 */
 @supports (color: color-mix(in srgb, red 50%, white)) {
   :root {
     /* 混比按模式分档:浅色是「白 + 一点色」,深色是「暗面 + 较多色」。
@@ -455,16 +460,21 @@ body {
   height: 10px;
   border-radius: 50%;
   border: 2px solid var(--surface);
-  background: #ccc;
+  /* 未连接。原先写死 #ccc，去绿后 connected 变成近白(深色档)，两者只差 38 个
+     灰阶几乎分不开；改用会反相的 --border，两套主题下都和 connected 拉到两极。 */
+  background: var(--border);
   box-shadow: none;
   transition: background 0.3s;
 }
-#status-dot.connected { background: var(--accent-light); box-shadow: 0 0 6px rgba(16,163,127,0.4); }
+/* 去掉了原来的绿色光晕：中性点配同色光晕看不出效果，而实心的黑/白点本身
+   已经是这一组里明度最极端的一个。三个中性状态靠明度分档：
+   未连接 --border(最淡) < queued --text-muted(中) < connected --accent(两极)。 */
+#status-dot.connected { background: var(--accent-light); }
 #status-dot.busy { background: var(--warn); animation: pulse 1s infinite; }
 /* awaiting 刻意留成独立的橙色:它和 busy 只靠色相区分,归并到 --warn 会让两个状态点
    变成同一个颜色。 */
 #status-dot.awaiting { background: #d9822b; animation: pulse 1s infinite; }
-#status-dot.queued { background: #607d3b; }
+#status-dot.queued { background: var(--text-muted); }
 
 @keyframes pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
@@ -1296,7 +1306,10 @@ body {
 .tool-json {
   font-size: var(--font-xs);
 }
-.tool-ok { color: #87e0a2; }
+/* 原先写死 #87e0a2 —— 那是深色档的薄荷绿，却放在通用规则里，浅色模式下
+   on #ffffff 只有 1.8:1，成功标记基本看不见。去绿时一并修掉：改用会反相的
+   --text-muted。「失败」仍是 .tool-err 的红，出事照样醒目。 */
+.tool-ok { color: var(--text-muted); }
 .tool-err { color: #ff8888; }
 .tool-card[data-card="decision"] { border-left-color: var(--warn-text); }
 .tool-card[data-card="outcome"] { border-left-color: var(--accent-text); }
@@ -2191,11 +2204,11 @@ body {
   transition: background 0.15s, border-color 0.15s, transform 0.1s;
 }
 .approve-btn:active, .deny-btn:active { transform: scale(0.96); }
-/* 批准 = 主操作:OpenAI 绿实心 + 柔和绿阴影 */
+/* 批准 = 主操作:中性 accent 实心(浅色黑底白字/深色白底黑字) + 柔和阴影 */
 .approve-btn {
   background: var(--accent-text);
   color: var(--on-accent-text);
-  box-shadow: 0 1px 3px rgba(13,130,101,0.25);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 .approve-btn:active { background: var(--accent-text-pressed); }
 /* 拒绝 = 次要操作:白底红字红边,克制不刺眼 */

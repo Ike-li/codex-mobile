@@ -299,3 +299,38 @@ test.describe('助手回复的 Markdown 排版', () => {
     await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
   });
 });
+
+// 2026-09-14 去绿之后补的。链接原先是 var(--accent-text) 的绿，和正文黑字靠色相
+// 区分；--accent-text 并入中性 --accent 后它和 --text 是同一个值，颜色这条通道
+// 没了。下划线因此从「锦上添花」变成唯一的区分手段 —— 全项目没有任何
+// text-decoration 声明，它靠的是浏览器默认样式，谁哪天加一条 reset 就没了。
+test('回复里的链接和正文可区分', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
+
+  const style = await page.evaluate(() => {
+    const doc = globalThis.document;
+    const win = doc.defaultView;
+    const probe = doc.createElement('div');
+    probe.className = 'msg codex';
+    probe.innerHTML = '<div class="bubble md"><p>正文 <a href="https://example.com">链接</a></p></div>';
+    doc.getElementById('messages').append(probe);
+    const link = probe.querySelector('a');
+    const body = probe.querySelector('p');
+    const out = {
+      linkColor: win.getComputedStyle(link).color,
+      bodyColor: win.getComputedStyle(body).color,
+      decoration: win.getComputedStyle(link).textDecorationLine,
+    };
+    probe.remove();
+    return out;
+  });
+
+  // 判据是「至少还剩一条通道」，不指定是哪条：将来把链接改回带色也照样成立。
+  const distinguishable =
+    style.linkColor !== style.bodyColor || style.decoration.includes('underline');
+  expect(
+    distinguishable,
+    `链接和正文既不差色（都是 ${style.linkColor}）也没有下划线（${style.decoration}）`,
+  ).toBe(true);
+});
