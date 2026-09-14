@@ -98,7 +98,6 @@ test.describe('关键用户旅程', () => {
     // Header should be visible
     await expect(page.locator('#header')).toBeVisible();
     await expect(page.locator('#header-context')).toBeVisible();
-    await expect(page.locator('#status-dot')).toBeVisible();
     // session-meta is hidden by default (CSS display:none), only shown on tap
     await expect(page.locator('#session-meta')).toBeAttached();
   });

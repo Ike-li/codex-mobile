@@ -93,7 +93,6 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   const attachBtn = $('attach-btn');
   const fileInput = $('file-input');
   const attachTray = $('attach-tray');
-  const statusDot = $('status-dot');
   const stateLabel = $('state-label');
   const sessionMetaEl = $('session-meta');
   const statusDetail = $('status-detail');
@@ -3706,9 +3705,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
 
   function renderConnectionState() {
     const state = sessionStatus?.state || (busy ? 'running' : 'idle');
-    const dotState = state === 'awaiting_approval' ? 'awaiting' : (state === 'running' ? 'busy' : state);
     const connected = isTransportConnected();
-    statusDot.className = connected ? `connected ${dotState}` : '';
     if (stateLabel) stateLabel.textContent = connected ? state.replace('_', ' ') : 'offline';
     paintConnectionBanner();
   }

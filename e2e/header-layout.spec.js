@@ -32,7 +32,9 @@ test.describe('顶部导航紧凑度', () => {
     await expect(page.locator('#header-home')).toBeVisible();
     await expect(page.locator('#header-new')).toBeVisible();
     await expect(page.locator('#menu-btn')).toBeVisible();
-    await expect(page.locator('#status-dot')).toBeVisible();
+    // 连接状态不再挂在会话钮上：在线看延迟条（本 test 末尾两行），掉线看 #conn-banner。
+    // 去绿后那颗点变成纯黑实心，在移动端读起来是「未读角标」而不是状态灯。
+    await expect(page.locator('#status-dot'), '连接状态点已移除，别加回来').toHaveCount(0);
     await expect(page.locator('#thread-title')).toHaveText('新会话');
     await expect(page.locator('#workdir-container'), '工作区切换只留在抽屉').toBeHidden();
     await expect(page.locator('#header #composer-defaults')).toHaveCount(0);

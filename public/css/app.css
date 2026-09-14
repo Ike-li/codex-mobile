@@ -89,7 +89,8 @@
   --keyboard-inset: 0px;
   /* 语义基色:每个语义只维护这一个纯色,surface/border/text 三档由下面的 @supports
      派生。基色刻意留在守护块之外 —— 它们是纯 hex 不需要守护,而且 --warn 被守护块
-     之外的规则(#status-dot.busy 等)直接引用,放进去会让不支持的引擎读到 undefined。 */
+     之外的规则(.thread-status-dot.needs-you 等)直接引用,放进去会让不支持的引擎
+     读到 undefined。 */
   --info: #2f7fd6;
   --warn: #e09a10;
   /* 去绿后「成功」不再有专属色相，跟着中性 accent 走。红(--error)/琥珀(--warn)
@@ -451,30 +452,6 @@ body {
   max-width: 95%;
   word-break: break-all;
 }
-
-#status-dot {
-  position: absolute;
-  right: -2px;
-  bottom: -2px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  border: 2px solid var(--surface);
-  /* 未连接。原先写死 #ccc，去绿后 connected 变成近白(深色档)，两者只差 38 个
-     灰阶几乎分不开；改用会反相的 --border，两套主题下都和 connected 拉到两极。 */
-  background: var(--border);
-  box-shadow: none;
-  transition: background 0.3s;
-}
-/* 去掉了原来的绿色光晕：中性点配同色光晕看不出效果，而实心的黑/白点本身
-   已经是这一组里明度最极端的一个。三个中性状态靠明度分档：
-   未连接 --border(最淡) < queued --text-muted(中) < connected --accent(两极)。 */
-#status-dot.connected { background: var(--accent-light); }
-#status-dot.busy { background: var(--warn); animation: pulse 1s infinite; }
-/* awaiting 刻意留成独立的橙色:它和 busy 只靠色相区分,归并到 --warn 会让两个状态点
-   变成同一个颜色。 */
-#status-dot.awaiting { background: #d9822b; animation: pulse 1s infinite; }
-#status-dot.queued { background: var(--text-muted); }
 
 @keyframes pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
