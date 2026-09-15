@@ -1337,7 +1337,13 @@ body {
    on #ffffff 只有 1.8:1，成功标记基本看不见。去绿时一并修掉：改用会反相的
    --text-muted。「失败」仍是 .tool-err 的红，出事照样醒目。 */
 .tool-ok { color: var(--text-muted); }
-.tool-err { color: #ff8888; }
+/* 同 .tool-ok 当年那条的理由：#ff8888 是深色档的红，放在通用规则里，底色跟随
+   主题后它在浅底上读不了。
+   取 --ansi-red 而不是 --error-text：后者是为 --surface(#ffffff) 选的，压在略深的
+   --code-surface(#ececec) 上只有 4.11:1，过不了 AA。--ansi-red 正是按这块底算出来的
+   （4.61:1），而 .tool-err 本来就和 ANSI 输出同处一块底；少数配 background:transparent
+   用在卡片白底上的场合，#d60000 on #ffffff 更高，不吃亏。 */
+.tool-err { color: var(--ansi-red); }
 .tool-card[data-card="decision"] { border-left-color: var(--warn-text); }
 .tool-card[data-card="outcome"] { border-left-color: var(--accent-text); }
 .tool-card[data-card="action"] { border-left-color: var(--border); }
@@ -1460,7 +1466,9 @@ body {
 .file-change-card details summary.tool-cmd { cursor: pointer; }
 .live-output {
   max-height: 180px;
-  color: #f1f1f1;
+  /* 不设 color：交给 .tool-output 的 var(--text)。这里曾硬编码 #f1f1f1（深底档的
+     浅灰），它和 .tool-output 同特异性但定义在后面，所以一直是它赢——底色跟随主题
+     之后，浅底上 #f1f1f1 只有 1.05:1，命令输出整块隐形。 */
 }
 .ansi-bold { font-weight: 700; color: var(--ansi-strong); }
 .ansi-dim { opacity: 0.65; }

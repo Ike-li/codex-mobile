@@ -21,9 +21,16 @@ async function readCodeSurfaces(page) {
     const win = doc.defaultView;
     const host = doc.getElementById('messages');
 
+    // class 必须和真实 DOM 一致：命令输出是 `tool-output live-output tool-ok`
+    // （app.js:3165）。只写 .tool-output 的话，.live-output 上那条后定义、
+    // 同特异性的 color 就测不到——它正是 2026-09-15 那次「输出整块隐形」的原因。
     const toolOutput = doc.createElement('div');
-    toolOutput.className = 'tool-output';
+    toolOutput.className = 'tool-output live-output tool-ok';
     host.appendChild(toolOutput);
+
+    const errOutput = doc.createElement('div');
+    errOutput.className = 'tool-output live-output tool-err';
+    host.appendChild(errOutput);
 
     const ansi = {};
     for (const name of names) {
@@ -50,14 +57,17 @@ async function readCodeSurfaces(page) {
     host.appendChild(turn);
 
     const outputStyle = win.getComputedStyle(toolOutput);
+    const errStyle = win.getComputedStyle(errOutput);
     const preStyle = win.getComputedStyle(pre);
     const result = {
       toolOutput: { bg: outputStyle.backgroundColor, fg: outputStyle.color },
+      toolErr: { bg: errStyle.backgroundColor, fg: errStyle.color },
       codeBlock: { bg: preStyle.backgroundColor, fg: preStyle.color },
       ansi,
     };
 
     toolOutput.remove();
+    errOutput.remove();
     turn.remove();
     return result;
   }, ANSI_NAMES);
@@ -100,6 +110,22 @@ test.describe('代码块与终端输出的表面色', () => {
         if (ratio < 4.5) failures.push(`ansi-${name}: ${fg} on ${bg} = ${ratio.toFixed(2)}:1`);
       }
       expect(failures, failures.join('\n')).toHaveLength(0);
+    });
+
+    // 输出块自己的正文色和失败态的红，和 ANSI 同等重要——2026-09-15 隐形的
+    // 正是前者（.live-output 硬编码 #f1f1f1，压在改浅后的底上 1.1:1）。
+    test(`${scheme} 主题下输出正文与失败态都读得了`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: scheme });
+      await page.goto('/');
+      await expect(page.locator('#state-label')).not.toHaveText('offline', { timeout: 10000 });
+
+      const surfaces = await readCodeSurfaces(page);
+      const body = contrastRatio(surfaces.toolOutput.fg, surfaces.toolOutput.bg);
+      const err = contrastRatio(surfaces.toolErr.fg, surfaces.toolErr.bg);
+      expect(body, `输出正文 ${surfaces.toolOutput.fg} on ${surfaces.toolOutput.bg} = ${body.toFixed(2)}:1`)
+        .toBeGreaterThanOrEqual(4.5);
+      expect(err, `失败态 ${surfaces.toolErr.fg} on ${surfaces.toolErr.bg} = ${err.toFixed(2)}:1`)
+        .toBeGreaterThanOrEqual(4.5);
     });
   }
 });
