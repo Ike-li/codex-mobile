@@ -52,13 +52,28 @@ function codeOnly(source) {
     .join('\n');
 }
 
+// 递归而不是扁平。扁平版是 2026-09-15 修的：它对 public/js/ 的**子目录**完全不可见，
+// 而那天前端正要从平铺拆成八个功能域——搬完之后这段代码只会扫到 app.js 与 sw.js 两个文件，
+// 然后报绿。没有地板断言的话，「扫了 2 个文件全合规」和「扫了 43 个文件全合规」
+// 在断言上一模一样。
+function allFrontendJs(dir = join(ROOT, 'public/js'), base = 'public/js') {
+  return readdirSync(dir, { withFileTypes: true }).flatMap(entry => {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) return allFrontendJs(full, `${base}/${entry.name}`);
+    return entry.name.endsWith('.js') ? [[`${base}/${entry.name}`, full]] : [];
+  });
+}
+
 test('前端不得用单引号 HTML 属性包裹插值——escapeHtml 挡不住那种写法', () => {
   const offenders = [];
-  for (const name of readdirSync(join(ROOT, 'public/js'))) {
-    if (!name.endsWith('.js')) continue;
+  const files = allFrontendJs();
+  assert.ok(files.length >= 30,
+    `只扫到 ${files.length} 个前端文件，扫描面塌了——这与「全部合规」在断言上无法区分`);
+
+  for (const [rel, full] of files) {
     // 形如 class='${...}' / id='${...}'：单引号属性里插值。
-    const matches = codeOnly(readFileSync(join(ROOT, 'public/js', name), 'utf8')).match(/=\s*'\$\{/g);
-    if (matches) offenders.push(`${name}（${matches.length} 处）`);
+    const matches = codeOnly(readFileSync(full, 'utf8')).match(/=\s*'\$\{/g);
+    if (matches) offenders.push(`${rel}（${matches.length} 处）`);
   }
   assert.deepEqual(offenders, [],
     'escapeHtml 不转义单引号，所以单引号属性里的插值可以闭合属性并注入新属性（如 onerror）。'

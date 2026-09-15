@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, symlinkSync, writeFileSync, rmSync, realpathSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { resolveWorkdirAllowlist, resolveWithinWorkdirs } from '../../workdir-allowlist.js';
+import { resolveWorkdirAllowlist, resolveWithinWorkdirs } from '../../src/files/workdir-allowlist.js';
 
 test('WORK_DIRS can load a JSON array of workspace paths', () => {
   const root = mkdtempSync(join(tmpdir(), 'ccm-workdirs-'));

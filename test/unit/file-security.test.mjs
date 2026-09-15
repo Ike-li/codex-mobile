@@ -12,7 +12,7 @@ import {
   fixPermissions,
   rejectableSymlinkComponent,
   checkPermissions,
-} from '../../file-security.js';
+} from '../../src/files/file-security.js';
 
 function makeTempDir() {
   return mkdtempSync(join(tmpdir(), 'ccm-fs-test-'));

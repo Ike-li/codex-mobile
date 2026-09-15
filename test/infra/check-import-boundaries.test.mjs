@@ -7,19 +7,25 @@
 // 用真实的 analyze / parseImports，不手写 stub。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   analyze, parseImports, findCycles, buildFromDisk,
-  BOUNDARY_RULES, SHARED_ALLOWLIST, FROZEN_ROOT_MODULES, FROZEN_PUBLIC_MODULES,
+  BOUNDARY_RULES, SHARED_ALLOWLIST, ROOT_ENTRYPOINTS, FROZEN_PUBLIC_MODULES,
+  ASSEMBLY_ROOTS, DOMAIN_RANK,
 } from '../../scripts/gates/check-import-boundaries.js';
+
+const ROOT_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 // 一份最小的合规仓库形状，各用例在它上面只改一处。
 const base = {
   edges: [
-    { from: 'server.js', to: 'devices.js' },
+    { from: 'server.js', to: 'src/auth/devices.js' },
     { from: 'src/ops/metrics.js', to: 'src/shared/data-dir.js' },
     { from: 'public/js/app.js', to: 'public/js/logic/unread.js' },
   ],
-  rootFiles: ['server.js', 'devices.js'],
+  rootFiles: ['server.js'],
   publicFiles: ['public/js/app.js'],
 };
 
@@ -44,8 +50,8 @@ test('frontend-no-backend：前端 import 后端 → 红', () => {
   assert.ok(namesOf(r).includes('frontend-no-backend'));
 });
 
-test('frontend-no-backend：前端 import 根目录冻结模块也算 → 红', () => {
-  const r = analyze({ ...base, edges: [{ from: 'public/js/app.js', to: 'devices.js' }] });
+test('frontend-no-backend：前端 import 根目录组装根也算 → 红', () => {
+  const r = analyze({ ...base, edges: [{ from: 'public/js/app.js', to: 'server.js' }] });
   assert.equal(r.ok, false);
   assert.ok(namesOf(r).includes('frontend-no-backend'));
 });
@@ -63,24 +69,49 @@ test('backend-no-frontend：三个具名共享模块是豁免，不报', () => {
     ...base,
     edges: [
       { from: 'server.js', to: 'public/js/cli-settings.js' },
-      { from: 'agent-appserver.js', to: 'public/js/cli-settings.js' },
-      { from: 'statusline.js', to: 'public/js/token-usage.js' },
+      { from: 'src/agent/agent-appserver.js', to: 'public/js/cli-settings.js' },
+      { from: 'src/ops/statusline.js', to: 'public/js/token-usage.js' },
     ],
-    rootFiles: ['server.js', 'agent-appserver.js', 'statusline.js'],
   });
   assert.equal(r.ok, true, JSON.stringify(r.problems, null, 2));
 });
 
-test('shared-is-leaf：src/shared 反向 import 其他域 → 红', () => {
+test('layer-order：低层域反向 import 高层域 → 红', () => {
+  // src/shared 是 0 层，引任何别的域都是反向。
   const r = analyze({ ...base, edges: [{ from: 'src/shared/data-dir.js', to: 'src/ops/metrics.js' }] });
   assert.equal(r.ok, false);
-  assert.ok(namesOf(r).includes('shared-is-leaf'));
+  assert.ok(namesOf(r).includes('layer-order'));
+
+  // files(1) 引 ops(2) 同样是反向——这条比 shared 那条更容易被写出来，
+  // 因为「上传时顺手记个 metric」看上去完全合理。
+  const s = analyze({ ...base, edges: [{ from: 'src/files/uploads.js', to: 'src/ops/metrics.js' }] });
+  assert.equal(s.ok, false);
+  assert.ok(namesOf(s).includes('layer-order'));
 });
 
-test('shared-is-leaf：src/shared import 根目录冻结模块也算反向 → 红', () => {
-  const r = analyze({ ...base, edges: [{ from: 'src/shared/data-dir.js', to: 'devices.js' }] });
-  assert.equal(r.ok, false);
-  assert.ok(namesOf(r).includes('shared-is-leaf'));
+test('layer-order：顺向与同层放行', () => {
+  const down = analyze({ ...base, edges: [{ from: 'src/agent/x.js', to: 'src/files/y.js' }] });
+  assert.equal(down.ok, true, 'agent(3) → files(1) 是顺向', JSON.stringify(down.problems));
+
+  const same = analyze({ ...base, edges: [{ from: 'src/ops/x.js', to: 'src/auth/y.js' }] });
+  assert.equal(same.ok, true, '同层互引放行，真成环交给 no-cycles');
+});
+
+test('layer-order：层序表覆盖 src/ 下的每一个域，不许有域落在表外', () => {
+  // 落在表外的域 rankOf 返回 undefined，规则直接跳过它——**新建一个域等于给自己开了
+  // 一扇不受层序管的门**，而它看起来和别的域一模一样。
+  const { edges } = buildFromDisk();
+  const domains = new Set();
+  for (const { from, to } of [...edges.map(e => ({ from: e.from, to: e.to }))]) {
+    for (const p of [from, to]) {
+      const m = p.match(/^(src\/[^/]+)\//);
+      if (m) domains.add(m[1]);
+    }
+  }
+  assert.ok(domains.size >= 6, `只发现 ${domains.size} 个后端域，扫描面疑似塌陷`);
+  for (const d of domains) {
+    assert.ok(d in DOMAIN_RANK, `${d} 没有出现在 DOMAIN_RANK 里，layer-order 管不到它`);
+  }
 });
 
 test('roots-are-sinks：组装根被别人 import → 红', () => {
@@ -89,11 +120,11 @@ test('roots-are-sinks：组装根被别人 import → 红', () => {
   assert.ok(namesOf(a).includes('roots-are-sinks'));
 
   // agent-appserver.js 是第二个组装根，只有 server.js 能引它。
-  const b = analyze({ ...base, edges: [{ from: 'devices.js', to: 'agent-appserver.js' }] });
+  const b = analyze({ ...base, edges: [{ from: 'src/auth/devices.js', to: 'src/agent/agent-appserver.js' }] });
   assert.equal(b.ok, false);
   assert.ok(namesOf(b).includes('roots-are-sinks'));
 
-  const ok = analyze({ ...base, edges: [{ from: 'server.js', to: 'agent-appserver.js' }] });
+  const ok = analyze({ ...base, edges: [{ from: 'server.js', to: 'src/agent/agent-appserver.js' }] });
   assert.equal(ok.ok, true, 'server.js 引 agent-appserver.js 是唯一合法的那条边');
 });
 
@@ -114,11 +145,12 @@ test('logic-is-leaf：纯逻辑层 import 逻辑层之外的东西 → 红', () 
   assert.equal(ok.ok, true, '逻辑层内部互相 import 是允许的');
 });
 
-test('no-new-root-modules：根目录冒出冻结清单外的 .js → 红', () => {
-  const r = analyze({ ...base, rootFiles: ['server.js', 'devices.js', 'brand-new-thing.js'] });
+test('no-new-root-modules：根目录冒出 server.js 之外的 .js → 红', () => {
+  const r = analyze({ ...base, rootFiles: ['server.js', 'brand-new-thing.js'] });
   assert.equal(r.ok, false);
   assert.ok(namesOf(r).includes('no-new-root-modules'));
   assert.match(JSON.stringify(r.problems), /brand-new-thing\.js/);
+  assert.match(JSON.stringify(r.problems), /agent|shared/, '报错要点出该往哪个域放，不能只说「不许」');
 });
 
 test('no-new-flat-frontend：public/js 直属冒出冻结清单外的 .js → 红', () => {
@@ -165,6 +197,16 @@ test('parseImports 认行中间的动态 import —— 否则边界规则可被 
   assert.deepEqual(parseImports(src), ['./sneaky.js']);
 });
 
+test('parseImports 认反引号形态的动态 import —— 少认一种字面量就是少堵一个绕过口', () => {
+  // 2026-09-15：搬家时才发现这个洞。上一版只认 ['"]，而本仓 test/ 里大量用
+  // ``import(`../../x.js?t=${Date.now()}`)`` 破缓存——同样的写法出现在 src/ 里，
+  // 这道闸一条边都看不见。带插值的也要认：`${…}` 里没有引号，整段会被捕获，
+  // 而 resolveSpecifier 按 `?` 截断后剩下的正是那个静态前缀。
+  assert.deepEqual(parseImports('const m = await import(`./tpl.js`);'), ['./tpl.js']);
+  assert.deepEqual(parseImports('await import(`../../server.js?t=${Date.now()}`);'),
+    ['../../server.js?t=${Date.now()}'], '原样返回，截断交给 resolveSpecifier');
+});
+
 test('parseImports 跳过整行注释——解释性散文最爱引用的就是调用形状本身', () => {
   // 实测过一次：config.js 的注释里写了 `import('../../server.js?t=…')` 解释为什么不能缓存，
   // 门禁立刻报出一条并不存在的循环依赖，而报错信息看起来和真的一模一样。
@@ -187,10 +229,10 @@ test('findCycles 对无环图返回空', () => {
   assert.deepEqual(findCycles(graph), []);
 });
 
-// ---- 三条反向断言：清单本身也会过期 ----
+// ---- 四条反向断言：清单本身也会过期 ----
 //
 // 白名单类配置最常见的失效方式不是「漏了一条」，是「多了一条」：被豁免的东西早就不存在了，
-// 而那条豁免继续替一个不再发生的情况开着口子。下面三条各盯一种过期形态。
+// 而那条豁免继续替一个不再发生的情况开着口子。下面四条各盯一种过期形态。
 
 test('反向：每条共享豁免都仍被后端真实 import，否则它只是一条死配置', () => {
   const { edges } = buildFromDisk();
@@ -210,17 +252,38 @@ test('反向：每条共享豁免都仍被后端真实 import，否则它只是�
   }
 });
 
-test('反向：冻结清单里的每个名字都仍然存在', () => {
+test('反向：白名单里的每个名字都仍然存在', () => {
   const { rootFiles, publicFiles } = buildFromDisk();
   const publicNames = new Set(publicFiles.map(p => p.replace(/^public\/js\//, '')));
 
-  const goneFromRoot = FROZEN_ROOT_MODULES.filter(name => !rootFiles.includes(name));
+  const goneFromRoot = ROOT_ENTRYPOINTS.filter(name => !rootFiles.includes(name));
   assert.deepEqual(goneFromRoot, [],
-    '这些名字还在根目录冻结清单里，但文件已经不在了。删掉它们——'
-    + '过期的冻结名会让一个同名新文件被静默当成「存量」放行。');
+    '这些名字还在根目录白名单里，但文件已经不在了。删掉它们——'
+    + '过期的白名单会让一个同名新文件被静默放行。');
 
   const goneFromPublic = FROZEN_PUBLIC_MODULES.filter(name => !publicNames.has(name));
   assert.deepEqual(goneFromPublic, [], '同上，public/js 冻结清单');
+});
+
+test('反向：ASSEMBLY_ROOTS 的键必须是真实存在的文件', () => {
+  // 【这条是 2026-09-15 搬家当天补的，因为它当场抓到了一次真实失效】
+  // 24 个后端模块从根目录进 src/ 之后，ASSEMBLY_ROOTS 里 'agent-appserver.js' 这个键
+  // 再也匹配不到任何一条边——roots-are-sinks 于是一个目标都没有。而门禁照样遍历、
+  // 照样比对、照样打印「✅ 模块边界与依赖方向合规」。
+  //
+  // scan-collapsed 抓不到这种：它只在**零条边**时触发，而这里边一条不少，
+  // 只是规则的键全部失配。**部分塌陷比全塌陷更危险**，因为它连数字都不异常。
+  const { edges } = buildFromDisk();
+  const targets = new Set(edges.map(e => e.to));
+  for (const [root, allowed] of Object.entries(ASSEMBLY_ROOTS)) {
+    assert.ok(existsSync(join(ROOT_DIR, root)), `ASSEMBLY_ROOTS 的键 ${root} 在磁盘上不存在`);
+    for (const importer of allowed) {
+      assert.ok(existsSync(join(ROOT_DIR, importer)),
+        `ASSEMBLY_ROOTS['${root}'] 里许可的 importer ${importer} 不存在`);
+      assert.ok(targets.has(root),
+        `没有任何一条边指向 ${root}，这条许可现在是空转的——要么它已经不是组装根了，要么扫描面失配`);
+    }
+  }
 });
 
 test('反向：真实仓库当前合规，且扫描面不是塌的', () => {

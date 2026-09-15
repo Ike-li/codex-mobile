@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, rmSync, realpathSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { resolveWorkdirsFromEntries } from '../../workdir-allowlist.js';
+import { resolveWorkdirsFromEntries } from '../../src/files/workdir-allowlist.js';
 
 function withDirs(names, fn) {
   const root = mkdtempSync(join(tmpdir(), 'ccm-workdirs-'));

@@ -14,7 +14,7 @@
 // 同向的话客户端的旧 baseline 会往回传染。两份实现之间的唯一连接点是
 // tests/invariants/read-state.test.mjs 里那条「两侧判定同义」的断言。
 import { readFileSync } from 'node:fs';
-import { writeOwnerOnlyFile } from '../../file-security.js';
+import { writeOwnerOnlyFile } from '../files/file-security.js';
 import { createSerialWriter } from '../shared/serial-writer.js';
 import { dataFile } from '../shared/data-dir.js';
 

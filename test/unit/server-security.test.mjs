@@ -11,7 +11,7 @@ import {
   evaluateTransportSecurity,
   evaluateSocketHandshakeSecurity,
   parseGatewaySecurityPolicy,
-} from '../../server-security.js';
+} from '../../src/auth/server-security.js';
 
 // ---- normalizeAddress ----
 

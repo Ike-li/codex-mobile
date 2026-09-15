@@ -15,8 +15,8 @@ import { randomBytes } from 'node:crypto';
 import { realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
-import { writeOwnerOnlyFile } from '../file-security.js';
-import { appendJsonlAuditRecord } from '../audit-log.js';
+import { writeOwnerOnlyFile } from '../src/files/file-security.js';
+import { appendJsonlAuditRecord } from '../src/ops/audit-log.js';
 import { dataFile } from '../src/shared/data-dir.js';
 import {
   CONFIG_FILE_NAME, CONFIG_SCHEMA_VERSION, migrateEnvValues,

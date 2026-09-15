@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeThreadHistoryMessages } from '../../thread-history.js';
+import { normalizeThreadHistoryMessages } from '../../src/sessions/thread-history.js';
 
 test('user and assistant items keep the existing text-only shape', () => {
   const messages = normalizeThreadHistoryMessages({

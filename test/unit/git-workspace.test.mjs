@@ -6,7 +6,7 @@ import {
   assertSafeRelPath,
   listGitChanges,
   readGitDiff,
-} from '../../git-workspace.js';
+} from '../../src/files/git-workspace.js';
 
 test('parsePorcelainZ understands ordinary and rename records', () => {
   const entries = parsePorcelainZ(' M src/a.js\0R  new.js\0old.js\0?? scratch.txt\0');

@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { ThreadRuntime } from '../../agent-appserver.js';
+import { ThreadRuntime } from '../../src/agent/agent-appserver.js';
 
 function makeSession(overrides = {}) {
   const events = [];

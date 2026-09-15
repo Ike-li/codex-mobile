@@ -1,7 +1,7 @@
 // scripts/smoke-appserver.js —— 用真实 codex app-server 驱动 ThreadRuntime 一次。
 // 验证：JSON-RPC 握手 + thread/start + turn/start + 流式 delta + turn/completed。
 // 用法：node scripts/smoke-appserver.js [cwd]   （需 codex 已登录；会消耗少量额度）
-import { ThreadRuntime } from '../agent-appserver.js';
+import { ThreadRuntime } from '../src/agent/agent-appserver.js';
 
 const cwd = process.argv[2] || process.cwd();
 const events = [];

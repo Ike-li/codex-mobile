@@ -2,7 +2,7 @@ import { realpath, stat } from 'node:fs/promises';
 import { lookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
 import { isAbsolute, relative, sep } from 'node:path';
-import { isPublicEndpointHostname, isPublicIpAddress } from './network-address.js';
+import { isPublicEndpointHostname, isPublicIpAddress } from '../shared/network-address.js';
 
 export async function resolveInputParts(parts, {
   cwd,

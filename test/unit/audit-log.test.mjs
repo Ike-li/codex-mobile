@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { appendJsonlAuditRecord } from '../../audit-log.js';
+import { appendJsonlAuditRecord } from '../../src/ops/audit-log.js';
 
 test('JSONL audit appends owner-only records and retains only one bounded rotation', () => {
   const root = mkdtempSync(join(tmpdir(), 'ccm-audit-log-'));

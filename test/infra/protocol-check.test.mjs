@@ -33,8 +33,8 @@ const protocolDir = join(root, '.protocol', 'stable');
 
 function currentBridgeUsage() {
   return collectBridgeMethodUsage({
-    agentAppserverSource: readFileSync(join(root, 'agent-appserver.js'), 'utf8'),
-    approvalBrokerSource: readFileSync(join(root, 'approval-broker.js'), 'utf8'),
+    agentAppserverSource: readFileSync(join(root, 'src', 'agent', 'agent-appserver.js'), 'utf8'),
+    approvalBrokerSource: readFileSync(join(root, 'src', 'agent', 'approval-broker.js'), 'utf8'),
   });
 }
 
@@ -317,7 +317,7 @@ test('通知字段用法对得上协议：报告协议里不存在的字段，�
 
 test('通知字段用法对得上协议：真实的 agent-appserver.js 对着真实协议没有未知字段', () => {
   const unknown = findUnknownNotificationFields({
-    usage: collectNotificationFieldUsage(readFileSync(join(root, 'agent-appserver.js'), 'utf8')),
+    usage: collectNotificationFieldUsage(readFileSync(join(root, 'src', 'agent', 'agent-appserver.js'), 'utf8')),
     paramsTypes: parseNotificationParamsTypes(readFileSync(join(protocolDir, 'ServerNotification.ts'), 'utf8')),
     declared: readAllNotificationParamsFields(protocolDir),
     allowlist: LEGACY_FIELD_ALLOWLIST,

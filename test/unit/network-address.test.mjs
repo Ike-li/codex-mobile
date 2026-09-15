@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { isPublicIpAddress, isPublicEndpointHostname } from '../../network-address.js';
+import { isPublicIpAddress, isPublicEndpointHostname } from '../../src/shared/network-address.js';
 
 test('public IP classification rejects non-global IPv4 and IPv6 ranges', () => {
   for (const address of [

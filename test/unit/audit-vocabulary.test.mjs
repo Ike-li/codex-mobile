@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync, writeFileSync, readFileSync, existsSync, utimesSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { pruneExpiredUploads, saveAttachments, decodeAttachments } from '../../uploads.js';
+import { pruneExpiredUploads, saveAttachments, decodeAttachments } from '../../src/files/uploads.js';
 import { runConfigCommand } from '../../scripts/config.js';
 
 function withDir(fn) {

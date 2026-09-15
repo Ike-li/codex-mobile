@@ -1,14 +1,17 @@
 // scripts/gates/check-import-boundaries.js —— 模块边界守卫：静态解析项目内相对 import，
 // 强制分层不变量 + 零循环依赖 + 「新代码不许落回平铺区」。
 //
-// 【为什么需要它】本仓根目录曾经平铺 25 个 .js、public/js/ 平铺 41 个，没有任何机器可读的
+// 【为什么需要它】本仓根目录曾经平铺 27 个 .js、public/js/ 平铺 41 个，没有任何机器可读的
 // 分层约定：eslint 没有 import 规则，三个门禁没一个管 import。而结构缠死是**渐进**的——
 // 没有任何一次改动会让它当场变红，于是「下次再整理」可以无限推迟。这个脚本把「脑子里的
 // 约定」变成一道会红的闸。
 //
-// 【当前阶段：存量冻结，新代码进新分层】根目录那 25 个与 public/js/ 那 41 个是**冻结区**，
-// 本门禁不要求它们搬家，只要求：① 它们之间的既有依赖方向不许变坏；② 不许再往这两个平铺区
-// 添新文件（no-new-root-modules / no-new-flat-frontend）。新代码去 src/ 与 public/js/{logic,app}/。
+// 【当前阶段：存量已搬完，根目录只剩入口】24 个后端模块已按域进 src/{agent,auth,files,ops,
+// sessions,shared}/，根目录只保留组装根 server.js 与两个工具配置。本门禁现在守四件事：
+//   ① 域之间的依赖方向（layer-order，层序见 DOMAIN_RANK）；
+//   ② 组装根不被反向 import（roots-are-sinks）；
+//   ③ 前后端不互相渗透（两条 no-*，三个具名共享模块除外）；
+//   ④ 不许再往根目录与 public/js/ 直属添新文件（no-new-*）。
 //
 // 【不引 madge】CI 不联网，而规则只需要静态相对 import 图，自实现足够。
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
@@ -17,22 +20,18 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
-// 扫描根：新分层两处 + 冻结区两处。tests/scripts 不设边界（工具与测试可跨域引用）。
+// 扫描根：后端 src/ 与前端 public/js/，外加根目录的组装根。
+// tests/scripts 不设边界（工具与测试可跨域引用）。
 const SCAN_DIRS = ['src', 'public/js'];
 
 // ---------------------------------------------------------------------------
-// 冻结清单
+// 根目录白名单
 // ---------------------------------------------------------------------------
-// 这两份名单是「存量」的定义。它们只减不增：文件删了要同步删名字（有反向断言盯着），
-// 而**往里加名字等于把一个本该进 src/ 的新模块合法化**——真要加，先问为什么它进不了 src/。
-export const FROZEN_ROOT_MODULES = Object.freeze([
-  'agent-appserver.js', 'app-server-host.js', 'app-server-transport.js', 'approval-broker.js',
-  'audit-log.js', 'devices.js', 'file-search.js', 'file-security.js', 'git-workspace.js',
-  'input-parts.js', 'message-receipt-ledger.js', 'needs-you-registry.js', 'network-address.js',
-  'push-sender.js', 'rpc-log-redaction.js', 'sanitizer.js', 'server-security.js', 'server.js',
-  'statusline.js', 'text-utils.js', 'thread-history.js', 'thread-registry.js', 'uploads.js',
-  'user-inputs.js', 'workdir-allowlist.js',
-]);
+// 根目录只许有组装根。**往里加名字等于把一个本该进 src/ 的新模块合法化**——
+// 真要加，先回答它为什么进不了六个域里的任何一个。
+// （两个工具配置 eslint.config.js / playwright.config.js 由 buildFromDisk 排除，
+//   它们是构建期配置不是运行时模块，进不了依赖图。）
+export const ROOT_ENTRYPOINTS = Object.freeze(['server.js']);
 
 export const FROZEN_PUBLIC_MODULES = Object.freeze([
   'agent-activity.js', 'ansi-html.js', 'app.js', 'at-mention.js', 'attachments-ui.js',
@@ -47,10 +46,15 @@ export const FROZEN_PUBLIC_MODULES = Object.freeze([
   'view-routing.js', 'workspace-panel.js',
 ]);
 
-// 两个组装根。它们只能被 EXPLICIT 那一侧 import，谁都不许反过来引它们。
-const ASSEMBLY_ROOTS = Object.freeze({
-  'server.js': [],                       // 顶层入口，任何人不得 import
-  'agent-appserver.js': ['server.js'],   // 第二组装根，只有 server.js 能引
+// 两个组装根。它们只能被列出的那一方 import，谁都不许反过来引它们。
+//
+// 【键必须是仓库相对路径，且有反向断言盯着它们仍存在】搬家时这里最容易腐烂：
+// 文件从根目录进了 src/agent/ 之后，'agent-appserver.js' 这个键再也匹配不到任何一条边，
+// 于是 roots-are-sinks 一个目标都没有——而它照样遍历、照样比对、照样报绿。
+// 「规则失效」与「全部合规」在输出上完全一样，这是清单型门禁的典型死法。
+export const ASSEMBLY_ROOTS = Object.freeze({
+  'server.js': [],                                    // 顶层入口，任何人不得 import
+  'src/agent/agent-appserver.js': ['server.js'],      // 第二组装根，只有 server.js 能引
 });
 
 // 前后端共享：**唯一**允许后端 import 前端的三个具名文件。
@@ -61,7 +65,7 @@ export const SHARED_ALLOWLIST = new Map([
     '权限预设与 turn overrides 的归一化：server.js 与 agent-appserver.js 消费同一份，浏览器也照它渲染。'
     + '两侧各写一份必然分叉成「面板显示的策略 ≠ 实际下发的策略」'],
   ['public/js/token-usage.js',
-    'token 用量的字段归一：statusline.js 消费。该文件注释已记过一次 camelCase→snake_case 漂移'
+    'token 用量的字段归一：src/ops/statusline.js 消费。该文件注释已记过一次 camelCase→snake_case 漂移'
     + '导致静默显示 0 的事故，那正是两份实现的代价'],
   ['public/js/thread-actions.js',
     'SCHEMA_MISMATCH 正则：运行时兜底（前端渲染那条错误）与启动自检（src/ops/doctor-checks.js）'
@@ -78,11 +82,19 @@ export const SHARED_ALLOWLIST = new Map([
 //   · 动态 `import('...')` **不锚定行首** —— 它可以出现在行中任意位置
 //     （`const m = await import('./x.js')`）。不单列这一条的话，
 //     **边界规则可以被动态 import 整个绕过**，而绕过之后一切照常绿。
+// 静态 import 的说明符只能是普通字符串字面量（``import x from `./y``` 是语法错误），
+// 所以这一条不认反引号。引号用捕获组回引，与动态那条对齐成同样的 match[2]。
 const STATIC_IMPORT_RE =
-  /(?:^|\n)\s*(?:import\s[^'"]*?from\s*|export\s[^'"]*?from\s*|import\s*)['"]([^'"]+)['"]/g;
+  /(?:^|\n)\s*(?:import\s[^'"]*?from\s*|export\s[^'"]*?from\s*|import\s*)(['"])([^'"]+)\1/g;
 // 前瞻 `(?<![.\w])` 挡住 `import.meta` 与 `reimport(` 这类——不挡的话会造出幽灵边，
 // 而幽灵边指向的文件通常不存在，于是报错信息会把人引向一个根本不存在的问题。
-const DYNAMIC_IMPORT_RE = /(?<![.\w])import\s*\(\s*['"]([^'"]+)['"]/g;
+//
+// 【反引号那一支不能漏，2026-09-15 补】上一版只认 `['"]`，于是
+// ``await import(`./x.js`)`` 对这道闸完全不可见——而这道闸加动态 import 分支的**全部理由**
+// 就是防「边界规则可以被 await import() 绕过」。少认一种字面量等于那个绕过口一直开着。
+// 带插值的 ``import(`./x.js?t=${Date.now()}`)`` 也认：`${…}` 里没有引号和反引号，
+// 整段会被捕获，而 resolveSpecifier 按 `?` 截断后剩下的正是那个静态前缀。
+const DYNAMIC_IMPORT_RE = /(?<![.\w])import\s*\(\s*(['"`])([^'"`]+)\1/g;
 
 /**
  * 去掉整行注释后再提取。
@@ -110,7 +122,7 @@ export function parseImports(source) {
   const found = [];
   for (const re of [STATIC_IMPORT_RE, DYNAMIC_IMPORT_RE]) {
     re.lastIndex = 0;
-    for (const match of code.matchAll(re)) found.push(match[1]);
+    for (const match of code.matchAll(re)) found.push(match[2]);
   }
   return found;
 }
@@ -121,9 +133,34 @@ export function parseImports(source) {
 const isFrontend = p => p.startsWith('public/js/');
 const isLogicLayer = p => p.startsWith('public/js/logic/');
 const isBackendSrc = p => p.startsWith('src/');
-const isRootModule = p => FROZEN_ROOT_MODULES.includes(p);
+const isRootModule = p => ROOT_ENTRYPOINTS.includes(p);
 const isBackend = p => isBackendSrc(p) || isRootModule(p);
 const isTooling = p => p.startsWith('scripts/') || p.startsWith('test/') || p.startsWith('e2e/');
+
+/**
+ * 后端域的层序。数字大的可以引数字小的，同层互引放行（真成环由 no-cycles 抓）。
+ *
+ * 【这张表是量出来的，不是设计出来的】搬家当天把 src/ 的全部跨域边打出来统计，
+ * 得到的就是下面这个顺序，一条反例都没有。所以它不是对未来的约束，是把**已经成立的
+ * 事实**钉住——这样它从第一天起就是绿的，而任何一次方向反转都会当场红。
+ * 反过来，凭空设计一套理想层序的下场是它落地当天就红一片，然后被人加豁免加到失效。
+ *
+ * 实测的跨域边（域 → 域）：
+ *   server.js → agent/auth/files/ops/sessions/shared   agent → files/sessions/shared
+ *   auth → files    ops → files/shared    sessions → files/shared    files → （无）
+ */
+export const DOMAIN_RANK = Object.freeze({
+  'src/shared': 0,    // 零 IO 零跨域叶子
+  'src/files': 1,     // 路径归一与文件安全，被上面各域共用
+  'src/auth': 2,
+  'src/ops': 2,
+  'src/sessions': 2,
+  'src/agent': 3,     // app-server 运行时，组装 sessions/files
+});
+// server.js 刻意不进这张表：它作为**来源**可以引任何域（组装根的本分），
+// 作为**目标**由 roots-are-sinks 全面禁止。放进来只会让同一条违规被两条规则各报一次。
+
+const rankOf = p => DOMAIN_RANK[p.match(/^(src\/[^/]+)\//)?.[1]];
 
 export const BOUNDARY_RULES = Object.freeze([
   {
@@ -137,10 +174,13 @@ export const BOUNDARY_RULES = Object.freeze([
     violates: (from, to) => isBackend(from) && isFrontend(to) && !SHARED_ALLOWLIST.has(to),
   },
   {
-    name: 'shared-is-leaf',
-    describe: 'src/shared 是叶子层，不得反向 import 其他后端域',
-    violates: (from, to) => from.startsWith('src/shared/')
-      && ((isBackendSrc(to) && !to.startsWith('src/shared/')) || isRootModule(to)),
+    name: 'layer-order',
+    describe: '后端域只能引层序不高于自己的域（src/shared 因此是叶子）',
+    violates: (from, to) => {
+      const a = rankOf(from);
+      const b = rankOf(to);
+      return a !== undefined && b !== undefined && b > a;
+    },
   },
   {
     name: 'roots-are-sinks',
@@ -205,11 +245,12 @@ export function analyze({ edges = [], rootFiles = [], publicFiles = [] } = {}) {
   }
 
   for (const file of rootFiles) {
-    if (!FROZEN_ROOT_MODULES.includes(file)) {
+    if (!ROOT_ENTRYPOINTS.includes(file)) {
       problems.push({
         rule: 'no-new-root-modules',
-        detail: `${file} 是根目录新增的模块。根目录是冻结区，新代码请落 src/{shared,ops,files,sessions}/。`
-          + '真要放根上，先回答它为什么进不了 src/',
+        detail: `${file} 落在了根目录。根目录只放组装根 server.js，`
+          + `模块请进 src/ 的六个域之一：${Object.keys(DOMAIN_RANK).map(d => d.slice(4)).join(' / ')}。`
+          + '真要放根上，先回答它为什么进不了任何一个域',
       });
     }
   }
@@ -267,7 +308,7 @@ function resolveSpecifier(fromAbs, specifier) {
 export function buildFromDisk(root = ROOT) {
   const files = [
     ...SCAN_DIRS.flatMap(dir => walk(join(root, dir))),
-    ...FROZEN_ROOT_MODULES.map(name => join(root, name)).filter(existsSync),
+    ...ROOT_ENTRYPOINTS.map(name => join(root, name)).filter(existsSync),
   ];
 
   const edges = [];

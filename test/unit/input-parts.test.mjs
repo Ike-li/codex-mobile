@@ -4,7 +4,7 @@ import { mkdtempSync, mkdirSync, realpathSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { resolveInputParts } from '../../input-parts.js';
+import { resolveInputParts } from '../../src/sessions/input-parts.js';
 
 test('resolveInputParts canonicalizes a workspace mention inside the runtime cwd', async () => {
   const cwd = mkdtempSync(join(tmpdir(), 'ccm-input-mention-'));

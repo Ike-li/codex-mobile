@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
-import { AppServerTransport } from '../../app-server-transport.js';
+import { AppServerTransport } from '../../src/agent/app-server-transport.js';
 
 function fakeChild() {
   const child = new EventEmitter();

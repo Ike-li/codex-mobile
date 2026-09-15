@@ -15,7 +15,7 @@ import { randomBytes } from 'node:crypto';
 import { createInterface } from 'node:readline/promises';
 import { realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { writeOwnerOnlyFile } from '../file-security.js';
+import { writeOwnerOnlyFile } from '../src/files/file-security.js';
 import { CONFIG_FILE_NAME, CONFIG_SCHEMA_VERSION } from '../src/ops/config-file.js';
 
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '..');

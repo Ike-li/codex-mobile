@@ -10,7 +10,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { truncate, truncatePayload } from '../../text-utils.js';
+import { truncate, truncatePayload } from '../../src/shared/text-utils.js';
 
 test('truncate: 不超过上限时原样返回，正好等于上限也不动', () => {
   assert.equal(truncate('abc', 5), 'abc');

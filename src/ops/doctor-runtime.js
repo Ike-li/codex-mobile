@@ -17,7 +17,7 @@ import {
 } from './doctor-checks.js';
 import { ALL_CONFIG_KEYS } from './codex-schema.js';
 import { resolveDataDir } from '../shared/data-dir.js';
-import { checkPermissions } from '../../file-security.js';
+import { checkPermissions } from '../files/file-security.js';
 
 /** 敏感文件清单。CLI 自检与将来的 web 体检共用同一份——分开写必然漂。 */
 export const SENSITIVE_FILES = Object.freeze([

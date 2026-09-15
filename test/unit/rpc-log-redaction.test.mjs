@@ -14,7 +14,7 @@ import {
   redactRpcError,
   redactRpcString,
   redactRpcValue,
-} from '../../rpc-log-redaction.js';
+} from '../../src/agent/rpc-log-redaction.js';
 
 // 键名像凭证 → **整个值**换成占位符，一个字节都不留。
 // 这一条和下一条的区别要紧：凭证不能留长度（长度本身就是线索），正文可以。

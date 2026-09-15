@@ -20,7 +20,7 @@ import {
   probePort, probeWorkdirs, runDoctor,
 } from '../src/ops/doctor-runtime.js';
 import { resolveDataDir } from '../src/shared/data-dir.js';
-import { resolveWorkdirAllowlist, resolveWorkdirsFromEntries } from '../workdir-allowlist.js';
+import { resolveWorkdirAllowlist, resolveWorkdirsFromEntries } from '../src/files/workdir-allowlist.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -122,7 +122,7 @@ async function main() {
     // 起真 app-server 要拉起 codex 子进程。失败不该让整个自检跑不完——
     // 其余十二项与它无关，而「因为一项探测挂了就什么都看不到」是最差的自检体验。
     try {
-      const { AppServerHost } = await import('../app-server-host.js');
+      const { AppServerHost } = await import('../src/agent/app-server-host.js');
       const host = new AppServerHost();
       const result = await probeSchema({ request: (m, p) => host.request(m, p), pinnedVersion: readPin() });
       schemaProbe = schemaProbeDiagnostic(result);

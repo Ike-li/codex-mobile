@@ -5,7 +5,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execSync } from 'node:child_process';
-import { buildStatusLine } from '../../statusline.js';
+import { buildStatusLine } from '../../src/ops/statusline.js';
 
 function makeTempDir() {
   const dir = mkdtempSync(join(tmpdir(), 'ccm-statusline-test-'));

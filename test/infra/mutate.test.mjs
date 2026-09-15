@@ -25,7 +25,7 @@ test('容器闸：没有 CCM_IN_CONTAINER 时 mutate 拒绝运行', () => {
   const env = { ...process.env };
   delete env.CCM_IN_CONTAINER;
 
-  const run = spawnSync(process.execPath, ['scripts/mutate.js', 'sanitizer.js'], {
+  const run = spawnSync(process.execPath, ['scripts/mutate.js', 'src/shared/sanitizer.js'], {
     cwd: ROOT,
     encoding: 'utf8',
     env,

@@ -50,7 +50,7 @@ function persistedFileNames(source) {
 test('服务端落盘的文件不超出 A2 允许的例外', () => {
   const found = new Set([
     ...persistedFileNames(read('server.js')),
-    ...persistedFileNames(read('devices.js')),
+    ...persistedFileNames(read('src/auth/devices.js')),
     ...persistedFileNames(read('src/sessions/read-state.js')),
   ]);
   // 扫到 0 个与「没有新增持久化」在断言上完全一样。读取列表漏一个文件、
@@ -69,7 +69,7 @@ test('服务端落盘的文件不超出 A2 允许的例外', () => {
 test('允许清单里的每一项都仍在被使用', () => {
   const found = new Set([
     ...persistedFileNames(read('server.js')),
-    ...persistedFileNames(read('devices.js')),
+    ...persistedFileNames(read('src/auth/devices.js')),
     ...persistedFileNames(read('src/sessions/read-state.js')),
   ]);
   // 扫到 0 个与「没有新增持久化」在断言上完全一样。读取列表漏一个文件、
@@ -88,9 +88,9 @@ test('会话、投递账本和 needs-you 注册表都不落盘', () => {
   // 这三样是内存态，重启即失。ARCHITECTURE.md 明确写了这一点，用户据此理解
   // 「重启会清掉哪些保护和状态」。任何一处改成落盘都会改变那个承诺。
   for (const [module, symbol] of [
-    ['message-receipt-ledger.js', '投递账本'],
-    ['needs-you-registry.js', 'needs-you 注册表'],
-    ['thread-registry.js', 'thread 注册表'],
+    ['src/sessions/message-receipt-ledger.js', '投递账本'],
+    ['src/sessions/needs-you-registry.js', 'needs-you 注册表'],
+    ['src/sessions/thread-registry.js', 'thread 注册表'],
   ]) {
     const source = read(module);
     assert.doesNotMatch(

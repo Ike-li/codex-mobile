@@ -133,6 +133,8 @@ test('文档里点名的 npm script 都真实存在', () => {
 // 例外显式登记 —— 加一条之前先问：读者照着去找会扑空吗？扑空了要紧吗？
 const MISSING_ON_PURPOSE = new Map([
   ['test/public-ui.test.mjs', 'TESTING.md 第 7 节讲的正是它被删除后的三条代价，指代一个不存在的文件是正确的'],
+  ['src/example.js', 'TESTING.md 第 10 节引用的是文件变更卡上的**界面文案**「新增: src/example.js」，'
+    + '不是仓库里的路径。这是把 src/ 纳入扫描面的代价：引号里的 UI 字符串和真实路径在正则眼里一样'],
 ]);
 
 test('文档里点名的仓库内文件都真实存在', () => {
@@ -142,7 +144,12 @@ test('文档里点名的仓库内文件都真实存在', () => {
     // 路径段要允许多级（门禁在 scripts/gates/ 下，只认单层会让那三个引用静默不被检查）。
     // 通配与花括号展开（`test/*.test.mjs`、`test/app-server-{transport,host}.test.mjs`）
     // 天然不匹配这个字符集，不需要额外排除。
-    const pattern = /\b((?:scripts|test|e2e)\/(?:[A-Za-z0-9._-]+\/)*[A-Za-z0-9._-]+\.(?:js|mjs|sh))/g;
+    //
+    // 【2026-09-15 加上 src/】在此之前扫描面只有 scripts|test|e2e，而文档点名产品代码时
+    // 写的是裸文件名（`devices.js`）——那种形态这条正则从来匹配不到。同一天 24 个后端模块
+    // 从根目录搬进 src/ 六个域，docs/TESTING.md 里 25 处引用**全部指向了不存在的路径**，
+    // 而这道检查一条都没报。现在产品代码的引用带上了目录前缀，正好落进可检查的形态里。
+    const pattern = /\b((?:src|scripts|test|e2e)\/(?:[A-Za-z0-9._-]+\/)*[A-Za-z0-9._-]+\.(?:js|mjs|sh))/g;
     for (const [, target] of readDoc(docPath).matchAll(pattern)) {
       if (MISSING_ON_PURPOSE.has(target)) { exempted.add(target); continue; }
       checked += 1;

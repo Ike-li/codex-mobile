@@ -1,5 +1,5 @@
 // scripts/device.js —— CLI 工具：管理待确认和受信任的设备指纹。
-import { getPendingDevices, approveDevice, denyDevice } from '../devices.js';
+import { getPendingDevices, approveDevice, denyDevice } from '../src/auth/devices.js';
 import { readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';

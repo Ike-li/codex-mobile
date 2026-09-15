@@ -17,19 +17,19 @@ import { watch } from 'node:fs';
 import express from 'express';
 import compression from 'compression';
 import { Server } from 'socket.io';
-import { ThreadRuntime } from './agent-appserver.js';
-import { ThreadRegistry } from './thread-registry.js';
-import { AppServerHost } from './app-server-host.js';
-import { MessageReceiptLedger } from './message-receipt-ledger.js';
-import { NeedsYouRegistry } from './needs-you-registry.js';
-import { resolveInputParts } from './input-parts.js';
-import { maskToken, sanitize, sanitizePath } from './sanitizer.js';
-import { writeOwnerOnlyFile, appendOwnerOnlyFile } from './file-security.js';
-import { appendJsonlAuditRecord } from './audit-log.js';
-import { createPushSender } from './push-sender.js';
-import { isPublicEndpointHostname, isPublicIpAddress } from './network-address.js';
-import { decodeAttachments, saveAttachments, pruneExpiredUploads } from './uploads.js';
-import { buildStatusLine } from './statusline.js';
+import { ThreadRuntime } from './src/agent/agent-appserver.js';
+import { ThreadRegistry } from './src/sessions/thread-registry.js';
+import { AppServerHost } from './src/agent/app-server-host.js';
+import { MessageReceiptLedger } from './src/sessions/message-receipt-ledger.js';
+import { NeedsYouRegistry } from './src/sessions/needs-you-registry.js';
+import { resolveInputParts } from './src/sessions/input-parts.js';
+import { maskToken, sanitize, sanitizePath } from './src/shared/sanitizer.js';
+import { writeOwnerOnlyFile, appendOwnerOnlyFile } from './src/files/file-security.js';
+import { appendJsonlAuditRecord } from './src/ops/audit-log.js';
+import { createPushSender } from './src/ops/push-sender.js';
+import { isPublicEndpointHostname, isPublicIpAddress } from './src/shared/network-address.js';
+import { decodeAttachments, saveAttachments, pruneExpiredUploads } from './src/files/uploads.js';
+import { buildStatusLine } from './src/ops/statusline.js';
 import { normalizeCollaborationMode, sanitizeTurnOverrides } from './public/js/cli-settings.js';
 import webpush from 'web-push';
 import {
@@ -44,7 +44,7 @@ import {
   issueDeviceSecret,
   verifyDeviceSecret,
   touchDevice,
-} from './devices.js';
+} from './src/auth/devices.js';
 import {
   isLocalAccess,
   normalizeAddress,
@@ -52,11 +52,11 @@ import {
   parseGatewaySecurityPolicy,
   evaluateTransportSecurity,
   evaluateSocketHandshakeSecurity,
-} from './server-security.js';
-import { resolveWorkdirAllowlist, resolveWorkdirsFromEntries, resolveWithinWorkdirs } from './workdir-allowlist.js';
-import { searchFiles } from './file-search.js';
-import { listGitChanges, readGitDiff } from './git-workspace.js';
-import { normalizeThreadHistoryMessages } from './thread-history.js';
+} from './src/auth/server-security.js';
+import { resolveWorkdirAllowlist, resolveWorkdirsFromEntries, resolveWithinWorkdirs } from './src/files/workdir-allowlist.js';
+import { searchFiles } from './src/files/file-search.js';
+import { listGitChanges, readGitDiff } from './src/files/git-workspace.js';
+import { normalizeThreadHistoryMessages } from './src/sessions/thread-history.js';
 
 // 配置加载收敛到 src/ops/config.js：它同时支持 codex.config.json 与 .env，并且把
 // 「shell 压过文件」「空串 ≡ 未设置」这两条语义变成了有测试盯着的显式代码，而不是

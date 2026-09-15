@@ -2,7 +2,7 @@ import { EventEmitter } from 'node:events';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { createPushSender } from '../../push-sender.js';
+import { createPushSender } from '../../src/ops/push-sender.js';
 
 function requestDetails(subscription, payload) {
   return {

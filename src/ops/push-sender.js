@@ -1,7 +1,7 @@
 import { lookup } from 'node:dns/promises';
 import { request as httpsRequest } from 'node:https';
 import { isIP } from 'node:net';
-import { isPublicEndpointHostname, isPublicIpAddress } from './network-address.js';
+import { isPublicEndpointHostname, isPublicIpAddress } from '../shared/network-address.js';
 
 export function createPushSender({
   generateRequestDetails,

@@ -2,7 +2,7 @@
 // 这些性质此前只被 server-integration 间接覆盖（见 FEATURE-BREAKDOWN 附录 C）。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { NeedsYouRegistry } from '../../needs-you-registry.js';
+import { NeedsYouRegistry } from '../../src/sessions/needs-you-registry.js';
 
 const targetFor = (index, instanceId = 'inst_1') => ({
   instanceId,

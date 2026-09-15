@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ApprovalBroker } from '../../approval-broker.js';
+import { ApprovalBroker } from '../../src/agent/approval-broker.js';
 
 function makeBroker(options = {}) {
   const events = [];

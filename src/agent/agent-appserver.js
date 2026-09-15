@@ -5,14 +5,14 @@ import { closeSync, constants, fstatSync, mkdirSync, openSync, renameSync, rmSyn
 import { dirname, join } from 'node:path';
 import { AppServerTransport } from './app-server-transport.js';
 import { ApprovalBroker } from './approval-broker.js';
-import { fixPermissions } from './file-security.js';
-import { sanitize } from './sanitizer.js';
-import { buildUserInputs } from './user-inputs.js';
-import { truncate, truncatePayload } from './text-utils.js';
+import { fixPermissions } from '../files/file-security.js';
+import { sanitize } from '../shared/sanitizer.js';
+import { buildUserInputs } from '../sessions/user-inputs.js';
+import { truncate, truncatePayload } from '../shared/text-utils.js';
 import { buildRpcLogEntry, isDeltaNotification } from './rpc-log-redaction.js';
 // 配置读取走同一份 schema。此前这里有第二份实现（numberFromEnv），与 server.js 那 8 段
 // 手写归一各判各的；两个枚举则完全没有校验，写错拼写会原样透传给 app-server。
-import { configValue } from './src/ops/config.js';
+import { configValue } from '../ops/config.js';
 import {
   buildTurnStartOverrides,
   collaborationModeFromThreadSettings,
@@ -21,7 +21,7 @@ import {
   normalizeCollaborationMode,
   sanitizeTurnOverrides,
   PERMISSION_PRESETS,
-} from './public/js/cli-settings.js';
+} from '../../public/js/cli-settings.js';
 
 // 六个可配置项的默认值已移进 src/ops/codex-schema.js —— 那里是它们的唯一事实源。
 // 留一份在这里的代价不是重复，是**漂移**：改了一边不改另一边不会有任何东西变红。

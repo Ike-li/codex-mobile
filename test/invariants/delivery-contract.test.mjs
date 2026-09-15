@@ -2,8 +2,8 @@
 // 守护：DELIVER-01
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { MessageReceiptLedger } from '../../message-receipt-ledger.js';
-import { NeedsYouRegistry } from '../../needs-you-registry.js';
+import { MessageReceiptLedger } from '../../src/sessions/message-receipt-ledger.js';
+import { NeedsYouRegistry } from '../../src/sessions/needs-you-registry.js';
 
 // 「不丢不重」与「需要人时叫得到人」的行为契约。
 //

@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, renameSync, rmSync, statSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { appendOwnerOnlyFile, fixPermissions } from './file-security.js';
+import { appendOwnerOnlyFile, fixPermissions } from '../files/file-security.js';
 
 export function appendJsonlAuditRecord(path, entry, options = {}) {
   const now = typeof options.now === 'function' ? options.now : () => Date.now();

@@ -11,7 +11,7 @@
 // Items now covered: agentMessage / commandExecution / fileChange / mcpToolCall / webSearch / reasoning
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ThreadRuntime } from '../../agent-appserver.js';
+import { ThreadRuntime } from '../../src/agent/agent-appserver.js';
 
 function makeSession(overrides = {}) {
   const events = [];
@@ -1504,8 +1504,8 @@ test('dispose rejects in-flight requests instead of leaving them pending', { tim
   // dispose() 里的 rejectAllPending 清的是 legacy 路径的 map（host 模式下恒空）；
   // 真正的在途请求躺在 host.transport.pending 里，条目的 context.runtime 是强引用，
   // 于是「被回收」的 runtime 连同它 500 条事件缓冲一起留在内存里，调用方永不 settle。
-  const { AppServerHost } = await import('../../app-server-host.js');
-  const { ThreadRegistry } = await import('../../thread-registry.js');
+  const { AppServerHost } = await import('../../src/agent/app-server-host.js');
+  const { ThreadRegistry } = await import('../../src/sessions/thread-registry.js');
   const host = new AppServerHost({
     registry: new ThreadRegistry(),
     spawnImpl: () => ({
@@ -1531,8 +1531,8 @@ test('a disposed runtime is not re-attached by a late response', { timeout: 3000
   // ensureInitialized 的 await 解开后会 notify('initialized')，那条路径会 attach()。
   // 如果 runtime 已经被回收，它就这样被塞回 host.runtimes——而 detach 只由 dispose
   // 调用，不会再发生第二次，于是永久泄漏。
-  const { AppServerHost } = await import('../../app-server-host.js');
-  const { ThreadRegistry } = await import('../../thread-registry.js');
+  const { AppServerHost } = await import('../../src/agent/app-server-host.js');
+  const { ThreadRegistry } = await import('../../src/sessions/thread-registry.js');
   const host = new AppServerHost({
     registry: new ThreadRegistry(),
     spawnImpl: () => ({

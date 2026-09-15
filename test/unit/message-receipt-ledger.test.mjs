@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { MessageReceiptLedger } from '../../message-receipt-ledger.js';
+import { MessageReceiptLedger } from '../../src/sessions/message-receipt-ledger.js';
 
 test('receipt ledger shares one pending result and rejects a conflicting fingerprint', async () => {
   const ledger = new MessageReceiptLedger();

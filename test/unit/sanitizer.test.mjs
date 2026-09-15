@@ -1,7 +1,7 @@
 // test/unit/sanitizer.test.mjs —— 日志脱敏模块单元测试。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { sanitize, maskToken, sanitizePath, stripControlSequences } from '../../sanitizer.js';
+import { sanitize, maskToken, sanitizePath, stripControlSequences } from '../../src/shared/sanitizer.js';
 
 // ---- stripControlSequences ----
 

@@ -82,7 +82,7 @@
 
 **落盘隔离是全局的，不靠每个文件自己记得。** [test/setup/preload-env.mjs](../test/setup/preload-env.mjs) 经 `node --import` 在任何测试文件之前加载，把 `TMPDIR` 与 `CODEX_DATA_DIR` 一起指进一个 `mkdtemp` 出来的一次性根，进程退出时整棵删掉。
 
-为什么必须是预加载：`server.js` 的 `DATA_DIR`、两个审计文件路径、`PUSH_SUB_FILE`、`devices.js` 的 `dataDir()` 全是**模块级常量，import 时就求值**。而 ESM 的静态 import 在模块链接阶段完成，早于该文件自身任何顶层语句——把 `process.env.CODEX_DATA_DIR = ...` 写在 import 上面也没用，被 import 的模块那时已经跑完顶层代码了。只有预加载跑得比它们早。
+为什么必须是预加载：`server.js` 的 `DATA_DIR`、两个审计文件路径、`PUSH_SUB_FILE`、`src/auth/devices.js` 的 `dataDir()` 全是**模块级常量，import 时就求值**。而 ESM 的静态 import 在模块链接阶段完成，早于该文件自身任何顶层语句——把 `process.env.CODEX_DATA_DIR = ...` 写在 import 上面也没用，被 import 的模块那时已经跑完顶层代码了。只有预加载跑得比它们早。
 
 `TMPDIR` 也一起收，是因为光靠各文件的 `before/after` + `rmSync` 补不上：被测模块的异步/防抖落盘发生在 `after` **之后**，它的 `mkdirSync(recursive)` 会把刚删掉的目录重新建出来。逐个去找 flush API 只能一次修一个，下一个引入防抖写的模块又会漏。
 
@@ -97,7 +97,7 @@
 ```bash
 npm run lint            # eslint .
 npm run protocol:check  # 协议三层，要求本机 codex 版本 == .codex-version
-node scripts/gates/check-import-boundaries.js  # 分层方向 + 零循环 + 平铺区冻结
+node scripts/gates/check-import-boundaries.js  # 域层序 + 零循环 + 根目录只放入口
 node scripts/gates/check-invariant-ids.js      # 守护行 ↔ 登记表双向闭合
 npm test                # test/{unit,invariants,integration,infra}/，--test-concurrency=1，经 check-test-summary 包装
 npm run test:e2e        # Playwright，mock 后端
@@ -364,7 +364,7 @@ Not-tested: webkit 未跑——本次只动了 server 侧分支，与浏览器�
 
 **这道门禁的价值不在数字，在于它真的会跑。** 2026-09-01 之前它挂在 `pull_request` 上，而 CI 矩阵默认的 fail-fast 又让 Node 22 的抖动连坐取消 Node 20 那条腿——**结构上从来没跑成过**，于是分支覆盖在 80 个提交里从 87.88 掉到 76.89 而没有任何东西变红。现在它挂在 push 路径上（fast-forward 合并走的正是 push，只在 PR 上跑等于给自己留后门）。
 
-**不要用碎测试去凑数字。** 分支覆盖离历史高点还差约 8pp，回到 87.88% 需再覆盖约 354 条分支，其中 `server.js` 占 296 条、`agent-appserver.js` 占 122 条——**两个文件就超过了缺口总量**，其余所有文件加起来才 471 条。这 8pp 实质是一项针对两个最大模块（3055 行 / 2000 行）错误路径的独立工作，不是清理。当年的 87.88 是在这两个文件还小得多的时候定的。
+**不要用碎测试去凑数字。** 分支覆盖离历史高点还差约 8pp，回到 87.88% 需再覆盖约 354 条分支，其中 `server.js` 占 296 条、`src/agent/agent-appserver.js` 占 122 条——**两个文件就超过了缺口总量**，其余所有文件加起来才 471 条。这 8pp 实质是一项针对两个最大模块（3055 行 / 2000 行）错误路径的独立工作，不是清理。当年的 87.88 是在这两个文件还小得多的时候定的。
 
 **别提议加绝对覆盖率门槛。** 退化门禁已经包含绝对阈值（80/60/80/80），后者是它的真子集。覆盖率是一个容易被凑、且凑了不产生保护的指标——第 3 节那 1807 行源码文本断言删掉后覆盖率只动了 0.03pp，它连这个最宽松的指标都没骗到，只骗过了人。
 
@@ -408,16 +408,16 @@ Not-tested: webkit 未跑——本次只动了 server 侧分支，与浏览器�
 
 | 案例 | 场景 | 代码入口 | 主要证据 |
 |---|---|---|---|
-| 案例 1 | 创建任务 + 流式输出 + ACK/outbox + provisional orphan/fresh-id 恢复 + gap 后恢复会话 | `server.js`、`message-receipt-ledger.js`、`public/js/message-{request,outbox}.js`、`public/js/{indexeddb-outbox,outbox-recovery,recovery-state}.js` | receipt/dedup 集成测试、outbox 与 recovery 单测、关键流程和 outbox recovery E2E |
-| 案例 2 | 执行命令 + 触发权限 + 审批/提问跨 thread 聚合 + exit code 可见 | `approval-broker.js`、`needs-you-registry.js`、`agent-appserver.js` | broker/needs 幂等与冲突测试、关键审批与 needs-you recovery E2E |
-| 案例 3 | 产生失败 + 重试恢复（同 id 只读核对 / fresh-id 确认重试）+ backpressure + 长日志移动体验 | `agent-appserver.js`、`message-receipt-ledger.js`、`public/index.html`、`public/js/app.js` | 协议错误/结果未知测试、retry/copy UI 契约、移动视口 E2E |
-| 案例 4 | 文件上传 + 结构化附件输入 + transport/business 双层上限 + 0700/0600 安全落盘 | `uploads.js`、`file-security.js`、`user-inputs.js`、`input-parts.js` | user-inputs/input-parts/file-security 单测、>1 MiB wire 集成、附件 E2E |
-| 案例 5 | 状态栏 + `thread/status/changed` + git/token/context 状态 | `statusline.js`、`agent-appserver.js` | statusline、thread_status 与 public UI 测试 |
-| 案例 6 | 历史浏览 + 工具/变更卡重建 + app-server thread 唯一事实源 + Codex App/Web 双向续接 | `thread-history.js`、`app-server-host.js`、`agent-appserver.js`、`server.js` 的 `thread:*` | thread-history 单测、native thread 集成、workspace-and-composer E2E |
-| 案例 7 | 多工作目录 + 实例切换 + 双设备/双 thread 零串流 + 共享单进程 | `app-server-host.js`、`thread-registry.js`、`agent-appserver.js`、`public/js/view-routing.js` | shared-host spawn/initialize、stale target、route/workdir、多实例 E2E |
-| 案例 8 | Web Push + DNS/address pinning + bounded response + needs-you 脱敏深链 + device revoke | `server.js`、`push-sender.js`、`network-address.js`、`needs-you-registry.js`、`public/js/sw.js` | Push DNS/mixed-IP/timeout/body-cap 单测、authenticated persist/prune、service worker 和 needs-you E2E |
-| 案例 9 | 模型切换 + 权限档切换 | `agent-appserver.js`、`server.js`、`public/index.html`、`public/js/app.js` | model/permission UI、宿主配置逐动作确认测试 |
-| 案例 10 | PWA 安装 + HTTPS/auth session + 全屏/移动体验 | `server-security.js`、`public/manifest.webmanifest`、`public/js/sw.js` | transport security/session/SW 测试、响应式和 PWA E2E |
+| 案例 1 | 创建任务 + 流式输出 + ACK/outbox + provisional orphan/fresh-id 恢复 + gap 后恢复会话 | `server.js`、`src/sessions/message-receipt-ledger.js`、`public/js/message-{request,outbox}.js`、`public/js/{indexeddb-outbox,outbox-recovery,recovery-state}.js` | receipt/dedup 集成测试、outbox 与 recovery 单测、关键流程和 outbox recovery E2E |
+| 案例 2 | 执行命令 + 触发权限 + 审批/提问跨 thread 聚合 + exit code 可见 | `src/agent/approval-broker.js`、`src/sessions/needs-you-registry.js`、`src/agent/agent-appserver.js` | broker/needs 幂等与冲突测试、关键审批与 needs-you recovery E2E |
+| 案例 3 | 产生失败 + 重试恢复（同 id 只读核对 / fresh-id 确认重试）+ backpressure + 长日志移动体验 | `src/agent/agent-appserver.js`、`src/sessions/message-receipt-ledger.js`、`public/index.html`、`public/js/app.js` | 协议错误/结果未知测试、retry/copy UI 契约、移动视口 E2E |
+| 案例 4 | 文件上传 + 结构化附件输入 + transport/business 双层上限 + 0700/0600 安全落盘 | `src/files/uploads.js`、`src/files/file-security.js`、`src/sessions/user-inputs.js`、`src/sessions/input-parts.js` | user-inputs/input-parts/file-security 单测、>1 MiB wire 集成、附件 E2E |
+| 案例 5 | 状态栏 + `thread/status/changed` + git/token/context 状态 | `src/ops/statusline.js`、`src/agent/agent-appserver.js` | statusline、thread_status 与 public UI 测试 |
+| 案例 6 | 历史浏览 + 工具/变更卡重建 + app-server thread 唯一事实源 + Codex App/Web 双向续接 | `src/sessions/thread-history.js`、`src/agent/app-server-host.js`、`src/agent/agent-appserver.js`、`server.js` 的 `thread:*` | thread-history 单测、native thread 集成、workspace-and-composer E2E |
+| 案例 7 | 多工作目录 + 实例切换 + 双设备/双 thread 零串流 + 共享单进程 | `src/agent/app-server-host.js`、`src/sessions/thread-registry.js`、`src/agent/agent-appserver.js`、`public/js/view-routing.js` | shared-host spawn/initialize、stale target、route/workdir、多实例 E2E |
+| 案例 8 | Web Push + DNS/address pinning + bounded response + needs-you 脱敏深链 + device revoke | `server.js`、`src/ops/push-sender.js`、`src/shared/network-address.js`、`src/sessions/needs-you-registry.js`、`public/js/sw.js` | Push DNS/mixed-IP/timeout/body-cap 单测、authenticated persist/prune、service worker 和 needs-you E2E |
+| 案例 9 | 模型切换 + 权限档切换 | `src/agent/agent-appserver.js`、`server.js`、`public/index.html`、`public/js/app.js` | model/permission UI、宿主配置逐动作确认测试 |
+| 案例 10 | PWA 安装 + HTTPS/auth session + 全屏/移动体验 | `src/auth/server-security.js`、`public/manifest.webmanifest`、`public/js/sw.js` | transport security/session/SW 测试、响应式和 PWA E2E |
 
 会话设置是聚焦用例：`test/unit/permission-settings.test.mjs` 与 `e2e/session-settings.spec.js` 覆盖预设字段、granular 清洗与持久化、outbox、主机默认恢复、失败不污染运行时、外部设置通知及移动端确认操作。
 

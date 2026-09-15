@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { buildUserInputs } from '../../user-inputs.js';
+import { buildUserInputs } from '../../src/sessions/user-inputs.js';
 
 test('buildUserInputs emits the pinned v2 text shape with text_elements', () => {
   assert.deepEqual(buildUserInputs({ text: 'hello app-server' }), [{

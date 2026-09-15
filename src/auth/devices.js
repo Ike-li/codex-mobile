@@ -2,10 +2,10 @@
 import { readFileSync, existsSync, mkdirSync, statSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { randomBytes, createHash, timingSafeEqual } from 'node:crypto';
-import { writeOwnerOnlyFile } from './file-security.js';
+import { writeOwnerOnlyFile } from '../files/file-security.js';
 // 状态根的解析收敛到这一处。此前本文件自己算一份、server.js 再算一份，两份都得记得
 // 「env 只能在函数体内读」——而那正是会漏的一步（server.js:87 就是模块级常量）。
-import { resolveDataDir } from './src/shared/data-dir.js';
+import { resolveDataDir } from '../shared/data-dir.js';
 
 const dataDir = () => resolveDataDir();
 const trustedDevicesFile = () => join(dataDir(), 'trusted-devices.json');

@@ -10,8 +10,8 @@ import { existsSync, readFileSync } from 'node:fs';
 
 const server = readFileSync(new URL('../../server.js', import.meta.url), 'utf8');
 const scenarioServer = readFileSync(new URL('../../scripts/scenario-server.js', import.meta.url), 'utf8');
-const appServerSession = readFileSync(new URL('../../agent-appserver.js', import.meta.url), 'utf8');
-const uploads = readFileSync(new URL('../../uploads.js', import.meta.url), 'utf8');
+const appServerSession = readFileSync(new URL('../../src/agent/agent-appserver.js', import.meta.url), 'utf8');
+const uploads = readFileSync(new URL('../../src/files/uploads.js', import.meta.url), 'utf8');
 
 test('production server no longer reads or writes sessions.json or Codex JSONL history', () => {
   assert.doesNotMatch(server, /from '\.\/sessions\.js'/);

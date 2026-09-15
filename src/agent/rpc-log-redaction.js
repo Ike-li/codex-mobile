@@ -9,8 +9,8 @@
 //   SENSITIVE_RPC_KEY_RE  键名像凭证 → 整个值换成 <redacted>，一个字节都不留
 //   CONTENT_RPC_KEY_RE    键名是正文 → 只留长度，用户 prompt 与工具输出不落盘
 //   其余                  过 sanitize()（抹掉密钥形态）+ sanitizePath()（抹掉家目录）后截断
-import { sanitize, sanitizePath } from './sanitizer.js';
-import { truncate } from './text-utils.js';
+import { sanitize, sanitizePath } from '../shared/sanitizer.js';
+import { truncate } from '../shared/text-utils.js';
 
 export const RPC_SUMMARY_CAP = 240;
 export const SENSITIVE_RPC_KEY_RE = /(token|secret|password|passwd|credential|authorization|api[_-]?key|private[_-]?key|refreshToken|accessToken|chatgptAuthTokens|dataBase64)/i;

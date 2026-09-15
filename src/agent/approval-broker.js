@@ -1,7 +1,7 @@
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { appendOwnerOnlyFile } from './file-security.js';
-import { truncate } from './text-utils.js';
+import { appendOwnerOnlyFile } from '../files/file-security.js';
+import { truncate } from '../shared/text-utils.js';
 
 const TRUNCATE_SUFFIX = ' ... (truncated)';
 

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ThreadRegistry } from '../../thread-registry.js';
+import { ThreadRegistry } from '../../src/sessions/thread-registry.js';
 
 function assertStale(action) {
   assert.throws(action, error => {

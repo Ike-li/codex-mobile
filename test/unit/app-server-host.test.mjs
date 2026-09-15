@@ -1,9 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
-import { AppServerHost } from '../../app-server-host.js';
-import { ThreadRegistry } from '../../thread-registry.js';
-import { childEnv } from '../../app-server-transport.js';
+import { AppServerHost } from '../../src/agent/app-server-host.js';
+import { ThreadRegistry } from '../../src/sessions/thread-registry.js';
+import { childEnv } from '../../src/agent/app-server-transport.js';
 
 // 等一个只由 unref 定时器驱动的 promise 时，必须有东西吊着事件循环。
 // 请求超时定时器在生产代码里是 unref 的（线上有 HTTP listener 吊着，无影响），测试里没有，

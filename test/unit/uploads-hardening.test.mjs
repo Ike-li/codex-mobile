@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { saveAttachments, decodeAttachments } from '../../uploads.js';
+import { saveAttachments, decodeAttachments } from '../../src/files/uploads.js';
 
 // async：saveAttachments 是异步的，同步版的 finally 会在落盘完成前就把目录删掉，
 // 于是每条用例都因 ENOENT 变红——那种红看起来和「发现了缺陷」一模一样。

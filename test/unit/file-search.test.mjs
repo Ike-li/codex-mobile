@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { matchFiles, searchFiles } from '../../file-search.js';
+import { matchFiles, searchFiles } from '../../src/files/file-search.js';
 
 test('empty query returns a dictionary-ordered browse list', () => {
   assert.deepEqual(
@@ -38,7 +38,7 @@ test('searchFiles returns relative hits from the candidate list', async () => {
 // 这个模块此前从没跑过变异，41 个候选里存活 21 个。它是 composer 里打 `@` 时的候选来源——
 // 用户从这个列表里选文件交给 agent 读，所以「哪些文件会出现在列表里」是一个 SCOPE 判据。
 
-import { clearFileSearchCache, FILE_SEARCH_MAX_DEPTH } from '../../file-search.js';
+import { clearFileSearchCache, FILE_SEARCH_MAX_DEPTH } from '../../src/files/file-search.js';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';

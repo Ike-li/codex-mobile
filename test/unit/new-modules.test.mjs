@@ -6,7 +6,7 @@ import { chmodSync, mkdirSync, mkdtempSync, writeFileSync, rmSync, statSync, rea
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 // ---- uploads.js ----
-import { decodeAttachments, validateAttachments, saveAttachments, toEventMeta, pruneExpiredUploads } from '../../uploads.js';
+import { decodeAttachments, validateAttachments, saveAttachments, toEventMeta, pruneExpiredUploads } from '../../src/files/uploads.js';
 
 test('validateAttachments: null/empty passes', () => {
   assert.equal(validateAttachments(undefined), null);
@@ -156,7 +156,7 @@ test('pruneExpiredUploads: unlinks files older than maxAgeMs and keeps fresh fil
 });
 
 // ---- file-security.js ----
-import { writeOwnerOnlyFile, isOwnerOnly } from '../../file-security.js';
+import { writeOwnerOnlyFile, isOwnerOnly } from '../../src/files/file-security.js';
 
 test('writeOwnerOnlyFile: creates file with 0600 permissions', () => {
   const dir = mkdtempSync(join(tmpdir(), 'ccm-test-'));
@@ -189,20 +189,20 @@ test('isOwnerOnly: detects permissive files', () => {
 
 // ---- statusline.js ----
 test('statusline buildStatusLine: includes project name', async () => {
-  const { buildStatusLine } = await import('../../statusline.js');
+  const { buildStatusLine } = await import('../../src/ops/statusline.js');
   const payload = await buildStatusLine({ agent: null, cwd: '/home/user/my-project', versions: null });
   assert.equal(payload.project, 'my-project');
 });
 
 test('statusline buildStatusLine: null agent yields basic payload', async () => {
-  const { buildStatusLine } = await import('../../statusline.js');
+  const { buildStatusLine } = await import('../../src/ops/statusline.js');
   const payload = await buildStatusLine({ agent: null, cwd: null, versions: null });
   assert.ok(payload.ts > 0, 'should always have timestamp');
   assert.equal(payload.ctx, undefined, 'no ctx without agent usage');
 });
 
 // ---- agent-appserver.js 结构化附件 ----
-import { ThreadRuntime } from '../../agent-appserver.js';
+import { ThreadRuntime } from '../../src/agent/agent-appserver.js';
 
 test('ThreadRuntime.send queues and drains with attachments', async () => {
   const events = [];

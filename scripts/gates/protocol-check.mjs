@@ -528,15 +528,15 @@ function runProtocolCheck() {
     const typeDiff = diffTypeSets(readProtocolTypeSet(STABLE_PROTOCOL_DIR), readProtocolTypeSet(generatedDir));
     const fileDiff = diffProtocolFiles(STABLE_PROTOCOL_DIR, generatedDir);
     const usage = collectBridgeMethodUsage({
-      agentAppserverSource: readFileSync(join(ROOT, 'agent-appserver.js'), 'utf8'),
-      approvalBrokerSource: readFileSync(join(ROOT, 'approval-broker.js'), 'utf8'),
+      agentAppserverSource: readFileSync(join(ROOT, 'src', 'agent', 'agent-appserver.js'), 'utf8'),
+      approvalBrokerSource: readFileSync(join(ROOT, 'src', 'agent', 'approval-broker.js'), 'utf8'),
     });
     const missing = findMissingProtocolCoverage({ usage, protocol: baselineMethods });
     // 方法名对得上不代表字段对得上：上游把字段改个名，我们读到 undefined，
     // 不抛异常也没有失败用例，功能静默失效。对着生成出来的协议比，而不是基线，
     // 这样字段漂移在升级那一刻就报出来。
     const unknownFields = findUnknownNotificationFields({
-      usage: collectNotificationFieldUsage(readFileSync(join(ROOT, 'agent-appserver.js'), 'utf8')),
+      usage: collectNotificationFieldUsage(readFileSync(join(ROOT, 'src', 'agent', 'agent-appserver.js'), 'utf8')),
       paramsTypes: parseNotificationParamsTypes(readFileSync(join(generatedDir, 'ServerNotification.ts'), 'utf8')),
       declared: readAllNotificationParamsFields(generatedDir),
       allowlist: LEGACY_FIELD_ALLOWLIST,
