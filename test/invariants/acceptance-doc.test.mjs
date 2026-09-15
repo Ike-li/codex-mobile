@@ -118,6 +118,27 @@ test('文档里点名的 npm script 都真实存在', () => {
   assert.ok(checked >= 4, `npm script 扫描器只检出 ${checked} 处，疑似失配`);
 });
 
+test('TESTING.md 里写的覆盖率基线与 .coverage-baseline.json 一致', () => {
+  // 【2026-09-15 补】文档第 6 节把四个基线数字**硬编码**在正文里，而没有任何东西
+  // 盯着它和基线文件一致。那天刷新基线时才发现：文档写的 91.27/80.12/95.09/91.27
+  // 在真实覆盖率是 90.50/85.97/92.85/90.50 时已经错了很久——而读者会拿文档里的数字
+  // 去判断「我这次改动是不是拖低了覆盖率」，判断依据本身是假的。
+  //
+  // 这与「文档点名不存在的文件」是同一类客观缺陷：机器能判对错，与措辞无关。
+  const baseline = JSON.parse(readDoc('../../.coverage-baseline.json'));
+  const doc = testingDoc;
+  const quoted = doc.match(/\*\*([\d.]+)\s*\/\s*([\d.]+)\s*\/\s*([\d.]+)\s*\/\s*([\d.]+)\*\*/);
+  assert.ok(quoted, 'TESTING.md 第 6 节应写出「**statements / branches / functions / lines**」四个基线数字');
+
+  const [, statements, branches, functions, lines] = quoted;
+  assert.deepEqual(
+    { statements: Number(statements), branches: Number(branches), functions: Number(functions), lines: Number(lines) },
+    baseline,
+    '文档里的基线数字与 .coverage-baseline.json 对不上。刷新基线时两处必须同改——'
+    + '只改文件的话，文档会继续教人拿一个错的参照去判断自己的改动',
+  );
+});
+
 // 文档点名一个仓库内文件，读者就会照着去找。指向不存在的路径和死链是同一类客观缺陷。
 //
 // 【为什么不能只扫 scripts/】上一版就是这样，而 2026-09-14 真正漏掉的那一类恰恰在
