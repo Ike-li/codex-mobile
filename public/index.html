@@ -11,9 +11,11 @@
   <link rel="manifest" href="/manifest.webmanifest" crossorigin="use-credentials">
   <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon-180.png">
-  <!-- 代码块在两种配色下都是暗底(app.css 里 .codex .bubble.md pre 与 .tool-output 硬编码
-       #1e1e1e),所以 hljs 主题不跟随 prefers-color-scheme,固定加载暗色主题。 -->
-  <link rel="stylesheet" href="/vendor/github-dark.min.css">
+  <!-- 代码块底色改成跟随主题（app.css 的 --code-surface：浅色 #ececec / 深色 #1e1e1e）后，
+       hljs 主题必须跟着切——github-dark 的前景色是为 #0d1117 挑的，压在浅底上读不了。
+       media 查询让浏览器只对当前配色的那份计算样式，切换是即时的，不需要 JS。 -->
+  <link rel="stylesheet" href="/vendor/github.min.css" media="(prefers-color-scheme: light)">
+  <link rel="stylesheet" href="/vendor/github-dark.min.css" media="(prefers-color-scheme: dark)">
   <link rel="stylesheet" href="/css/app.css">
   <title>Codex Chat</title>
 </head>

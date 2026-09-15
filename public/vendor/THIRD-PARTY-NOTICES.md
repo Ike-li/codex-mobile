@@ -25,9 +25,11 @@
 - 许可 / License: BSD-3-Clause (SPDX: `BSD-3-Clause`)
 - 来源 / Source: https://github.com/highlightjs/highlight.js
 
-## highlight.js GitHub theme — `github-dark.min.css`
+## highlight.js GitHub themes — `github.min.css`, `github-dark.min.css`
 
-- 来源主题 / Theme: GitHub Dark, highlight.js bundled styles
+- 来源主题 / Theme: GitHub（浅色）与 GitHub Dark（深色），highlight.js bundled styles
+- 为什么是两份 / Why both: 代码块底色跟随 prefers-color-scheme（app.css 的 `--code-surface`），
+  前景色必须跟着切——github-dark 的配色是为 `#0d1117` 挑的，压在浅底上读不了
 - 版权与许可同 highlight.js / Copyright and license: same as highlight.js above (BSD-3-Clause)
 - 来源 / Source: https://github.com/highlightjs/highlight.js/tree/main/src/styles
 

@@ -97,22 +97,27 @@ test('应用样式表排在 hljs 主题之后，覆盖关系不反转', () => {
   assert.doesNotMatch(html, /<style>/, 'index.html 里出现了内联 <style> 块');
 });
 
-test('只打包暗色 hljs 主题，且第三方登记与实际打包一致', () => {
-  // .codex .bubble.md pre 与 .tool-output 都硬编码了 #1e1e1e 暗底，而两个 hljs 主题原本
-  // 按 prefers-color-scheme 互斥加载：浅色下生效的是 github-light，它的深灰/深蓝 token
-  // 前景色压在这块黑底上几乎读不出来。代码块统一走暗色 ⇒ 只保留 github-dark 且不带 media。
-  assert.match(html, /<link rel="stylesheet" href="\/vendor\/github-dark\.min\.css">/);
-  assert.doesNotMatch(html, /github-light/, 'github-light 不应再被引用');
-  assert.ok(
-    !existsSync(new URL('../public/vendor/github-light.min.css', import.meta.url)),
-    '未被引用的 vendor 文件应删除',
-  );
+test('hljs 主题按配色互斥加载，且第三方登记与实际打包一致', () => {
+  // 这条曾经断言「只打包暗色」。当时的理由成立：.codex .bubble.md pre 与 .tool-output
+  // 硬编码 #1e1e1e 暗底，浅色下生效的 github 主题（深灰/深蓝前景）压在黑底上读不出来，
+  // 于是删掉浅色那份、暗色不带 media。
+  //
+  // 但那是治标——根因是**背景不跟随主题**，而不是浅色主题有问题。现在底色走
+  // --code-surface（浅 #ececec / 深 #1e1e1e），前景必须跟着切回来，两份都要打包。
+  // 对比度由 e2e/code-surface.spec.js 按绝对判据守着，不靠这里。
+  assert.match(html, /href="\/vendor\/github\.min\.css" media="\(prefers-color-scheme: light\)"/);
+  assert.match(html, /href="\/vendor\/github-dark\.min\.css" media="\(prefers-color-scheme: dark\)"/);
 
   // 上面的引用完整性绊线只检查「被引用的文件存在」，不检查「文件都被引用」——
   // 删文件不会让它变红。这条反向断言同步第三方登记，属于许可证合规，不是风格。
   const notices = readFileSync(new URL('../public/vendor/THIRD-PARTY-NOTICES.md', import.meta.url), 'utf8');
-  assert.doesNotMatch(notices, /github-light/, '第三方登记必须与实际打包的文件一致');
-  assert.match(notices, /github-dark\.min\.css/);
+  for (const file of ['github.min.css', 'github-dark.min.css']) {
+    assert.ok(
+      existsSync(new URL(`../public/vendor/${file}`, import.meta.url)),
+      `${file} 被 index.html 引用，文件必须存在`,
+    );
+    assert.ok(notices.includes(file), `第三方登记里缺 ${file}`);
+  }
 });
 
 test('客户端不得裸调 crypto.randomUUID —— 非 secure context 里它不存在', () => {

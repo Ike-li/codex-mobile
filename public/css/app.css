@@ -111,6 +111,27 @@
   --banner-info: var(--info-surface);
   --banner-warn: var(--warn-surface);
   --banner-success: var(--success-surface);
+  /* 代码块与终端输出的表面。过去是两处硬编码 #1e1e1e，浅色界面里一整块纯黑，
+     视觉上像挖了个洞，而且不跟随主题。
+     ChatGPT 桌面端的做法（从 app.asar 提取的一手值）：--codex-diffs-surface 取的
+     就是 var(--color-surface)，靠 color-mix(in oklab, … 50%, transparent) 拉层次，
+     浅色主题落在 --gray-100 = #ececec 这一档。这里取同一档。
+     深色档保留原来的 #1e1e1e —— 深色下那块底本来就没问题。 */
+  --code-surface: #ececec;
+  /* ANSI 九色的浅底档。原来那套（#ff6b6b / #51cf66 / #fcc419…，Open Color 的 5 档）
+     是为 #1e1e1e 深底挑的，压在 #ececec 上只有 1.18–2.82:1，读不了——.ansi-bold
+     更是纯白，等于隐形。
+     这一档不是另选的配色：保持原色相与饱和度不动，只把明度降到过 AA 为止，
+     所以它是「同一个颜色的深版本」。实测 4.61–4.80:1 on --code-surface，
+     由 e2e/code-surface.spec.js 逐色守着，改任何一个都会红。 */
+  --ansi-strong: #0d0d0d;
+  --ansi-red: #d60000;
+  --ansi-green: #217830;
+  --ansi-yellow: #836302;
+  --ansi-blue: #0e6bb9;
+  --ansi-magenta: #aa1dcd;
+  --ansi-cyan: #15717f;
+  --ansi-muted: #616970;
   --diff-add: rgba(13,13,13,0.12);
   --diff-del: rgba(223,28,28,0.1);
   /* 实心底上的反色字。--accent-text 去绿后也跟着 --accent 反相了，所以它的反色字
@@ -158,6 +179,17 @@
     --tool-bg: #1c1c1c;
     --tool-border: #2e2e2e;
     --system: #9a9a9a;
+    /* 深色下代码块保持原来那档深灰：暗底终端在暗色主题里本来就不突兀。 */
+    --code-surface: #1e1e1e;
+    /* ANSI 深色档保留原值 —— 它们本来就是为这块底挑的，深色模式观感不变。 */
+    --ansi-strong: #ffffff;
+    --ansi-red: #ff6b6b;
+    --ansi-green: #51cf66;
+    --ansi-yellow: #fcc419;
+    --ansi-blue: #339af0;
+    --ansi-magenta: #cc5de8;
+    --ansi-cyan: #22b8cf;
+    --ansi-muted: #868e96;
     /* --success 去绿后是 var(--accent) 的别名，深色下自动跟到 #f2f2f2，
        不再需要「绿基色深色下单独下沉一档」那条覆盖。 */
     --info-surface: #163044;
@@ -894,8 +926,8 @@ body {
   overflow: auto;
   overscroll-behavior: contain;
   border-radius: var(--radius-xs);
-  background: #1e1e1e;
-  color: #f1f1f1;
+  background: var(--code-surface);
+  color: var(--text);
   font-size: var(--font-sm);
 }
 .codex .bubble.md code {
@@ -1279,17 +1311,16 @@ body {
   margin-top: var(--space-1);
   /* 贴到卡片边缘，拿回卡片自己的 14px 水平 padding。三层容器（#messages 16px +
      .tool-card 14px + 这里 12px）连续吃掉 84px，393px 视口下终端内容只剩 307px。
-     终端块本来就是深色的，贴边反而更像终端。
      拿回 28px ≈ 4 列（46 → 50）。这不解决「终端输出按 80 列设计」的根本问题——
      393px 视口下 11px 等宽最多约 53 列，那是物理限制，这里只是少折几行。 */
   margin-left: -14px;
   margin-right: -14px;
   padding: var(--space-3) 12px;
   border-radius: var(--radius-xs);
-  background: #1e1e1e; /* Dark theme terminal looks amazing */
+  background: var(--code-surface);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: var(--font-terminal);
-  color: #f1f1f1;
+  color: var(--text);
   white-space: pre-wrap;
   max-height: 150px;
   overflow-y: auto;
@@ -1431,15 +1462,15 @@ body {
   max-height: 180px;
   color: #f1f1f1;
 }
-.ansi-bold { font-weight: 700; color: #ffffff; }
+.ansi-bold { font-weight: 700; color: var(--ansi-strong); }
 .ansi-dim { opacity: 0.65; }
-.ansi-red { color: #ff6b6b; }
-.ansi-green { color: #51cf66; }
-.ansi-yellow { color: #fcc419; }
-.ansi-blue { color: #339af0; }
-.ansi-magenta { color: #cc5de8; }
-.ansi-cyan { color: #22b8cf; }
-.ansi-muted { color: #868e96; }
+.ansi-red { color: var(--ansi-red); }
+.ansi-green { color: var(--ansi-green); }
+.ansi-yellow { color: var(--ansi-yellow); }
+.ansi-blue { color: var(--ansi-blue); }
+.ansi-magenta { color: var(--ansi-magenta); }
+.ansi-cyan { color: var(--ansi-cyan); }
+.ansi-muted { color: var(--ansi-muted); }
 
 /* Typing indicator */
 /* 等待态。原先是三个脉动的圆点——它只说明「在动」，不说明在做什么，而且和后面
