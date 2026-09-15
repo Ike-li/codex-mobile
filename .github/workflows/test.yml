@@ -42,6 +42,10 @@ jobs:
         if: matrix.node-version == 20
         run: npm run lint
 
+      - name: Check invariant ids
+        if: matrix.node-version == 20
+        run: node scripts/gates/check-invariant-ids.js
+
       - name: Run tests
         run: npm test
 

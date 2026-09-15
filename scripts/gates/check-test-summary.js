@@ -13,8 +13,15 @@
 // 这个脚本就是那道防线。
 //
 // 用法：node scripts/gates/check-test-summary.js [传给 node --test 的参数...]
+//
+// 落盘隔离（test/setup/preload-env.mjs）由本包装器**硬编码注入**，不靠调用方传参：
+// 走这条路的测试因此不可能忘记加 --import。绕过包装器的入口（test:local / coverage）
+// 各自在 package.json 里显式写上同一份预加载。
 
 import { spawn } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+
+const PRELOAD = fileURLToPath(new URL('../../test/setup/preload-env.mjs', import.meta.url));
 
 /**
  * 从 `node --test` 的输出里判断这次运行能不能算通过。
@@ -77,7 +84,7 @@ export function summaryVerdict(output) {
 // import 本模块时不执行（测试要 import 纯函数）。
 if (process.argv[1] && process.argv[1].endsWith('check-test-summary.js')) {
   const args = process.argv.slice(2);
-  const child = spawn(process.execPath, ['--test', ...args], {
+  const child = spawn(process.execPath, ['--import', PRELOAD, '--test', ...args], {
     stdio: ['inherit', 'pipe', 'inherit'],
   });
 

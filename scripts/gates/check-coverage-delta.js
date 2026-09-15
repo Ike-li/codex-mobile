@@ -73,10 +73,21 @@ function runCoverageDeltaCheck() {
   const reportDir = mkdtempSync(join(tmpdir(), 'ccm-coverage-delta-'));
   try {
     console.log('📊 运行测试并收集覆盖率...');
-    const testFiles = readdirSync(join(ROOT, 'test'))
-      .filter(file => file.endsWith('.test.mjs'))
-      .sort()
-      .map(file => join('test', file));
+    // 递归：测试按执行槽分在 test/{unit,invariants,integration,infra}/ 下。
+    // 扁平 readdirSync 在分层之后会收集到 0 个文件，而「0 个」与「全都跑了」
+    // 在覆盖率数字上无法区分——那正是本文件开头记的那种静默失效，所以下面补了地板断言。
+    const collectTestFiles = (dir, prefix) => readdirSync(dir, { withFileTypes: true })
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .flatMap(entry => {
+        const rel = join(prefix, entry.name);
+        if (entry.isDirectory()) return collectTestFiles(join(dir, entry.name), rel);
+        return entry.name.endsWith('.test.mjs') ? [rel] : [];
+      });
+    const testFiles = collectTestFiles(join(ROOT, 'test'), 'test');
+    if (testFiles.length === 0) {
+      console.error('❌ 没有收集到任何测试文件，覆盖率门禁已失明');
+      process.exit(1);
+    }
 
     execFileSync(process.execPath, [
       join(ROOT, 'node_modules', 'c8', 'bin', 'c8.js'),

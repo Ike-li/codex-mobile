@@ -2,8 +2,8 @@
 
 本仓所有测试规则从两条硬约束推出：
 
-1. **日常回归零模型额度** —— [AGENTS.md](../AGENTS.md) 的项目规则，由 `test/zero-quota-guard.test.mjs` 守（三道：mock 探测挂在 globalSetup、E2E 的 webServer 指向 mock 脚本、mock 脚本真把 `CODEX_BIN` 指向假二进制）。
-2. **不产生第二份真相** —— 架构决定 A2，由 `test/zero-persistence-guard.test.mjs` 守。thread / turn / item / 配置 / 模型列表全部向 app-server 现问，落盘的例外只有设备表、审计与推送订阅三类，逐条写明理由。
+1. **日常回归零模型额度** —— [AGENTS.md](../AGENTS.md) 的项目规则，由 `test/invariants/zero-quota-guard.test.mjs` 守（三道：mock 探测挂在 globalSetup、E2E 的 webServer 指向 mock 脚本、mock 脚本真把 `CODEX_BIN` 指向假二进制）。
+2. **不产生第二份真相** —— 架构决定 A2，由 `test/invariants/zero-persistence-guard.test.mjs` 守。thread / turn / item / 配置 / 模型列表全部向 app-server 现问，落盘的例外只有设备表、审计与推送订阅三类，逐条写明理由。
 
 **这份文档回答「怎么做」**：一条测试该写在哪一层、怎么知道自己没写出假绿、增删改功能时分别做什么。
 
@@ -18,11 +18,22 @@
 | 槽 | 住哪 | 跑什么 | 命令 |
 |---|---|---|---|
 | **G** 静态门禁 | `scripts/gates/` | 读源码与配置文本，零 IO | `npm run lint`、`npm run protocol:check` |
-| **U** 纯函数单测 | `test/*.test.mjs` | import 真模块，不碰磁盘 | `npm test` |
-| **I** 带 IO 的单测 | `test/*.test.mjs`（同一条命令） | `mkdtemp` 真磁盘 / spawn 子进程 / 起 server | `npm test` |
+| **U** 纯函数单测 | `test/unit/` | import 真模块，不碰磁盘 | `npm test` |
+| **I** 带 IO 的单测 | `test/unit/`（同一条命令） | `mkdtemp` 真磁盘 / spawn 子进程 | `npm test` |
 | **E** 浏览器行为 | `e2e/*.spec.js` | Playwright + mock 后端 | `npm run test:e2e` |
 | **M** 变异 | 只在容器 | 改坏源码，看断言开不开口 | `npm run mutate:docker` |
 | **S** 真 Codex 冒烟 | `scripts/smoke-*.js` | 真 CLI，烧额度 | 手敲，需授权 |
+
+`test/` 下另有三个目录，它们与 `test/unit/` **执行槽相同**（同一条 `npm test`、同一份预加载），分的是组织轴不是运行轴：
+
+| 目录 | 收什么 | 判据 |
+|---|---|---|
+| `test/unit/` | 按**被测模块**组织 | 默认落点。文件名 = 被测模块名 |
+| `test/invariants/` | 按**不变量**组织 | 文件头写 `// 守护：<编号>`，编号在 [test/README.md](../test/README.md) 查得到。这类文件通常没有同名源模块——它守的是一条规则，不是一个模块 |
+| `test/integration/` | 起真进程 / 连真端口 | `spawn`/`fork` 了 `server.js`，或用 socket 客户端连真实端口 |
+| `test/infra/` | 测**测试基建自身** | 被测对象是 `scripts/gates/*`、`.github/workflows/*` 或 `scripts/mutate.js` |
+
+判据按 infra → integration → invariants → unit 的顺序问，第一个「是」就停。`scripts/gates/` 下的门禁**自己**住在 G 槽，测它们的文件住在 `test/infra/`——两者不是一回事。
 
 按顺序问，第一个「是」就停：
 
@@ -31,17 +42,17 @@
 3. **判据是「用户点得到 / 读得懂」吗？** → E。
 4. 其余 → I。
 
-**不新增槽。** 不要建 `security/` `reliability/` `performance/` 这类顶层类别——那些是「会怎么伤人」的问法，填进第 4 节那张表，不是新目录。门禁例外：它们必须住在 `scripts/gates/`，因为 `test/gate-wiring.test.mjs` 的判据就是「这个目录里放的都是门禁」。混在 `scripts/` 里时白名单要列 12 条例外，而「新增一个 mock 脚本要记得加一条例外」又回到了靠记性。
+**不新增按「会怎么伤人」分的类别。** 不要建 `security/` `reliability/` `performance/` 这种目录——那是缺陷的后果分类，填进第 4 节那张表，不是新目录。一条 SSRF 防护测试既是「安全」又是「纯函数」，按后果分它就同时该放进两个地方，于是放哪都行、放哪都对不上。上面那四个目录分的是**执行槽与组织轴**（怎么跑、按什么组织），是正交的另一回事，不在这条限制内。门禁例外：它们必须住在 `scripts/gates/`，因为 [test/infra/gate-wiring.test.mjs](../test/infra/gate-wiring.test.mjs) 的判据就是「这个目录里放的都是门禁」。混在 `scripts/` 里时白名单要列 12 条例外，而「新增一个 mock 脚本要记得加一条例外」又回到了靠记性。
 
 ### 判断二：观察点在哪一层
 
 同一个缺陷可以在三层观察，成本差一个数量级，**而它们抓到的东西并不相同**：
 
-- **源码文本**（`readFileSync` + 正则）—— 只证明「代码写了」，不证明「功能能用」。见第 5 节：`test/public-ui.test.mjs` 曾用 1807 行做这件事，删掉后覆盖率一点没掉（91.30 → 91.33），因为它从不 `import`，对被测代码的执行覆盖始终是 0。**不要再往回加这一层**，唯一的合法用法是结构性绊线（`test/public-shell-guard.test.mjs`：无内联 script、不裸调 `randomUUID`、不用 `Math.random` 生成凭证）——那些是「越过边界就红」，不是「复述实现长什么样」。
+- **源码文本**（`readFileSync` + 正则）—— 只证明「代码写了」，不证明「功能能用」。见第 5 节：`test/public-ui.test.mjs` 曾用 1807 行做这件事，删掉后覆盖率一点没掉（91.30 → 91.33），因为它从不 `import`，对被测代码的执行覆盖始终是 0。**不要再往回加这一层**，唯一的合法用法是结构性绊线（`test/invariants/public-shell-guard.test.mjs`：无内联 script、不裸调 `randomUUID`、不用 `Math.random` 生成凭证）——那些是「越过边界就红」，不是「复述实现长什么样」。
 - **单元 / 契约**（真 import）—— 默认落点。
 - **浏览器行为**（真 `click`、真 `toBeVisible`）—— 判据是可达性与可读性。
 
-选最低的那一层，但要确认它真的看得见你要守的东西。`test/ui-preferences.test.mjs` 是反向例子：MCP 启动状态的静默判定抽成纯函数放在 U，**因为 mock app-server 不发 `mcpServer/startupStatus/updated`，这条路径在 E 里根本走不到**，只靠 E2E 的话它会一直是零覆盖。
+选最低的那一层，但要确认它真的看得见你要守的东西。`test/unit/ui-preferences.test.mjs` 是反向例子：MCP 启动状态的静默判定抽成纯函数放在 U，**因为 mock app-server 不发 `mcpServer/startupStatus/updated`，这条路径在 E 里根本走不到**，只靠 E2E 的话它会一直是零覆盖。
 
 ### 判断三：失败方向是哪一侧
 
@@ -69,13 +80,13 @@
 
 这是白名单不是黑名单。黑名单要求「每遇到一个新命令都正确归类」，而那正是会失败的一步；白名单反过来，判断错了顶多多跑一次容器，代价不对称地小。
 
-> ⚠ **`npm test` 目前在宿主机上跑，而它没有全局落盘隔离。**
->
-> `server.js:87` 的 `DATA_DIR = process.env.CODEX_DATA_DIR || join(HERE, 'data')` 是模块级常量、import 时求值，`devices.js:10` 的 `DEFAULT_DATA_DIR` 同样。而 `npm test` 的命令行里没有 `--import` 预加载，79 个测试文件里**只有 7 个设了 `CODEX_DATA_DIR`**。也就是说隔离靠每个文件自己记得，而「记得」正是会漏的那一步。仓库根的 `data/` 里现在躺着真实的 `trusted-devices.json`、`pending-devices.json` 与 `security-audit.jsonl`。
->
-> 修法（姊妹项目 2026-09-11 做过）：把隔离下沉成一次预加载，`node --import ./test/setup/preload-env.mjs`，在里面**目录级**兜底把 `CODEX_DATA_DIR` 指向一次性目录。必须是目录级而不是逐个文件点名——后者在新增落盘文件时会静默漏掉（那边曾只点名 6 个文件，`sessions.json`、`uploads/` 等 9 项全裸）。
->
-> 在那之前：**任何 import `server.js` / `devices.js` / `audit-log.js` 的新测试，第一行就设 `CODEX_DATA_DIR`。**
+**落盘隔离是全局的，不靠每个文件自己记得。** [test/setup/preload-env.mjs](../test/setup/preload-env.mjs) 经 `node --import` 在任何测试文件之前加载，把 `TMPDIR` 与 `CODEX_DATA_DIR` 一起指进一个 `mkdtemp` 出来的一次性根，进程退出时整棵删掉。
+
+为什么必须是预加载：`server.js` 的 `DATA_DIR`、两个审计文件路径、`PUSH_SUB_FILE`、`devices.js` 的 `dataDir()` 全是**模块级常量，import 时就求值**。而 ESM 的静态 import 在模块链接阶段完成，早于该文件自身任何顶层语句——把 `process.env.CODEX_DATA_DIR = ...` 写在 import 上面也没用，被 import 的模块那时已经跑完顶层代码了。只有预加载跑得比它们早。
+
+`TMPDIR` 也一起收，是因为光靠各文件的 `before/after` + `rmSync` 补不上：被测模块的异步/防抖落盘发生在 `after` **之后**，它的 `mkdirSync(recursive)` 会把刚删掉的目录重新建出来。逐个去找 flush API 只能一次修一个，下一个引入防抖写的模块又会漏。
+
+注入点有两条，都要维护：`npm test` 走 [scripts/gates/check-test-summary.js](../scripts/gates/check-test-summary.js) 的包装器，预加载在那里**硬编码**，走这条路不可能忘；`test:local` / `coverage` 绕过包装器，在 `package.json` 里各自显式写。
 
 **什么时候该把一条测试挪进容器**：它会写 `HOME` 下的路径、会递归删目录、或者它验证的正是「算路径的那段代码」。
 
@@ -86,13 +97,13 @@
 ```bash
 npm run lint            # eslint .
 npm run protocol:check  # 协议三层，要求本机 codex 版本 == .codex-version
-npm test                # 79 个文件，--test-concurrency=1，经 check-test-summary 包装
+npm test                # test/{unit,invariants,integration,infra}/，--test-concurrency=1，经 check-test-summary 包装
 npm run test:e2e        # Playwright，mock 后端
 ```
 
 一条抵四条：**`npm run test:ci`**（lint → protocol:check → `npm test` → check-coverage-delta → test:e2e）。
 
-**不在链里的门禁等于不存在。** [test/gate-wiring.test.mjs](../test/gate-wiring.test.mjs) 守这一条：`scripts/gates/` 下每个文件要么出现在**展开后**的 `test:ci` 里（要展开，`check-test-summary.js` 就是通过 `npm test` 间接接线的），要么在 `NOT_IN_CHECK` 里写明为什么不接。默认值落在「新门禁必须接线」那一侧，不依赖谁记得补一条断言。
+**不在链里的门禁等于不存在。** [test/infra/gate-wiring.test.mjs](../test/infra/gate-wiring.test.mjs) 守这一条：`scripts/gates/` 下每个文件要么出现在**展开后**的 `test:ci` 里（要展开，`check-test-summary.js` 就是通过 `npm test` 间接接线的），要么在 `NOT_IN_CHECK` 里写明为什么不接。默认值落在「新门禁必须接线」那一侧，不依赖谁记得补一条断言。
 
 其余命令，知道它们存在即可：
 
@@ -362,12 +373,12 @@ Not-tested: webkit 未跑——本次只动了 server 侧分支，与浏览器�
 - **结构化输入**：attachments 类型、10/20 MiB 业务限制、32 MiB Socket wire cap、0700 上传目录/0600 文件，图片→`localImage`、文件→`mention`，workspace mention、enabled skill、显式门控的 HTTPS image URL 与完整 IPv4/IPv6 DNS/SSRF 拒绝路径。
 - **审批与 needs-you**：approval/question 分类、精确 target、snapshot/revision、进程内幂等重放与 conflict/stale/unknown、resolved/expired/revoked 广播和脱敏深链。
 - **自托管安全**：HTTPS fail-closed、Origin allowlist、可信代理、HttpOnly device-bound session、query token 拒绝、配对/撤销、外部 trusted-file 原子变更、认证/Push 容量限制、rate-limit 审计聚合、O_APPEND + bounded rotation、宿主配置审计 sink 脱敏，以及 Push DNS pin/总超时/响应上限与持久化失败。
-- **门禁自身**：CI 矩阵关闭 fail-fast、没有 `continue-on-error` 吞掉失败、生产依赖 audit 阻断、覆盖率退化门禁不限于 PR（`test/ci-workflow.test.mjs`）；E2E 必须走 mock 且跑用例前先探测后端版本（`test/zero-quota-guard.test.mjs` + `e2e/assert-mock-backend.js`）；落盘文件不超出 A2 允许的例外（`test/zero-persistence-guard.test.mjs`）；`public/` 外壳的结构性边界（`test/public-shell-guard.test.mjs`）。
+- **门禁自身**：CI 矩阵关闭 fail-fast、没有 `continue-on-error` 吞掉失败、生产依赖 audit 阻断、覆盖率退化门禁不限于 PR（`test/infra/ci-workflow.test.mjs`）；E2E 必须走 mock 且跑用例前先探测后端版本（`test/invariants/zero-quota-guard.test.mjs` + `e2e/assert-mock-backend.js`）；落盘文件不超出 A2 允许的例外（`test/invariants/zero-persistence-guard.test.mjs`）；`public/` 外壳的结构性边界（`test/invariants/public-shell-guard.test.mjs`）。
 - **移动端**：流式气泡、thinking、命令/工具/diff/审批/提问卡片、状态栏、PWA/Service Worker、needs-you 恢复、outbox 存储与多实例/多视图隔离。
 
 这几类守的是「规则被违反时会不会有东西变红」，此前全靠文档约定。**它们是绊线，不是实现的镜像**：从源码里抽事实，只写死「允许什么」。所以重构不会误伤，越界一定变红。新增门禁照这个形态写——凡是需要复述当前代码长什么样才能通过的断言，重命名一次就会红，而逻辑写反时不会红，净效果是负的。
 
-主要证据分布在 `test/app-server-{transport,host}.test.mjs`、`test/thread-{registry,source-of-truth,status}.test.mjs`、`test/message-{receipt-ledger,outbox,request}.test.mjs`、`test/recovery-state.test.mjs`、`test/{user-inputs,input-parts}.test.mjs`、`test/server-{integration,security,push}.test.mjs`、`test/service-worker.test.mjs` 和 `e2e/*recovery*.spec.js`。
+主要证据分布在 `test/app-server-{transport,host}.test.mjs`、`test/thread-{registry,source-of-truth,status}.test.mjs`、`test/message-{receipt-ledger,outbox,request}.test.mjs`、`test/unit/recovery-state.test.mjs`、`test/{user-inputs,input-parts}.test.mjs`、`test/server-{integration,security,push}.test.mjs`、`test/unit/service-worker.test.mjs` 和 `e2e/*recovery*.spec.js`。
 
 ### 已知的测试债
 
@@ -377,7 +388,7 @@ Not-tested: webkit 未跑——本次只动了 server 侧分支，与浏览器�
 2. **两条断言互相打架而同时绿**：一条要求源码里必须出现 `crypto.randomUUID()`，另一条禁止裸调它。前者会拦住「改用统一的 `randomId()`」这个明确的改进——**门禁在阻止修 bug**。
 3. **删掉后覆盖率一点没掉**（91.30 → 91.33）。
 
-替代形态是三层，不再有第四层：结构性绊线（`test/public-shell-guard.test.mjs`）、可提取的纯逻辑（抽成 `public/js/` 下的模块 + 真 `import` 的单测，已抽出 37 个）、真实行为（E2E，真 `click` 和 `toBeVisible`）。
+替代形态是三层，不再有第四层：结构性绊线（`test/invariants/public-shell-guard.test.mjs`）、可提取的纯逻辑（抽成 `public/js/` 下的模块 + 真 `import` 的单测，已抽出 37 个）、真实行为（E2E，真 `click` 和 `toBeVisible`）。
 
 **在 `app.js` 拆完之前，涉及它的功能必须有一条 E2E 守住入口。**
 
@@ -402,7 +413,7 @@ Not-tested: webkit 未跑——本次只动了 server 侧分支，与浏览器�
 | 案例 9 | 模型切换 + 权限档切换 | `agent-appserver.js`、`server.js`、`public/index.html`、`public/js/app.js` | model/permission UI、宿主配置逐动作确认测试 |
 | 案例 10 | PWA 安装 + HTTPS/auth session + 全屏/移动体验 | `server-security.js`、`public/manifest.webmanifest`、`public/js/sw.js` | transport security/session/SW 测试、响应式和 PWA E2E |
 
-会话设置是聚焦用例：`test/permission-settings.test.mjs` 与 `e2e/session-settings.spec.js` 覆盖预设字段、granular 清洗与持久化、outbox、主机默认恢复、失败不污染运行时、外部设置通知及移动端确认操作。
+会话设置是聚焦用例：`test/unit/permission-settings.test.mjs` 与 `e2e/session-settings.spec.js` 覆盖预设字段、granular 清洗与持久化、outbox、主机默认恢复、失败不污染运行时、外部设置通知及移动端确认操作。
 
 ---
 
