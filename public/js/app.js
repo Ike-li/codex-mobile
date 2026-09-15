@@ -86,6 +86,7 @@ import { renderAnsi } from '/js/ansi-html.js';
 import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/client-encoding.js';
 import { buildPreview, truncationNotice } from '/js/logic/file-preview.js';
 import { createUnreadTracker } from '/js/app/unread-tracker.js';
+import { installClientErrorReporting } from '/js/app/client-log.js';
 
 (function() {
   const $ = id => document.getElementById(id);
@@ -692,6 +693,8 @@ import { createUnreadTracker } from '/js/app/unread-tracker.js';
   window.addEventListener('resize', syncVisualViewport);
   window.visualViewport?.addEventListener('resize', syncVisualViewport);
   window.visualViewport?.addEventListener('scroll', syncVisualViewport);
+
+  installClientErrorReporting({ socket });
 
   socket.on('connect', () => {
     setConnectionPhase('online');

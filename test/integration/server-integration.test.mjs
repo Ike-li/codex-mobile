@@ -5126,3 +5126,40 @@ test('pending 设备收不到任何广播，也发不出任何指令', async () 
     await fixture.close();
   }
 });
+
+test('/metrics 受同一张限速表管辖，不能成为暴破 AUTH_TOKEN 的旁路', async () => {
+  // 不共用限速表的话，/health、/metrics、/push/* 就是一条无限次试令牌的通道——
+  // 而同一个 IP 的 socket 握手早已被锁。攻击者只要挑 HTTP 这一侧打就完全绕过了锁定。
+  const fixture = await startIsolatedServer({ authMaxFailures: 3 });
+  try {
+    const codes = [];
+    for (let i = 0; i < 5; i += 1) {
+      const res = await fetch(`${fixture.url}/metrics`, { headers: { 'x-auth-token': 'wrong-token' } });
+      codes.push(res.status);
+      // 401 与 429 说的是两件事：前者「令牌不对，重输」，后者「已达阈值，等一下」。
+      // 说成同一个会让正在被锁的人一遍遍重输一个其实正确的令牌。
+      if (res.status === 429) {
+        assert.ok(res.headers.get('retry-after'), '429 必须带 Retry-After，否则「等多久」无从得知');
+      }
+    }
+    assert.ok(codes.includes(401), `前几次应是 401（令牌不对），实际：${codes.join(',')}`);
+    assert.ok(codes.includes(429), `达阈值后应转 429（被锁），实际：${codes.join(',')}`);
+  } finally {
+    await fixture.close();
+  }
+});
+
+test('/metrics 用正确令牌返回白名单映射表，且不回显任何配置值', async () => {
+  const fixture = await startIsolatedServer();
+  try {
+    const res = await fetch(`${fixture.url}/metrics`, { headers: { 'x-auth-token': fixture.authToken } });
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.ok(body.counters && body.gauges && body.rpc, '三组都要有');
+    assert.equal(typeof body.counters.auth_failures, 'number');
+    // doctor 的 safe 字段同款纪律：可观测出口是人最常贴进 issue 的东西。
+    assert.doesNotMatch(JSON.stringify(body), new RegExp(fixture.authToken), '绝不能把令牌回显出去');
+  } finally {
+    await fixture.close();
+  }
+});

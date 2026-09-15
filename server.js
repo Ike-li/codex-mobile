@@ -4,6 +4,8 @@
 import { loadRuntimeConfig } from './src/ops/config.js';
 import { resolveDataDir } from './src/shared/data-dir.js';
 import { createReadStateStore } from './src/sessions/read-state.js';
+import * as metrics from './src/ops/metrics.js';
+import { formatClientErrorLine, createSocketErrorLimiter } from './src/ops/client-error-log.js';
 import { codexBinDiagnostic } from './src/ops/doctor-checks.js';
 import { probeCodexBin } from './src/ops/doctor-runtime.js';
 import { createServer } from 'node:http';
@@ -188,8 +190,14 @@ async function pushNotify(notification) {
   const payload = JSON.stringify(notification);
   const expired = [];
   await Promise.all(eligible.map(sub =>
-    sendPushNotification(sub, payload).catch(e => {
-      if (e.statusCode === 410 || e.statusCode === 404) expired.push(sub.endpoint);
+    sendPushNotification(sub, payload).then(() => {
+      metrics.inc('push_success');
+    }).catch(e => {
+      // 订阅过期（410/404）是正常生命周期，不算投递失败——把它算进失败率会让
+      // 「推送坏了」这个信号被日常的订阅轮换淹没。
+      if (e.statusCode === 410 || e.statusCode === 404) { expired.push(sub.endpoint); return; }
+      metrics.inc('push_failure');
+      metrics.gauge('push_failure_last_ts', Date.now());
     })
   ));
   if (expired.length) {
@@ -571,10 +579,44 @@ function sessionCookie(token, request, { clear = false } = {}) {
   return attributes.join('; ');
 }
 
+/**
+ * HTTP 侧鉴权。
+ *
+ * 【限速与 socket 握手共用同一张表】不共用的话，`/health`、`/metrics`、`/push/*` 就是
+ * 一条无限次试 AUTH_TOKEN 的通道——而同一个 IP 的 socket 早已被锁。攻击者只要挑
+ * HTTP 这一侧打就完全绕过了锁定。
+ *
+ * 【401 与 429 说的是两件事】
+ *   401 —— 令牌不对。行动指引是「重输令牌」。
+ *   429 —— 已达阈值被锁。行动指引是「等一下」，并给出 Retry-After。
+ * 说成同一个会把行动指引换错：正在被锁的人会一遍遍重输一个其实正确的令牌。
+ *
+ * 失败日志只记 path / 来源 / 失败类别，**绝不带令牌值**。bad_token 指向配置漂移，
+ * no_token 指向扫描器——两个完全不同的排查方向。
+ */
 async function httpAuth(req, res, next) {
   const session = readAuthSession(req.headers.cookie);
   if (session) req.authSession = session;
   if (!AUTH_TOKEN || session || tokenMatches(req.headers['x-auth-token'])) return next();
+
+  const failure = recordAuthFailure(req.socket?.remoteAddress || req.ip);
+  metrics.inc('auth_failures');
+  if (failure.shouldAudit) {
+    appendSecurityAudit({
+      event: 'auth_failure',
+      outcome: failure.rateLimited ? 'rate_limited' : 'denied',
+      path: req.path,
+      reason: req.headers['x-auth-token'] ? 'bad_token' : 'no_token',
+      ip: clientIp(req.socket?.remoteAddress || req.ip),
+      ...(failure.rateLimited ? { attempts: failure.count, resetAt: failure.resetAt } : {}),
+    });
+  }
+  if (failure.rateLimited) {
+    metrics.inc('auth_lockouts');
+    metrics.gauge('auth_lockout_last_ts', Date.now());
+    res.set('Retry-After', String(Math.max(1, Math.ceil((failure.resetAt - Date.now()) / 1000))));
+    return res.status(429).json({ status: 'rate_limited' });
+  }
   return res.status(401).json({ status: 'unauthorized' });
 }
 
@@ -645,6 +687,52 @@ app.use(express.static(join(HERE, 'public'), {
     if (filePath.endsWith('/js/sw.js')) res.setHeader('Service-Worker-Allowed', '/');
   }
 }));
+
+/**
+ * /metrics 的输出**是一张逐项显式的白名单映射表**，不是 metrics 内部状态的转储。
+ *
+ * 代价是加一个计数器要改两处；收益是「记了但没出口」这件事有地方可查——
+ * 转储式输出会让任何 inc() 自动出现，于是拼错的 key 也会一起出现，而那与真指标
+ * 在输出里长得一模一样。test/invariants/metrics-contract.test.mjs 钉住两处一致。
+ */
+function getMetricsPayload() {
+  const rpc = { clientRequests: 0, clientResponses: 0, clientNotifications: 0,
+    serverRequests: 0, serverResponses: 0, serverNotifications: 0, errors: 0 };
+  for (const agent of agents.values()) {
+    const stats = agent.rpcStatsSnapshot;
+    if (!stats) continue;
+    for (const key of Object.keys(rpc)) rpc[key] += stats[key] ?? 0;
+  }
+
+  return {
+    counters: {
+      auth_failures: metrics.getCounter('auth_failures'),
+      auth_lockouts: metrics.getCounter('auth_lockouts'),
+      client_errors: metrics.getCounter('client_errors'),
+      client_errors_unapproved: metrics.getCounter('client_errors_unapproved'),
+      push_success: metrics.getCounter('push_success'),
+      push_failure: metrics.getCounter('push_failure'),
+      needs_you_opened: metrics.getCounter('needs_you_opened'),
+      needs_you_resolved: metrics.getCounter('needs_you_resolved'),
+      upload_saved: metrics.getCounter('upload_saved'),
+      upload_rejected: metrics.getCounter('upload_rejected'),
+    },
+    gauges: {
+      auth_lockout_last_ts: metrics.getGauge('auth_lockout_last_ts'),
+      client_errors_last_ts: metrics.getGauge('client_errors_last_ts'),
+      push_failure_last_ts: metrics.getGauge('push_failure_last_ts'),
+      server_started_at: metrics.getGauge('server_started_at'),
+      activeAgents: agents.size,
+    },
+    // 口径：**当前存活 runtime 的累计**，不是进程累计。空闲 runtime 被
+    // reclaimIdleAgents 回收时它的计数一起消失。想要进程累计得在 dispose 时
+    // 加进 metrics.inc()，那是另一个决定——两个数不是一回事，别混着看。
+    rpc,
+    timestamp: Date.now(),
+  };
+}
+
+app.get('/metrics', httpAuth, (_req, res) => res.json(getMetricsPayload()));
 
 app.get('/health', httpAuth, (_req, res) => {
   res.json({
@@ -1299,6 +1387,7 @@ function trackNeedsYou(agent, envelope) {
   if (envelope?.type !== 'approval_request' && envelope?.type !== 'user_input_request') return [];
   const payload = envelope.payload || {};
   try {
+    metrics.inc('needs_you_opened');
     const change = needsYouRegistry.open({
       kind: envelope.type === 'user_input_request' ? 'question' : 'approval',
       target: {
@@ -1698,6 +1787,26 @@ io.on('connection', socket => {
 
   // 连接 RTT 探活：客户端定时 emit，服务端立即 ack。无业务副作用。
   // 走裸 socket.on（不经 on() 的 deviceApproved 闸）——待审批设备也能看到网络延迟。
+  // 【刻意不走 on()】那层包装对未批准设备 fail-closed 丢弃一切事件。对数据面那完全正确
+  // （未批准设备不该触达会话内容），但对遥测是个洞：最值得看到的前端错误恰恰发生在
+  // 注册/等待批准那一屏，那里崩了用户永远批不下来，而我们零信息。
+  // 三道收敛替代那层闸：两个独立限流桶、字段长度钳制 + 脱敏、两个独立计数器。
+  // 无 ack、无回显——不给未批准设备任何反馈通道。
+  socket.data.errLimiter = createSocketErrorLimiter({ max: 10, windowMs: 60_000 });
+  socket.data.errLimiterUnapproved = createSocketErrorLimiter({ max: 3, windowMs: 60_000 });
+  socket.on('logs:clientError', payload => {
+    const approved = socket.deviceApproved === true;
+    const limiter = approved ? socket.data.errLimiter : socket.data.errLimiterUnapproved;
+    if (!limiter.allow()) return;
+    const line = formatClientErrorLine(payload);
+    if (!line) return;
+    // 两个计数器分开：未批准侧的洪水必须能一眼看出来。
+    if (approved) metrics.inc('client_errors');
+    else metrics.inc('client_errors_unapproved');
+    metrics.gauge('client_errors_last_ts', Date.now());
+    console.warn(`[client-error]${approved ? '' : '(unapproved)'} ${line}`);
+  });
+
   socket.on('conn:ping', (_payload, ack) => {
     if (typeof ack === 'function') ack({ ok: true, t: Date.now() });
   });
@@ -1909,6 +2018,7 @@ io.on('connection', socket => {
     const decodedAttachments = decodeAttachments(attachments);
     const attachErr = decodedAttachments.error ?? null;
     if (attachErr) {
+      metrics.inc('upload_rejected');
       sysTo(socket, attachErr, true);
       if (typeof ack === 'function') {
         ack({
@@ -2081,6 +2191,7 @@ io.on('connection', socket => {
       if (attachments?.length) {
         try {
           savedAttachments = await saveAttachments(ai.cwd || WORK_DIR, attachments, decodedAttachments.decoded);
+          metrics.inc('upload_saved', savedAttachments.length);
         } catch (err) {
           const error = `附件保存失败：${sanitize(String(err?.message || err))}`;
           sysTo(socket, error, true);
@@ -2211,6 +2322,7 @@ io.on('connection', socket => {
       itemId: typeof payload?.itemId === 'string' ? payload.itemId : null,
       requestId: approvalId,
     };
+    metrics.inc('needs_you_resolved');
     const outcome = await needsYouRegistry.resolve(
       query,
       { decision, answers: payload?.answers || null },
@@ -2995,7 +3107,8 @@ export function startServer() {
     authSessionsPruneTimer.unref?.();
 
     // 每 5 分钟清理过期限流窗口
-    failureWindowsPruneTimer = setInterval(pruneExpiredFailureWindows, 300_000);
+    metrics.gauge('server_started_at', Date.now());
+  failureWindowsPruneTimer = setInterval(pruneExpiredFailureWindows, 300_000);
     failureWindowsPruneTimer.unref?.();
 
     // 每 5 分钟回收无人查看的空闲实例，并顺带回收 needs-you 的终态记录——

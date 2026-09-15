@@ -1751,6 +1751,11 @@ export class ThreadRuntime {
     }));
   }
 
+  /** 只读快照。口径是「本 runtime 存活期间的累计」——它被回收时这份计数一起消失。 */
+  get rpcStatsSnapshot() {
+    return { ...this.rpcStats };
+  }
+
   incrementRpcStats(frame, details) {
     if (frame === 'request' && details.direction === 'outbound') this.rpcStats.clientRequests += 1;
     if (frame === 'response' && details.direction === 'inbound') this.rpcStats.clientResponses += 1;
