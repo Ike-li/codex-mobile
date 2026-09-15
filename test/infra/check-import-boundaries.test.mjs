@@ -230,3 +230,16 @@ test('反向：真实仓库当前合规，且扫描面不是塌的', () => {
   const { ok, problems } = analyze(graph);
   assert.equal(ok, true, problems.map(p => `[${p.rule}] ${p.detail}`).join('\n'));
 });
+
+test('浏览器绝对路径说明符（/js/…）也要被解析，否则前端半数文件对门禁不可见', () => {
+  // 本仓前端两种写法混用：多数文件写 './x.js'，而 app.js 与 workspace-panel.js 写
+  // '/js/x.js'（浏览器里说明符是相对站点根的，而 public/ 就是站点根）。
+  // 只认 '.' 开头的话，那两个文件的所有 import 边门禁完全看不见——而 app.js
+  // 恰恰是最大的那个前端文件。
+  const { edges } = buildFromDisk();
+  const fromApp = edges.filter(e => e.from === 'public/js/app.js');
+  assert.ok(fromApp.length > 10, `app.js 只解析出 ${fromApp.length} 条 import 边，绝对路径那一支失配了`);
+  for (const e of fromApp) {
+    assert.match(e.to, /^public\/js\//, `解析结果没落回 public/ 下：${e.to}`);
+  }
+});

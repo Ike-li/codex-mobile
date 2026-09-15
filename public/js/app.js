@@ -84,6 +84,7 @@ import { icon, hydrateIcons } from '/js/icons.js';
 import { escapeHtml as escHtml } from '/js/html-escape.js';
 import { renderAnsi } from '/js/ansi-html.js';
 import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/client-encoding.js';
+import { buildPreview, truncationNotice } from '/js/logic/file-preview.js';
 
 (function() {
   const $ = id => document.getElementById(id);
@@ -2427,12 +2428,14 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     socket.emit('fs:readFile', { path, cwd: serverCwd }, ack => {
       if (!ack?.ok) return appendSystem(ack?.error || 'Read file failed', true);
       const text = decodeBase64Text(ack.dataBase64 || '');
+      const preview = buildPreview(text, { maxChars: 2000 });
       addInputPart({ kind: 'mention', name: path.split('/').pop() || path, path });
       inputEl.focus();
       renderNativePanel('File Preview', `<div class="native-list-row">
         <div class="native-row-title">${escHtml(path)}</div>
         <div class="native-row-actions"><button class="native-mini-btn" data-edit-file type="button">编辑</button></div>
-        <pre class="tool-output" style="max-height:180px;">${escHtml(text.slice(0, 2000))}</pre>
+        <pre class="tool-output" style="max-height:180px;">${escHtml(preview.body)}</pre>
+        ${preview.truncated ? `<div class="native-row-title">${escHtml(truncationNotice(preview))}</div>` : ''}
       </div>`);
       nativePanel.querySelector('[data-edit-file]').onclick = () => editNativeFile(path, text);
     });

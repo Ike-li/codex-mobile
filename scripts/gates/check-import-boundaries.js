@@ -249,11 +249,19 @@ function walk(dir) {
   });
 }
 
-/** 把 import 说明符解析成项目相对路径；解析不到项目内文件时返回 null（第三方包、node: 内置）。 */
+/**
+ * 把 import 说明符解析成项目相对路径；解析不到项目内文件时返回 null（第三方包、node: 内置）。
+ *
+ * 【`/js/...` 这一支不能漏】浏览器里的模块说明符是相对**站点根**的绝对路径，而
+ * public/ 就是站点根。本仓前端两种写法混用：多数文件写 `./x.js`，而 app.js 与
+ * workspace-panel.js 写 `/js/x.js`。只认 `.` 开头的话，这两个文件的所有 import 边
+ * 对门禁完全不可见——偏偏 app.js 是最大的那个前端文件，它违规了也不会红。
+ */
 function resolveSpecifier(fromAbs, specifier) {
-  if (!specifier.startsWith('.')) return null;
-  const abs = resolve(dirname(fromAbs), specifier.split('?')[0]);
-  return relative(ROOT, abs).split('\\').join('/');
+  const path = specifier.split('?')[0];
+  if (path.startsWith('/js/') || path.startsWith('/vendor/')) return `public${path}`;
+  if (!path.startsWith('.')) return null;
+  return relative(ROOT, resolve(dirname(fromAbs), path)).split('\\').join('/');
 }
 
 export function buildFromDisk(root = ROOT) {

@@ -1,13 +1,10 @@
 import { diffLineModels } from '/js/diff-lines.js';
 import { icon } from '/js/icons.js';
-
-function decodeBase64Text(data) {
-  try {
-    return decodeURIComponent(escape(atob(String(data || ''))));
-  } catch {
-    return '';
-  }
-}
+// 解码只留一份。本文件原先自带一个 `decodeURIComponent(escape(atob()))` 版本，
+// 与 app.js 用的 TextDecoder 版行为不同（多字节 UTF-8 与非字符串输入都不一样），
+// 于是同一个文件在两个面板里可能显示成两个样子。
+import { decodeBase64Text } from '/js/client-encoding.js';
+import { buildPreview, truncationNotice } from '/js/logic/file-preview.js';
 
 export function createWorkspacePanel({
   modal,
@@ -102,12 +99,14 @@ export function createWorkspacePanel({
         setMessage(filesBody, ack?.error || '无法读取文件');
         return;
       }
-      const text = decodeBase64Text(ack.dataBase64 || '');
+      const preview = buildPreview(decodeBase64Text(ack.dataBase64 || ''), { maxChars: 8000 });
       if (pathEl) pathEl.textContent = path;
       if (backBtn) backBtn.hidden = false;
       if (!filesBody) return;
-      filesBody.innerHTML = `<pre class="workspace-preview">${escHtml(text.slice(0, 8000))}</pre>
-        <button type="button" class="workspace-mention-btn" data-mention="${escHtml(path)}">引用到输入框</button>`;
+      const notice = truncationNotice(preview);
+      filesBody.innerHTML = `<pre class="workspace-preview">${escHtml(preview.body)}</pre>`
+        + (notice ? `<div class="workspace-section">${escHtml(notice)}</div>` : '')
+        + `<button type="button" class="workspace-mention-btn" data-mention="${escHtml(path)}">引用到输入框</button>`;
     });
   }
 
