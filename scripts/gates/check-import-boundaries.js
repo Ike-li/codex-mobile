@@ -84,11 +84,33 @@ const STATIC_IMPORT_RE =
 // 而幽灵边指向的文件通常不存在，于是报错信息会把人引向一个根本不存在的问题。
 const DYNAMIC_IMPORT_RE = /(?<![.\w])import\s*\(\s*['"]([^'"]+)['"]/g;
 
+/**
+ * 去掉整行注释后再提取。
+ *
+ * 【为什么必须去】提取器工作在裸文本上，而解释性散文最爱引用的就是调用形状本身——
+ * 本仓实测过一次：config.js 的注释里写了一句 `import('../../server.js?t=…')` 来解释
+ * 为什么不能缓存，门禁立刻报出一条 src/ops/config.js → server.js 的循环依赖。
+ * 那条边不存在，而报错信息看起来和真的一模一样。
+ *
+ * 判据是**整行注释**（与 public-shell-guard 同款），不做完整词法分析：散文活在整行注释里，
+ * 而 `'https://…'` 这类字符串里的 `//` 不会出现在行首，不会被误伤。
+ */
+function stripCommentLines(source) {
+  return String(source)
+    .split('\n')
+    .map(line => {
+      const trimmed = line.trim();
+      return (trimmed.startsWith('//') || trimmed.startsWith('*') || trimmed.startsWith('/*')) ? '' : line;
+    })
+    .join('\n');
+}
+
 export function parseImports(source) {
+  const code = stripCommentLines(source);
   const found = [];
   for (const re of [STATIC_IMPORT_RE, DYNAMIC_IMPORT_RE]) {
     re.lastIndex = 0;
-    for (const match of String(source).matchAll(re)) found.push(match[1]);
+    for (const match of code.matchAll(re)) found.push(match[1]);
   }
   return found;
 }

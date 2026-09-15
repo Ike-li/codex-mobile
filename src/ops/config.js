@@ -10,6 +10,7 @@
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadConfigSources, resolveConfigValues, projectToEnv } from './config-file.js';
+import { CODEX_SCHEMA, coerceValue, validateConfig } from './codex-schema.js';
 
 const PROJECT_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -55,13 +56,46 @@ export function applyRuntimeConfig({ dir = PROJECT_ROOT, env = process.env } = {
     if (env[key] === '') delete env[key];
   }
 
-  return { env, source, path, warnings };
+  const { values: typed, errors, warnings: configWarnings } = parseCodexConfig(values);
+
+  return { env, values: typed, errors, source, path, warnings: [...warnings, ...configWarnings] };
 }
 
-let cached = null;
+/**
+ * 原始值 → 类型化配置对象。每个已登记的键都有值（未设置时是 default），
+ * 所以消费点不再需要各自写一遍 `process.env.X || 默认`。
+ *
+ * 校验与归一是两件事，都要做：归一保证**永远拿得到一个能用的值**，校验负责
+ * 在值不合法时**说出来**。只归一不校验，`CODEX_SANDBOX=nonsense` 会安静地变成
+ * workspace-write——行为与配置不符，而没有任何地方会提。
+ */
+/**
+ * 单键读取：给「不在启动期、而是在对象构造时才需要配置」的地方用（如每个 ThreadRuntime）。
+ *
+ * 读的是已被 loadRuntimeConfig 投影过的 process.env，再过同一份 schema 归一——
+ * 所以它和启动期拿到的是同一套判据与同一套默认值，而不是第二份实现。
+ * agent-appserver.js 的 numberFromEnv 就是那第二份实现，已由它替代。
+ */
+export function configValue(key, env = process.env) {
+  return coerceValue(key, env[key]);
+}
 
-/** 记忆化入口：进程内只加载一次。测试用 applyRuntimeConfig 显式注入，不碰这个。 */
+export function parseCodexConfig(raw = {}) {
+  const values = {};
+  for (const key of Object.keys(CODEX_SCHEMA)) values[key] = coerceValue(key, raw[key]);
+  const { errors, warnings } = validateConfig(raw);
+  return { values, errors, warnings };
+}
+
+/**
+ * 生产入口。server.js 在模块顶层调一次。
+ *
+ * 【刻意不做记忆化】曾经在这里缓存过结果，症状是一整片集成测试变红：那些用例用
+ * `import('../../server.js?t=' + Date.now())` 绕开模块缓存重新起 server，但 config.js
+ * 是用普通说明符引入的、模块实例被复用，于是**第二个 server 实例拿到的是第一个实例的配置**。
+ * 缓存在这里省不下任何东西（每个 server 实例只调一次），却把「重新 import 就是一个干净的
+ * server」这个测试基建赖以成立的前提悄悄拆掉了。
+ */
 export function loadRuntimeConfig(options) {
-  if (!cached) cached = applyRuntimeConfig(options);
-  return cached;
+  return applyRuntimeConfig(options);
 }

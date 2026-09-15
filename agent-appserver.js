@@ -10,6 +10,9 @@ import { sanitize } from './sanitizer.js';
 import { buildUserInputs } from './user-inputs.js';
 import { truncate, truncatePayload } from './text-utils.js';
 import { buildRpcLogEntry, isDeltaNotification } from './rpc-log-redaction.js';
+// 配置读取走同一份 schema。此前这里有第二份实现（numberFromEnv），与 server.js 那 8 段
+// 手写归一各判各的；两个枚举则完全没有校验，写错拼写会原样透传给 app-server。
+import { configValue } from './src/ops/config.js';
 import {
   buildTurnStartOverrides,
   collaborationModeFromThreadSettings,
@@ -20,14 +23,10 @@ import {
   PERMISSION_PRESETS,
 } from './public/js/cli-settings.js';
 
-const BUFFER_CAP = 500;
+// 六个可配置项的默认值已移进 src/ops/codex-schema.js —— 那里是它们的唯一事实源。
+// 留一份在这里的代价不是重复，是**漂移**：改了一边不改另一边不会有任何东西变红。
 const TOOL_SUMMARY_CAP = 600;
-const DEFAULT_INPUT_QUEUE_LIMIT = 20;
-const DEFAULT_INTERRUPT_TIMEOUT_MS = 2000;
-const DEFAULT_BACKPRESSURE_RETRIES = 5;
-const DEFAULT_BACKPRESSURE_BASE_MS = 250;
 const MAX_BACKPRESSURE_DELAY_MS = 5000;
-const DEFAULT_RPC_LOG_MAX_BYTES = 8 * 1024 * 1024;
 const LEGACY_APPROVAL_METHODS = new Set(['applyPatchApproval', 'execCommandApproval']);
 
 function inputPartEventMeta(parts) {
@@ -60,7 +59,7 @@ export class ThreadRuntime {
     this.seq = 0;
     this.buffer = [];
     this.bufferTrimmed = false;
-    this.bufferCap = numberFromEnv('CODEX_EVENT_BUFFER_CAP', BUFFER_CAP);
+    this.bufferCap = configValue('CODEX_EVENT_BUFFER_CAP');
     this.firstMessage = null;
 
     this.child = null;
@@ -82,7 +81,7 @@ export class ThreadRuntime {
       : (rpcLogPath || join(this.cwd, '.codex-chat-rpc.jsonl'));
     this.rpcLogMaxBytes = Number.isInteger(rpcLogMaxBytes) && rpcLogMaxBytes > 0
       ? rpcLogMaxBytes
-      : numberFromEnv('CODEX_RPC_LOG_MAX_BYTES', DEFAULT_RPC_LOG_MAX_BYTES);
+      : configValue('CODEX_RPC_LOG_MAX_BYTES');
     this.rpcLogReady = false;
     this.rpcStats = {
       clientRequests: 0,
@@ -107,16 +106,16 @@ export class ThreadRuntime {
       auditPath: approvalAuditPath || join(this.cwd, '.codex-chat-approval-audit.jsonl'),
     });
     this.inputQueue = [];
-    this.inputQueueLimit = numberFromEnv('CODEX_INPUT_QUEUE_LIMIT', DEFAULT_INPUT_QUEUE_LIMIT);
-    this.interruptTimeoutMs = numberFromEnv('CODEX_INTERRUPT_TIMEOUT_MS', DEFAULT_INTERRUPT_TIMEOUT_MS);
+    this.inputQueueLimit = configValue('CODEX_INPUT_QUEUE_LIMIT');
+    this.interruptTimeoutMs = configValue('CODEX_INTERRUPT_TIMEOUT_MS');
     this.currentTurnId = null;
     this.threadStatus = null;
     this.lastErrorMessage = null;
     this.drainScheduled = false;
     this.experimentalApi = experimentalApi === true;
     // 审批/沙箱（仅 app-server 后端）：默认 on-request + workspace-write，可经环境变量覆盖。
-    this.approvalPolicy = process.env.CODEX_APPROVAL_POLICY || 'on-request';
-    this.sandbox = process.env.CODEX_SANDBOX || 'workspace-write';
+    this.approvalPolicy = configValue('CODEX_APPROVAL_POLICY');
+    this.sandbox = configValue('CODEX_SANDBOX');
     this.approvalsReviewer = 'user';
     this.resolvedHostPolicy = null;
     this.turnOverrides = {};
@@ -424,12 +423,12 @@ export class ThreadRuntime {
   request(method, params, options = {}) {
     const maxBackpressureRetries = integerOption(
       options.maxBackpressureRetries,
-      numberFromEnv('CODEX_BACKPRESSURE_RETRIES', DEFAULT_BACKPRESSURE_RETRIES),
+      configValue('CODEX_BACKPRESSURE_RETRIES'),
       { allowZero: true }
     );
     const backpressureBaseMs = integerOption(
       options.backpressureBaseMs,
-      numberFromEnv('CODEX_BACKPRESSURE_BASE_MS', DEFAULT_BACKPRESSURE_BASE_MS)
+      configValue('CODEX_BACKPRESSURE_BASE_MS')
     );
     const timeoutMs = Number(options.timeoutMs) > 0 ? Number(options.timeoutMs) : 0;
     return new Promise((resolve, reject) => {
@@ -1932,7 +1931,4 @@ function reasoningPayload(params, { text, channel, kind, indexKey }) {
   return payload;
 }
 
-function numberFromEnv(name, fallback) {
-  const n = Number(process.env[name]);
-  return Number.isInteger(n) && n > 0 ? n : fallback;
-}
+

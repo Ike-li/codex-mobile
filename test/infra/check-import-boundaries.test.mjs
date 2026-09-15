@@ -165,6 +165,17 @@ test('parseImports 认行中间的动态 import —— 否则边界规则可被 
   assert.deepEqual(parseImports(src), ['./sneaky.js']);
 });
 
+test('parseImports 跳过整行注释——解释性散文最爱引用的就是调用形状本身', () => {
+  // 实测过一次：config.js 的注释里写了 `import('../../server.js?t=…')` 解释为什么不能缓存，
+  // 门禁立刻报出一条并不存在的循环依赖，而报错信息看起来和真的一模一样。
+  const src = [
+    "// 曾经在这里写过 import('../../server.js') 来解释为什么不行",
+    ' * 块注释里的 await import("./ghost.js") 同样不算',
+    "import real from './real.js';",
+  ].join('\n');
+  assert.deepEqual(parseImports(src), ['./real.js']);
+});
+
 test('parseImports 不把 import.meta 之类的词误当成 import 调用', () => {
   assert.deepEqual(parseImports('const x = import.meta.dirname;'), []);
   assert.deepEqual(parseImports('const s = "reimport(\'./no.js\')";'), [],
