@@ -58,12 +58,22 @@ export function resolveWorkdirAllowlist({
   readFileSync: readFile = readFileSync,
 } = {}) {
   const warnings = [];
+  // 空值单列一条消息。曾经 server.js 那边写的是 `process.env.WORK_DIR || homedir()`，
+  // 于是不配工作区时**整个家目录**进了 agent 的文件作用域——~/.ssh、~/.aws、浏览器配置、
+  // 其他项目的 .env 全在里面，而用户看不到这件事发生了，启动日志只印一条看起来正常的路径。
+  // 现在没配就停下来。落到下面 stat('') 的通用分支也会抛，但那条消息是「WORK_DIR 不存在：」，
+  // 读起来像路径打错了，不像「你根本没配」——而这两件事的下一步动作完全不同。
+  if (!workDir) {
+    throw new Error('没有配置任何工作区。在 codex.config.json 里设 WORKDIRS（数组，首项就是手机端'
+      + '默认打开的目录），或用旧格式设 WORK_DIR。不配时不会回落到家目录——那等于把整个家目录'
+      + '交给 agent。');
+  }
   let primary;
   try {
     if (!stat(workDir).isDirectory()) throw new Error(`WORK_DIR 不是目录：${workDir}`);
     primary = realpath(workDir);
   } catch (err) {
-    throw new Error(err.message.includes('WORK_DIR') ? err.message : `WORK_DIR 不存在：${workDir}（请在 .env 中设置有效路径）`);
+    throw new Error(err.message.includes('WORK_DIR') ? err.message : `WORK_DIR 不存在：${workDir}（请设置有效路径）`);
   }
 
   const workDirs = [primary];

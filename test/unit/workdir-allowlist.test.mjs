@@ -219,3 +219,18 @@ test('空的 WORK_DIRS 不产生条目也不产生告警', () => {
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+test('没配工作区时拒绝，且不回落家目录', () => {
+  // 曾经 server.js 写的是 `process.env.WORK_DIR || homedir()`：不配工作区时整个家目录
+  // 进入 agent 的文件作用域——~/.ssh、~/.aws、浏览器配置、其他项目的 .env 全在里面，
+  // 而用户看不到这件事发生了，启动日志只印一条看起来正常的路径。
+  assert.throws(() => resolveWorkdirAllowlist({ workDir: '' }), /没有配置任何工作区/);
+  assert.throws(() => resolveWorkdirAllowlist({}), /没有配置任何工作区/);
+});
+
+test('「没配」与「路径打错了」是两条不同的消息——下一步动作不同', () => {
+  const notConfigured = (() => { try { resolveWorkdirAllowlist({ workDir: '' }); } catch (e) { return e.message; } })();
+  const wrongPath = (() => { try { resolveWorkdirAllowlist({ workDir: '/definitely/not/here' }); } catch (e) { return e.message; } })();
+  assert.notEqual(notConfigured, wrongPath);
+  assert.match(wrongPath, /不存在/);
+});

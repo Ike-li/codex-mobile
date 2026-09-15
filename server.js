@@ -5,7 +5,6 @@ import { loadRuntimeConfig } from './src/ops/config.js';
 import { resolveDataDir } from './src/shared/data-dir.js';
 import { createServer } from 'node:http';
 import { statSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
-import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
@@ -80,7 +79,11 @@ const CFG = runtimeConfigLoad.values;
 
 const AUTH_TOKEN = CFG.AUTH_TOKEN;
 
-let WORK_DIR = process.env.WORK_DIR || homedir();
+// 【刻意不回落 homedir()】曾经是 `process.env.WORK_DIR || homedir()`：不配工作区时，
+// **整个家目录**进入 agent 的文件作用域——~/.ssh、~/.aws、浏览器配置、其他项目的 .env
+// 全在里面。而用户看不到这件事发生了，启动日志只会印一条看起来正常的路径。
+// 现在没配就拒绝启动（判据在 initializeWorkDirs）。
+let WORK_DIR = process.env.WORK_DIR || '';
 let workDirs = [];
 const PORT = CFG.PORT;
 const shouldStartServer = process.env.CODEX_SERVER_NO_START !== '1';
@@ -342,6 +345,7 @@ function initializeWorkDirs() {
   //   无 —— .env 时代的 WORK_DIR + WORK_DIRS，保留兼容。
   // 不把 WORKDIRS join(',') 喂回旧入口：含逗号的目录名会被重新拆坏，
   // 而拆坏之后看起来仍像是配好了。
+  // 两条入口各自对「一个工作区都没有」fail-loud，这里不再重复判一遍。
   const resolved = CFG.WORKDIRS.length > 0
     ? resolveWorkdirsFromEntries({ entries: CFG.WORKDIRS })
     : resolveWorkdirAllowlist({ workDir: WORK_DIR, extra: process.env.WORK_DIRS || '', baseDir: HERE });
