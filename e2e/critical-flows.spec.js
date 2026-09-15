@@ -1,5 +1,6 @@
 // e2e/critical-flows.spec.js —— 关键用户旅程 E2E 测试。
 import { test, expect } from '@playwright/test';
+import { sampleScrollContinuity } from './lib/scroll-audit.js';
 
 function latestApprovalCard(page) {
   return page.locator('.tool-card').filter({ hasText: '需要审批' }).last();
@@ -117,7 +118,14 @@ test.describe('关键用户旅程', () => {
     await expect(bubble.locator('li')).toHaveCount(2);
   });
 
-  test('流式阶段保持稳定文本，完成后再渲染 Markdown', async ({ page }) => {
+  // 这条过去断言的是「流式期间 strong/code/li 计数为 0」——即全程显示 markdown
+  // 源码，收尾才渲染。那是 fd84592 的决策，动机是避免 markdown 结构边流边翻转。
+  //
+  // 动机成立，但「稳定」和「渲染」并不互斥：被空行闭合的块后续文本改不了它，
+  // 提前渲染同样稳定。splitStreamingMarkdown 把文本切成这样的 stable 前缀和
+  // active 尾部，前者渲染一次不再重建（单调性由 test/markdown-stream.test.mjs
+  // 逐字回放守着），后者才随写随更新。收益是整轮结束时不再有源码→渲染的突变。
+  test('流式阶段就渲染已定型的 Markdown，不等整轮结束', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
 
@@ -128,8 +136,12 @@ test.describe('关键用户旅程', () => {
     const turn = bubble.locator('..');
     await expect(bubble).toHaveAttribute('data-streaming', 'true', { timeout: 10000 });
     await expect(turn).toHaveAttribute('aria-busy', 'true');
-    await expect(bubble).toContainText('Here is', { timeout: 10000 });
-    await expect(bubble.locator('strong, code, li')).toHaveCount(0);
+
+    // fixture 的第一段被空行闭合后就进 stable。这里要的是它**在流式途中**
+    // 已经是渲染态：紧跟的 aria-busy 断言负责证明那一刻还没收尾。
+    await expect(bubble.locator('strong')).toHaveText('bold', { timeout: 10000 });
+    await expect(bubble.locator('code')).toHaveText('code');
+    await expect(turn).toHaveAttribute('aria-busy', 'true');
 
     await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
     await expect(bubble).not.toHaveAttribute('data-streaming', 'true');
@@ -137,6 +149,46 @@ test.describe('关键用户旅程', () => {
     await expect(bubble.locator('strong')).toHaveText('bold');
     await expect(bubble.locator('code')).toHaveText('code');
     await expect(bubble.locator('li')).toHaveCount(2);
+  });
+
+  // 入场动画只给**实时发送**的气泡，不给历史回放——切会话时几十条一起滑入是灾难。
+  // 两者本来就是分开的代码路径（appendUserBubble 与 appendHistoryUserBubble），
+  // 动画类只挂在前者上。
+  test('新发送的用户气泡有入场动画', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
+
+    await page.locator('#msg-input').fill('hello motion');
+    await page.locator('#send-btn').click();
+
+    const bubble = page.locator('.msg.user').filter({ hasText: 'hello motion' }).last();
+    await expect(bubble).toBeVisible();
+
+    const anim = await bubble.evaluate(el => {
+      const cs = el.ownerDocument.defaultView.getComputedStyle(el);
+      return { name: cs.animationName, duration: cs.animationDuration };
+    });
+    expect(anim.name).toBe('slideUp');
+    expect(parseFloat(anim.duration)).toBeGreaterThan(0);
+  });
+
+  // 判据是「有多少帧是静止的」：内容在长、视口却纹丝不动的那些帧，就是用户看到
+  // 的顿挫。瞬时 scrollTop = scrollHeight 下实测 92% 的帧静止，剩下 8% 整齐地跳
+  // 46px（两行高）—— 约 10fps 的跳动。这条测的是运动的连续性，不是滚动的正确性,
+  // 后者由下面那条「不抢回滚动位置」守。
+  test('流式跟随是连续滚动，不是一跳一跳', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 520 });
+    await page.goto('/');
+    await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
+
+    await page.locator('#msg-input').fill('SCROLL_STREAM_FIXTURE');
+    await page.locator('#send-btn').click();
+    await expect(page.locator('#state-label')).not.toHaveText('idle', { timeout: 10000 });
+
+    // fixture 是 90 行 × 35ms ≈ 3.1s，采 2s 落在流式中段。
+    const motion = await sampleScrollContinuity(page, '#messages', 2000);
+    expect(motion.totalScrolled).toBeGreaterThan(200); // 先确认真的在滚，否则下面的比例没有意义
+    expect(motion.stillRatio).toBeLessThan(0.7);
   });
 
   test('用户上滑阅读时流式输出不抢回滚动位置', async ({ page }) => {

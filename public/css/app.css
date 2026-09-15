@@ -799,6 +799,17 @@ body {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
+/* 入场动画只挂在**实时新建**的气泡上（app.js 的 appendUserBubble 加 .enter）。
+   不做成 .msg 通用规则：切会话时 renderHistoryMessages 会一次性插入几十条，
+   全都滑一遍是灾难，而且那些消息对用户来说不是「刚发生」的。
+
+   曲线和时长取自本表已有的 popIn / sheetUp —— 动效语言统一比单独调参更要紧。 */
+.msg.enter {
+  animation: slideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .msg.enter { animation: none; }
+}
 
 .bubble {
   padding: var(--space-3) 14px;
@@ -843,11 +854,17 @@ body {
 .codex .bubble.md {
   white-space: normal;
 }
-.codex .bubble.md[data-streaming="true"] {
-  white-space: pre-wrap;
+/* 活动尾部不生成自己的盒子：渲染出的 p/ul/pre 直接参与气泡布局，下面那些
+   .codex .bubble.md p 之类的后代选择器与 margin 折叠因此和收尾重渲染后完全
+   一致 —— 少了这行，流式态和完成态的间距会差一档，收尾时跳一下。 */
+.codex .bubble.md .md-active {
+  display: contents;
 }
-.codex .bubble.md[data-streaming="true"]::after {
-  content: '';
+/* 光标是真节点，不是伪元素：它要跟住正在写的那个字，而「最后一个字」可能在
+   <li> 或 <code> 里。伪元素只能挂在容器上，跟在块级子元素后面会被挤成匿名块、
+   自己占一行——列表和代码块下会凭空多出一根竖线。插入位置由 app.js 的
+   CARET_CONTAINERS 决定。 */
+.codex .bubble.md .stream-caret {
   display: inline-block;
   width: 2px;
   height: 1em;
@@ -862,7 +879,7 @@ body {
   50% { opacity: 0.9; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .codex .bubble.md[data-streaming="true"]::after {
+  .codex .bubble.md .stream-caret {
     animation: none;
     opacity: 0.6;
   }

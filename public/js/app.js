@@ -29,6 +29,7 @@ import { compactPath, parentPath } from '/js/display-path.js';
 import { loadExpandedDirs, persistExpandedDirs, toggleExpandedDir } from '/js/drawer-dirs.js';
 import { renderMarkdown } from '/js/markdown.js';
 import { createTranscriptStream } from '/js/transcript-stream.js';
+import { splitStreamingMarkdown } from '/js/markdown-stream.js';
 import { commandCard, fileChangeCard } from '/js/tool-cards.js';
 import { activeLabel, groupSummary, workedForLabel, thoughtLabel } from '/js/agent-activity.js';
 import { resolveConnectionBanner, resolveInsecureTransportBanner } from '/js/connection-banner.js';
@@ -158,8 +159,27 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   let busy = false;
   let interruptPending = false;
   let streamingEl = null;
+  // 活动尾部容器，永远是 streamingEl 的最后一个子节点。已定型的内容插在它
+  // 前面、直接挂在气泡下，现有的 .codex .bubble.md p 之类选择器因此原样生效。
+  let streamingActiveEl = null;
+  let streamingStableLength = 0;
+  // 光标往里钻到哪一层为止。只对**容器**下潜：到 <p>/<li>/<code> 就停，
+  // 再往里会插进 <strong> 这类行内元素——`<p>写了 <strong>粗</strong> 还有后半句</p>
+  // 的 lastElementChild 是 strong，光标会跑到后半句文字的前面去。
+  const CARET_CONTAINERS = new Set(['DIV', 'UL', 'OL', 'PRE', 'BLOCKQUOTE', 'TABLE', 'TBODY']);
+  function caretHost(root) {
+    let host = root;
+    while (host.lastElementChild && CARET_CONTAINERS.has(host.tagName)) {
+      host = host.lastElementChild;
+    }
+    return host;
+  }
   const TRANSCRIPT_FOLLOW_DISTANCE_PX = 80;
   let followTranscript = true;
+  // 必须和 followTranscript 一起声明在这里，不能挪到 followBottomSmooth 旁边：
+  // scrollBottom 会读它，而 scrollBottom 在初始化阶段就被调用（视口同步那一处），
+  // 声明写在后面会落进 let 的暂时性死区，整个前端在启动时就抛 ReferenceError。
+  let followRaf = null;
   let activeAssistantTurnEl = null;
   const transcriptStream = createTranscriptStream({
     onStart() {
@@ -169,22 +189,43 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
       bubble.className = 'bubble md';
       bubble.dataset.streaming = 'true';
       streamingEl = bubble;
+      streamingActiveEl = document.createElement('div');
+      streamingActiveEl.className = 'md-active';
+      bubble.appendChild(streamingActiveEl);
+      streamingStableLength = 0;
       appendRaw(bubble, 'codex');
       scrollBottom();
     },
     onText(text) {
       if (!streamingEl) return;
-      streamingEl.textContent = text;
-      scrollBottom();
+      const { stable, active } = splitStreamingMarkdown(text);
+      if (stable.length > streamingStableLength) {
+        // 只渲染**新定型**的那一段。切点落在块边界上，所以单独渲染增量和整体
+        // 渲染等价；这也是不让成本随已生成长度累积的关键——否则每 40ms 都要把
+        // 整段重新 parse + sanitize + highlight 一遍。
+        const delta = stable.slice(streamingStableLength);
+        streamingActiveEl.insertAdjacentHTML('beforebegin', renderMarkdown(delta));
+        streamingStableLength = stable.length;
+      }
+      streamingActiveEl.innerHTML = renderMarkdown(active);
+      const caret = document.createElement('span');
+      caret.className = 'stream-caret';
+      caretHost(streamingActiveEl).appendChild(caret);
+      followBottomSmooth();
     },
     onFinish(text) {
       if (!streamingEl) return;
+      // 收尾仍整体重渲染一次。增量拼接对跨块结构（链接引用定义等）不保证和
+      // 整体解析等价，这一次重渲染是正确性兜底；此刻屏幕上已经是渲染态，
+      // 不再有过去那种源码→富文本的突变。
       streamingEl.innerHTML = renderMarkdown(text);
       // 留住 markdown 原文：复制按钮要给的是源码，不是渲染完的纯文本——
       // 从 textContent 拿回来的东西，标题、列表、代码围栏全没了。
       streamingEl.dataset.raw = text;
       delete streamingEl.dataset.streaming;
       streamingEl = null;
+      streamingActiveEl = null;
+      streamingStableLength = 0;
       scrollBottom();
     },
   });
@@ -2730,7 +2771,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
       return;
     }
     const el = document.createElement('div');
-    el.className = 'msg user queued';
+    el.className = 'msg user queued enter';
     el.dataset.text = text;
     if (clientRequestId) el.dataset.clientRequestId = clientRequestId;
     el.innerHTML = `<div class="bubble">${escHtml(text)}<span class="queued-label">Queued #${payload.position || payload.queueLength || 1}</span></div>`;
@@ -2775,7 +2816,9 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     const clientRequestId = payload.clientRequestId || '';
     if (clientRequestId && renderedOutboxStates.has(clientRequestId)) return;
     const el = document.createElement('div');
-    el.className = 'msg user offline';
+    // 乐观气泡才是用户看到的第一帧：点发送的瞬间就是它出现在屏幕上，
+    // 之后的 promote 只改 class 不重建节点。入场动画要挂在这里。
+    el.className = 'msg user offline enter';
     el.dataset.text = text;
     if (clientRequestId) el.dataset.clientRequestId = clientRequestId;
     let html = `<div class="bubble">`;
@@ -3527,7 +3570,8 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
       return;
     }
     const el = document.createElement('div');
-    el.className = 'msg user';
+    // .enter 只加在这里：历史回放走 appendHistoryUserBubble，不该逐条滑入。
+    el.className = 'msg user enter';
     let html = `<div class="bubble">`;
     if (attachments?.length) {
       html += `<div style="font-size:11px;opacity:.8;margin-bottom:4px;">${icon('paperclip')} ${attachments.map(a => escHtml(a.name)).join(', ')}</div>`;
@@ -3782,6 +3826,11 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   }
 
   function scrollBottom(force = false) {
+    // 任何一次瞬时滚动都打断插值，否则切会话后残留的循环会接着滚新会话的内容。
+    if (followRaf !== null) {
+      cancelAnimationFrame(followRaf);
+      followRaf = null;
+    }
     if (!force && !followTranscript) {
       paintJumpToLatest();
       return;
@@ -3789,6 +3838,37 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     messagesEl.scrollTop = messagesEl.scrollHeight;
     followTranscript = true;
     paintJumpToLatest();
+  }
+
+  /**
+   * 流式跟随专用：把「贴到底部」这件事摊到多帧完成。
+   *
+   * 直接 scrollTop = scrollHeight 的问题不是频率而是颗粒度——内容每 ~100ms
+   * 长出两行，视口就整齐地跳 46px，实测 92% 的帧纹丝不动，剩下 8% 在跳。
+   * 提高渲染频率解决不了：内容到达速率是固定的，多出来的帧只是空转。
+   */
+  function followBottomSmooth() {
+    if (!followTranscript) {
+      paintJumpToLatest();
+      return;
+    }
+    if (followRaf !== null) return; // 循环已在跑，它每帧都读实时距离
+    followRaf = requestAnimationFrame(function step() {
+      followRaf = null;
+      if (!followTranscript) return;
+      const delta = transcriptDistanceFromBottom();
+      if (delta <= 0.5) return;
+      // 距离超过跟随阈值就直接到位。插值只用来磨掉小跳变的颗粒感；给大跳变
+      // 做动画反而危险——追赶期间距底距离会持续高于阈值，下面那个 scroll
+      // 监听会把它误判成「用户上滑了」，跟随就此关掉。
+      if (delta > TRANSCRIPT_FOLLOW_DISTANCE_PX) {
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+        return;
+      }
+      // 每帧吃掉剩余距离的一部分；保底 1px 是为了收尾，否则会无限逼近。
+      messagesEl.scrollTop += Math.max(1, delta * 0.28);
+      followRaf = requestAnimationFrame(step);
+    });
   }
 
   messagesEl.addEventListener('scroll', () => {
