@@ -3,6 +3,8 @@ node_modules/
 
 # Secrets & runtime state
 .env
+# 含 AUTH_TOKEN 与 VAPID 私钥，与 .env 同级敏感
+codex.config.json
 # .env 的备份同样含 AUTH_TOKEN。不写 .env.* —— 那会把要入库的 .env.example 一起挡掉。
 .env.bak*
 *.log

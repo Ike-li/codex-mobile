@@ -122,3 +122,47 @@ export function resolveWithinWorkdirs(rawPath, workDirs = [], {
   }
   return null;
 }
+
+/**
+ * WORKDIRS 数组 → 允许列表。codex.config.json 走这条路。
+ *
+ * 与 resolveWorkdirAllowlist 的分工：那个入口是 .env 时代的形态（WORK_DIR 主目录 +
+ * WORK_DIRS 附加源，后者还是「文件路径或逗号串」的双形态），保留是为了兼容；
+ * 这个入口只认一个数组，**首项就是主工作目录**。
+ *
+ * 不把数组 join(',') 再喂回旧入口：含逗号的目录名会被重新拆坏，而拆坏之后
+ * 看起来仍像是配好了。
+ */
+export function resolveWorkdirsFromEntries({
+  entries = [],
+  realpathSync: realpath = realpathSync,
+  statSync: stat = statSync,
+} = {}) {
+  const warnings = [];
+  const workDirs = [];
+
+  for (const entry of entries) {
+    const raw = typeof entry === 'string' ? entry : entry?.path;
+    if (!raw) {
+      warnings.push(`工作区条目无法识别，已跳过：${JSON.stringify(entry)}`);
+      continue;
+    }
+    if (!isAbsolute(raw)) {
+      throw new Error(`工作区必须是绝对路径：${raw}。`
+        + '相对路径会让允许列表取决于进程从哪个目录启动，而那是权限边界不该依赖的东西。');
+    }
+    try {
+      if (!stat(raw).isDirectory()) throw new Error('不是目录');
+      const real = realpath(raw);
+      if (!workDirs.includes(real)) workDirs.push(real);
+    } catch (err) {
+      warnings.push(`工作区不可用，已跳过：${raw}（${err.message}）`);
+    }
+  }
+
+  if (workDirs.length === 0) {
+    // fail-loud：空白名单的后果不是「没有工作区」，是范围判定失去参照。
+    throw new Error('没有任何可用的工作区。检查 WORKDIRS 里的路径是否存在且是目录。');
+  }
+  return { workDir: workDirs[0], workDirs, warnings };
+}

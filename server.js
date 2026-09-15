@@ -50,7 +50,7 @@ import {
   evaluateTransportSecurity,
   evaluateSocketHandshakeSecurity,
 } from './server-security.js';
-import { resolveWorkdirAllowlist, resolveWithinWorkdirs } from './workdir-allowlist.js';
+import { resolveWorkdirAllowlist, resolveWorkdirsFromEntries, resolveWithinWorkdirs } from './workdir-allowlist.js';
 import { searchFiles } from './file-search.js';
 import { listGitChanges, readGitDiff } from './git-workspace.js';
 import { normalizeThreadHistoryMessages } from './thread-history.js';
@@ -337,11 +337,14 @@ function preflight() {
 }
 
 function initializeWorkDirs() {
-  const resolved = resolveWorkdirAllowlist({
-    workDir: WORK_DIR,
-    extra: process.env.WORK_DIRS || '',
-    baseDir: HERE,
-  });
+  // 两条入口，判据是「配置里有没有 WORKDIRS」：
+  //   有 —— codex.config.json 的形态，首项就是主工作目录。
+  //   无 —— .env 时代的 WORK_DIR + WORK_DIRS，保留兼容。
+  // 不把 WORKDIRS join(',') 喂回旧入口：含逗号的目录名会被重新拆坏，
+  // 而拆坏之后看起来仍像是配好了。
+  const resolved = CFG.WORKDIRS.length > 0
+    ? resolveWorkdirsFromEntries({ entries: CFG.WORKDIRS })
+    : resolveWorkdirAllowlist({ workDir: WORK_DIR, extra: process.env.WORK_DIRS || '', baseDir: HERE });
   WORK_DIR = resolved.workDir;
   workDirs = resolved.workDirs;
   for (const warning of resolved.warnings) console.warn(`⚠️  ${warning}`);

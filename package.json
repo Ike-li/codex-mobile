@@ -34,7 +34,8 @@
     "coverage:report": "c8 report --reporter=text --reporter=lcov node --import ./test/setup/preload-env.mjs --test test/*/*.test.mjs",
     "test:docker": "docker compose -f docker/docker-compose.test.yml run --rm test",
     "mutate": "node scripts/mutate.js",
-    "mutate:docker": "docker compose -f docker/docker-compose.test.yml run --rm mutate node scripts/mutate.js"
+    "mutate:docker": "docker compose -f docker/docker-compose.test.yml run --rm mutate node scripts/mutate.js",
+    "config": "node scripts/config.js"
   },
   "dependencies": {
     "compression": "^1.8.1",

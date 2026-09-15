@@ -9,8 +9,9 @@
 // 全连不上，而日志里一个错字都没有。改坏一个逗号的代价不该是「服务看起来好好的
 // 但没人能连」。fail-loud 在这里是唯一正确的方向。
 import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { isAbsolute, join } from 'node:path';
 import dotenv from 'dotenv';
+import { CODEX_SCHEMA, PASSTHROUGH_KEYS, coerceValue } from './codex-schema.js';
 
 export const CONFIG_FILE_NAME = 'codex.config.json';
 export const CONFIG_SCHEMA_VERSION = 1;
@@ -44,10 +45,10 @@ export function loadConfigSources({ dir, configName = CONFIG_FILE_NAME, envName 
   }
 
   if (existsSync(envPath)) {
-    // 【这一支刻意不告警】`.env` 目前仍是本仓受支持的配置格式——codex.config.json 与
-    // 迁移命令（scripts/config.js migrate）尚未落地。现在就提示「该迁移了」等于让用户去跑
-    // 一个会报 Cannot find module 的命令，比不提示更糟；而每次启动都打一条无法执行的告警，
-    // 只会训练人忽略告警栏。迁移命令落地的那一批把这条加回来。
+    // 告警的前提是「照着做能解决问题」：这条命令现在真的存在了（scripts/config.js），
+    // 且迁移不会删原文件，跑错了还有东西可对照。
+    warnings.push(`仍在使用 ${envName}。跑 \`npm run config migrate\` 迁到 ${configName}——`
+      + `WORKDIRS 会变成真数组，数值和开关也不再是字符串；原 ${envName} 不会被删。`);
     return { source: 'env', fileValues: dotenv.parse(readFileSync(envPath, 'utf8')), path: envPath, warnings };
   }
 
@@ -95,4 +96,76 @@ export function projectToEnv(key, value) {
   if (typeof value === 'boolean') return value ? '1' : '0';
   if (Array.isArray(value) || (typeof value === 'object')) return JSON.stringify(value);
   return String(value);
+}
+
+// ---------------------------------------------------------------------------
+// .env → codex.config.json 的一次性迁移
+// ---------------------------------------------------------------------------
+
+/** 读 WORK_DIRS 指向的 JSON 文件；读不出来返回 null（调用方据此决定保留原键还是内联）。 */
+function readWorkdirsFile(raw, baseDir) {
+  const path = isAbsolute(raw) ? raw : join(baseDir, raw);
+  if (!existsSync(path)) return null;
+  try {
+    const parsed = JSON.parse(readFileSync(path, 'utf8'));
+    if (!Array.isArray(parsed)) return null;
+    return { path, entries: parsed.map(e => (typeof e === 'string' ? e : e?.path)).filter(Boolean) };
+  } catch { return null; }
+}
+
+/**
+ * 把一份 .env 的解析结果转成 codex.config.json 的结构化内容。
+ *
+ * 【工作区的折叠顺序不可换】先把 WORK_DIRS 展开成数组，再把 WORK_DIR 折进首项。
+ * 反过来的话，WORK_DIR 会折进一个还没展开的字符串上，结果只剩它自己——
+ * 而迁移仍然会报「成功」。
+ *
+ * 【读不出来的东西一律保留原键并告警，不静默丢弃】少搬一个工作区、换掉手机端默认
+ * 打开的目录，用户都要等到下次开手机才发现，而那时已经没有 .env 可以对照了。
+ */
+export function migrateEnvValues(envValues = {}, { baseDir = process.cwd() } = {}) {
+  const config = { $schemaVersion: CONFIG_SCHEMA_VERSION };
+  const warnings = [];
+  const rest = { ...envValues };
+
+  // ① WORK_DIRS → 数组
+  let workdirs = [];
+  const rawWorkDirs = rest.WORK_DIRS;
+  if (rawWorkDirs) {
+    const fromFile = readWorkdirsFile(rawWorkDirs, baseDir);
+    if (fromFile) {
+      workdirs = fromFile.entries;
+      warnings.push(`${rawWorkDirs} 的内容已内联进 WORKDIRS，该文件不再被读取，确认无误后可以删掉。`);
+      delete rest.WORK_DIRS;
+    } else if (rawWorkDirs.includes(',') || !rawWorkDirs.endsWith('.json')) {
+      workdirs = coerceValue('WORKDIRS', rawWorkDirs);
+      delete rest.WORK_DIRS;
+    } else {
+      warnings.push(`WORK_DIRS 指向的 ${rawWorkDirs} 读不出来（不存在、不是 JSON、或顶层不是数组），`
+        + '已原样保留该键而不是丢弃——丢弃会让迁移后只剩一个工作区，而迁移仍然报成功。');
+    }
+  }
+
+  // ② WORK_DIR 折进首项。它就是手机端默认打开的目录，丢掉等于悄悄换了个目录。
+  const primary = rest.WORK_DIR;
+  if (primary) {
+    workdirs = [primary, ...workdirs.filter(p => p !== primary)];
+    delete rest.WORK_DIR;
+  }
+  if (workdirs.length > 0) config.WORKDIRS = workdirs;
+
+  // ③ 其余键按 schema 归一成 JSON 原生类型
+  for (const [key, raw] of Object.entries(rest)) {
+    if (raw === '' || raw == null) continue;
+    if (Object.hasOwn(CODEX_SCHEMA, key)) {
+      config[key] = coerceValue(key, raw);
+    } else {
+      config[key] = raw;
+      if (!PASSTHROUGH_KEYS.includes(key)) {
+        warnings.push(`${key} 不在配置表里，已原样保留——它不会被校验，也不会出现在配置面板上。`);
+      }
+    }
+  }
+
+  return { config, warnings };
 }

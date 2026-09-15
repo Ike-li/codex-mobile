@@ -131,14 +131,13 @@ test('JSON 顶层不是对象时同样抛，不当成空配置', () => {
   });
 });
 
-test('只有 .env 时正常读取，且**不**提示迁移——迁移命令还不存在', () => {
-  // 告警的价值在于「照着做能解决问题」。scripts/config.js 尚未落地，现在提示
-  // 「跑 config migrate」只会让人撞上 Cannot find module，而每次启动一条无法执行的
-  // 告警会训练人忽略整个告警栏。迁移命令落地的那一批把这条加回来，并把本用例反过来。
+test('只有 .env 时提示迁移——而且那条命令真的存在', () => {
+  // 告警的价值全在「照着做能解决问题」上。这条提示指向的 scripts/config.js migrate
+  // 必须是可执行的，否则每次启动一条撞 Cannot find module 的告警只会训练人忽略告警栏。
   withDir({ '.env': SAMPLE_ENV }, dir => {
     const sources = loadConfigSources({ dir });
     assert.equal(sources.source, 'env');
-    assert.deepEqual(sources.warnings, []);
+    assert.match(sources.warnings.join('\n'), /migrate/);
   });
 });
 

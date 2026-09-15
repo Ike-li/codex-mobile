@@ -305,3 +305,23 @@ export function validateConfig(values = {}) {
 
   return { ok: errors.length === 0, errors, warnings };
 }
+
+/**
+ * 生成示例配置。
+ *
+ * 【为什么要生成而不是手写】手写的示例文件与代码之间没有任何机械联系，漂移是必然的：
+ * 本仓的 .env.example 就漏了三项真实被读取的键（CODEX_INTERRUPT_TIMEOUT_MS / LOG_STDERR /
+ * CODEX_SERVER_NO_START），而漏掉的症状是「照着示例配完，某个功能没生效」。
+ * 从 schema 生成之后这类漂移**由构造消失**，不再依赖谁记得同步。
+ *
+ * 只出非 secret 且非 readonly 的项：示例文件是要提交进仓库的，不该有任何形似凭据的东西
+ * （哪怕是占位符——占位符被原样用上线过）。
+ */
+export function buildExampleConfig() {
+  const example = { $schemaVersion: 1 };
+  for (const [key, def] of Object.entries(CODEX_SCHEMA)) {
+    if (isSecret(def) || def.kind === 'readonly') continue;
+    example[key] = def.default;
+  }
+  return example;
+}

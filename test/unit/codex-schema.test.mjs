@@ -5,9 +5,10 @@
 // 收对了，而收错一个默认值的症状是「某个限额悄悄变了」，不会有任何报错。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import {
   CODEX_SCHEMA, coerceValue, checkOne, validateConfig,
-  DEFAULT_PORT, MIN_AGENT_IDLE_TTL_MS, ALL_CONFIG_KEYS, isSecret,
+  DEFAULT_PORT, MIN_AGENT_IDLE_TTL_MS, ALL_CONFIG_KEYS, isSecret, buildExampleConfig,
 } from '../../src/ops/codex-schema.js';
 
 // 换血前 server.js 里那 8 段三元表达式的默认值，逐字抄来。
@@ -133,4 +134,22 @@ test('AUTH_TOKEN 是 readonly 且 secret', () => {
 test('ALL_CONFIG_KEYS 覆盖 schema 与 passthrough，且无重复', () => {
   assert.equal(new Set(ALL_CONFIG_KEYS).size, ALL_CONFIG_KEYS.length, '有重复键');
   for (const key of Object.keys(CODEX_SCHEMA)) assert.ok(ALL_CONFIG_KEYS.includes(key));
+});
+
+test('提交进仓库的示例配置就是 schema 生成的那一份', () => {
+  // 手写示例与代码之间没有任何机械联系，漂移是必然的：本仓原先的 .env.example 就漏了
+  // 三个真实被读取的键，而症状是「照着示例配完，某个功能没生效」。这条断言让那类漂移
+  // 由构造消失——示例改了 schema 没改（或反过来）都会当场变红。
+  const committed = JSON.parse(readFileSync(new URL('../../codex.config.json.example', import.meta.url), 'utf8'));
+  assert.deepEqual(committed, buildExampleConfig());
+});
+
+test('示例配置里不含任何 secret 或只读项', () => {
+  // 示例文件会进仓库。占位符被原样用上线过，所以这里一个形似凭据的字段都不留。
+  const example = buildExampleConfig();
+  for (const [key, def] of Object.entries(CODEX_SCHEMA)) {
+    if (isSecret(def) || def.kind === 'readonly') {
+      assert.equal(Object.hasOwn(example, key), false, `${key} 不该出现在示例里`);
+    }
+  }
 });
