@@ -97,13 +97,19 @@
 ```bash
 npm run lint            # eslint .
 npm run protocol:check  # 协议三层，要求本机 codex 版本 == .codex-version
+node scripts/gates/check-import-boundaries.js  # 分层方向 + 零循环 + 平铺区冻结
+node scripts/gates/check-invariant-ids.js      # 守护行 ↔ 登记表双向闭合
 npm test                # test/{unit,invariants,integration,infra}/，--test-concurrency=1，经 check-test-summary 包装
 npm run test:e2e        # Playwright，mock 后端
 ```
 
-一条抵四条：**`npm run test:ci`**（lint → protocol:check → `npm test` → check-coverage-delta → test:e2e）。
+一条抵全部：**`npm run test:ci`**。
 
-**不在链里的门禁等于不存在。** [test/infra/gate-wiring.test.mjs](../test/infra/gate-wiring.test.mjs) 守这一条：`scripts/gates/` 下每个文件要么出现在**展开后**的 `test:ci` 里（要展开，`check-test-summary.js` 就是通过 `npm test` 间接接线的），要么在 `NOT_IN_CHECK` 里写明为什么不接。默认值落在「新门禁必须接线」那一侧，不依赖谁记得补一条断言。
+**不在链里的门禁等于不存在——而「在链里」有两层，缺一层都是静默失效。**
+
+第一层由 [test/infra/gate-wiring.test.mjs](../test/infra/gate-wiring.test.mjs) 守：`scripts/gates/` 下每个文件要么出现在**展开后**的 `test:ci` 里（要展开，`check-test-summary.js` 就是通过 `npm test` 间接接线的），要么在 `NOT_IN_CHECK` 里写明为什么不接。
+
+第二层由 [test/infra/ci-workflow.test.mjs](../test/infra/ci-workflow.test.mjs) 守：**workflow 不跑 `test:ci`**，它把各段拆成独立 step 逐条写。所以「加进 `test:ci`」与「CI 上真的会跑」是两件事，而两者看起来完全一样——本地 `npm run test:ci` 全绿，CI 也全绿，但那道闸一次都没执行。加门禁时两处都要改。
 
 其余命令，知道它们存在即可：
 

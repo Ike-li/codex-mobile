@@ -29,11 +29,25 @@ import assert from 'node:assert/strict';
 const PUBLIC_JS = new URL('../../public/js/', import.meta.url);
 const html = readFileSync(new URL('../../public/index.html', import.meta.url), 'utf8');
 
-/** 逐行扫描 public/js 下的所有脚本，返回命中 predicate 的 `文件:行号  内容`。 */
+/** 递归列出 public/js 下所有 .js 的相对名（含子目录）。 */
+function clientScriptNames(dir = PUBLIC_JS, prefix = '') {
+  return readdirSync(dir, { withFileTypes: true })
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .flatMap(entry => (entry.isDirectory()
+      ? clientScriptNames(new URL(`${entry.name}/`, dir), `${prefix}${entry.name}/`)
+      : (entry.name.endsWith('.js') ? [`${prefix}${entry.name}`] : [])));
+}
+
+/**
+ * 逐行扫描 public/js 下的所有脚本，返回命中 predicate 的 `文件:行号  内容`。
+ *
+ * 递归而不是扁平：前端正在往 public/js/{logic,app}/ 分层，而扁平 readdirSync
+ * 对子目录里的新文件**完全看不见**——这道闸会静默只守住存量，新写的代码反而不受约束，
+ * 且症状就是全绿。下面 scanClientSources 的每个消费者都另有一条扫描面下限断言兜底。
+ */
 function scanClientSources(predicate) {
   const offenders = [];
-  for (const name of readdirSync(PUBLIC_JS)) {
-    if (!name.endsWith('.js')) continue;
+  for (const name of clientScriptNames()) {
     const source = readFileSync(new URL(name, PUBLIC_JS), 'utf8');
     source.split('\n').forEach((line, index) => {
       const trimmed = line.trim();
@@ -44,6 +58,13 @@ function scanClientSources(predicate) {
   }
   return offenders;
 }
+
+test('客户端脚本扫描面没有塌陷', () => {
+  // 扫到 0 个与「一个违规都没有」在断言上完全一样。这条单列，是因为下面那几条
+  // 「不得裸调 X」的断言全都建立在扫描器真的看见了文件这个前提上。
+  const names = clientScriptNames();
+  assert.ok(names.length >= 30, `只扫到 ${names.length} 个客户端脚本，扫描器失配了`);
+});
 
 test('外壳只加载外部脚本，没有内联 script', () => {
   // 无内联脚本是可以写进 CSP 的客观属性，不是代码风格。一旦破了，

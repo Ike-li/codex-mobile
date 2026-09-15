@@ -42,6 +42,10 @@ jobs:
         if: matrix.node-version == 20
         run: npm run lint
 
+      - name: Check import boundaries
+        if: matrix.node-version == 20
+        run: node scripts/gates/check-import-boundaries.js
+
       - name: Check invariant ids
         if: matrix.node-version == 20
         run: node scripts/gates/check-invariant-ids.js
