@@ -132,3 +132,25 @@ export function checkPermissions(paths, isDir = false) {
   }
   return problems;
 }
+
+/**
+ * 这个路径能不能安全地 open() 来读。
+ *
+ * 【为什么必须在 open 之前拦，而不是靠 open 的 flags】POSIX 下 `open(FIFO, O_RDONLY)`
+ * 在没有 writer 的时候会**无限阻塞**——而本服务是单进程 Node，阻塞住的是整个事件循环：
+ * 所有会话一起卡死，没有报错、没有超时、没有日志。`O_NOFOLLOW` 改变不了这一点（它管的是
+ * 符号链接，不是文件类型），字符设备与 unix socket 同理。
+ *
+ * lstat 而不是 stat：不跟随符号链接。放行 symlink 本身是有意的——范围校验在别处做，
+ * 这里只回答「open 它会不会把进程挂住」。
+ *
+ * @param {string} path 已经过范围校验的绝对路径
+ */
+export function isOpenableTarget(path) {
+  try {
+    const stat = lstatSync(path);
+    return stat.isFile() || stat.isSymbolicLink();
+  } catch {
+    return false;   // 看不到就不开，fail-closed
+  }
+}

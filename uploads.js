@@ -13,7 +13,18 @@ const MAX_TOTAL_BYTES = 20 * 1024 * 1024;  // 总量 20MB
 const PNG_SIGNATURE = Buffer.from('89504e470d0a1a0a', 'hex');
 const PNG_IEND = Buffer.from('0000000049454e44ae426082', 'hex');
 
+/**
+ * 按**内容**判断是不是图片，不看扩展名。
+ *
+ * 【为什么不能只认 PNG】识别不出来的后果不是报错：附件会以 mention 而不是 localImage
+ * 下发，模型就"看不见"那张图，而界面上一切正常。iOS 截图确实是 PNG，但相册里的照片
+ * 多是 JPEG——「从相册发一张图」是最常见的路径之一，只认 PNG 的话它一直是坏的。
+ *
+ * 【每种格式都同时查头和尾】只查魔数头会把截断的文件也判成图片，而截断的图片解不出来，
+ * 失败会发生在更下游、错误信息更难懂。查尾等于顺带确认了「这个文件是完整的」。
+ */
 function detectImageMimeType(content) {
+  // PNG：签名 + IHDR（宽高非零）+ IEND
   if (
     content.length >= 45
     && content.subarray(0, PNG_SIGNATURE.length).equals(PNG_SIGNATURE)
@@ -25,6 +36,35 @@ function detectImageMimeType(content) {
   ) {
     return 'image/png';
   }
+
+  // JPEG：SOI(FFD8FF) 开头 + EOI(FFD9) 结尾
+  if (
+    content.length >= 4
+    && content[0] === 0xff && content[1] === 0xd8 && content[2] === 0xff
+    && content[content.length - 2] === 0xff && content[content.length - 1] === 0xd9
+  ) {
+    return 'image/jpeg';
+  }
+
+  // GIF：GIF87a / GIF89a 开头 + trailer(0x3B) 结尾
+  if (content.length >= 14) {
+    const head = content.toString('ascii', 0, 6);
+    if ((head === 'GIF87a' || head === 'GIF89a') && content[content.length - 1] === 0x3b) {
+      return 'image/gif';
+    }
+  }
+
+  // WebP：RIFF....WEBP。它是 RIFF 容器，长度写在头里——用那个字段核对实际长度，
+  // 等价于其他格式的"查尾"。
+  if (
+    content.length >= 16
+    && content.toString('ascii', 0, 4) === 'RIFF'
+    && content.toString('ascii', 8, 12) === 'WEBP'
+    && content.readUInt32LE(4) + 8 <= content.length
+  ) {
+    return 'image/webp';
+  }
+
   return null;
 }
 
@@ -51,7 +91,12 @@ const MAX_SAVED_NAME_LEN = 200;
 function sanitizeName(name) {
   // eslint-disable-next-line no-control-regex -- 过滤文件名中的控制字符属安全收敛
   const base = basename(String(name ?? '')).replace(/[\x00-\x1f\x7f]/g, '');
-  const safe = base.replace(/[/\\:*?"<>|]/g, '_').replace(/^\.+/, '').trim();
+  // trim() **必须排在去前导点之前**。反过来的话，"<BOM>..evil" 在去点那一步看到的
+  // 首字符是 BOM 而不是点，点原样留下，trim 再把 BOM 抹掉，结果是 "..evil" —— 一个
+  // 隐藏文件；而同样意图的 "..evil" 直接传进来得到的是 "evil"。同一个意图的两个输入
+  // 归一到不同结果，就说明顺序错了。BOM、NBSP 都算 JS trim 承认的空白，所以这条不是
+  // 只针对普通空格。
+  const safe = base.replace(/[/\\:*?"<>|]/g, '_').trim().replace(/^\.+/, '').trim();
   if (!safe) return 'file';
   if (safe.length <= MAX_SAVED_NAME_LEN) return safe;
 

@@ -20,7 +20,7 @@ function withRoot(fn) {
 // ---- codex 二进制 ----
 
 test('没配 CODEX_BIN 时走 which；查不到就如实说查不到', () => {
-  const found = probeCodexBin({ exec: (cmd, args) => (cmd === 'which' ? '/usr/local/bin/codex\n' : 'codex-cli 0.147.0\n') });
+  const found = probeCodexBin({ exec: cmd => (cmd === 'which' ? '/usr/local/bin/codex\n' : 'codex-cli 0.147.0\n') });
   assert.equal(found.resolved, '/usr/local/bin/codex');
 
   const missing = probeCodexBin({ exec: () => { throw new Error('not found'); } });

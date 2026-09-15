@@ -1,10 +1,12 @@
 // test/unit/file-security.test.mjs —— 文件安全模块单元测试。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync, writeFileSync, chmodSync, mkdirSync, lstatSync, existsSync, readFileSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync, chmodSync, mkdirSync, lstatSync, existsSync, readFileSync, symlinkSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import {
+  isOpenableTarget,
   writeOwnerOnlyFile,
   isOwnerOnly,
   fixPermissions,
@@ -211,4 +213,31 @@ test('rejectableSymlinkComponent: 普通路径返回 null', () => {
 
 test('rejectableSymlinkComponent: 不存在的路径返回 null', () => {
   assert.equal(rejectableSymlinkComponent('/nonexistent/path/file.txt'), null);
+});
+
+test('isOpenableTarget 放行普通文件与软链，挡住 FIFO 与目录', () => {
+  // FIFO 是这条判定存在的全部理由：POSIX 下 open(FIFO, O_RDONLY) 在没有 writer 时
+  // **无限阻塞**，而本服务是单进程 Node —— 挂住的是整个事件循环，所有会话一起卡死，
+  // 没有报错、没有超时、没有日志。O_NOFOLLOW 挡不住它（那管的是软链，不是文件类型）。
+  const dir = mkdtempSync(join(tmpdir(), 'ccm-openable-'));
+  try {
+    const file = join(dir, 'real.txt');
+    writeFileSync(file, 'x');
+    assert.equal(isOpenableTarget(file), true);
+
+    const link = join(dir, 'link.txt');
+    symlinkSync(file, link);
+    assert.equal(isOpenableTarget(link), true, '软链本身放行——范围校验在别处做');
+
+    assert.equal(isOpenableTarget(dir), false, '目录不该被当成可读文件');
+    assert.equal(isOpenableTarget(join(dir, 'nope')), false, '看不到就不开');
+
+    const fifo = join(dir, 'pipe');
+    const made = spawnSync('mkfifo', [fifo]);
+    if (made.status === 0) {
+      assert.equal(isOpenableTarget(fifo), false, 'FIFO 必须在 open 之前就被挡住');
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true }); // safe-rm: mkdtemp 一次性目录
+  }
 });
