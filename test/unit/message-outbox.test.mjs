@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { createMessageOutbox } from '../../public/js/message-outbox.js';
-import { createMessageRequest } from '../../public/js/message-request.js';
+import { createMessageOutbox } from '../../public/js/outbox/message-outbox.js';
+import { createMessageRequest } from '../../public/js/compose/message-request.js';
 
 test('message outbox persists a request before its first transport attempt', async () => {
   const calls = [];

@@ -35,7 +35,7 @@ import {
   loadCliSettings,
   saveCliSettings,
   SETTINGS_STORAGE_KEY,
-} from '../../public/js/cli-settings.js';
+} from '../../public/js/util/cli-settings.js';
 
 // Derived from the pinned protocol rather than restated here: an option the
 // protocol dropped would otherwise stay valid in the UI and get rejected only

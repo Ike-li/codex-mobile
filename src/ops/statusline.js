@@ -3,7 +3,7 @@
 import { execFile } from 'node:child_process';
 // 协议字段名只在 token-usage.js 里出现一次，前端也 import 同一份——
 // 上一版两边各写一遍，statusline 这侧漂到 snake_case 后静默显示了很久的 0。
-import { contextFromTokenUsage } from '../../public/js/token-usage.js';
+import { contextFromTokenUsage } from '../../public/js/session/token-usage.js';
 
 // ---- git 状态（per-cwd 短 TTL 缓存）----
 const GIT_TTL_MS = 5_000;

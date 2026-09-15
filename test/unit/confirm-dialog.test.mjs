@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createConfirmController } from '../../public/js/confirm-dialog.js';
+import { createConfirmController } from '../../public/js/ui/confirm-dialog.js';
 
 function fakeEl(initial = {}) {
   const el = {

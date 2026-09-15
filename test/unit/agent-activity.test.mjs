@@ -7,7 +7,7 @@ import {
   repeatedCallsLabel,
   groupSummary,
   thoughtLabel,
-} from '../../public/js/agent-activity.js';
+} from '../../public/js/render/agent-activity.js';
 
 // 文案对齐 ChatGPT 桌面端 zh-CN 包里的 localConversation.agentActivity.*：
 // 进行中用现在时（"正在运行"），完成后用过去时（"运行了命令"）。两套分开，

@@ -10,7 +10,7 @@ import {
   SLASH_ACTIONS,
   UNSUPPORTED_SLASH,
   slashHelpLines,
-} from '../../public/js/slash-commands.js';
+} from '../../public/js/compose/slash-commands.js';
 
 test('已接入的命令解析成 action，动作 id 来自分发表', () => {
   assert.deepEqual(resolveSlashCommand('/compact'), { kind: 'action', cmd: '/compact', action: 'compact', args: '' });

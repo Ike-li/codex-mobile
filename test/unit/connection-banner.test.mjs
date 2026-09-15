@@ -7,7 +7,7 @@ import {
   CONN_BANNER_RECONNECTED_LINGER_MS,
   resolveConnectionBanner,
   resolveInsecureTransportBanner,
-} from '../../public/js/connection-banner.js';
+} from '../../public/js/net/connection-banner.js';
 
 test('first connect stays quiet until the delay, then shows connecting', () => {
   assert.equal(resolveConnectionBanner({

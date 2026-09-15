@@ -5,7 +5,7 @@ test('IndexedDB outbox records survive reload in stable creation order', async (
   await page.goto('/');
 
   const beforeReload = await page.evaluate(async name => {
-    const { createIndexedDbMessageStore } = await import('/js/indexeddb-outbox.js');
+    const { createIndexedDbMessageStore } = await import('/js/outbox/indexeddb-outbox.js');
     const store = createIndexedDbMessageStore({ dbName: name });
     await store.put({ clientRequestId: 'req-later', createdAt: 20, state: 'pending', payload: {} });
     await store.put({ clientRequestId: 'req-earlier', createdAt: 10, state: 'pending', payload: {} });
@@ -17,7 +17,7 @@ test('IndexedDB outbox records survive reload in stable creation order', async (
 
   await page.reload();
   const afterReload = await page.evaluate(async name => {
-    const { createIndexedDbMessageStore } = await import('/js/indexeddb-outbox.js');
+    const { createIndexedDbMessageStore } = await import('/js/outbox/indexeddb-outbox.js');
     const store = createIndexedDbMessageStore({ dbName: name });
     const ids = (await store.list()).map(record => record.clientRequestId);
     await store.clear();
@@ -32,7 +32,7 @@ test('IndexedDB outbox quarantines an interrupted sending record instead of repl
   const dbName = `ccm-outbox-recovery-${Date.now()}`;
   await page.goto('/');
   await page.evaluate(async name => {
-    const { createIndexedDbMessageStore } = await import('/js/indexeddb-outbox.js');
+    const { createIndexedDbMessageStore } = await import('/js/outbox/indexeddb-outbox.js');
     const store = createIndexedDbMessageStore({ dbName: name });
     await store.put({
       clientRequestId: 'req-interrupted',
@@ -46,8 +46,8 @@ test('IndexedDB outbox quarantines an interrupted sending record instead of repl
 
   await page.reload();
   const recovered = await page.evaluate(async name => {
-    const { createIndexedDbMessageStore } = await import('/js/indexeddb-outbox.js');
-    const { createMessageOutbox } = await import('/js/message-outbox.js');
+    const { createIndexedDbMessageStore } = await import('/js/outbox/indexeddb-outbox.js');
+    const { createMessageOutbox } = await import('/js/outbox/message-outbox.js');
     const store = createIndexedDbMessageStore({ dbName: name });
     const count = await store.recoverInterrupted();
     let transportCalls = 0;
@@ -89,7 +89,7 @@ test('IndexedDB outbox marks an unverified queued receipt for reconciliation aft
   const dbName = `ccm-outbox-queued-recovery-${Date.now()}`;
   await page.goto('/');
   await page.evaluate(async name => {
-    const { createIndexedDbMessageStore } = await import('/js/indexeddb-outbox.js');
+    const { createIndexedDbMessageStore } = await import('/js/outbox/indexeddb-outbox.js');
     const store = createIndexedDbMessageStore({ dbName: name });
     await store.put({
       clientRequestId: 'req-queued-before-restart',
@@ -111,8 +111,8 @@ test('IndexedDB outbox marks an unverified queued receipt for reconciliation aft
 
   await page.reload();
   const recovered = await page.evaluate(async name => {
-    const { createIndexedDbMessageStore } = await import('/js/indexeddb-outbox.js');
-    const { createMessageOutbox } = await import('/js/message-outbox.js');
+    const { createIndexedDbMessageStore } = await import('/js/outbox/indexeddb-outbox.js');
+    const { createMessageOutbox } = await import('/js/outbox/message-outbox.js');
     const store = createIndexedDbMessageStore({ dbName: name });
     const count = await store.recoverInterrupted();
     let transportCalls = 0;

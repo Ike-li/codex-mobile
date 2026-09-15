@@ -78,7 +78,7 @@ async function edgeHintPaints(page, scroller, side) {
 
 async function mountNarrowTable(page) {
   await page.evaluate(async () => {
-    const { renderMarkdown } = await import('/js/markdown.js');
+    const { renderMarkdown } = await import('/js/render/markdown.js');
     const host = globalThis.document.createElement('div');
     host.className = 'msg codex';
     host.id = 'narrow-table-probe';

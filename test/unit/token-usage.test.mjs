@@ -1,7 +1,7 @@
 // test/unit/token-usage.test.mjs —— 上下文占用的展示格式。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { contextFromTokenUsage, formatContextMeter, formatTokens } from '../../public/js/token-usage.js';
+import { contextFromTokenUsage, formatContextMeter, formatTokens } from '../../public/js/session/token-usage.js';
 
 // ---- contextFromTokenUsage：协议字段 → ctx ----
 // 服务端(statusline.js)和浏览器(app.js)共用这一份，协议字段名只在这里出现。

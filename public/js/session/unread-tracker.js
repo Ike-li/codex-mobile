@@ -11,7 +11,7 @@
 import {
   isSessionUnread, isManualUnreadNow, mergeReadState,
   markSeenEntry, setManualUnreadEntry, parseUnreadState, serializeUnreadState,
-} from '/js/logic/unread.js';
+} from '/js/session/unread.js';
 
 const STORAGE_KEY = 'codex_unread_v1';
 

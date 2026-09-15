@@ -10,7 +10,7 @@
 
 // 相对路径而不是 /js/：浏览器里解析结果一样，但 node 单测也能直接加载。
 // 项目里用 /js/ 绝对导入的模块（workspace-panel.js）都只有 e2e 覆盖。
-import { parseCollaborationModeSlash } from './cli-settings.js';
+import { parseCollaborationModeSlash } from '../util/cli-settings.js';
 
 // 命令词形态：开头一个词，不含第二个斜杠。收紧到这个程度是为了不误伤正常消息——
 // `/usr/bin/codex 这个路径不对` 和 `/etc/hosts` 都得当普通文本发出去。

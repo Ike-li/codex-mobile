@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { summarizeTextChange } from '../../public/js/file-diff-summary.js';
+import { summarizeTextChange } from '../../public/js/files/file-diff-summary.js';
 
 // R-16 要求写入前展示 diff 并确认。手机误触代价高，光说「要覆盖 X 吗」不够——
 // 必须能看出改了什么。

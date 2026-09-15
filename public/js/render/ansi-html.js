@@ -5,7 +5,7 @@
 //   2. 安全关键——输出直接进 innerHTML（app.js:2962），而输入是 agent
 //      执行任意命令产生的工具输出
 //   3. 在 IIFE 里时**完全无法单元测试**，只能靠 E2E 间接碰到
-import { escapeHtml } from './html-escape.js';
+import { escapeHtml } from '../util/html-escape.js';
 
 // 只认这几个 SGR 码，其余（包括 256 色、真彩色、背景色）一律忽略。
 // 忽略是对的：不认识的码不该变成 class 名进到 HTML 里。

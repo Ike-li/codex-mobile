@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { pickPastedImage, attachmentPreview } from '../../public/js/attachments-ui.js';
+import { pickPastedImage, attachmentPreview } from '../../public/js/compose/attachments-ui.js';
 
 test('pickPastedImage prefers the first image clipboard item', () => {
   const image = { type: 'image/png', kind: 'file' };

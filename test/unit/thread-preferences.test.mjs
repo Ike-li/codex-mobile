@@ -4,7 +4,7 @@ import {
   clearCurrentThread,
   getCurrentThread,
   setCurrentThread,
-} from '../../public/js/thread-preferences.js';
+} from '../../public/js/session/thread-preferences.js';
 
 function memoryStorage(initial = {}) {
   const values = new Map(Object.entries(initial));

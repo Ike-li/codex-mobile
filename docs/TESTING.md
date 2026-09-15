@@ -408,13 +408,13 @@ Not-tested: webkit 未跑——本次只动了 server 侧分支，与浏览器�
 
 | 案例 | 场景 | 代码入口 | 主要证据 |
 |---|---|---|---|
-| 案例 1 | 创建任务 + 流式输出 + ACK/outbox + provisional orphan/fresh-id 恢复 + gap 后恢复会话 | `server.js`、`src/sessions/message-receipt-ledger.js`、`public/js/message-{request,outbox}.js`、`public/js/{indexeddb-outbox,outbox-recovery,recovery-state}.js` | receipt/dedup 集成测试、outbox 与 recovery 单测、关键流程和 outbox recovery E2E |
+| 案例 1 | 创建任务 + 流式输出 + ACK/outbox + provisional orphan/fresh-id 恢复 + gap 后恢复会话 | `server.js`、`src/sessions/message-receipt-ledger.js`、`public/js/compose/message-request.js`、`public/js/outbox/message-outbox.js`、`public/js/outbox/{indexeddb-outbox,outbox-recovery,recovery-state}.js` | receipt/dedup 集成测试、outbox 与 recovery 单测、关键流程和 outbox recovery E2E |
 | 案例 2 | 执行命令 + 触发权限 + 审批/提问跨 thread 聚合 + exit code 可见 | `src/agent/approval-broker.js`、`src/sessions/needs-you-registry.js`、`src/agent/agent-appserver.js` | broker/needs 幂等与冲突测试、关键审批与 needs-you recovery E2E |
 | 案例 3 | 产生失败 + 重试恢复（同 id 只读核对 / fresh-id 确认重试）+ backpressure + 长日志移动体验 | `src/agent/agent-appserver.js`、`src/sessions/message-receipt-ledger.js`、`public/index.html`、`public/js/app.js` | 协议错误/结果未知测试、retry/copy UI 契约、移动视口 E2E |
 | 案例 4 | 文件上传 + 结构化附件输入 + transport/business 双层上限 + 0700/0600 安全落盘 | `src/files/uploads.js`、`src/files/file-security.js`、`src/sessions/user-inputs.js`、`src/sessions/input-parts.js` | user-inputs/input-parts/file-security 单测、>1 MiB wire 集成、附件 E2E |
 | 案例 5 | 状态栏 + `thread/status/changed` + git/token/context 状态 | `src/ops/statusline.js`、`src/agent/agent-appserver.js` | statusline、thread_status 与 public UI 测试 |
 | 案例 6 | 历史浏览 + 工具/变更卡重建 + app-server thread 唯一事实源 + Codex App/Web 双向续接 | `src/sessions/thread-history.js`、`src/agent/app-server-host.js`、`src/agent/agent-appserver.js`、`server.js` 的 `thread:*` | thread-history 单测、native thread 集成、workspace-and-composer E2E |
-| 案例 7 | 多工作目录 + 实例切换 + 双设备/双 thread 零串流 + 共享单进程 | `src/agent/app-server-host.js`、`src/sessions/thread-registry.js`、`src/agent/agent-appserver.js`、`public/js/view-routing.js` | shared-host spawn/initialize、stale target、route/workdir、多实例 E2E |
+| 案例 7 | 多工作目录 + 实例切换 + 双设备/双 thread 零串流 + 共享单进程 | `src/agent/app-server-host.js`、`src/sessions/thread-registry.js`、`src/agent/agent-appserver.js`、`public/js/ui/view-routing.js` | shared-host spawn/initialize、stale target、route/workdir、多实例 E2E |
 | 案例 8 | Web Push + DNS/address pinning + bounded response + needs-you 脱敏深链 + device revoke | `server.js`、`src/ops/push-sender.js`、`src/shared/network-address.js`、`src/sessions/needs-you-registry.js`、`public/js/sw.js` | Push DNS/mixed-IP/timeout/body-cap 单测、authenticated persist/prune、service worker 和 needs-you E2E |
 | 案例 9 | 模型切换 + 权限档切换 | `src/agent/agent-appserver.js`、`server.js`、`public/index.html`、`public/js/app.js` | model/permission UI、宿主配置逐动作确认测试 |
 | 案例 10 | PWA 安装 + HTTPS/auth session + 全屏/移动体验 | `src/auth/server-security.js`、`public/manifest.webmanifest`、`public/js/sw.js` | transport security/session/SW 测试、响应式和 PWA E2E |

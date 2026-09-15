@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { randomId } from '../../public/js/random-id.js';
+import { randomId } from '../../public/js/util/random-id.js';
 
 function stubCrypto(value) {
   Object.defineProperty(globalThis, 'crypto', { value, configurable: true, writable: true });

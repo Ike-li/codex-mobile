@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { renderMarkdown, SANITIZE_CONFIG, enhanceCodeBlocks } from '../../public/js/markdown.js';
+import { renderMarkdown, SANITIZE_CONFIG, enhanceCodeBlocks } from '../../public/js/render/markdown.js';
 
 await import('../../public/vendor/marked.min.js');
 

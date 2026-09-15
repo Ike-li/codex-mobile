@@ -12,7 +12,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   analyze, parseImports, findCycles, buildFromDisk,
-  BOUNDARY_RULES, SHARED_ALLOWLIST, ROOT_ENTRYPOINTS, FROZEN_PUBLIC_MODULES,
+  BOUNDARY_RULES, SHARED_ALLOWLIST, ROOT_ENTRYPOINTS, PUBLIC_ENTRYPOINTS,
   ASSEMBLY_ROOTS, DOMAIN_RANK,
 } from '../../scripts/gates/check-import-boundaries.js';
 
@@ -23,7 +23,7 @@ const base = {
   edges: [
     { from: 'server.js', to: 'src/auth/devices.js' },
     { from: 'src/ops/metrics.js', to: 'src/shared/data-dir.js' },
-    { from: 'public/js/app.js', to: 'public/js/logic/unread.js' },
+    { from: 'public/js/app.js', to: 'public/js/session/unread.js' },
   ],
   rootFiles: ['server.js'],
   publicFiles: ['public/js/app.js'],
@@ -57,7 +57,7 @@ test('frontend-no-backend：前端 import 根目录组装根也算 → 红', () 
 });
 
 test('backend-no-frontend：后端 import 前端 → 红', () => {
-  const r = analyze({ ...base, edges: [{ from: 'src/ops/metrics.js', to: 'public/js/markdown.js' }] });
+  const r = analyze({ ...base, edges: [{ from: 'src/ops/metrics.js', to: 'public/js/render/markdown.js' }] });
   assert.equal(r.ok, false);
   assert.ok(namesOf(r).includes('backend-no-frontend'));
 });
@@ -68,9 +68,9 @@ test('backend-no-frontend：三个具名共享模块是豁免，不报', () => {
   const r = analyze({
     ...base,
     edges: [
-      { from: 'server.js', to: 'public/js/cli-settings.js' },
-      { from: 'src/agent/agent-appserver.js', to: 'public/js/cli-settings.js' },
-      { from: 'src/ops/statusline.js', to: 'public/js/token-usage.js' },
+      { from: 'server.js', to: 'public/js/util/cli-settings.js' },
+      { from: 'src/agent/agent-appserver.js', to: 'public/js/util/cli-settings.js' },
+      { from: 'src/ops/statusline.js', to: 'public/js/session/token-usage.js' },
     ],
   });
   assert.equal(r.ok, true, JSON.stringify(r.problems, null, 2));
@@ -136,13 +136,21 @@ test('runtime-no-tooling：运行时 import scripts/ 或 test/ → 红', () => {
   }
 });
 
-test('logic-is-leaf：纯逻辑层 import 逻辑层之外的东西 → 红', () => {
-  const r = analyze({ ...base, edges: [{ from: 'public/js/logic/unread.js', to: 'public/js/markdown.js' }] });
+test('frontend-util-is-leaf：基础层 import 本层之外的东西 → 红', () => {
+  const r = analyze({ ...base, edges: [{ from: 'public/js/util/html-escape.js', to: 'public/js/render/markdown.js' }] });
   assert.equal(r.ok, false);
-  assert.ok(namesOf(r).includes('logic-is-leaf'));
+  assert.ok(namesOf(r).includes('frontend-util-is-leaf'));
 
-  const ok = analyze({ ...base, edges: [{ from: 'public/js/logic/unread.js', to: 'public/js/logic/format.js' }] });
-  assert.equal(ok.ok, true, '逻辑层内部互相 import 是允许的');
+  const ok = analyze({ ...base, edges: [{ from: 'public/js/util/html-escape.js', to: 'public/js/util/random-id.js' }] });
+  assert.equal(ok.ok, true, '基础层内部互相 import 是允许的');
+});
+
+test('frontend-util-is-leaf 有真实靶子——util/ 必须非空，否则这条规则是空转的', () => {
+  // 它的前身 logic-is-leaf 就是这样死的：前端改布局后 public/js/logic/ 没了，
+  // 规则还在规则表里占着位置，但一个文件都管不到。
+  const { edges } = buildFromDisk();
+  const utilFiles = new Set(edges.map(e => e.from).filter(p => p.startsWith('public/js/util/')));
+  assert.ok(utilFiles.size > 0, 'public/js/util/ 下没有任何带 import 的文件，这条叶子规则没有靶子');
 });
 
 test('no-new-root-modules：根目录冒出 server.js 之外的 .js → 红', () => {
@@ -153,10 +161,11 @@ test('no-new-root-modules：根目录冒出 server.js 之外的 .js → 红', ()
   assert.match(JSON.stringify(r.problems), /agent|shared/, '报错要点出该往哪个域放，不能只说「不许」');
 });
 
-test('no-new-flat-frontend：public/js 直属冒出冻结清单外的 .js → 红', () => {
+test('no-new-flat-frontend：public/js 直属冒出两个入口之外的 .js → 红', () => {
   const r = analyze({ ...base, publicFiles: ['public/js/app.js', 'public/js/brand-new.js'] });
   assert.equal(r.ok, false);
   assert.ok(namesOf(r).includes('no-new-flat-frontend'));
+  assert.match(JSON.stringify(r.problems), /compose|util/, '报错要点出该往哪个域放');
 });
 
 test('循环依赖 → 红，且报错里带出整条环', () => {
@@ -261,8 +270,8 @@ test('反向：白名单里的每个名字都仍然存在', () => {
     '这些名字还在根目录白名单里，但文件已经不在了。删掉它们——'
     + '过期的白名单会让一个同名新文件被静默放行。');
 
-  const goneFromPublic = FROZEN_PUBLIC_MODULES.filter(name => !publicNames.has(name));
-  assert.deepEqual(goneFromPublic, [], '同上，public/js 冻结清单');
+  const goneFromPublic = PUBLIC_ENTRYPOINTS.filter(name => !publicNames.has(name));
+  assert.deepEqual(goneFromPublic, [], '同上，public/js 入口白名单');
 });
 
 test('反向：ASSEMBLY_ROOTS 的键必须是真实存在的文件', () => {

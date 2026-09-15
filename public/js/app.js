@@ -3,45 +3,45 @@ import {
   eventMatchesTarget,
   outboxRequestMatchesView as requestMatchesView,
   withTarget,
-} from '/js/view-routing.js';
-import { clearCurrentThread, getCurrentThread, setCurrentThread } from '/js/thread-preferences.js';
-import { bufferRecoveryEvent, completeRecovery, createRecoveryState } from '/js/recovery-state.js';
-import { createMessageRequest, messageWirePayload } from '/js/message-request.js';
-import { createMessageOutbox } from '/js/message-outbox.js';
-import { createIndexedDbMessageStore } from '/js/indexeddb-outbox.js';
+} from '/js/ui/view-routing.js';
+import { clearCurrentThread, getCurrentThread, setCurrentThread } from '/js/session/thread-preferences.js';
+import { bufferRecoveryEvent, completeRecovery, createRecoveryState } from '/js/outbox/recovery-state.js';
+import { createMessageRequest, messageWirePayload } from '/js/compose/message-request.js';
+import { createMessageOutbox } from '/js/outbox/message-outbox.js';
+import { createIndexedDbMessageStore } from '/js/outbox/indexeddb-outbox.js';
 import {
   isDefinitelyUnattempted,
   isProvisionalInstanceOrphan,
   requiresManualDisposal,
   shouldSurfaceInOutboxView,
-} from '/js/outbox-recovery.js';
-import { emitWithAck } from '/js/socket-ack.js';
+} from '/js/outbox/outbox-recovery.js';
+import { emitWithAck } from '/js/net/socket-ack.js';
 import {
   applyThreadStatus,
   mergeThreadList,
   threadStatusPresentation,
   needResolutionLabel,
   resolveThreadTitle,
-} from '/js/thread-status.js';
-import { resolveComposerPrimaryMode } from '/js/composer-mode.js';
-import { projectLabel } from '/js/project-label.js';
-import { compactPath, parentPath } from '/js/display-path.js';
-import { loadExpandedDirs, persistExpandedDirs, toggleExpandedDir } from '/js/drawer-dirs.js';
-import { renderMarkdown } from '/js/markdown.js';
-import { createTranscriptStream } from '/js/transcript-stream.js';
-import { splitStreamingMarkdown } from '/js/markdown-stream.js';
-import { createLongPress } from '/js/long-press.js';
-import { commandCard, fileChangeCard } from '/js/tool-cards.js';
-import { activeLabel, groupSummary, workedForLabel, thoughtLabel } from '/js/agent-activity.js';
-import { resolveConnectionBanner, resolveInsecureTransportBanner } from '/js/connection-banner.js';
-import { formatRttChip, formatWorkspaceChangeBadge } from '/js/header-chrome.js';
-import { contextFromTokenUsage, formatContextMeter } from '/js/token-usage.js';
-import { createConfirmController } from '/js/confirm-dialog.js';
-import { readPreferences, writePreference, shouldAnnounceMcpStatus } from '/js/ui-preferences.js';
-import { threadActionConfirm, threadActionErrorMessage } from '/js/thread-actions.js';
-import { summarizeTextChange } from '/js/file-diff-summary.js';
-import { summarizeTurnOutcome } from '/js/turn-outcome.js';
-import { diagnoseHealth, HEALTH_LAYERS } from '/js/health-diagnosis.js';
+} from '/js/session/thread-status.js';
+import { resolveComposerPrimaryMode } from '/js/compose/composer-mode.js';
+import { projectLabel } from '/js/session/project-label.js';
+import { compactPath, parentPath } from '/js/files/display-path.js';
+import { loadExpandedDirs, persistExpandedDirs, toggleExpandedDir } from '/js/files/drawer-dirs.js';
+import { renderMarkdown } from '/js/render/markdown.js';
+import { createTranscriptStream } from '/js/render/transcript-stream.js';
+import { splitStreamingMarkdown } from '/js/render/markdown-stream.js';
+import { createLongPress } from '/js/ui/long-press.js';
+import { commandCard, fileChangeCard } from '/js/render/tool-cards.js';
+import { activeLabel, groupSummary, workedForLabel, thoughtLabel } from '/js/render/agent-activity.js';
+import { resolveConnectionBanner, resolveInsecureTransportBanner } from '/js/net/connection-banner.js';
+import { formatRttChip, formatWorkspaceChangeBadge } from '/js/ui/header-chrome.js';
+import { contextFromTokenUsage, formatContextMeter } from '/js/session/token-usage.js';
+import { createConfirmController } from '/js/ui/confirm-dialog.js';
+import { readPreferences, writePreference, shouldAnnounceMcpStatus } from '/js/ui/ui-preferences.js';
+import { threadActionConfirm, threadActionErrorMessage } from '/js/session/thread-actions.js';
+import { summarizeTextChange } from '/js/files/file-diff-summary.js';
+import { summarizeTurnOutcome } from '/js/render/turn-outcome.js';
+import { diagnoseHealth, HEALTH_LAYERS } from '/js/net/health-diagnosis.js';
 
 const LAYER_LABELS = {
   browser: '这台设备的网络',
@@ -51,9 +51,9 @@ const LAYER_LABELS = {
   codex: 'codex 运行状态',
   upstream: '模型上游',
 };
-import { detectAtMentionQuery, applyAtMentionPick, mentionPartFromSearchHit } from '/js/at-mention.js';
-import { pickPastedImage, attachmentPreview } from '/js/attachments-ui.js';
-import { createWorkspacePanel } from '/js/workspace-panel.js';
+import { detectAtMentionQuery, applyAtMentionPick, mentionPartFromSearchHit } from '/js/compose/at-mention.js';
+import { pickPastedImage, attachmentPreview } from '/js/compose/attachments-ui.js';
+import { createWorkspacePanel } from '/js/files/workspace-panel.js';
 import {
   APPROVAL_OPTIONS,
   SANDBOX_OPTIONS,
@@ -77,16 +77,16 @@ import {
   sanitizeTurnOverrides,
   serviceTiersForModel,
   visibleModels,
-} from '/js/cli-settings.js';
-import { resolveSlashCommand, slashHelpLines } from '/js/slash-commands.js';
-import { icon, hydrateIcons } from '/js/icons.js';
+} from '/js/util/cli-settings.js';
+import { resolveSlashCommand, slashHelpLines } from '/js/compose/slash-commands.js';
+import { icon, hydrateIcons } from '/js/ui/icons.js';
 // 沿用 escHtml 这个本地名字：94 处调用点原样不动，改名不是这次搬迁的目的。
-import { escapeHtml as escHtml } from '/js/html-escape.js';
-import { renderAnsi } from '/js/ansi-html.js';
-import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/client-encoding.js';
-import { buildPreview, truncationNotice } from '/js/logic/file-preview.js';
-import { createUnreadTracker } from '/js/app/unread-tracker.js';
-import { installClientErrorReporting } from '/js/app/client-log.js';
+import { escapeHtml as escHtml } from '/js/util/html-escape.js';
+import { renderAnsi } from '/js/render/ansi-html.js';
+import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/util/client-encoding.js';
+import { buildPreview, truncationNotice } from '/js/files/file-preview.js';
+import { createUnreadTracker } from '/js/session/unread-tracker.js';
+import { installClientErrorReporting } from '/js/net/client-log.js';
 
 (function() {
   const $ = id => document.getElementById(id);

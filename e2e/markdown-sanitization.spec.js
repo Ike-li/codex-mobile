@@ -42,7 +42,7 @@ test.describe('agent 输出渲染的消毒边界', () => {
     await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
 
     const results = await page.evaluate(async payloads => {
-      const { renderMarkdown } = await import('/js/markdown.js');
+      const { renderMarkdown } = await import('/js/render/markdown.js');
       const host = globalThis.document.createElement('div');
       host.id = 'xss-probe-host';
       globalThis.document.body.appendChild(host);
@@ -74,7 +74,7 @@ test.describe('agent 输出渲染的消毒边界', () => {
     await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
 
     const html = await page.evaluate(async () => {
-      const { renderMarkdown } = await import('/js/markdown.js');
+      const { renderMarkdown } = await import('/js/render/markdown.js');
       return renderMarkdown('**粗体** 与 `行内代码`\n\n```js\nconst ok = 1\n```\n\n[链接](https://example.com)', globalThis);
     });
 

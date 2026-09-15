@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { sanitizeTurnOverrides, buildTurnStartOverrides, effectiveComposerSettings,
-  saveCliSettings, loadCliSettings, SETTINGS_STORAGE_KEY } from '../../public/js/cli-settings.js';
-import { createMessageRequest } from '../../public/js/message-request.js';
+  saveCliSettings, loadCliSettings, SETTINGS_STORAGE_KEY } from '../../public/js/util/cli-settings.js';
+import { createMessageRequest } from '../../public/js/compose/message-request.js';
 import { ThreadRuntime } from '../../src/agent/agent-appserver.js';
 
 test('permission presets override conflicting raw values through repeated sanitation', () => {

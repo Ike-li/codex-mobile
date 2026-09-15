@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { splitStreamingMarkdown } from '../../public/js/markdown-stream.js';
+import { splitStreamingMarkdown } from '../../public/js/render/markdown-stream.js';
 
 // 这个文件测的是**切分判据**，不是渲染。splitStreamingMarkdown 只回答一个问题：
 // 流式文本到目前为止，哪一段前缀已经定型、可以渲染成 DOM 之后再也不动。

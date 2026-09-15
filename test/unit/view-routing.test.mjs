@@ -6,7 +6,7 @@ import {
   eventMatchesTarget,
   outboxRequestMatchesView,
   withTarget,
-} from '../../public/js/view-routing.js';
+} from '../../public/js/ui/view-routing.js';
 
 test('eventMatchesTarget rejects a foreign thread event before rendering', () => {
   const target = { instanceId: 'inst_a', threadId: 'thr_a' };

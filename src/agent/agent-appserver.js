@@ -21,7 +21,7 @@ import {
   normalizeCollaborationMode,
   sanitizeTurnOverrides,
   PERMISSION_PRESETS,
-} from '../../public/js/cli-settings.js';
+} from '../../public/js/util/cli-settings.js';
 
 // 六个可配置项的默认值已移进 src/ops/codex-schema.js —— 那里是它们的唯一事实源。
 // 留一份在这里的代价不是重复，是**漂移**：改了一边不改另一边不会有任何东西变红。

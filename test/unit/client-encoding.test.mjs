@@ -9,7 +9,7 @@ import {
   createDeviceToken,
   decodeBase64Text,
   urlBase64ToUint8Array,
-} from '../../public/js/client-encoding.js';
+} from '../../public/js/util/client-encoding.js';
 
 // globalThis.crypto 是只读 getter，赋值会抛 TypeError——必须走 defineProperty。
 function stubCrypto(value) {

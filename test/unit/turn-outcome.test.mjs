@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { summarizeTurnOutcome } from '../../public/js/turn-outcome.js';
+import { summarizeTurnOutcome } from '../../public/js/render/turn-outcome.js';
 
 // R-20：完成页不能只显示模型的自述。「跑过哪些验证、哪些失败了、改了哪些文件」是可以从
 // 本轮的聚合 diff 与命令执行记录里客观导出的，不需要相信模型怎么说。

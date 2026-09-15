@@ -83,7 +83,7 @@ test('用只读调用探测，不发起 turn —— 自检不该烧额度', asyn
 test('判据与运行时兜底用同一份正则，不各写一份', async () => {
   // 两处各写一份的话，上游改了错误文案就只有一边跟着改——而这类"两侧各写一份"的
   // 常量正是同源漏修的高发区。
-  const { SCHEMA_MISMATCH } = await import('../../public/js/thread-actions.js');
+  const { SCHEMA_MISMATCH } = await import('../../public/js/session/thread-actions.js');
   assert.ok(SCHEMA_MISMATCH instanceof RegExp,
     'thread-actions.js 必须导出 SCHEMA_MISMATCH，让 doctor 复用同一份');
   assert.equal(SCHEMA_MISMATCH.test('no such table: x'), true);

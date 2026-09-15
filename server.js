@@ -30,7 +30,7 @@ import { createPushSender } from './src/ops/push-sender.js';
 import { isPublicEndpointHostname, isPublicIpAddress } from './src/shared/network-address.js';
 import { decodeAttachments, saveAttachments, pruneExpiredUploads } from './src/files/uploads.js';
 import { buildStatusLine } from './src/ops/statusline.js';
-import { normalizeCollaborationMode, sanitizeTurnOverrides } from './public/js/cli-settings.js';
+import { normalizeCollaborationMode, sanitizeTurnOverrides } from './public/js/util/cli-settings.js';
 import webpush from 'web-push';
 import {
   isDeviceTrusted,

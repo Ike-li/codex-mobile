@@ -4,7 +4,7 @@ import {
   detectAtMentionQuery,
   applyAtMentionPick,
   mentionPartFromSearchHit,
-} from '../../public/js/at-mention.js';
+} from '../../public/js/compose/at-mention.js';
 
 test('detects @query at the start of a line or after whitespace', () => {
   assert.deepEqual(detectAtMentionQuery('@src'), { query: 'src', matchStart: 0 });

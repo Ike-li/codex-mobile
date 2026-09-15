@@ -4,7 +4,7 @@ import {
   bufferRecoveryEvent,
   completeRecovery,
   createRecoveryState,
-} from '../../public/js/recovery-state.js';
+} from '../../public/js/outbox/recovery-state.js';
 
 test('recovery accepts only its exact target and flushes live events above the snapshot watermark', () => {
   const recovery = createRecoveryState({ instanceId: 'inst-a', threadId: 'thr-a' });

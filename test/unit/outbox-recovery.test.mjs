@@ -6,7 +6,7 @@ import {
   isProvisionalInstanceOrphan,
   requiresManualDisposal,
   shouldSurfaceInOutboxView,
-} from '../../public/js/outbox-recovery.js';
+} from '../../public/js/outbox/outbox-recovery.js';
 
 test('provisional outbox targets become orphans only after an authoritative instance snapshot', () => {
   const request = {

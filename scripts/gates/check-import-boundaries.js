@@ -6,9 +6,12 @@
 // 没有任何一次改动会让它当场变红，于是「下次再整理」可以无限推迟。这个脚本把「脑子里的
 // 约定」变成一道会红的闸。
 //
-// 【当前阶段：存量已搬完，根目录只剩入口】24 个后端模块已按域进 src/{agent,auth,files,ops,
-// sessions,shared}/，根目录只保留组装根 server.js 与两个工具配置。本门禁现在守四件事：
-//   ① 域之间的依赖方向（layer-order，层序见 DOMAIN_RANK）；
+// 【当前阶段：存量已搬完，两个平铺区只剩入口】24 个后端模块按域进了 src/{agent,auth,files,
+// ops,sessions,shared}/，根目录只保留组装根 server.js 与两个工具配置；43 个前端模块按域进了
+// public/js/{compose,files,net,outbox,render,session,ui,util}/，直属只剩 app.js 与 sw.js。
+// 本门禁现在守四件事：
+//   ① 后端域之间的依赖方向（layer-order，层序见 DOMAIN_RANK）与前端基础层的叶子性
+//      （frontend-util-is-leaf）；
 //   ② 组装根不被反向 import（roots-are-sinks）；
 //   ③ 前后端不互相渗透（两条 no-*，三个具名共享模块除外）；
 //   ④ 不许再往根目录与 public/js/ 直属添新文件（no-new-*）。
@@ -33,18 +36,12 @@ const SCAN_DIRS = ['src', 'public/js'];
 //   它们是构建期配置不是运行时模块，进不了依赖图。）
 export const ROOT_ENTRYPOINTS = Object.freeze(['server.js']);
 
-export const FROZEN_PUBLIC_MODULES = Object.freeze([
-  'agent-activity.js', 'ansi-html.js', 'app.js', 'at-mention.js', 'attachments-ui.js',
-  'cli-settings.js', 'client-encoding.js', 'composer-mode.js', 'confirm-dialog.js',
-  'connection-banner.js', 'diff-lines.js', 'display-path.js', 'drawer-dirs.js',
-  'file-diff-summary.js', 'header-chrome.js', 'health-diagnosis.js', 'html-escape.js',
-  'icons.js', 'indexeddb-outbox.js', 'long-press.js', 'markdown-stream.js', 'markdown.js',
-  'message-outbox.js', 'message-request.js', 'outbox-recovery.js', 'project-label.js',
-  'random-id.js', 'recovery-state.js', 'slash-commands.js', 'socket-ack.js', 'sw.js',
-  'thread-actions.js', 'thread-preferences.js', 'thread-status.js', 'token-usage.js',
-  'tool-cards.js', 'transcript-stream.js', 'turn-outcome.js', 'ui-preferences.js',
-  'view-routing.js', 'workspace-panel.js',
-]);
+// public/js/ 直属只许有这两个，理由都不是「历史遗留」而是它们的路径本身承载语义：
+//   · app.js —— index.html 里唯一的 <script type="module">，站点根下的模块入口
+//   · sw.js  —— Service Worker 的**作用域由它自己的 URL 决定**。挪进子目录就只能
+//              管住那个子目录，而 server.js 专门为 /js/sw.js 发了 Service-Worker-Allowed: /
+//              那个头才让它管得住整站。两处必须同时改，改漏一处的症状是推送静默失效。
+export const PUBLIC_ENTRYPOINTS = Object.freeze(['app.js', 'sw.js']);
 
 // 两个组装根。它们只能被列出的那一方 import，谁都不许反过来引它们。
 //
@@ -61,13 +58,13 @@ export const ASSEMBLY_ROOTS = Object.freeze({
 // 不开 `public/js/shared/` 这类目录级后门——那会让「再共享一个」变成零成本，
 // 而每多一个共享模块，前后端的耦合面就多一处，且耦合方向是反的。
 export const SHARED_ALLOWLIST = new Map([
-  ['public/js/cli-settings.js',
+  ['public/js/util/cli-settings.js',
     '权限预设与 turn overrides 的归一化：server.js 与 agent-appserver.js 消费同一份，浏览器也照它渲染。'
     + '两侧各写一份必然分叉成「面板显示的策略 ≠ 实际下发的策略」'],
-  ['public/js/token-usage.js',
+  ['public/js/session/token-usage.js',
     'token 用量的字段归一：src/ops/statusline.js 消费。该文件注释已记过一次 camelCase→snake_case 漂移'
     + '导致静默显示 0 的事故，那正是两份实现的代价'],
-  ['public/js/thread-actions.js',
+  ['public/js/session/thread-actions.js',
     'SCHEMA_MISMATCH 正则：运行时兜底（前端渲染那条错误）与启动自检（src/ops/doctor-checks.js）'
     + '必须认同一个形态，否则 doctor 报绿而手机上弹 no such table。'
     + '（这条曾经被删过一次——当时它的唯一消费者是 scripts/doctor.js，而 scripts/ 不在扫描面内，'
@@ -131,7 +128,7 @@ export function parseImports(source) {
 // 规则表
 // ---------------------------------------------------------------------------
 const isFrontend = p => p.startsWith('public/js/');
-const isLogicLayer = p => p.startsWith('public/js/logic/');
+const isUtilLayer = p => p.startsWith('public/js/util/');
 const isBackendSrc = p => p.startsWith('src/');
 const isRootModule = p => ROOT_ENTRYPOINTS.includes(p);
 const isBackend = p => isBackendSrc(p) || isRootModule(p);
@@ -193,9 +190,15 @@ export const BOUNDARY_RULES = Object.freeze([
     violates: (from, to) => !isTooling(from) && isTooling(to),
   },
   {
-    name: 'logic-is-leaf',
-    describe: 'public/js/logic 是纯逻辑层，只能 import 同层（数据进数据出，不碰 DOM/socket）',
-    violates: (from, to) => isLogicLayer(from) && !isLogicLayer(to),
+    name: 'frontend-util-is-leaf',
+    describe: 'public/js/util 是前端基础层，只能 import 同层（html-escape / 编解码 / 随机 id 这类）',
+    // 前身是 logic-is-leaf（守 public/js/logic/）。前端拆成八个功能域后 logic/ 不复存在，
+    // 那条规则会变成没有靶子的空转——比没有规则更糟，因为它占着「有人管」这个位置。
+    // 换成 util/ 不是改名：搬完当天量过前端全部跨域边，util 是唯一零出边的域，
+    // 也就是这条叶子约束唯一有证据支持的落点。其余域之间只有 5 条零散边
+    // （compose/files/outbox/render → util、files → ui、outbox → compose），
+    // 给 session 和 net 这种零出边的域编层序等于凭空发明约束。
+    violates: (from, to) => isUtilLayer(from) && !isUtilLayer(to),
   },
 ]);
 
@@ -257,11 +260,11 @@ export function analyze({ edges = [], rootFiles = [], publicFiles = [] } = {}) {
 
   for (const file of publicFiles) {
     const name = file.replace(/^public\/js\//, '');
-    if (!FROZEN_PUBLIC_MODULES.includes(name)) {
+    if (!PUBLIC_ENTRYPOINTS.includes(name)) {
       problems.push({
         rule: 'no-new-flat-frontend',
-        detail: `${file} 是 public/js/ 直属新增的模块。那一层是冻结区：`
-          + '纯逻辑进 public/js/logic/（数据进数据出），DOM 胶水进 public/js/app/',
+        detail: `${file} 落在了 public/js/ 直属。那一层只放 app.js 与 sw.js 两个入口，`
+          + '模块请进功能域：compose / files / net / outbox / render / session / ui / util',
       });
     }
   }

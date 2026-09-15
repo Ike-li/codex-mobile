@@ -4,7 +4,7 @@ import {
   loadExpandedDirs,
   persistExpandedDirs,
   toggleExpandedDir,
-} from '../../public/js/drawer-dirs.js';
+} from '../../public/js/files/drawer-dirs.js';
 
 test('loadExpandedDirs restores saved dirs and always keeps the current cwd expanded', () => {
   const storage = {

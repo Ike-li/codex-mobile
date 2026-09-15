@@ -6,7 +6,7 @@ import {
   readPreferences,
   writePreference,
   DEFAULT_PREFERENCES,
-} from '../../public/js/ui-preferences.js';
+} from '../../public/js/ui/ui-preferences.js';
 
 /** 最小 localStorage 替身。只实现被用到的三个方法。 */
 function fakeStorage(initial = {}) {

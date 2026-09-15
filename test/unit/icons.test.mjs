@@ -1,15 +1,15 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { icon, ICONS } from '../../public/js/icons.js';
-import { APPROVAL_OPTIONS, SANDBOX_OPTIONS } from '../../public/js/cli-settings.js';
+import { icon, ICONS } from '../../public/js/ui/icons.js';
+import { APPROVAL_OPTIONS, SANDBOX_OPTIONS } from '../../public/js/util/cli-settings.js';
 
 const html = readFileSync(new URL('../../public/index.html', import.meta.url), 'utf8');
 const appJs = readFileSync(new URL('../../public/js/app.js', import.meta.url), 'utf8');
-const cliSettings = readFileSync(new URL('../../public/js/cli-settings.js', import.meta.url), 'utf8');
+const cliSettings = readFileSync(new URL('../../public/js/util/cli-settings.js', import.meta.url), 'utf8');
 
 test('icons.js exports stroke SVG markup with the shared chrome convention', () => {
-  assert.ok(existsSync(new URL('../../public/js/icons.js', import.meta.url)));
+  assert.ok(existsSync(new URL('../../public/js/ui/icons.js', import.meta.url)));
   const sample = icon('shield');
   assert.match(sample, /<svg\b/);
   assert.match(sample, /viewBox="0 0 24 24"/);
@@ -34,7 +34,7 @@ test('P0/P1 surfaces resolve through icon names instead of emoji', () => {
   // 静态壳用 data-icon 占位,由 hydrateIcons 注入 SVG,避免 HTML/JS 两套 path 漂移。
   assert.match(appJs, /hydrateIcons\(\)/);
   assert.match(
-    readFileSync(new URL('../../public/js/icons.js', import.meta.url), 'utf8'),
+    readFileSync(new URL('../../public/js/ui/icons.js', import.meta.url), 'utf8'),
     /\[data-icon\]/,
   );
   for (const name of ['compass', 'chart', 'clipboard', 'search', 'notepad', 'broom', 'shield', 'chat', 'tools', 'warning', 'hammer', 'pencil', 'hourglass']) {

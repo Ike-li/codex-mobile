@@ -13,7 +13,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createReadStateStore } from '../../src/sessions/read-state.js';
-import { isManualUnreadNow, isSessionUnread } from '../../public/js/logic/unread.js';
+import { isManualUnreadNow, isSessionUnread } from '../../public/js/session/unread.js';
 
 const T0 = 1_700_000_000_000;
 

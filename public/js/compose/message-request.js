@@ -1,5 +1,5 @@
-import { sanitizeTurnOverrides } from './cli-settings.js';
-import { randomId } from './random-id.js';
+import { sanitizeTurnOverrides } from '../util/cli-settings.js';
+import { randomId } from '../util/random-id.js';
 
 export function createMessageRequest(input = {}, options = {}) {
   const createId = options.createId || randomId;

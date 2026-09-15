@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { createTranscriptStream } from '../../public/js/transcript-stream.js';
+import { createTranscriptStream } from '../../public/js/render/transcript-stream.js';
 
 test('transcript stream batches deltas and finishes with the complete text', () => {
   const scheduled = [];

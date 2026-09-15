@@ -1,10 +1,10 @@
-import { diffLineModels } from '/js/diff-lines.js';
-import { icon } from '/js/icons.js';
+import { diffLineModels } from '/js/files/diff-lines.js';
+import { icon } from '/js/ui/icons.js';
 // 解码只留一份。本文件原先自带一个 `decodeURIComponent(escape(atob()))` 版本，
 // 与 app.js 用的 TextDecoder 版行为不同（多字节 UTF-8 与非字符串输入都不一样），
 // 于是同一个文件在两个面板里可能显示成两个样子。
-import { decodeBase64Text } from '/js/client-encoding.js';
-import { buildPreview, truncationNotice } from '/js/logic/file-preview.js';
+import { decodeBase64Text } from '/js/util/client-encoding.js';
+import { buildPreview, truncationNotice } from '/js/files/file-preview.js';
 
 export function createWorkspacePanel({
   modal,

@@ -66,7 +66,7 @@ test.describe('全局排版体系', () => {
     // RICH_MARKDOWN_FIXTURE 只有 h1/h2，h3 测不到。自己挂一个齐全的探针，
     // 判据才覆盖到实际会出现在回复里的层级。
     await page.evaluate(async () => {
-      const { renderMarkdown } = await import('/js/markdown.js');
+      const { renderMarkdown } = await import('/js/render/markdown.js');
       const doc = globalThis.document;
       const host = doc.createElement('div');
       host.className = 'msg codex';

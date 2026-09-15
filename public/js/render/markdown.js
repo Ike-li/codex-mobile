@@ -1,4 +1,4 @@
-import { escapeHtml } from './html-escape.js';
+import { escapeHtml } from '../util/html-escape.js';
 
 export const SANITIZE_CONFIG = {
   FORBID_TAGS: ['label', 'form', 'button', 'select', 'textarea', 'option', 'fieldset', 'legend'],

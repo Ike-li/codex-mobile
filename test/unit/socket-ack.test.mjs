@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { emitWithAck } from '../../public/js/socket-ack.js';
+import { emitWithAck } from '../../public/js/net/socket-ack.js';
 
 test('emitWithAck resolves the exact server acknowledgement', async () => {
   const socket = {

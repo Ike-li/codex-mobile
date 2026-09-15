@@ -1,6 +1,6 @@
-import { createMessageRequest, messageWirePayload } from './message-request.js';
+import { createMessageRequest, messageWirePayload } from '../compose/message-request.js';
 import { isDefinitelyUnattempted } from './outbox-recovery.js';
-import { randomId } from './random-id.js';
+import { randomId } from '../util/random-id.js';
 
 export function createMessageOutbox({
   store,

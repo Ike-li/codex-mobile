@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { createMessageRequest, messageWirePayload } from '../../public/js/message-request.js';
+import { createMessageRequest, messageWirePayload } from '../../public/js/compose/message-request.js';
 
 test('message requests get unique ids while retries preserve the original logical-thread payload', () => {
   const ids = ['req-one', 'req-two'];

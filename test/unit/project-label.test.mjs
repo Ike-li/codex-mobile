@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { groupThreadsByProject, projectLabel } from '../../public/js/project-label.js';
+import { groupThreadsByProject, projectLabel } from '../../public/js/session/project-label.js';
 
 test('projectLabel uses the last path segment as the project name', () => {
   assert.equal(projectLabel('/Users/raylee/code/codex-chat-mobile'), 'codex-chat-mobile');

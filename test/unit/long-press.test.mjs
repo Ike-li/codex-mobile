@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { createLongPress } from '../../public/js/long-press.js';
+import { createLongPress } from '../../public/js/ui/long-press.js';
 
 // 手势的判定逻辑抽在这里测，DOM 事件绑定留在 app.js。注入 schedule/cancel
 // 是为了不靠真实时钟——和 transcript-stream.js 同一个套路。

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { threadActionConfirm, threadActionErrorMessage } from '../../public/js/thread-actions.js';
+import { threadActionConfirm, threadActionErrorMessage } from '../../public/js/session/thread-actions.js';
 
 test('archive 必须二次确认,且文案指出会话去了哪、怎么找回', () => {
   const confirm = threadActionConfirm('archive');

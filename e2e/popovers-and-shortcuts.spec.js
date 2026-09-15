@@ -2,7 +2,7 @@
 // seed: e2e/seed.spec.ts
 
 import { test, expect } from '@playwright/test';
-import { APPROVAL_OPTIONS, SANDBOX_OPTIONS } from '../public/js/cli-settings.js';
+import { APPROVAL_OPTIONS, SANDBOX_OPTIONS } from '../public/js/util/cli-settings.js';
 
 const forbiddenRuntimeErrors = [
   /TypeError/i,

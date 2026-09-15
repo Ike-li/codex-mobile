@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { diagnoseHealth, HEALTH_LAYERS } from '../../public/js/health-diagnosis.js';
+import { diagnoseHealth, HEALTH_LAYERS } from '../../public/js/net/health-diagnosis.js';
 
 // R-19：自托管产品最高频的求助是「连不上」，而「连不上」有六层可能。笼统地显示
 // offline，用户只能一层层猜。这里的判定要给出**最外层的坏点**——修好它之前，

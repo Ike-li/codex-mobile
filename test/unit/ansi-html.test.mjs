@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { renderAnsi } from '../../public/js/ansi-html.js';
+import { renderAnsi } from '../../public/js/render/ansi-html.js';
 
 const ESC = '\x1b';
 

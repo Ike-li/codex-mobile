@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { commandCard, fileChangeCard } from '../../public/js/tool-cards.js';
+import { commandCard, fileChangeCard } from '../../public/js/render/tool-cards.js';
 
 test('a running command card exposes a foldable command and no exit yet', () => {
   const card = commandCard({ command: 'ls -la', running: true });

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   formatRttChip,
   formatWorkspaceChangeBadge,
-} from '../../public/js/header-chrome.js';
+} from '../../public/js/ui/header-chrome.js';
 
 test('RTT chip hides invalid samples and labels milliseconds or seconds', () => {
   assert.deepEqual(formatRttChip(NaN), { visible: false, label: '', tone: '' });

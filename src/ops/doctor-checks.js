@@ -10,7 +10,7 @@
 //
 // 【safe 字段只出布尔 / 计数 / 枚举字面量】它会被贴进 issue 和截图。绝不出明文令牌、
 // 绝对路径、URL 值——那些正是人贴 doctor 输出时最容易连带泄露的东西。
-import { SCHEMA_MISMATCH } from '../../public/js/thread-actions.js';
+import { SCHEMA_MISMATCH } from '../../public/js/session/thread-actions.js';
 
 /** 统一形状。status 三档：ok / warn（能跑但要知道）/ fail（这条不解决就别期待它能用）。 */
 const verdict = (id, status, detail, safe) => ({ id, status, detail, ...(safe ? { safe } : {}) });

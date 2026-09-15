@@ -7,7 +7,7 @@ import {
   threadStatusPresentation,
   needResolutionLabel,
   resolveThreadTitle,
-} from '../../public/js/thread-status.js';
+} from '../../public/js/session/thread-status.js';
 
 test('当前会话不在眼前这份列表里时,标题维持现状而不是回落成新会话', () => {
   // 切到「已归档」视图后,列表整份被换成归档会话,当前这个未归档会话自然找不到。

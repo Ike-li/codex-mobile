@@ -11,7 +11,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { compactPath, parentPath } from '../../public/js/display-path.js';
+import { compactPath, parentPath } from '../../public/js/files/display-path.js';
 
 test('深路径缩成末两段，宿主机身份不出现在界面上', () => {
   // 真实形态：macOS 的 ~ 展开后带用户名，Linux 网关带部署路径。

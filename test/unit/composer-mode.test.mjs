@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { resolveComposerPrimaryMode } from '../../public/js/composer-mode.js';
+import { resolveComposerPrimaryMode } from '../../public/js/compose/composer-mode.js';
 
 test('idle with content sends', () => {
   const state = resolveComposerPrimaryMode({ turnRunning: false, hasContent: true });

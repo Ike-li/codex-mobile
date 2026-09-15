@@ -145,11 +145,12 @@ test('文档里点名的仓库内文件都真实存在', () => {
     // 通配与花括号展开（`test/*.test.mjs`、`test/app-server-{transport,host}.test.mjs`）
     // 天然不匹配这个字符集，不需要额外排除。
     //
-    // 【2026-09-15 加上 src/】在此之前扫描面只有 scripts|test|e2e，而文档点名产品代码时
-    // 写的是裸文件名（`devices.js`）——那种形态这条正则从来匹配不到。同一天 24 个后端模块
-    // 从根目录搬进 src/ 六个域，docs/TESTING.md 里 25 处引用**全部指向了不存在的路径**，
-    // 而这道检查一条都没报。现在产品代码的引用带上了目录前缀，正好落进可检查的形态里。
-    const pattern = /\b((?:src|scripts|test|e2e)\/(?:[A-Za-z0-9._-]+\/)*[A-Za-z0-9._-]+\.(?:js|mjs|sh))/g;
+    // 【2026-09-15 加上 src/ 与 public/】在此之前扫描面只有 scripts|test|e2e，而文档点名
+    // 产品代码时写的是裸文件名（`devices.js`）——那种形态这条正则从来匹配不到。同一天
+    // 24 个后端模块搬进 src/ 六个域、43 个前端模块搬进 public/js/ 八个域，
+    // docs/TESTING.md 里 27 处引用**全部指向了不存在的路径**，而这道检查一条都没报。
+    // 现在产品代码的引用带上了目录前缀，正好落进可检查的形态里。
+    const pattern = /\b((?:src|public|scripts|test|e2e)\/(?:[A-Za-z0-9._-]+\/)*[A-Za-z0-9._-]+\.(?:js|mjs|sh))/g;
     for (const [, target] of readDoc(docPath).matchAll(pattern)) {
       if (MISSING_ON_PURPOSE.has(target)) { exempted.add(target); continue; }
       checked += 1;
