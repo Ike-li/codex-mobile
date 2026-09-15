@@ -63,12 +63,12 @@ export const SHARED_ALLOWLIST = new Map([
   ['public/js/token-usage.js',
     'token 用量的字段归一：statusline.js 消费。该文件注释已记过一次 camelCase→snake_case 漂移'
     + '导致静默显示 0 的事故，那正是两份实现的代价'],
+  ['public/js/thread-actions.js',
+    'SCHEMA_MISMATCH 正则：运行时兜底（前端渲染那条错误）与启动自检（src/ops/doctor-checks.js）'
+    + '必须认同一个形态，否则 doctor 报绿而手机上弹 no such table。'
+    + '（这条曾经被删过一次——当时它的唯一消费者是 scripts/doctor.js，而 scripts/ 不在扫描面内，'
+    + '于是豁免对应不到任何真实的边、成了死配置。判定层搬进 src/ 之后它才真正承重。）'],
 ]);
-
-// 【为什么 public/js/thread-actions.js 不在上面】它确实被 scripts/doctor.js import
-// （共享 SCHEMA_MISMATCH 正则），但 scripts/ 不在扫描面内，且「工具 import 运行时」
-// 本来就是合法方向——runtime-no-tooling 是单向的。给它加一条豁免不会拦住任何东西，
-// 只会变成一条谁也不敢删的死配置：反向断言（豁免必须仍被真实 import）对它恒假。
 
 // ---------------------------------------------------------------------------
 // import 提取

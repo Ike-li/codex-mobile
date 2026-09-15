@@ -1,188 +1,154 @@
-// scripts/doctor.js —— 启动前自检脚本
-// 检查：CODEX_BIN/codex in PATH、WORK_DIR、data/ 可写、AUTH_TOKEN、状态库 schema
-import { statSync, accessSync, mkdirSync, constants, readFileSync } from 'node:fs';
+// scripts/doctor.js —— 启动自检的 CLI 宿主。
+//
+// 三层里最薄的一层：参数、取数、打印、退出码。判定在 src/ops/doctor-checks.js，
+// 探测在 src/ops/doctor-runtime.js。
+//
+// 【配置必须走 loadRuntimeConfig，不能自己读一份】doctor 的全部价值在于
+// 「它看到的 = server 启动时会看到的」。各读各的话，最典型的故障——配置文件放错位置、
+// 被环境变量压过、格式不对——恰恰是 doctor 看不见的那一类。
+//
+// 【schema 探测要起真 app-server】所以它不在 `npm test` 里跑（会打真 ~/.codex），
+// 只在这条命令里跑，而这条命令被宿主机钩子管辖。--skip-probe 可以跳过。
+import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { execSync } from 'node:child_process';
-// 与运行时兜底认同一个形态。~/.codex 是全局共享的，桌面版 Codex 一升级就把新迁移
-// 写进去，pin 住旧版的本项目再去读自己那版才有的表就扑空。
-import { SCHEMA_MISMATCH } from '../public/js/thread-actions.js';
+import { realpathSync } from 'node:fs';
+import { loadRuntimeConfig } from '../src/ops/config.js';
+import { schemaVerdict, schemaProbeDiagnostic } from '../src/ops/doctor-checks.js';
+import {
+  probeCodexBin, probeConfigPerms, probeDataDir, probeEnvOverrides,
+  probePort, probeWorkdirs, runDoctor,
+} from '../src/ops/doctor-runtime.js';
+import { resolveDataDir } from '../src/shared/data-dir.js';
+import { resolveWorkdirAllowlist, resolveWorkdirsFromEntries } from '../workdir-allowlist.js';
 
-const HERE = dirname(fileURLToPath(import.meta.url));
-const ROOT = join(HERE, '..');
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
-/**
- * 判断一段 codex 错误是不是状态库 schema 不兼容，并给出下一步。
- *
- * @param {string} raw codex / app-server 吐出的错误文本
- * @returns {{compatible: boolean, hint?: string}}
- */
-export function schemaVerdict(raw) {
-  if (!raw || !SCHEMA_MISMATCH.test(raw)) return { compatible: true };
-
-  let pin = '';
-  try { pin = readFileSync(join(ROOT, '.codex-version'), 'utf8').trim(); } catch { /* 没有 pin 文件 */ }
-
-  // 只给最可能奏效的那一个动作。成因也可能是库损坏或 CODEX_HOME 指错，所以措辞是
-  // 「多半」而不是断言——但不给「稍后再试」那种假出路，重试对这个故障没有任何作用。
-  return {
-    compatible: false,
-    hint: `状态库里缺表或缺列，多半是跑着的 codex 比 ~/.codex 里的库旧。\n`
-      + `     ~/.codex 是全局共享的，桌面版 Codex 升级会单向写入新迁移。\n`
-      + `     下一步：把 codex 对齐到 .codex-version（${pin || '见该文件'}），`
-      + `或确认 CODEX_HOME 指向的是同一个目录。`,
-  };
-}
+/** 重新导出，保持既有 import 路径可用（test/invariants/doctor.test.mjs 守着 ENV-02）。 */
+export { schemaVerdict };
 
 /**
  * 用一次只读调用探测状态库能不能读。
  *
  * 判据是「这条链路现在能不能用」，不是「库里有哪些表」——本项目不直接读 sqlite
- * （~/.codex 下有六个带版本后缀的库），状态库由 codex 进程独占，我们只能通过
- * app-server 观察。
+ * （~/.codex 下有六个带版本后缀的库），状态库由 codex 进程独占，只能通过 app-server 观察。
  *
  * @param {{request: (method: string, params?: object) => Promise<unknown>}} deps
  *   request 是外部边界（codex 子进程），注入以便测试。
  */
-export async function probeSchema({ request }) {
+export async function probeSchema({ request, pinnedVersion = '' }) {
   try {
     // 只读、零额度。发 turn 那类会真的调用模型，与「日常回归不消耗额度」冲突。
     await request('thread/list', { pageSize: 1 });
     return { compatible: true };
   } catch (err) {
     const raw = String(err?.message || err);
-    const verdict = schemaVerdict(raw);
+    const verdict = schemaVerdict(raw, { pinnedVersion });
     if (!verdict.compatible) return verdict;
-    // 不是 schema 问题，但探测确实没成功。静默当成通过等于这道检查不存在。
     return { compatible: true, probeError: raw };
   }
 }
 
-// ---- CLI ----
-// import 本模块时不执行自检（测试要 import 上面的纯函数）。
-
-async function main() {
+/**
+ * 按 server 的那两条入口解析实际生效的工作区。
+ *
+ * 判据与 server.js#initializeWorkDirs 逐字相同。解析不出来时返回空数组而不是抛——
+ * 「一个工作区都没有」本身就是 workdirsDiagnostic 要报的那条 fail，自检不该
+ * 因为被检对象有问题而自己崩掉。
+ */
+function resolveEffectiveWorkdirs(cfg) {
   try {
-    const { config } = await import('dotenv');
-    config({ path: join(ROOT, '.env') });
-  } catch { /* dotenv not installed yet or no .env */ }
-
-  let passed = 0;
-  let failed = 0;
-
-  function check(label, fn) {
-    try {
-      const result = fn();
-      console.log(`  ✅ ${label}${result ? ': ' + result : ''}`);
-      passed++;
-    } catch (err) {
-      console.log(`  ❌ ${label}: ${err.message}`);
-      failed++;
-    }
-  }
-
-  async function checkAsync(label, fn) {
-    try {
-      const result = await fn();
-      console.log(`  ✅ ${label}${result ? ': ' + result : ''}`);
-      passed++;
-    } catch (err) {
-      console.log(`  ❌ ${label}: ${err.message}`);
-      failed++;
-    }
-  }
-
-  console.log('\nCodex Chat Mobile — 启动自检\n');
-
-  // D1: codex binary
-  check('CODEX_BIN / codex in PATH', () => {
-    const bin = process.env.CODEX_BIN || '';
-    if (bin) {
-      statSync(bin);
-      return bin;
-    }
-    const found = execSync('which codex', { encoding: 'utf8' }).trim();
-    if (!found) throw new Error('未找到 codex 命令');
-    return found;
-  });
-
-  // D2: WORK_DIR
-  check('WORK_DIR 是有效目录', () => {
-    const dir = process.env.WORK_DIR;
-    if (!dir) throw new Error('WORK_DIR 未设置');
-    if (!statSync(dir).isDirectory()) throw new Error(`不是目录: ${dir}`);
-    return dir;
-  });
-
-  // D3: data/ writable
-  check('data/ 目录可写', () => {
-    const dataDir = process.env.CODEX_DATA_DIR || join(ROOT, 'data');
-    mkdirSync(dataDir, { recursive: true });
-    accessSync(dataDir, constants.W_OK);
-    return dataDir;
-  });
-
-  // D4: AUTH_TOKEN
-  check('AUTH_TOKEN 已设置', () => {
-    if (!process.env.AUTH_TOKEN) throw new Error('AUTH_TOKEN 未设置（公网访问时需要）');
-    return `${process.env.AUTH_TOKEN.slice(0, 4)}****`;
-  });
-
-  // D5: 绑定到非 loopback 时的 token 强度。server-security 会在启动时 fail-closed，
-  // 这里提前说清楚，免得部署到服务器上才发现起不来。
-  check('远程绑定的 token 强度', () => {
-    const host = process.env.HOST || '127.0.0.1';
-    const loopback = host === '127.0.0.1' || host === '::1' || host === 'localhost';
-    if (loopback) return `HOST=${host}（仅本机，无额外要求）`;
-    const token = process.env.AUTH_TOKEN || '';
-    if (token.length < 32) throw new Error(`HOST=${host} 需要 AUTH_TOKEN ≥32 字符，当前 ${token.length}`);
-    return `HOST=${host}，token ${token.length} 字符`;
-  });
-
-  // D6: 无图形界面。这是本项目相对官方 Remote 的差异点——官方要求 host 跑 ChatGPT 桌面 app
-  // （仅 macOS/Windows）。缺 DISPLAY 是服务器的常态，不该影响任何东西，明确报出来让人放心。
-  check('无图形界面也能运行', () => {
-    const headless = !process.env.DISPLAY && !process.env.WAYLAND_DISPLAY;
-    return headless ? '未检测到 DISPLAY/WAYLAND_DISPLAY，无需图形界面' : '当前有图形会话（无头环境同样支持）';
-  });
-
-  // D7: 状态库 schema。运行时撞上这个故障的症状是点开会话列表才报一句 no such table，
-  // 而那时用户多半在手机上、离机器很远。这里提前问一次，用一次只读调用，零额度。
-  await checkAsync('状态库 schema 可读', async () => {
-    const { AppServerTransport } = await import('../app-server-transport.js');
-    const transport = new AppServerTransport({
-      codexBin: process.env.CODEX_BIN || 'codex',
-      cwd: process.env.WORK_DIR || ROOT,
-    });
-    const timeoutMs = 20000;
-    try {
-      transport.start();
-      try {
-        await transport.request('initialize', {
-          clientInfo: { name: 'codex-chat-mobile-doctor', title: 'Doctor', version: '0.1.0' },
-          capabilities: { experimentalApi: false, requestAttestation: false },
-        }, { timeoutMs });
-        transport.notify('initialized', {});
-      } catch (err) {
-        // 握手本身也可能撞上缺表——那时同样该给对齐版本的提示，而不是一句握手失败。
-        const verdict = schemaVerdict(String(err?.message || err));
-        if (!verdict.compatible) throw new Error(verdict.hint);
-        throw new Error(`app-server 握手失败：${err.message}`);
-      }
-
-      const verdict = await probeSchema({
-        request: (method, params) => transport.request(method, params, { timeoutMs }),
+    const resolved = cfg.WORKDIRS?.length > 0
+      ? resolveWorkdirsFromEntries({ entries: cfg.WORKDIRS })
+      : resolveWorkdirAllowlist({
+        workDir: process.env.WORK_DIR || '',
+        extra: process.env.WORK_DIRS || '',
+        baseDir: ROOT,
       });
-      if (!verdict.compatible) throw new Error(verdict.hint);
-      if (verdict.probeError) throw new Error(`探测未完成：${verdict.probeError}`);
-      return '通过 thread/list 只读探测，未发现缺表/缺列';
-    } finally {
-      transport.dispose();
-    }
-  });
-
-  console.log(`\n结果: ${passed} 通过, ${failed} 失败\n`);
-  if (failed > 0) process.exit(1);
+    return resolved.workDirs;
+  } catch { return []; }
 }
 
-if (process.argv[1] && process.argv[1].endsWith('doctor.js')) await main();
+function readPin() {
+  try { return readFileSync(join(ROOT, '.codex-version'), 'utf8').trim(); } catch { return ''; }
+}
+
+/** 收集全部事实。schemaProbe 由调用方决定要不要跑——它要起真进程。 */
+export async function collectDoctorContext({ schemaProbe = null } = {}) {
+  // **必须在 loadRuntimeConfig 之前取**：加载器会把配置文件里的值投影进 process.env，
+  // 投影之后再看就分不清「这个键来自 shell」还是「来自配置文件」——第一版就是这么
+  // 把 AUTH_TOKEN 和 VAPID 全报成「被环境变量压过」的。
+  const shellEnv = { ...process.env };
+  let load;
+  let configError = null;
+  try {
+    load = loadRuntimeConfig();
+  } catch (err) {
+    configError = String(err?.message || err);
+    load = { values: {}, source: 'none', path: null, warnings: [] };
+  }
+  const cfg = load.values;
+
+  const codexProbe = probeCodexBin({ explicit: cfg.CODEX_BIN || '' });
+  const portProbe = await probePort(cfg.PORT ?? 3001, { host: cfg.HOST || '127.0.0.1' });
+
+  return {
+    source: load.source, configPath: load.path, configError,
+    token: cfg.AUTH_TOKEN || '', host: cfg.HOST || '127.0.0.1', port: cfg.PORT ?? 3001,
+    codexProbe, pinnedVersion: readPin(),
+    // 工作区必须按 server 的那两条入口解析，不能只看 CFG.WORKDIRS：.env 部署里工作区
+    // 藏在 `WORK_DIRS=workdirs.json` 后面，只看新键会报出「1 个工作区」而实际有 6 个。
+    // 报少了比报错更坏——它看起来是个正常结果。
+    workdirProbes: probeWorkdirs(resolveEffectiveWorkdirs(cfg)),
+    dataDirProbe: probeDataDir(resolveDataDir()),
+    permsProbe: probeConfigPerms({ root: ROOT }),
+    portProbe,
+    schemaProbe,
+    display: process.env.DISPLAY || '', wayland: process.env.WAYLAND_DISPLAY || '',
+    logStderr: !!cfg.LOG_STDERR, rpcLog: cfg.CODEX_RPC_LOG !== false,
+    rpcLogCap: cfg.CODEX_RPC_LOG_MAX_BYTES ?? 0,
+    envOverrides: probeEnvOverrides({ shellEnv }),
+  };
+}
+
+const ICON = { ok: '✅', warn: '⚠️ ', fail: '❌' };
+
+async function main() {
+  const asJson = process.argv.includes('--json');
+  const skipProbe = process.argv.includes('--skip-probe');
+
+  let schemaProbe = null;
+  if (!skipProbe) {
+    // 起真 app-server 要拉起 codex 子进程。失败不该让整个自检跑不完——
+    // 其余十二项与它无关，而「因为一项探测挂了就什么都看不到」是最差的自检体验。
+    try {
+      const { AppServerHost } = await import('../app-server-host.js');
+      const host = new AppServerHost();
+      const result = await probeSchema({ request: (m, p) => host.request(m, p), pinnedVersion: readPin() });
+      schemaProbe = schemaProbeDiagnostic(result);
+      await host.dispose?.();
+    } catch (err) {
+      schemaProbe = schemaProbeDiagnostic({ compatible: true, probeError: String(err?.message || err) });
+    }
+  }
+
+  const { checks, readiness } = runDoctor(await collectDoctorContext({ schemaProbe }));
+
+  if (asJson) {
+    console.log(JSON.stringify({ readiness, checks }, null, 2));
+  } else {
+    console.log('');
+    for (const check of checks) console.log(`${ICON[check.status]} ${check.id.padEnd(20)} ${check.detail}`);
+    console.log(`\n${readiness.level === 'ready' ? '✅' : readiness.level === 'caution' ? '⚠️ ' : '❌'} ${readiness.summary}\n`);
+  }
+  process.exit(readiness.level === 'blocked' ? 1 : 0);
+}
+
+function invokedDirectly() {
+  if (!process.argv[1]) return false;
+  try {
+    return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));
+  } catch { return false; }
+}
+
+if (invokedDirectly()) await main();
