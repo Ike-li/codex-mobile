@@ -36,14 +36,53 @@ async function firstSessionRow(page) {
   return row;
 }
 
+// 长按：按住不动超过阈值。用 mouse 而不是 tap——tap 是瞬时的，产生不了
+// pointerdown 与 pointerup 之间的那段停顿。
+//
+// 先 hover 再取坐标不是多此一举：boundingBox() + page.mouse 绕过了 Playwright
+// 的 actionability 检查，而抽屉是滑入的，toBeVisible() 在动画途中就会通过。
+// 直接取 box 会拿到还在视口左侧之外的坐标（实测 x = -177），鼠标点到屏幕外，
+// 事件一个都派发不出去。hover() 会等到元素**位置稳定**才返回。
+async function longPress(page, locator, ms = 600) {
+  await locator.hover();
+  const box = await locator.boundingBox();
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.waitForTimeout(ms);
+  await page.mouse.up();
+}
+
+async function openThreadMenu(page, row) {
+  await longPress(page, row);
+  const menu = page.locator('#thread-menu');
+  await expect(menu).toBeVisible();
+  return menu;
+}
+
 test.describe('抽屉里的会话操作', () => {
+  test('长按会话弹出操作菜单，列表里不再常驻按钮', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('#state-label')).not.toHaveText('offline', { timeout: 10000 });
+    await seedOneThread(page);
+
+    const row = await firstSessionRow(page);
+    // 条目本身只剩标题和时间：三个按钮撑得每条 ~100px，一屏看不到几条。
+    await expect(row.locator('[data-action]')).toHaveCount(0);
+
+    const menu = await openThreadMenu(page, row);
+    await expect(menu.locator('[data-action="rename"]')).toBeVisible();
+    await expect(menu.locator('[data-action="archive"]')).toBeVisible();
+    await expect(menu.locator('[data-action="delete"]')).toBeVisible();
+  });
+
   test('从抽屉拉起的确认框盖在抽屉之上,而不是躲在它后面', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('#state-label')).not.toHaveText('offline', { timeout: 10000 });
     await seedOneThread(page);
 
     const row = await firstSessionRow(page);
-    await row.locator('[data-action="delete"]').click();
+    const menu = await openThreadMenu(page, row);
+    await menu.locator('[data-action="delete"]').click();
 
     const modal = page.locator('#confirm-modal');
     await expect(modal).toBeVisible();
@@ -73,7 +112,8 @@ test.describe('抽屉里的会话操作', () => {
     await seedOneThread(page);
 
     const row = await firstSessionRow(page);
-    await row.locator('[data-action="archive"]').click();
+    const menu = await openThreadMenu(page, row);
+    await menu.locator('[data-action="archive"]').click();
 
     // 归档过去是静默执行的,会话直接从列表消失。现在必须先出现一张说明卡。
     const modal = page.locator('#confirm-modal');
@@ -112,8 +152,6 @@ test.describe('抽屉里的会话操作', () => {
     await seedOneThread(page);
 
     const rows = page.locator('#drawer-projects .session-item');
-    const archiveBtns = page.locator('#drawer-projects [data-action="archive"]');
-    const unarchiveBtns = page.locator('#drawer-projects [data-action="unarchive"]');
     const toggle = page.locator('#drawer-archived-toggle');
 
     // 同一个 mock 进程跨用例累积会话,所以一律用相对量,不钉死绝对条数。
@@ -122,27 +160,35 @@ test.describe('抽屉里的会话操作', () => {
     expect(liveBefore).toBeGreaterThan(0);
 
     await toggle.click();
-    // 归档视图里的行只会提供 Unarchive——这条语义断言在列表为空时也成立。
-    await expect(archiveBtns).toHaveCount(0, { timeout: 10000 });
+    // count() 是即时取值，不等列表真的切完就会读到上一视图的残留。原来担任这个
+    // 等待的是「列表里没有 Archive 按钮」，按钮进菜单后它恒成立、等不住了。
+    await expect(page.locator('#drawer-projects .session-item:not([data-archived="true"])'))
+      .toHaveCount(0, { timeout: 10000 });
     const archivedBefore = await rows.count();
     await toggle.click();
     await expect.poll(() => rows.count(), { timeout: 10000 }).toBe(liveBefore);
 
+    // 「未归档的行只提供归档、归档的行只提供取消归档」这条语义，过去是靠数列表里
+    // 的按钮（toHaveCount(0)）来断言的。按钮收进菜单后列表里恒为 0，那种写法会变成
+    // 永远通过的假绿，所以改成直接查菜单在这个位置给的是哪一项。
+    let menu = await openThreadMenu(page, rows.first());
+    await expect(menu.locator('#thread-menu-archive')).toHaveText('归档');
+
     // 确认后真的归档:未归档视图少一行。
-    await rows.first().locator('[data-action="archive"]').click();
+    await menu.locator('[data-action="archive"]').click();
     await page.locator('#confirm-ok').click();
     await expect.poll(() => rows.count(), { timeout: 10000 }).toBe(liveBefore - 1);
 
     // 按确认框许诺的那条路找回来——这正是那句文案的兑现。
     await toggle.click();
     await expect.poll(() => rows.count(), { timeout: 10000 }).toBe(archivedBefore + 1);
-    await expect(unarchiveBtns.first()).toBeVisible();
 
-    await unarchiveBtns.first().click();
+    menu = await openThreadMenu(page, rows.first());
+    await expect(menu.locator('#thread-menu-archive')).toHaveText('取消归档');
+    await menu.locator('[data-action="unarchive"]').click();
     await expect.poll(() => rows.count(), { timeout: 10000 }).toBe(archivedBefore);
     await toggle.click();
     await expect.poll(() => rows.count(), { timeout: 10000 }).toBe(liveBefore);
-    await expect(unarchiveBtns).toHaveCount(0);
   });
 
   test('切到归档视图不会把顶栏标题谎报成新会话', async ({ page }) => {
@@ -159,7 +205,10 @@ test.describe('抽屉里的会话操作', () => {
     await toggle.click();
     await expect(toggle).toHaveAttribute('aria-pressed', 'true');
     // 当前会话不在归档列表里,列表刷新完也不该把标题抹成「新会话」。
-    await expect(page.locator('#drawer-projects [data-action="archive"]')).toHaveCount(0, { timeout: 10000 });
+    // 这一句的作用是**等列表真的切完**（socket 往返是异步的），不是语义断言——
+    // 过去写成「列表里没有 Archive 按钮」，按钮收进菜单后那个计数恒为 0，
+    // 等待作用会一起失效，于是改用条目自己标的归档状态。
+    await expect(page.locator('#drawer-projects .session-item:not([data-archived="true"])')).toHaveCount(0, { timeout: 10000 });
     await expect(title, '当前会话不在归档列表里,不代表用户回到了新会话').toHaveText('Mock thread');
   });
 });

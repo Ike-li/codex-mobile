@@ -30,6 +30,7 @@ import { loadExpandedDirs, persistExpandedDirs, toggleExpandedDir } from '/js/dr
 import { renderMarkdown } from '/js/markdown.js';
 import { createTranscriptStream } from '/js/transcript-stream.js';
 import { splitStreamingMarkdown } from '/js/markdown-stream.js';
+import { createLongPress } from '/js/long-press.js';
 import { commandCard, fileChangeCard } from '/js/tool-cards.js';
 import { activeLabel, groupSummary, workedForLabel, thoughtLabel } from '/js/agent-activity.js';
 import { resolveConnectionBanner, resolveInsecureTransportBanner } from '/js/connection-banner.js';
@@ -180,6 +181,21 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   // scrollBottom 会读它，而 scrollBottom 在初始化阶段就被调用（视口同步那一处），
   // 声明写在后面会落进 let 的暂时性死区，整个前端在启动时就抛 ReferenceError。
   let followRaf = null;
+
+  // 会话行的长按手势。绑在**容器**上而不是每个条目上：会话列表会因状态推送、
+  // turn 收尾等整体重建（renderDrawerProjects 重铺 innerHTML），监听挂在条目上
+  // 时，重建一旦撞进长按那 500ms，手势就随旧元素被丢掉——表现为「长按没反应」，
+  // 而且是随机的。容器是 index.html 里的静态节点。
+  //
+  // 声明放在这里的原因同 followRaf：renderDrawerProjects 要读 rowLongPress.pending，
+  // 而它在初始化阶段就会被调用，声明写在后面会落进暂时性死区。
+  const sessionRowThreads = new WeakMap();
+  let pressedThread = null;
+  const rowLongPress = createLongPress({
+    onLongPress: () => {
+      if (pressedThread) openThreadMenu(pressedThread);
+    },
+  });
   let activeAssistantTurnEl = null;
   const transcriptStream = createTranscriptStream({
     onStart() {
@@ -2082,19 +2098,39 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     scrollBottom();
   }
 
+  function bindSessionRowGestures(root) {
+    root.addEventListener('pointerdown', event => {
+      const row = event.target.closest?.('.session-item');
+      const thread = row ? sessionRowThreads.get(row) : null;
+      if (!thread) return;
+      pressedThread = thread;
+      rowLongPress.start(event.clientX, event.clientY);
+    });
+    root.addEventListener('pointermove', event => rowLongPress.move(event.clientX, event.clientY));
+    root.addEventListener('pointerup', () => rowLongPress.end());
+    root.addEventListener('pointercancel', () => rowLongPress.end());
+  }
+  bindSessionRowGestures(document.getElementById('drawer-projects'));
+
   function createSessionRow(s) {
     const el = document.createElement('div');
     el.className = 'session-item' + (s.id === currentSessionId ? ' active' : '');
+    // 归档与否过去只能从「这行提供 Archive 还是 Unarchive 按钮」反推。按钮收进
+    // 菜单后列表里看不出来了，于是把状态直接标在条目上。
+    el.dataset.archived = s.archived ? 'true' : 'false';
     const date = new Date(s.lastUsedAt || s.createdAt).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     const tag = s.model ? ` · ${escHtml(s.model)}` : '';
     const status = threadStatusPresentation(s.status);
-    const actions = `<div class="native-row-actions">
-          <button class="native-mini-btn" data-action="rename">Rename</button>
-          <button class="native-mini-btn" data-action="${s.archived ? 'unarchive' : 'archive'}">${s.archived ? 'Unarchive' : 'Archive'}</button>
-          <button class="native-mini-btn native-danger" data-action="delete">Delete</button>
-        </div>`;
-    el.innerHTML = `<div class="session-title"><span class="thread-status-dot ${status.kind}" title="${escHtml(status.label)}"></span><span class="session-title-copy">${escHtml(s.title || '未命名')}</span></div><div class="session-date">${date}${tag} · ${escHtml(status.label)}</div>${actions}`;
+    // 状态只留圆点，不再把 label 写进元信息行。非当前会话一律是 notLoaded——
+    // 那是 app-server 的「没加载进内存」，不是错误，对用户的信息量接近零，
+    // 而「这条不是当前会话」高亮和圆点已经说过了。圆点的 title 留着给读屏。
+    el.innerHTML = `<div class="session-title"><span class="thread-status-dot ${status.kind}" title="${escHtml(status.label)}"></span><span class="session-title-copy">${escHtml(s.title || '未命名')}</span></div><div class="session-date">${date}${tag}</div>`;
+    // 三个操作收进长按菜单。常驻按钮把每条会话撑到约 100px，一屏看不到几条。
+    // 手势本身绑在容器上（见 rowLongPress），这里只登记「这个元素是哪条会话」。
+    sessionRowThreads.set(el, s);
     el.onclick = () => {
+      // 长按之后 pointerup 照样合成一次 click，不挡住会连带把会话打开。
+      if (rowLongPress.fired) return;
       socket.emit('thread:select', { threadId: s.id, cwd: s.cwd, title: s.title }, ack => {
         if (!ack?.ok) {
           appendSystem(ack?.error || 'Thread select failed', true);
@@ -2107,13 +2143,40 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
       });
       closeDrawer();
     };
-    for (const btn of el.querySelectorAll('[data-action]')) {
-      btn.onclick = event => {
-        event.stopPropagation();
-        handleNativeThreadAction(s, btn.dataset.action);
-      };
-    }
     return el;
+  }
+
+  const threadMenuEl = document.getElementById('thread-menu');
+  const threadMenuTitleEl = document.getElementById('thread-menu-title');
+  const threadMenuArchiveEl = document.getElementById('thread-menu-archive');
+  let threadMenuTarget = null;
+
+  function openThreadMenu(thread) {
+    threadMenuTarget = thread;
+    threadMenuTitleEl.textContent = thread.title || '未命名';
+    // 归档视图里这一项是「取消归档」。过去靠两个不同的常驻按钮表达，
+    // 现在同一个位置换文案和 action。
+    threadMenuArchiveEl.textContent = thread.archived ? '取消归档' : '归档';
+    threadMenuArchiveEl.dataset.action = thread.archived ? 'unarchive' : 'archive';
+    threadMenuEl.hidden = false;
+  }
+
+  function closeThreadMenu() {
+    threadMenuEl.hidden = true;
+    threadMenuTarget = null;
+  }
+
+  threadMenuEl.addEventListener('click', event => {
+    // 点遮罩空白处关闭；点卡片内部不关。
+    if (event.target === threadMenuEl) closeThreadMenu();
+  });
+  document.getElementById('thread-menu-cancel').onclick = closeThreadMenu;
+  for (const btn of threadMenuEl.querySelectorAll('.sheet-menu [data-action]')) {
+    btn.onclick = () => {
+      const thread = threadMenuTarget;
+      closeThreadMenu();
+      if (thread) handleNativeThreadAction(thread, btn.dataset.action);
+    };
   }
 
   function renderSessionList() {

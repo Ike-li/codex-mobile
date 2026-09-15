@@ -2643,6 +2643,42 @@ body {
   min-height: 0;
 }
 .sheet-body { font-size: var(--font-md); color: var(--text-muted); white-space: pre-wrap; margin-bottom: var(--space-5); }
+/* 会话操作菜单的菜单项。竖排整行，不跟 .sheet-actions 那样横向均分——
+   菜单项数量会变（归档/取消归档随视图切换），横向均分会让按钮宽度跳。
+   高度统一 48px：这里面混着「删除」，layout-audit 的 tap-target-too-small
+   守着它不低于 44×44，同组共用一个高度免得后来加的那个忘了。 */
+.sheet-menu {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+.sheet-menu button {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  padding: 0 var(--space-5);
+  font: inherit;
+  font-size: var(--font-body);
+  font-weight: 500;
+  text-align: left;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s, transform 0.08s;
+}
+.sheet-menu button:active {
+  background: var(--border-light);
+  transform: scale(0.99);
+}
+/* 和 .native-danger 同一个理由：取文字档而不是基色，深色下基色压在卡片底上
+   只有 3.51:1，过不了 AA。 */
+.sheet-menu-danger {
+  color: var(--error-text) !important;
+  border-color: var(--error-border) !important;
+}
+
 .sheet-actions { display: flex; gap: var(--space-3); }
 .sheet-actions button {
   flex: 1;

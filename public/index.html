@@ -403,6 +403,24 @@
   </div>
 </div>
 
+<!-- 会话操作菜单：长按抽屉里的会话条目拉起。这些操作过去是三个常驻按钮，
+     把每条会话撑到约 100px；收进菜单后条目只剩标题和时间。
+     复用 .sheet-* 那套类，连 z-index 150（压住抽屉）一起继承。 -->
+<div id="thread-menu" class="sheet-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="thread-menu-title">
+  <div class="sheet-card">
+    <div class="sheet-handle"></div>
+    <div id="thread-menu-title" class="sheet-title"></div>
+    <div class="sheet-menu">
+      <button type="button" data-action="rename">重命名</button>
+      <button type="button" id="thread-menu-archive" data-action="archive">归档</button>
+      <button type="button" data-action="delete" class="sheet-menu-danger">删除</button>
+    </div>
+    <div class="sheet-actions">
+      <button type="button" id="thread-menu-cancel">取消</button>
+    </div>
+  </div>
+</div>
+
 <div id="workspace-modal" class="sheet-overlay" hidden role="dialog" aria-modal="true" aria-label="工作区">
   <div class="sheet-card">
     <div class="sheet-handle"></div>
