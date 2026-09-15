@@ -768,9 +768,12 @@ test('authentication rate limiting emits one audit summary per identity window',
     }
     assert.deepEqual(statuses, [401, 401, 429, 429, 429, 429, 429, 429, 429, 429]);
 
+    // 只数鉴权记录。审计文件里还有 server_restart 之类与本用例无关的条目，
+    // 按文件总行数断言会让任何新增的埋点都把这条用例误判成回归。
     const records = readFileSync(join(fixture.dataDir, 'security-audit.jsonl'), 'utf8')
-      .trim().split('\n').map(line => JSON.parse(line));
-    assert.equal(records.length, 3);
+      .trim().split('\n').map(line => JSON.parse(line))
+      .filter(record => record.event === 'session_issue');
+    assert.equal(records.length, 3, '达阈值后只该再发一条汇总，不是每次失败都发');
     assert.deepEqual(records.map(record => record.outcome), ['denied', 'denied', 'rate_limited']);
     assert.equal(records[2].attempts, 3);
     assert.equal(Number.isFinite(records[2].resetAt), true);

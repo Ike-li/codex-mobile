@@ -362,6 +362,23 @@ function readStateForThreads(threads) {
   return { baselineTs: snapshot.baselineTs, seen, manual };
 }
 
+/**
+ * 附件清理并留痕。
+ *
+ * 删除必须可追溯：删了多少文件此前完全静默，于是「附件不见了」在日志里没有任何落点，
+ * 而用户会以为是上传失败——两件事的排查方向完全相反。零删除不记，避免每小时一条噪音
+ * 把真正有价值的记录从环形窗口里挤出去。
+ */
+function auditUploadCleanup(dir) {
+  pruneExpiredUploads(dir)
+    .then(({ removed, scanned }) => {
+      if (removed > 0) {
+        appendSecurityAudit({ event: 'retention_cleanup', outcome: 'success', target: 'uploads', removed, scanned });
+      }
+    })
+    .catch(() => { /* 清理失败不该冒泡到定时器 */ });
+}
+
 function initializeWorkDirs() {
   // 两条入口，判据是「配置里有没有 WORKDIRS」：
   //   有 —— codex.config.json 的形态，首项就是主工作目录。
@@ -2192,6 +2209,15 @@ io.on('connection', socket => {
         try {
           savedAttachments = await saveAttachments(ai.cwd || WORK_DIR, attachments, decodedAttachments.decoded);
           metrics.inc('upload_saved', savedAttachments.length);
+          // 上传是往工作区写文件，但它不走 fs:writeFile，所以被现有的 fs_mutation 漏掉。
+          // 只记数量与字节数，**不记文件名**——文件名是用户内容，而审计的 meta 只放事实性元数据。
+          appendSecurityAudit({
+            event: 'upload_write',
+            outcome: 'success',
+            actor: socket.deviceRef || null,
+            count: savedAttachments.length,
+            bytes: savedAttachments.reduce((sum, a) => sum + (a.size || 0), 0),
+          });
         } catch (err) {
           const error = `附件保存失败：${sanitize(String(err?.message || err))}`;
           sysTo(socket, error, true);
@@ -3091,13 +3117,13 @@ export function startServer() {
 
     // 启动时清理过期附件
     for (const dir of workDirs) {
-      pruneExpiredUploads(dir).catch(() => {});
+      auditUploadCleanup(dir);
     }
 
     // 每 1 小时自动定时清理
     pruneUploadsTimer = setInterval(() => {
       for (const dir of workDirs) {
-        pruneExpiredUploads(dir).catch(() => {});
+        auditUploadCleanup(dir);
       }
     }, 3600000);
     pruneUploadsTimer.unref?.();
@@ -3108,6 +3134,9 @@ export function startServer() {
 
     // 每 5 分钟清理过期限流窗口
     metrics.gauge('server_started_at', Date.now());
+  // 重启边界是读审计时唯一的分段标记。没有它，跨重启的记录看起来是连续的——
+  // 而「这条异常发生在重启前还是重启后」常常就是排查的分水岭。
+  appendSecurityAudit({ event: 'server_restart', outcome: 'success', pid: process.pid, versions });
   failureWindowsPruneTimer = setInterval(pruneExpiredFailureWindows, 300_000);
     failureWindowsPruneTimer.unref?.();
 

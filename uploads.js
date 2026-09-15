@@ -199,7 +199,7 @@ export function toEventMeta(saved) {
 
 // 定期清理过期上传的文件
 export async function pruneExpiredUploads(workDir, maxAgeMs = 24 * 60 * 60 * 1000) {
-  if (!workDir) return;
+  if (!workDir) return { removed: 0, scanned: 0 };
   const dir = join(workDir, UPLOAD_DIR);
   
   // symlink 穿越检查
@@ -213,7 +213,7 @@ export async function pruneExpiredUploads(workDir, maxAgeMs = 24 * 60 * 60 * 100
     }
     await chmod(dir, 0o700);
   } catch (err) {
-    if (err?.code === 'ENOENT') return;
+    if (err?.code === 'ENOENT') return { removed: 0, scanned: 0 };
     throw err;
   }
 
@@ -227,6 +227,9 @@ export async function pruneExpiredUploads(workDir, maxAgeMs = 24 * 60 * 60 * 100
     return;
   }
 
+  // 数出删了多少。删除必须可追溯——调用方拿不到数字的话，「附件不见了」这件事
+  // 在日志里没有任何落点，而用户会以为是上传失败。
+  let removed = 0;
   for (const e of entries) {
     if (!e.isFile()) continue;
     const absPath = resolve(dir, e.name);
@@ -240,9 +243,11 @@ export async function pruneExpiredUploads(workDir, maxAgeMs = 24 * 60 * 60 * 100
       const st = await stat(absPath);
       if (Date.now() - st.mtimeMs > maxAgeMs) {
         await unlink(absPath);
+        removed += 1;
       }
     } catch {
       // 忽略单个文件清理错误（可能已被删或无权限）
     }
   }
+  return { removed, scanned: entries.length };
 }

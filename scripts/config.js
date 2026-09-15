@@ -16,6 +16,8 @@ import { realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
 import { writeOwnerOnlyFile } from '../file-security.js';
+import { appendJsonlAuditRecord } from '../audit-log.js';
+import { dataFile } from '../src/shared/data-dir.js';
 import {
   CONFIG_FILE_NAME, CONFIG_SCHEMA_VERSION, migrateEnvValues,
 } from '../src/ops/config-file.js';
@@ -25,6 +27,34 @@ import {
 
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '..');
 const KNOWN_FLAGS = new Set(['--json', '--reveal', '--force']);
+
+/**
+ * 配置变更留痕。
+ *
+ * 【为什么配置改动要进安全审计】配置里有 CODEX_SANDBOX、CODEX_ALLOW_INSECURE_REMOTE、
+ * HOST 这些直接决定安全边界的项。改了没痕迹意味着事后无法回答「谁把沙箱关了」，
+ * 而那恰恰是出事之后第一个要问的问题。
+ *
+ * 【只记键名与「前后有没有值」，绝不记值】审计文件本身不该成为第二处凭据存放点。
+ * 而「这个键从有值变成没值」这个事实，对排查来说已经够用。
+ */
+function auditConfigChange(action, keys, before, after) {
+  if (keys.length === 0) return;
+  try {
+    appendJsonlAuditRecord(dataFile('security-audit.jsonl'), {
+      event: 'config_changed',
+      outcome: 'success',
+      actor: 'cli',
+      action,
+      keys,
+      // 逐键的「前有值/后有值」。够回答「是不是被清空了」，又不带出任何值本身。
+      transitions: Object.fromEntries(keys.map(key => [
+        key,
+        `${before?.[key] === undefined ? 'unset' : 'set'}->${after?.[key] === undefined ? 'unset' : 'set'}`,
+      ])),
+    });
+  } catch { /* 留痕失败不该阻断配置写入——配不上比记不上严重 */ }
+}
 
 const configPathOf = dir => join(dir, CONFIG_FILE_NAME);
 const readConfigFile = dir => (existsSync(configPathOf(dir))
@@ -170,7 +200,9 @@ function applyChanges(dir, changes) {
   if (!ok) return { ok: false, problems: errors };
 
   next.$schemaVersion = CONFIG_SCHEMA_VERSION;
+  const before = readConfigFile(dir);
   writeConfigFile(dir, next);
+  auditConfigChange('set', Object.keys(changes), before, next);
   return { ok: true, data: { changed: Object.keys(changes) } };
 }
 
@@ -203,6 +235,7 @@ function cmdMigrate(dir) {
 
   const { config, warnings } = migrateEnvValues(dotenv.parse(readFileSync(envPath, 'utf8')), { baseDir: dir });
   writeConfigFile(dir, config);
+  auditConfigChange('migrate', Object.keys(config).filter(k => k !== '$schemaVersion'), {}, config);
   // 刻意不删 .env：迁移错了还得有东西可对照，而删掉是不可逆的。
   return { ok: true, data: { path: configPathOf(dir), warnings, keptEnv: envPath } };
 }
