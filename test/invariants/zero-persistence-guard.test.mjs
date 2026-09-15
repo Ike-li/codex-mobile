@@ -25,12 +25,23 @@ const ALLOWED_STATE_FILES = new Map([
   ['push-subscriptions.json', '浏览器 Push endpoint，属于设备表的一部分'],
   ['security-audit.jsonl', 'append-only 审计，只增不改，不作为任何读路径的数据源'],
   ['host-config-audit.jsonl', '同上，宿主配置操作的审计'],
+  ['read-state.json',
+    '「用户在手机上看过某个 thread 到什么时刻」是本网关独有的事实：app-server 的 thread 模型里'
+    + '没有「已读」这个概念（thread/list 只给 createdAt / updatedAt / recencyAt，全是 agent 侧的'
+    + '活动时间），也无法从 thread 历史重建——它记录的是人的浏览行为，不是 agent 的行为。'
+    + '且它是缓存类：损坏或形状不对一律当作没有，删掉最多让所有会话按新基线重来一次。'
+    + '它不进任何读路径的判定——判定发生在前端，本文件只是那份判定的跨设备位点。'],
 ]);
 
 /** 从源码里抽出所有落在 DATA_DIR 下的文件名。 */
 function persistedFileNames(source) {
   const names = new Set();
   for (const [, name] of source.matchAll(/join\((?:DATA_DIR|dataDir\(\)),\s*'([^']+)'\)/g)) {
+    names.add(name);
+  }
+  // dataFile('x') 是 src/shared/data-dir.js 的写法。不补这一支的话，任何走新分层的
+  // 落盘点对这道闸完全不可见——而「扫不到」与「合规」在断言上一模一样。
+  for (const [, name] of source.matchAll(/dataFile\(\s*'([^']+)'\s*\)/g)) {
     names.add(name);
   }
   return names;
@@ -40,7 +51,11 @@ test('服务端落盘的文件不超出 A2 允许的例外', () => {
   const found = new Set([
     ...persistedFileNames(read('server.js')),
     ...persistedFileNames(read('devices.js')),
+    ...persistedFileNames(read('src/sessions/read-state.js')),
   ]);
+  // 扫到 0 个与「没有新增持久化」在断言上完全一样。读取列表漏一个文件、
+  // 正则失配、文件改名——都会走到这里，而它们的症状都是「全绿」。
+  assert.ok(found.size >= 5, `只扫出 ${found.size} 个落盘点，扫描面塌了`);
 
   const unexpected = [...found].filter(name => !ALLOWED_STATE_FILES.has(name));
   assert.deepEqual(
@@ -55,7 +70,11 @@ test('允许清单里的每一项都仍在被使用', () => {
   const found = new Set([
     ...persistedFileNames(read('server.js')),
     ...persistedFileNames(read('devices.js')),
+    ...persistedFileNames(read('src/sessions/read-state.js')),
   ]);
+  // 扫到 0 个与「没有新增持久化」在断言上完全一样。读取列表漏一个文件、
+  // 正则失配、文件改名——都会走到这里，而它们的症状都是「全绿」。
+  assert.ok(found.size >= 5, `只扫出 ${found.size} 个落盘点，扫描面塌了`);
 
   const stale = [...ALLOWED_STATE_FILES.keys()].filter(name => !found.has(name));
   assert.deepEqual(

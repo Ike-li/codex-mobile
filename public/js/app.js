@@ -85,6 +85,7 @@ import { escapeHtml as escHtml } from '/js/html-escape.js';
 import { renderAnsi } from '/js/ansi-html.js';
 import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/client-encoding.js';
 import { buildPreview, truncationNotice } from '/js/logic/file-preview.js';
+import { createUnreadTracker } from '/js/app/unread-tracker.js';
 
 (function() {
   const $ = id => document.getElementById(id);
@@ -192,6 +193,13 @@ import { buildPreview, truncationNotice } from '/js/logic/file-preview.js';
   // 而它在初始化阶段就会被调用，声明写在后面会落进暂时性死区。
   const sessionRowThreads = new WeakMap();
   let pressedThread = null;
+  // 未读是第三条注意力轴：与「需要你」（答过才清）和服务告警（时效窗退场）
+  // 清除条件完全不同，所以用一个独立的指示器，不挤进 thread-status-dot。
+  const unread = createUnreadTracker({
+    emit: (event, payload) => socket.emit(event, payload),
+    onChange: () => renderSessionList(),
+  });
+
   const rowLongPress = createLongPress({
     onLongPress: () => {
       if (pressedThread) openThreadMenu(pressedThread);
@@ -285,7 +293,10 @@ import { buildPreview, truncationNotice } from '/js/logic/file-preview.js';
   }
 
   function rememberCurrentThread(threadId) {
+    const leaving = currentSessionId;
+    if (leaving && leaving !== threadId) unread.markSeen(leaving);
     currentSessionId = typeof threadId === 'string' && threadId ? threadId : null;
+    if (currentSessionId) unread.markEntered(currentSessionId);
     if (currentSessionId) setCurrentThread(localStorage, serverCwd, currentSessionId);
     else clearCurrentThread(localStorage, serverCwd);
   }
@@ -688,6 +699,8 @@ import { buildPreview, truncationNotice } from '/js/logic/file-preview.js';
     renderConnectionState();
     requestCatchUp();
     startRttMonitor();
+    // 全量归并：离线期攒的位点靠这一趟推上去，别的设备的位点靠它合并下来。
+    socket.emit('read:sync', unread.snapshot(), ack => { if (ack?.ok) unread.hydrate(ack.state); });
   });
 
   socket.on('disconnect', () => {
@@ -727,7 +740,12 @@ import { buildPreview, truncationNotice } from '/js/logic/file-preview.js';
     else socket.connect();
   });
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState !== 'visible') return;
+    // 切后台用 markSeen 而**不是** markEntered：用户可能刚长按标了「稍后再看」
+    // 就切走，那一笔不能被这一下当场清掉。
+    if (document.visibilityState !== 'visible') {
+      if (currentSessionId) unread.markSeen(currentSessionId);
+      return;
+    }
     paintConnectionBanner();
     if (!socket.connected) socket.connect();
   });
@@ -2125,7 +2143,12 @@ import { buildPreview, truncationNotice } from '/js/logic/file-preview.js';
     // 状态只留圆点，不再把 label 写进元信息行。非当前会话一律是 notLoaded——
     // 那是 app-server 的「没加载进内存」，不是错误，对用户的信息量接近零，
     // 而「这条不是当前会话」高亮和圆点已经说过了。圆点的 title 留着给读屏。
-    el.innerHTML = `<div class="session-title"><span class="thread-status-dot ${status.kind}" title="${escHtml(status.label)}"></span><span class="session-title-copy">${escHtml(s.title || '未命名')}</span></div><div class="session-date">${date}${tag}</div>`;
+    const isUnread = unread.isUnread(s, { viewingId: currentSessionId });
+    el.innerHTML = `<div class="session-title">`
+      + `<span class="thread-unread-dot" ${isUnread ? '' : 'hidden'} title="未读" data-testid="unread-mark"></span>`
+      + `<span class="thread-status-dot ${status.kind}" title="${escHtml(status.label)}"></span>`
+      + `<span class="session-title-copy">${escHtml(s.title || '未命名')}</span></div>`
+      + `<div class="session-date">${date}${tag}</div>`;
     // 三个操作收进长按菜单。常驻按钮把每条会话撑到约 100px，一屏看不到几条。
     // 手势本身绑在容器上（见 rowLongPress），这里只登记「这个元素是哪条会话」。
     sessionRowThreads.set(el, s);
@@ -2157,6 +2180,8 @@ import { buildPreview, truncationNotice } from '/js/logic/file-preview.js';
     threadMenuTitleEl.textContent = thread.title || '未命名';
     // 归档视图里这一项是「取消归档」。过去靠两个不同的常驻按钮表达，
     // 现在同一个位置换文案和 action。
+    const unreadBtn = document.getElementById('thread-menu-unread');
+    if (unreadBtn) unreadBtn.textContent = unread.isManual(thread.id) ? '标为已读' : '标为未读';
     threadMenuArchiveEl.textContent = thread.archived ? '取消归档' : '归档';
     threadMenuArchiveEl.dataset.action = thread.archived ? 'unarchive' : 'archive';
     threadMenuEl.hidden = false;
@@ -2186,6 +2211,17 @@ import { buildPreview, truncationNotice } from '/js/logic/file-preview.js';
   }
 
   async function handleNativeThreadAction(thread, action) {
+    if (action === 'toggle-unread') {
+      unread.setManualUnread(thread.id, !unread.isManual(thread.id));
+      return;
+    }
+    // 归档 / 重命名是**本机用户自己的元数据操作**，不该产生未读。app-server 的
+    // recencyAt 按协议是「用于最近排序的时间戳」，没有承诺只随对话推进（见
+    // logic/unread.js 头注），所以本地操作后顺手记一笔已看，把这条最常见的
+    // 假未读路径堵掉。跨设备的元数据操作仍可能产生一次假未读，可接受。
+    if (action === 'archive' || action === 'unarchive' || action === 'rename') {
+      unread.markSeen(thread.id);
+    }
     if (action === 'rename') {
       const name = await confirmDialog.prompt({ title: '重命名会话', body: '输入新的会话名称', initial: thread.title || '' });
       if (!name) return;
@@ -2247,6 +2283,9 @@ import { buildPreview, truncationNotice } from '/js/logic/file-preview.js';
     // 开关写着「未归档」,底下却列着归档会话。同 scheduleThreadListRefresh 的 cwd 校验。
     const requestedArchived = showArchivedThreads;
     socket.emit('thread:list', { cwd, archived: requestedArchived }, ack => {
+      // 搭车的位点只覆盖本页这些行。hydrate 逐 key 取 max、只增不减，
+      // 所以少回的 key 不会抹掉本地已有位点。
+      if (ack?.ok && ack.readState) unread.hydrate(ack.readState);
       if (requestedArchived !== showArchivedThreads) return;
       if (!ack?.ok) {
         if (cwd === serverCwd) appendSystem(ack?.error || 'Thread list failed', true);

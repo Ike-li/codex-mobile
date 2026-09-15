@@ -698,6 +698,18 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/* 未读点。与 .thread-status-dot 是**两条不同的注意力轴**：那个表达 agent 活跃状态
+   （running / needs-you / error），这个表达「有没有看过新内容」。清除条件不同，
+   所以形状也要分得开——实心方块 vs 圆点，不靠颜色区分（色觉差异下会糊成一个）。 */
+.thread-unread-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 2px;
+  flex: 0 0 6px;
+  background: var(--accent);
+}
+.thread-unread-dot[hidden] { display: none; }
+
 .thread-status-dot {
   width: 8px;
   height: 8px;
