@@ -13,7 +13,8 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { schemaVerdict, probeSchema } from '../../scripts/doctor.js';
+import { EventEmitter } from 'node:events';
+import { schemaVerdict, probeSchema, createProbeChannel } from '../../scripts/doctor.js';
 
 test('no such table 判为状态库不兼容', () => {
   const verdict = schemaVerdict('anyhow error chain: no such table: agent_jobs');
@@ -87,4 +88,109 @@ test('判据与运行时兜底用同一份正则，不各写一份', async () =>
   assert.ok(SCHEMA_MISMATCH instanceof RegExp,
     'thread-actions.js 必须导出 SCHEMA_MISMATCH，让 doctor 复用同一份');
   assert.equal(SCHEMA_MISMATCH.test('no such table: x'), true);
+});
+
+// ---------------------------------------------------------------------------
+// 探测得**真的跑起来**才算数
+// ---------------------------------------------------------------------------
+// 上面那几条测的都是「拿到结果之后怎么判断」，它们从第一天起就是绿的。而 2026-09-15
+// 真跑一次 npm run doctor 才发现 SCHEMA_PROBE 从加上那天起一次都没成功过，
+// 而且是**两层错误叠在一起**：
+//
+//   ① 宿主写 `new AppServerHost()`，而它第一行就是 `if (!registry) throw`。
+//      异常被外层 try 吞成 probeError，输出恒为 ⚠️「探测没能完成」。
+//   ② 修掉 ① 之后才暴露出更深的一层：`AppServerHost.request` 的第一个参数是
+//      **runtime 不是 method**。`host.request('thread/list', {…})` 被解释成
+//      runtime='thread/list'、method={…}，app-server 收到一个对象当方法名，
+//      永远不回——doctor 直接挂死，比 warn 更糟。
+//
+// 结论是选错了边界：AppServerHost 的职责是按 runtime 路由，而探测没有 runtime。
+// 探测该走下一层的 AppServerTransport。
+//
+// 教训：判定层的纯函数测得再厚，也证明不了**有人以正确的参数调用过它们**。
+// 接线本身要有一条测，否则第一层错误会把第二层挡在后面。
+
+/** 一个照 JSON-RPC 规矩应答的假 app-server：请求回结果，通知不回。 */
+function fakeAppServer({ answer = () => ({}), silent = false } = {}) {
+  const child = new EventEmitter();
+  const methods = [];
+  child.stdout = new EventEmitter();
+  child.stderr = new EventEmitter();
+  child.stdin = {
+    write(chunk) {
+      for (const line of String(chunk).split('\n').filter(Boolean)) {
+        const frame = JSON.parse(line);
+        methods.push(frame.method);
+        if (silent || frame.id === undefined) continue;
+        const payload = `${JSON.stringify({ jsonrpc: '2.0', id: frame.id, result: answer(frame.method) })}\n`;
+        queueMicrotask(() => child.stdout.emit('data', Buffer.from(payload)));
+      }
+      return true;
+    },
+  };
+  child.kill = () => true;
+  return { child, methods };
+}
+
+test('探测通道建得出来，且用配置里那个 codexBin 与主工作区', async () => {
+  // doctor 的全部价值在于「它看到的 == server 启动时会看到的」。探测却去跑 PATH 上
+  // 另一个 codex 的话，报出来的兼容性结论与实际要用的那个二进制无关。
+  const spawned = [];
+  const probe = await createProbeChannel({
+    codexBin: '/opt/custom/codex',
+    cwd: '/srv/work',
+    spawnImpl: (bin, args, opts) => { spawned.push({ bin, cwd: opts?.cwd }); return fakeAppServer().child; },
+  });
+  assert.deepEqual(spawned, [], '构造不该 spawn——建个对象就拉子进程的话，--skip-probe 也躲不掉');
+
+  await probe.request('thread/list', { pageSize: 1 });
+  assert.deepEqual(spawned, [{ bin: '/opt/custom/codex', cwd: '/srv/work' }]);
+  await probe.dispose();
+});
+
+test('先 initialize 握手再发 thread/list——顺序反了 app-server 不回', async () => {
+  const server = fakeAppServer();
+  const probe = await createProbeChannel({
+    codexBin: '/fake/codex', cwd: '/w', spawnImpl: () => server.child,
+  });
+  await probe.request('thread/list', { pageSize: 1 });
+  assert.deepEqual(server.methods, ['initialize', 'initialized', 'thread/list'],
+    'initialized 通知也要发，它是协议握手的第二步');
+  await probe.dispose();
+});
+
+test('握手参数与 server 用的是同一份，不各写一份', async () => {
+  // 两处各写一份的话，上游改了 capabilities 形状就只有一边跟着改，
+  // 而 doctor 报出来的兼容性结论会与实际连接的那次不同——正是它最不该出错的地方。
+  const { buildInitializeParams } = await import('../../src/agent/app-server-host.js');
+  const sent = [];
+  const server = fakeAppServer();
+  server.child.stdin.write = chunk => {
+    for (const line of String(chunk).split('\n').filter(Boolean)) sent.push(JSON.parse(line));
+    const frame = sent.at(-1);
+    if (frame.id !== undefined) {
+      queueMicrotask(() => server.child.stdout.emit('data',
+        Buffer.from(`${JSON.stringify({ jsonrpc: '2.0', id: frame.id, result: {} })}\n`)));
+    }
+    return true;
+  };
+  const probe = await createProbeChannel({
+    codexBin: '/fake/codex', cwd: '/w', spawnImpl: () => server.child,
+  });
+  await probe.request('thread/list', {});
+  assert.deepEqual(sent[0].params, buildInitializeParams({ experimentalApi: false }));
+  await probe.dispose();
+});
+
+test('请求带超时——app-server 不回时 doctor 必须停下来，不能永远挂着', async () => {
+  // 这条是真踩出来的：修掉构造那个 bug 之后，探测第一次真的跑起来，
+  // 却因为参数顺序错误发出了一个畸形请求，app-server 不回，npm run doctor 挂死。
+  // **挂死比 warn 更糟**——warn 至少还能看到其余十二项。
+  const probe = await createProbeChannel({
+    codexBin: '/fake/codex', cwd: '/w', timeoutMs: 40,
+    spawnImpl: () => fakeAppServer({ silent: true }).child,
+  });
+  // 卡在 initialize 而不是 thread/list——握手就超时，比发完请求再等更早停下来。
+  await assert.rejects(() => probe.request('thread/list', {}), /initialize timed out/i);
+  await probe.dispose();
 });

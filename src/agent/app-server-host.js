@@ -13,6 +13,23 @@ const TARGETED_SERVER_REQUESTS = new Set([
   'execCommandApproval',
 ]);
 
+/**
+ * app-server 握手的 initialize 参数。
+ *
+ * 独立导出是因为**第二个消费者出现了**：scripts/doctor.js 的 SCHEMA_PROBE 也要起一条
+ * 连接做只读探测。两处各写一份的话，上游改了 capabilities 形状就只有一边跟着改——
+ * 而 doctor 报出来的兼容性结论会与 server 实际连接的那次不同，正是它最不该出错的地方。
+ */
+export function buildInitializeParams({ experimentalApi = false } = {}) {
+  return {
+    clientInfo: { name: 'codex-chat-mobile', title: 'Codex Chat Mobile', version: '0.1.0' },
+    capabilities: {
+      experimentalApi: experimentalApi === true,
+      requestAttestation: false,
+    },
+  };
+}
+
 export class AppServerHost {
   constructor({
     codexBin = 'codex',
@@ -84,13 +101,8 @@ export class AppServerHost {
     this.attach(runtime);
     if (this.initialized) return this.initialized;
     const pending = (async () => {
-      await this.request(runtime, 'initialize', {
-        clientInfo: { name: 'codex-chat-mobile', title: 'Codex Chat Mobile', version: '0.1.0' },
-        capabilities: {
-          experimentalApi: this.experimentalApi,
-          requestAttestation: false,
-        },
-      });
+      await this.request(runtime, 'initialize',
+        buildInitializeParams({ experimentalApi: this.experimentalApi }));
       this.notify(runtime, 'initialized', {});
     })();
     const singleFlight = pending.catch(error => {

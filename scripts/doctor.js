@@ -27,6 +27,54 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 /** 重新导出，保持既有 import 路径可用（test/invariants/doctor.test.mjs 守着 ENV-02）。 */
 export { schemaVerdict };
 
+/** 探测的默认超时。app-server 不回时 doctor 必须停下来——挂死比 warn 更糟。 */
+const PROBE_TIMEOUT_MS = 15_000;
+
+/**
+ * 开一条只用来做 schema 探测的 app-server 连接，返回 `{request, dispose}`。
+ *
+ * 【为什么走 transport 而不是 AppServerHost】AppServerHost 的职责是**按 runtime 路由**
+ * （`request(runtime, method, params)` 第一个参数是 runtime），而探测没有 runtime。
+ * 拿它当探测入口会写成 `host.request('thread/list', {…})` —— 参数错位成
+ * runtime='thread/list'、method={…}，app-server 收到一个对象当方法名，永远不回。
+ * 这个错误曾经被更浅的一个 bug（无参构造 AppServerHost 直接抛）挡在后面，
+ * 两层叠加的症状是 SCHEMA_PROBE 恒为「探测没能完成」。
+ *
+ * codexBin 与 cwd 必须由调用方给：doctor 的全部价值在于「它看到的 == server 启动时
+ * 会看到的」，探测却去跑 PATH 上另一个 codex 的话，报出来的结论与实际那个二进制无关。
+ *
+ * 动态 import 是有意的：src/agent/ 那一支导入失败（缺依赖、语法错）时，其余十二项检查
+ * 仍然要能跑完——「因为一项探测挂了就什么都看不到」是最差的自检体验。
+ */
+export async function createProbeChannel({
+  codexBin, cwd, spawnImpl, timeoutMs = PROBE_TIMEOUT_MS,
+} = {}) {
+  const [{ AppServerTransport }, { buildInitializeParams }] = await Promise.all([
+    import('../src/agent/app-server-transport.js'),
+    import('../src/agent/app-server-host.js'),
+  ]);
+  const transport = new AppServerTransport({
+    codexBin, cwd, ...(spawnImpl ? { spawnImpl } : {}),
+  });
+
+  // 握手只做一次，且**懒到第一次 request 才做**——构造即 spawn 的话，
+  // 连 --skip-probe 都躲不掉那个子进程。
+  let handshake = null;
+  const request = async (method, params) => {
+    handshake ??= (async () => {
+      transport.start();
+      // experimentalApi 固定 false：探测只发 thread/list，不需要实验能力，
+      // 而开着它会让握手的成败取决于一个与本次结论无关的开关。
+      await transport.request('initialize', buildInitializeParams({ experimentalApi: false }), { timeoutMs });
+      transport.notify('initialized', {});
+    })();
+    await handshake;
+    return transport.request(method, params, { timeoutMs });
+  };
+
+  return { request, dispose: async () => { await transport.dispose?.(); } };
+}
+
 /**
  * 用一次只读调用探测状态库能不能读。
  *
@@ -117,22 +165,32 @@ async function main() {
   const asJson = process.argv.includes('--json');
   const skipProbe = process.argv.includes('--skip-probe');
 
+  // 取数在探测**之前**：探测要用解析后的 codexBin 与主工作区，而那两样都在上下文里。
+  // 上一版顺序是反的，于是探测只能空手构造 host——那正是它一直跑不起来的原因之一。
+  const context = await collectDoctorContext();
+
   let schemaProbe = null;
   if (!skipProbe) {
     // 起真 app-server 要拉起 codex 子进程。失败不该让整个自检跑不完——
     // 其余十二项与它无关，而「因为一项探测挂了就什么都看不到」是最差的自检体验。
+    let probe = null;
     try {
-      const { AppServerHost } = await import('../src/agent/app-server-host.js');
-      const host = new AppServerHost();
-      const result = await probeSchema({ request: (m, p) => host.request(m, p), pinnedVersion: readPin() });
+      probe = await createProbeChannel({
+        codexBin: context.codexProbe.resolved || context.codexProbe.explicit || 'codex',
+        cwd: context.workdirProbes[0]?.path,
+      });
+      const result = await probeSchema({ request: probe.request, pinnedVersion: context.pinnedVersion });
       schemaProbe = schemaProbeDiagnostic(result);
-      await host.dispose?.();
     } catch (err) {
       schemaProbe = schemaProbeDiagnostic({ compatible: true, probeError: String(err?.message || err) });
+    } finally {
+      // finally 而不是 try 尾部：probeSchema 抛出时上一版会漏掉 dispose，
+      // 把一个 codex 子进程留在后台，而 doctor 是个会被反复跑的命令。
+      await probe?.dispose?.();
     }
   }
 
-  const { checks, readiness } = runDoctor(await collectDoctorContext({ schemaProbe }));
+  const { checks, readiness } = runDoctor({ ...context, schemaProbe });
 
   if (asJson) {
     console.log(JSON.stringify({ readiness, checks }, null, 2));
