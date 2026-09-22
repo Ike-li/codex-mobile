@@ -82,6 +82,19 @@ npm run test:ci             # 全量门禁：lint + 协议 + 边界 + 覆盖率�
 
 日常回归一律走 mock server，不调真实 Codex CLI。详见 [docs/TESTING.md](docs/TESTING.md)。
 
+## 给 AI agent 的上下文
+
+`openwiki/` 是生成的证据索引，按系统与工作流分组（architecture / concepts /
+workflows / frontend / integrations / operations / testing）。每条断言都绑定
+`repo://path#Lx-Ly` 的有界代码行范围，不是对代码的复述。入口
+[openwiki/quickstart.md](openwiki/quickstart.md) 按任务路由：改协议桥、改审批、
+改前端渲染、加门禁、改配置，各自该先读哪一页。
+
+它是**按需上下文，不是必读**。源码和测试是权威，wiki 与代码冲突时以代码为准。
+
+`AGENTS.md`（指向 [CLAUDE.md](CLAUDE.md) 的符号链接）是项目规则：分支约定、TDD
+要求，以及「日常回归走 mock server、不消耗模型额度」这类硬约束。
+
 ## FAQ
 
 **Can I control Codex CLI from my phone without a ChatGPT account?**
