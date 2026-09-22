@@ -64,7 +64,12 @@ jobs:
         # webkit 是 playwright.config.js 里 mobile-webkit project 的引擎。产品主设备是
         # 手机，只装 chromium 等于 iOS 侧零覆盖；漏装的症状是 E2E 报
         # "Executable doesn't exist"，读起来像配置坏了而不像少装了浏览器。
-        run: npx playwright install chromium webkit
+        #
+        # --with-deps 不能省：它装的是浏览器自身的二进制，系统库要另外装。ubuntu-latest
+        # 滚到 24.04 后 webkit 依赖 libgtk-4（此前是 libgtk-3），runner 镜像里没有，
+        # 于是每个 mobile-webkit 用例在 2~3ms 内以 "browserType.launch: Host system is
+        # missing dependencies" 挂掉 —— 失败得太快，看起来像用例本身坏了。
+        run: npx playwright install --with-deps chromium webkit
 
       - name: Run E2E tests
         if: matrix.node-version == 20
