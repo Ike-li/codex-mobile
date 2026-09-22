@@ -95,6 +95,24 @@ test('全量 audit 即使不阻断，报告也必须留存为产物', () => {
   );
 });
 
+test('E2E 失败时 Playwright 的现场必须留存为产物', () => {
+  // 2026-09-22 实测：webkit 上两条 E2E 红了，而 run 里只有 audit-report。
+  // playwright.config.js 配了 screenshot: only-on-failure 与 trace: on-first-retry，
+  // 截图和 trace 都落在 test-results/，但没人上传——随 runner 一起销毁。
+  // 于是线上失败只剩一行断言文本，排查只能靠在本地重建 Linux 容器碰运气复现。
+  //
+  // 判据必须连 if 条件一起看：默认的 upload-artifact 只在前面步骤全绿时执行，
+  // 而这里要的恰恰是失败那一次的现场——不写 failure()/always() 等于没有这个步骤。
+  const step = workflow.match(/- name: [^\n]*Playwright[^\n]*\n(?:.*\n)*?\s*retention-days: \d+/);
+  assert.ok(step, 'E2E 会产出 test-results/，但 workflow 里没有对应的 upload-artifact 步骤');
+  assert.match(step[0], /path:\s*test-results\//, '上传的不是 test-results/，拿不到截图与 trace');
+  assert.match(
+    step[0],
+    /if:\s*\$\{\{\s*(failure\(\)|always\(\))/,
+    '没有 failure()/always() 条件 —— 只在成功时上传现场，而现场只在失败时才有价值',
+  );
+});
+
 test('覆盖率退化门禁不只在 pull_request 上生效', () => {
   const deltaStep = workflow.match(/- name: Check coverage delta\n(?:.*\n)*?\s*run: .*check-coverage-delta\.js/);
   assert.ok(deltaStep, 'workflow 里找不到 Check coverage delta 步骤');
