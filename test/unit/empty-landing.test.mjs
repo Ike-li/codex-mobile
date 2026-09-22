@@ -33,7 +33,10 @@ test('有待审批时排在最前，因为只有它会卡住 agent', () => {
   const items = emptyLandingItems({
     lastThread: { id: 'thr_1', cwd: '/tmp/app', title: '修胶囊' },
     changedCount: 3,
-    pendingCount: 2,
+    pendingNeeds: [
+      { needId: 'need_a', target: { threadId: 'thr_a' } },
+      { needId: 'need_b', target: { threadId: 'thr_b' } },
+    ],
   });
 
   assert.equal(items[0].action, 'approvals', '待审批必须排在继续会话与改动之前');
@@ -41,7 +44,22 @@ test('有待审批时排在最前，因为只有它会卡住 agent', () => {
   assert.deepEqual(items.map(item => item.action), ['approvals', 'continue', 'changes']);
 });
 
+// 横幅在落地页上收起之后，这颗按钮就是待审批唯一的入口，它必须自己知道要开哪一条：
+// 聚合成一个数字而不带目标，点下去就只能靠调用方再猜一次。
+test('待审批入口带上它要打开的那一条', () => {
+  const [entry] = emptyLandingItems({
+    pendingNeeds: [
+      { needId: 'need_a', target: { threadId: 'thr_a' } },
+      { needId: 'need_b', target: { threadId: 'thr_b' } },
+    ],
+  });
+
+  assert.equal(entry.needId, 'need_a', '先来的先处理');
+  assert.equal(entry.threadId, 'thr_a');
+});
+
 test('没有待审批时不占位', () => {
-  assert.deepEqual(emptyLandingItems({ pendingCount: 0 }), []);
-  assert.deepEqual(emptyLandingItems({ changedCount: 1, pendingCount: 0 }).map(i => i.action), ['changes']);
+  assert.deepEqual(emptyLandingItems({ pendingNeeds: [] }), []);
+  assert.deepEqual(emptyLandingItems({}), []);
+  assert.deepEqual(emptyLandingItems({ changedCount: 1, pendingNeeds: [] }).map(i => i.action), ['changes']);
 });

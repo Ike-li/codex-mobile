@@ -14,16 +14,17 @@ test('a fresh mobile page recovers and resolves a pending cross-thread approval'
     await freshPage.goto('http://localhost:3232/');
     await expect(freshPage.locator('#state-label')).not.toHaveText('offline', { timeout: 10000 });
 
-    const needsPanel = freshPage.locator('#needs-you-panel');
-    await expect(needsPanel).toBeVisible({ timeout: 10000 });
-    await expect(needsPanel).toContainText('approve needs-you recovery');
-    await needsPanel.locator('[data-need-action="open"]').click();
+    // fresh page 落在空会话上，待审批的入口是落地页那颗按钮——横幅在有可见入口时收起。
+    const landingEntry = freshPage.locator('[data-empty-action="approvals"]');
+    await expect(landingEntry).toBeVisible({ timeout: 10000 });
+    await expect(freshPage.locator('#needs-you-panel'), '落地页已经有入口了').toBeHidden();
+    await landingEntry.click();
 
     const recoveredCard = freshPage.locator('.tool-card[data-card="decision"]').last();
     await expect(recoveredCard).toBeVisible();
     await recoveredCard.locator('.approve-btn[data-d="accept"]').click();
     await expect(recoveredCard).toContainText('已批准');
-    await expect(needsPanel).toBeHidden();
+    await expect(freshPage.locator('#needs-you-panel')).toBeHidden();
   } finally {
     await freshContext.close();
   }
@@ -40,15 +41,15 @@ test('a needs-you deep link opens the exact pending approval', async ({ page, br
   const freshPage = await freshContext.newPage();
   try {
     await freshPage.goto('http://localhost:3232/');
-    const row = freshPage.locator('#needs-you-panel [data-need-id]').filter({ hasText: 'approve needs-you deep link' });
-    await expect(row).toBeVisible({ timeout: 10000 });
-    const needId = await row.getAttribute('data-need-id');
-    // 从 data 属性读，不从显示文本读：那一行给用户看的是会话名，不是内部 id。
-    const threadId = await row.getAttribute('data-thread-id');
+    // 横幅在落地页上收起，目标改挂在落地页那颗按钮的 data 属性上。
+    const landingEntry = freshPage.locator('[data-empty-action="approvals"]');
+    await expect(landingEntry).toBeVisible({ timeout: 10000 });
+    const needId = await landingEntry.getAttribute('data-need-id');
+    const threadId = await landingEntry.getAttribute('data-thread-id');
+    expect(needId, '入口必须带上它要打开的那一条').toBeTruthy();
 
-    // 面板上不该出现内部 threadId —— 它对用户没有任何意义，而「需要你」正是用户
-    // 最需要快速判断「是哪个会话在等我」的地方。
-    await expect(row.locator('.needs-you-thread')).not.toHaveText(threadId);
+    // 按钮上不该把内部 threadId 写给用户看 —— 它对人没有任何意义。
+    await expect(landingEntry).not.toContainText(threadId);
 
     await freshPage.goto(`http://localhost:3232/?thread=${encodeURIComponent(threadId)}&need=${encodeURIComponent(needId)}`);
     const recoveredCard = freshPage.locator('.tool-card').filter({ hasText: 'approve needs-you deep link' }).last();
@@ -111,7 +112,9 @@ test('审批卡在视野里时横幅收起，滚出视野就回来', async ({ pa
   await expect(page.locator('#needs-you-panel'), '看不见了就必须把它拉回眼前').toBeVisible({ timeout: 5000 });
 });
 
-test('空落地页与横幅读同一份待审批，数字不会打架', async ({ page }) => {
+// 空落地页已经把「N 项等你批准」摆在正中间，横幅再挂一条就是同一件事说两遍——
+// 和「审批卡在视野里」是同一条判据，只是可见入口换成了落地页那颗按钮。
+test('空落地页把待审批摆在正中间时，横幅不再重复一遍', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#state-label')).not.toHaveText('offline', { timeout: 10000 });
 
@@ -119,15 +122,31 @@ test('空落地页与横幅读同一份待审批，数字不会打架', async ({
   await page.locator('#send-btn').click();
   await expect(page.locator('.tool-card[data-card="decision"]').last()).toBeVisible({ timeout: 10000 });
 
-  // 新建会话回到空落地页：审批卡随会话离开 DOM，横幅必须重新出现
   await page.locator('#header-new').click();
   const landing = page.locator('#empty-actions');
   await expect(landing).toContainText('等你批准', { timeout: 10000 });
-  await expect(page.locator('#needs-you-panel'), '卡片已不在 DOM，横幅要回来').toBeVisible({ timeout: 5000 });
+  await expect(page.locator('#needs-you-panel'), '落地页已经把它摆在正中间了').toBeHidden();
 
-  // 两处读的是同一份 needsYou，只刷一处就会在同屏给出两个数字。
+  // 落地页的数字来自同一份 needsYou，不能因为横幅收起就不再跟着刷。
   const landingCount = (await landing.innerText()).match(/(\d+)\s*项等你批准/)?.[1];
-  const bannerCount = (await page.locator('.needs-you-heading').innerText()).match(/(\d+)/)?.[1];
-  expect(landingCount, '落地页读不出待审批数').toBeTruthy();
-  expect(landingCount, `落地页说 ${landingCount} 项，横幅说 ${bannerCount} 项`).toBe(bannerCount);
+  expect(Number(landingCount), '落地页读不出待审批数').toBeGreaterThan(0);
+});
+
+// 正对照：落地页入口一旦不在（回到会话视图且卡片看不见），横幅必须重新承担提醒。
+test('离开落地页且审批卡看不见时，横幅重新出现', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('#state-label')).not.toHaveText('offline', { timeout: 10000 });
+
+  await page.locator('#msg-input').fill('approve back to thread');
+  await page.locator('#send-btn').click();
+  const card = page.locator('.tool-card[data-card="decision"]').last();
+  await expect(card).toBeVisible({ timeout: 10000 });
+  // 断言收敛到「当前这一条」：mock server 的 needs 跨用例累积，横幅里可能还挂着
+  // 别的用例留下的待办，按整条横幅的显隐来断言会被那些串扰。
+  await expect(page.locator('#needs-you-panel'), '卡片就在眼前').not.toContainText('approve back to thread');
+
+  await card.evaluate(el => { el.style.marginBottom = '3000px'; });
+  await page.locator('#messages').evaluate(el => { el.scrollTop = el.scrollHeight; });
+  await expect(page.locator('#needs-you-panel'), '没有任何可见入口时横幅要把它拉回来')
+    .toContainText('approve back to thread', { timeout: 5000 });
 });

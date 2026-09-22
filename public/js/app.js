@@ -799,11 +799,11 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
     const items = emptyLandingItems({
       lastThread,
       changedCount: workspaceChanged,
-      pendingCount: [...needsYou.values()].filter(need => need.state === 'pending').length,
+      pendingNeeds: [...needsYou.values()].filter(need => need.state === 'pending'),
     });
     root.innerHTML = items.map(item => {
       if (item.action === 'approvals') {
-        return `<button type="button" class="suggestion-card" data-empty-action="approvals">
+        return `<button type="button" class="suggestion-card" data-empty-action="approvals" data-need-id="${escHtml(item.needId)}" data-thread-id="${escHtml(item.threadId)}">
           <span class="suggestion-icon">${icon('hand')}</span>
           <span class="suggestion-text">${escHtml(item.label)}</span>
         </button>`;
@@ -840,8 +840,10 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
       btn.onclick = () => workspacePanel.open('changes');
     });
     root.querySelectorAll('[data-empty-action="approvals"]').forEach(btn => {
-      btn.onclick = () => openNeed([...needsYou.values()].find(need => need.state === 'pending'));
+      btn.onclick = () => openNeed(needsYou.get(btn.dataset.needId));
     });
+    // 这颗按钮的出现与消失直接改变横幅该不该出现，落地页一重绘就得重算横幅。
+    renderNeedsYouPanel();
   }
 
   let workspaceChanged = 0;
@@ -1761,9 +1763,15 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
     openNeed(need);
   }
 
-  // 审批卡是否已经在视野里。横幅只负责把**看不见的**待办拉到眼前，卡片就在眼前时
-  // 再挂一条横幅，等于同一件事在一屏内说两遍，还占掉首屏六分之一的高度。
+  // 待办是否已经有一个看得见的入口。横幅只负责把**看不见的**待办拉到眼前，眼前已经
+  // 有入口时再挂一条，等于同一件事在一屏内说两遍，还占掉首屏六分之一的高度。
+  //
+  // 两种可见入口：会话里的审批卡（逐条），空落地页的「N 项等你批准」（聚合，覆盖全部）。
   function inlineVisibleNeedIds() {
+    const landingEntry = $('empty-actions')?.querySelector('[data-empty-action="approvals"]');
+    if (landingEntry && $('empty-state')?.style.display !== 'none') {
+      return [...needsYou.keys()];
+    }
     const ids = [];
     for (const [needId, card] of Object.entries(pendingApprovalCards)) {
       if (!card?.isConnected || typeof card.getBoundingClientRect !== 'function') continue;
@@ -1776,8 +1784,9 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
   // 横幅与空落地页的「N 项等你批准」读的是同一份 needsYou。只刷一处，同一屏上就会
   // 出现两个对不上的数字——实测撞到过：横幅说 1 项，落地页说 2 项。
   function refreshNeedsViews() {
-    renderNeedsYouPanel();
+    // 先落地页后横幅：横幅的判据要读落地页那颗按钮在不在，顺序反了就读到上一帧的状态。
     if ($('empty-state')?.style.display !== 'none') renderEmptyLanding();
+    renderNeedsYouPanel();
   }
 
   let lastBannerKey = null;
