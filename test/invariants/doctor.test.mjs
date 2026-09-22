@@ -16,6 +16,23 @@ import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
 import { schemaVerdict, probeSchema, createProbeChannel } from '../../scripts/doctor.js';
 
+// 等一个只由 unref 定时器驱动的 promise 时，必须有东西吊着事件循环。
+// 请求超时定时器在生产代码里是 unref 的（线上有 HTTP listener 吊着，无影响），测试里没有，
+// 于是事件循环先排空，node --test 判定「promise 仍挂起而事件循环已结束」，把用例标成
+// cancelled——而 cancelled 不计入 fail，汇总看起来像通过（check-test-summary.js 正是为
+// 这个而设，它把 cancelled≠0 拦成红）。
+// app-server-transport.test.mjs 与 app-server-host.test.mjs 已各有一份同源实现：
+// test/ 下的用例彼此不 import，三处各自保持自包含。这里是这个病的第三次复发——
+// 前两次修的时候解法都没传过来。
+async function withLiveEventLoop(fn) {
+  const keepAlive = setInterval(() => {}, 1_000);
+  try {
+    return await fn();
+  } finally {
+    clearInterval(keepAlive);
+  }
+}
+
 test('no such table 判为状态库不兼容', () => {
   const verdict = schemaVerdict('anyhow error chain: no such table: agent_jobs');
   assert.equal(verdict.compatible, false);
@@ -186,11 +203,13 @@ test('请求带超时——app-server 不回时 doctor 必须停下来，不能�
   // 这条是真踩出来的：修掉构造那个 bug 之后，探测第一次真的跑起来，
   // 却因为参数顺序错误发出了一个畸形请求，app-server 不回，npm run doctor 挂死。
   // **挂死比 warn 更糟**——warn 至少还能看到其余十二项。
-  const probe = await createProbeChannel({
-    codexBin: '/fake/codex', cwd: '/w', timeoutMs: 40,
-    spawnImpl: () => fakeAppServer({ silent: true }).child,
+  await withLiveEventLoop(async () => {
+    const probe = await createProbeChannel({
+      codexBin: '/fake/codex', cwd: '/w', timeoutMs: 40,
+      spawnImpl: () => fakeAppServer({ silent: true }).child,
+    });
+    // 卡在 initialize 而不是 thread/list——握手就超时，比发完请求再等更早停下来。
+    await assert.rejects(() => probe.request('thread/list', {}), /initialize timed out/i);
+    await probe.dispose();
   });
-  // 卡在 initialize 而不是 thread/list——握手就超时，比发完请求再等更早停下来。
-  await assert.rejects(() => probe.request('thread/list', {}), /initialize timed out/i);
-  await probe.dispose();
 });
