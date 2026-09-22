@@ -92,8 +92,8 @@ workflows / frontend / integrations / operations / testing）。每条断言都�
 
 它是**按需上下文，不是必读**。源码和测试是权威，wiki 与代码冲突时以代码为准。
 
-`AGENTS.md`（指向 [CLAUDE.md](CLAUDE.md) 的符号链接）是项目规则：分支约定、TDD
-要求，以及「日常回归走 mock server、不消耗模型额度」这类硬约束。
+[AGENTS.md](AGENTS.md) 是项目规则：分支约定、TDD 要求，以及「日常回归走 mock
+server、不消耗模型额度」这类硬约束。
 
 ## FAQ
 
