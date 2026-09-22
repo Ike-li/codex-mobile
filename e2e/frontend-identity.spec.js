@@ -56,7 +56,12 @@ test.describe('空状态是工作台，不是聊天落地页', () => {
     await page.goto('/');
     await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
     await expect(page.locator('#empty-heading')).toBeVisible();
-    await expect(page.locator('.suggestion-card')).toHaveCount(0);
+    // 这条守的是「不放通用聊天建议」，不是「一张卡都不许有」——空状态本来就该放
+    // 工作台入口（继续上次、未提交改动、等你批准）。只断言没有别的东西混进来。
+    const actions = await page.locator('.suggestion-card')
+      .evaluateAll(cards => cards.map(card => card.dataset.emptyAction));
+    expect(actions.filter(action => !['continue', 'changes', 'approvals'].includes(action)))
+      .toEqual([]);
     await expect(page.locator('#empty-actions')).not.toContainText('探索并理解代码');
   });
 

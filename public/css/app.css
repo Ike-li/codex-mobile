@@ -1385,6 +1385,37 @@ body {
    用在卡片白底上的场合，#d60000 on #ffffff 更高，不吃亏。 */
 .tool-err { color: var(--ansi-red); }
 .tool-card[data-card="decision"] { border-left-color: var(--warn-text); }
+
+/* 决议结果的文字。此前走 .tool-output 再内联 padding:0，结果紧贴卡片左边缘、
+   几乎压在那道琥珀竖线上——按钮换成文字时把内边距一起清掉了。 */
+.approval-result {
+  display: inline-block;
+  padding: var(--space-2) 0;
+  font-size: var(--font-terminal);
+  color: var(--ok-text, var(--text-muted));
+}
+.approval-result-err { color: var(--err-text, var(--text-muted)); }
+
+/* 决议之后这张卡是历史记录：命令在下面的执行行里还会出现，原因和按钮已无操作价值。
+   收成标题一行，详情留在 DOM 里不删——需要回看时还能靠展开拿到。 */
+.tool-card[data-resolved] > *:not(.tool-name) { display: none; }
+.tool-card[data-resolved] { opacity: .72; }
+.tool-card[data-resolved] .tool-name {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.approval-resolved-cmd {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono, monospace);
+  font-size: var(--font-terminal);
+  color: var(--text-muted);
+}
 .tool-card[data-card="outcome"] { border-left-color: var(--accent-text); }
 .tool-card[data-card="action"] { border-left-color: var(--border); }
 .tool-card[data-card="meta"] { border-left-color: var(--border-light); }

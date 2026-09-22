@@ -15,7 +15,9 @@ test.describe('P0 协议桥、审批与 Socket.IO', () => {
     await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
 
     // 2. Send approve this command.
-    const approvalCards = page.locator('.tool-card').filter({ hasText: '需要审批' });
+    // 用 data-card 而不是「需要审批」这四个字定位：卡片决议后标题会变成「已批准」，
+    // 拿文案当锚点会在那一刻解析不到元素，而那正是要断言结果的时刻。
+    const approvalCards = page.locator('.tool-card[data-card="decision"]');
     const approvalCountBeforeApprove = await approvalCards.count();
     await sendMessage(page, 'approve this command');
     const approveCard = approvalCards.nth(approvalCountBeforeApprove);

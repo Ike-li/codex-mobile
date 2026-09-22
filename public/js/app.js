@@ -44,6 +44,7 @@ import { readPreferences, shouldAnnounceMcpStatus } from '/js/ui/ui-preferences.
 import { mcpPanelHtml } from '/js/ui/mcp-panel.js';
 import { accountPanelHtml } from '/js/ui/account-panel.js';
 import { emptyLandingItems } from '/js/ui/empty-landing.js';
+import { bannerNeeds, waitingLabel } from '/js/session/needs-you-view.js';
 import { threadActionConfirm, threadActionErrorMessage } from '/js/session/thread-actions.js';
 import { summarizeTurnOutcome } from '/js/render/turn-outcome.js';
 import { diagnoseHealth, HEALTH_LAYERS } from '/js/net/health-diagnosis.js';
@@ -795,8 +796,18 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
     const root = $('empty-actions');
     if (!root) return;
     const lastThread = (appThreads || []).find(item => item?.id) || null;
-    const items = emptyLandingItems({ lastThread, changedCount: workspaceChanged });
+    const items = emptyLandingItems({
+      lastThread,
+      changedCount: workspaceChanged,
+      pendingCount: [...needsYou.values()].filter(need => need.state === 'pending').length,
+    });
     root.innerHTML = items.map(item => {
+      if (item.action === 'approvals') {
+        return `<button type="button" class="suggestion-card" data-empty-action="approvals">
+          <span class="suggestion-icon">${icon('hand')}</span>
+          <span class="suggestion-text">${escHtml(item.label)}</span>
+        </button>`;
+      }
       if (item.action === 'continue') {
         const sub = item.title ? `<span class="suggestion-text-sub">${escHtml(item.title)}</span>` : '';
         return `<button type="button" class="suggestion-card" data-empty-action="continue" data-thread-id="${escHtml(item.threadId)}" data-cwd="${escHtml(item.cwd)}">
@@ -827,6 +838,9 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
     });
     root.querySelectorAll('[data-empty-action="changes"]').forEach(btn => {
       btn.onclick = () => workspacePanel.open('changes');
+    });
+    root.querySelectorAll('[data-empty-action="approvals"]').forEach(btn => {
+      btn.onclick = () => openNeed([...needsYou.values()].find(need => need.state === 'pending'));
     });
   }
 
@@ -1709,7 +1723,7 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
       if (!ack?.ok || !Number.isFinite(ack.revision) || ack.revision < needsYouRevision) return;
       needsYouRevision = ack.revision;
       needsYou = new Map((ack.needs || []).map(need => [need.needId, need]));
-      renderNeedsYouPanel();
+      refreshNeedsViews();
       openPendingNeedsYouDeepLink();
     });
   }
@@ -1726,15 +1740,12 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
       const card = pendingApprovalCards[need.needId];
       if (card) {
         delete pendingApprovalCards[need.needId];
-        const actions = card.querySelector('.approval-btns:last-child');
         // 按真实原因写文案：超时与被撤销都不是「在其他设备处理」，那句话会把用户
         // 支使到另一台设备上去找根本不存在的操作记录。
-        if (actions) {
-          actions.innerHTML = `<span class="tool-output tool-ok" style="background:transparent;padding:0;">${escHtml(needResolutionLabel(need.state))}</span>`;
-        }
+        collapseDecisionCard(card, needResolutionLabel(need.state));
       }
     }
-    renderNeedsYouPanel();
+    refreshNeedsViews();
     openPendingNeedsYouDeepLink();
   }
 
@@ -1750,9 +1761,35 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
     openNeed(need);
   }
 
+  // 审批卡是否已经在视野里。横幅只负责把**看不见的**待办拉到眼前，卡片就在眼前时
+  // 再挂一条横幅，等于同一件事在一屏内说两遍，还占掉首屏六分之一的高度。
+  function inlineVisibleNeedIds() {
+    const ids = [];
+    for (const [needId, card] of Object.entries(pendingApprovalCards)) {
+      if (!card?.isConnected || typeof card.getBoundingClientRect !== 'function') continue;
+      const rect = card.getBoundingClientRect();
+      if (rect.bottom > 0 && rect.top < (window.innerHeight || 0)) ids.push(needId);
+    }
+    return ids;
+  }
+
+  // 横幅与空落地页的「N 项等你批准」读的是同一份 needsYou。只刷一处，同一屏上就会
+  // 出现两个对不上的数字——实测撞到过：横幅说 1 项，落地页说 2 项。
+  function refreshNeedsViews() {
+    renderNeedsYouPanel();
+    if ($('empty-state')?.style.display !== 'none') renderEmptyLanding();
+  }
+
+  let lastBannerKey = null;
   function renderNeedsYouPanel() {
     if (!needsYouPanel) return;
-    const active = [...needsYou.values()].filter(need => need.state === 'pending' || need.state === 'unknown');
+    const pending = [...needsYou.values()].filter(need => need.state === 'pending' || need.state === 'unknown');
+    const active = bannerNeeds(pending, { inlineNeedIds: inlineVisibleNeedIds() });
+    // 滚动会以每帧的频率调进来。集合没变就不重建 DOM——否则拇指滑动时整条横幅
+    // 每帧闪一次，按钮也会在指尖下被换掉。
+    const key = active.map(need => `${need.needId}:${need.state}`).join(',');
+    if (key === lastBannerKey) return;
+    lastBannerKey = key;
     if (!active.length) {
       needsYouPanel.hidden = true;
       needsYouPanel.innerHTML = '';
@@ -1765,7 +1802,7 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
           ? (need.payload?.questions?.[0]?.question || 'Codex 有问题等待回答')
           : displayCommand(Array.isArray(need.payload?.command) ? need.payload.command.join(' ') : (need.payload?.command || need.payload?.reason || '有操作等待审批'));
         const action = need.state === 'unknown'
-          ? '<span class="tool-output tool-err" style="background:transparent;padding:0;">结果未知，等待上游终态</span>'
+          ? '<span class="approval-result approval-result-err">结果未知，等待上游终态</span>'
           : '<button class="native-mini-btn" type="button" data-need-action="open">处理</button>';
         // 显示会话名而不是内部 threadId：`mock_thread_1789224943799` 对用户没有任何
         // 意义，而「需要你」正是用户最需要快速判断「这是哪个会话在等我」的地方。
@@ -1822,7 +1859,7 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
     delete pendingApprovalCards[needId];
     const actions = card.querySelector('.approval-btns:last-child');
     if (actions) {
-      actions.innerHTML = '<span class="tool-output tool-err" style="background:transparent;padding:0;">结果未知，等待上游终态</span>';
+      actions.innerHTML = '<span class="approval-result approval-result-err">结果未知，等待上游终态</span>';
     }
   }
 
@@ -3210,6 +3247,7 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
     appendRaw(card, 'codex');
     const cardKey = payload.needId || String(payload.approvalId);
     pendingApprovalCards[cardKey] = card;
+    refreshWaitingLabel();
     const btns = card.querySelector('.approval-btns');
     btns.querySelectorAll('button').forEach(b => {
       b.onclick = () => {
@@ -3233,12 +3271,27 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
           }
           delete pendingApprovalCards[cardKey];
           needsYou.delete(payload.needId);
-          renderNeedsYouPanel();
-          btns.innerHTML = `<span class="tool-output tool-ok" style="background:transparent;padding:0;">已${b.dataset.d === 'accept' ? '批准' : '拒绝'}</span>`;
+          refreshNeedsViews();
+          refreshWaitingLabel();
+          collapseDecisionCard(card, `已${b.dataset.d === 'accept' ? '批准' : '拒绝'}`);
         });
       };
     });
     scrollBottom();
+  }
+
+  // 决议之后这张卡就是历史记录了：命令在下面的执行行里还会再出现一次，原因和
+  // 按钮都已经没有操作价值。收成一行，标题自带结果与命令摘要，详情仍可展开。
+  function collapseDecisionCard(card, label) {
+    if (!card) return;
+    const cmd = card.querySelector('.tool-cmd');
+    const summary = cmd ? cmd.textContent.trim() : '';
+    const name = card.querySelector('.tool-name');
+    if (name) {
+      name.innerHTML = `${icon('check')} ${escHtml(label)}`
+        + (summary ? `<span class="approval-resolved-cmd">${escHtml(summary)}</span>` : '');
+    }
+    card.dataset.resolved = '1';
   }
 
   function renderApprovalDetails(payload) {
@@ -3311,7 +3364,7 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
           return;
         }
         needsYou.delete(payload.needId);
-        renderNeedsYouPanel();
+        refreshNeedsViews();
         markInputCardDone(card, cardKey, successLabel);
       });
     };
@@ -3354,7 +3407,7 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
   function markInputCardDone(card, cardKey, label) {
     delete pendingApprovalCards[cardKey];
     const btns = card.querySelector('.approval-btns:last-child');
-    if (btns) btns.innerHTML = `<span class="tool-output tool-ok" style="background:transparent;padding:0;">${escHtml(label)}</span>`;
+    if (btns) btns.innerHTML = `<span class="approval-result">${escHtml(label)}</span>`;
   }
 
   function handleApprovalRevoked(payload) {
@@ -3599,7 +3652,22 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
     checkEmptyState();
   }
 
+  let needsYouScrollRaf = 0;
+  messagesEl?.addEventListener('scroll', () => {
+    if (needsYouScrollRaf) return;
+    needsYouScrollRaf = requestAnimationFrame(() => {
+      needsYouScrollRaf = 0;
+      renderNeedsYouPanel();
+    });
+  }, { passive: true });
+
   let typingEl = null;
+  // 审批到达与决议都要把这句话改过来：等审批的时候它没在思考，它在等你。
+  function refreshWaitingLabel() {
+    const shimmer = typingEl?.querySelector('.loading-shimmer');
+    if (shimmer) shimmer.textContent = waitingLabel({ pendingApprovals: Object.keys(pendingApprovalCards).length });
+  }
+
   function showTyping() {
     if (typingEl) return;
     const el = document.createElement('div');
@@ -3607,7 +3675,7 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
     // ChatGPT 的等待态不是三个点，是「正在思考」这几个字本身被一道微光扫过。
     // 文案和 reasoning 的进行时一致（reasoningItem.thinking），两者前后脚出现，
     // 用同一句话就不会让人以为是两件事。
-    el.innerHTML = `<div class="typing"><span class="loading-shimmer">正在思考</span></div>`;
+    el.innerHTML = `<div class="typing"><span class="loading-shimmer">${waitingLabel({ pendingApprovals: Object.keys(pendingApprovalCards).length })}</span></div>`;
     typingEl = el;
     messagesEl.appendChild(el);
     scrollBottom();
@@ -3714,14 +3782,20 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
     finishAssistantTurn();
     messagesEl.innerHTML = '';
     pendingToolCards = {};
+    // 卡片随会话一起离开 DOM，那些待办就从「看得见」变回「看不见」，横幅要重新出现。
+    // 不清缓存键的话 renderNeedsYouPanel 会认为集合没变而直接返回，横幅永远不回来。
     pendingApprovalCards = {};
+    lastBannerKey = null;
     queuedUserBubbles = [];
     offlineUserBubbles = [];
     renderedOutboxStates = new Map();
     followTranscript = true;
     jumpToLatestBtn.hidden = true;
     setBusy(false);
+    // checkEmptyState 会刷落地页的「N 项等你批准」，横幅得跟着同一时刻重算——
+    // 否则两者读同一份 needsYou 却停在不同的时刻上。
     checkEmptyState();
+    renderNeedsYouPanel();
   }
 
   // Connection UI states
