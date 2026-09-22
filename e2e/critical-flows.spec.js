@@ -57,7 +57,13 @@ test.describe('关键用户旅程', () => {
 
     // Send a message
     const input = page.locator('#msg-input');
-    await input.fill('long task');
+    // 必须用 SLOW_TURN（mock 里 sleep 6000）而不是任意文本：通用路径的回应是
+    // `Mock response to: <input>`，逐字符 10ms 流式推送，整个 turn 只有约 270ms。
+    // 这条用例要在那之内走完「断言离开 idle → 断言按钮变 stop → 点击」三步，
+    // 窗口一关 turn 就自然结束、按钮翻回 send，那一下点成了发送——于是
+    // state-label 是 idle 但「已中断」永远不出现。在 macOS/Chromium 上勉强够快，
+    // 在 Linux WebKit 上必然输掉。本文件其余点 stop 的用例一直用的就是 SLOW_TURN。
+    await input.fill('SLOW_TURN');
     await page.locator('#send-btn').click();
 
     // Wait for state to leave idle (message sent)
