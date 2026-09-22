@@ -5,7 +5,7 @@
 //
 // 每个探测器都接受注入：测试注入假实现，就不必真的去 spawn codex 或占端口——
 // 姊妹项目实测过，不注入的话单文件耗时从 1.5s 涨到 56.8s，而多出来的 55s 全是等超时。
-import { accessSync, constants, existsSync, mkdirSync, statSync } from 'node:fs';
+import { accessSync, constants, existsSync, statSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import net from 'node:net';
 import { join } from 'node:path';
@@ -17,7 +17,7 @@ import {
 } from './doctor-checks.js';
 import { ALL_CONFIG_KEYS } from './codex-schema.js';
 import { resolveDataDir } from '../shared/data-dir.js';
-import { checkPermissions } from '../files/file-security.js';
+import { checkPermissions, mkdirBounded } from '../files/file-security.js';
 
 /** 敏感文件清单。CLI 自检与将来的 web 体检共用同一份——分开写必然漂。 */
 export const SENSITIVE_FILES = Object.freeze([
@@ -60,7 +60,7 @@ export function probeWorkdirs(paths = []) {
 
 export function probeDataDir(dir = resolveDataDir()) {
   try {
-    mkdirSync(dir, { recursive: true, mode: 0o700 });
+    mkdirBounded(dir, { mode: 0o700 });
     accessSync(dir, constants.W_OK);
     return { path: dir, writable: true };
   } catch { return { path: dir, writable: false }; }

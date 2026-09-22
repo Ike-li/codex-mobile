@@ -1,6 +1,6 @@
-import { existsSync, mkdirSync, renameSync, rmSync, statSync } from 'node:fs';
+import { existsSync, renameSync, rmSync, statSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { appendOwnerOnlyFile, fixPermissions } from '../files/file-security.js';
+import { appendOwnerOnlyFile, fixPermissions, mkdirBounded } from '../files/file-security.js';
 
 export function appendJsonlAuditRecord(path, entry, options = {}) {
   const now = typeof options.now === 'function' ? options.now : () => Date.now();
@@ -15,7 +15,7 @@ export function appendJsonlAuditRecord(path, entry, options = {}) {
   if (lineBytes > maxBytes) throw new Error('Audit record exceeds retention limit');
 
   const directory = dirname(path);
-  mkdirSync(directory, { recursive: true, mode: 0o700 });
+  mkdirBounded(directory, { mode: 0o700 });
   fixPermissions(directory, true);
   if (existsSync(path) && statSync(path).size + lineBytes > maxBytes) {
     // 代号越大越旧。先丢掉超出保留代数的那一代，再整体后移一位，最后把活动文件挪到 .1。

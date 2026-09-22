@@ -1,7 +1,7 @@
 // file-security.js —— 文件安全守卫
 // 功能：symlink 穿越防御 + owner-only 权限检查与修复。
 // 用途：配置文件写入、doctor 权限检查、上传文件防护。
-import { lstatSync, chmodSync, accessSync, constants, writeFileSync, openSync, closeSync, fsyncSync, renameSync } from 'node:fs';
+import { lstatSync, chmodSync, accessSync, constants, writeFileSync, openSync, closeSync, fsyncSync, renameSync, existsSync, mkdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { platform } from 'node:os';
 
@@ -31,6 +31,41 @@ export function rejectableSymlinkComponent(path) {
     const parent = dirname(current);
     if (parent === current) return null;
     current = parent;
+  }
+}
+
+/**
+ * 有界版的 `mkdir -p`：工作量是路径深度，不是重试次数。
+ *
+ * 不能用 `mkdirSync(dir, { recursive: true })`：它在「mkdir 返回 ENOENT 而父目录
+ * 存在」时会活锁。Linux 的 procfs 正是这个形态——挂载是可写的，但创建条目一律
+ * 回 ENOENT；Node 把 ENOENT 当成「父目录缺失」，于是去建 /proc（已存在）→ 回头
+ * 重试子路径 → 又 ENOENT → 无限循环，100% CPU 且永不返回，没有任何错误抛出。
+ * 形态同 nodejs/node#28599。
+ *
+ * 这不是假想的边界情况：本仓的 CODEX_DATA_DIR 是用户配置项，测试里把它指向
+ * /proc/... 就让整个测试进程挂死过（见 audit-vocabulary.test.mjs 的注释）。
+ * 用户在生产里这么配，server 会一样挂死——而且是最难查的那种，日志里什么都没有。
+ *
+ * 这里先自下而上收集缺失的祖先（循环靠 dirname 自反终止，上界是路径深度），
+ * 再由浅到深逐个**非递归** mkdir。非递归 mkdir 拿到 ENOENT 会立刻抛出，不重试。
+ */
+export function mkdirBounded(dir, { mode = 0o700, exists = existsSync, mkdir = mkdirSync } = {}) {
+  const missing = [];
+  let current = resolve(dir);
+  while (!exists(current)) {
+    missing.push(current);
+    const parent = dirname(current);
+    if (parent === current) break;
+    current = parent;
+  }
+  for (const path of missing.reverse()) {
+    try {
+      mkdir(path, { mode });
+    } catch (err) {
+      // 并发创建：别人先建出来了，对调用方而言目标已达成。
+      if (err?.code !== 'EEXIST') throw err;
+    }
   }
 }
 

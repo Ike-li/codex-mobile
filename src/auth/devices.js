@@ -1,8 +1,8 @@
 // devices.js —— 管理受信任和等待确认的设备指纹列表。
-import { readFileSync, existsSync, mkdirSync, statSync } from 'node:fs';
+import { readFileSync, existsSync, statSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { randomBytes, createHash, timingSafeEqual } from 'node:crypto';
-import { writeOwnerOnlyFile } from '../files/file-security.js';
+import { writeOwnerOnlyFile, mkdirBounded } from '../files/file-security.js';
 // 状态根的解析收敛到这一处。此前本文件自己算一份、server.js 再算一份，两份都得记得
 // 「env 只能在函数体内读」——而那正是会漏的一步（server.js:87 就是模块级常量）。
 import { resolveDataDir } from '../shared/data-dir.js';
@@ -77,7 +77,7 @@ export function saveTrustedDevices() {
   }
   const file = trustedDevicesFile();
   try {
-    mkdirSync(dirname(file), { recursive: true });
+    mkdirBounded(dirname(file));
     writeOwnerOnlyFile(file, JSON.stringify([...trustedDevices.values()], null, 2));
     return true;
   } catch (err) {
@@ -111,7 +111,7 @@ export function loadPendingDevices({ force = false } = {}) {
 export function savePendingDevices() {
   const file = pendingDevicesFile();
   try {
-    mkdirSync(dirname(file), { recursive: true });
+    mkdirBounded(dirname(file));
     writeOwnerOnlyFile(file, JSON.stringify(pendingDevices, null, 2));
     return true;
   } catch (err) {
