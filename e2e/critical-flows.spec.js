@@ -228,6 +228,34 @@ test.describe('关键用户旅程', () => {
     await expect(page.locator('#jump-to-latest')).toBeVisible();
     await expect(bubble).toContainText('line-050', { timeout: 10000 });
     await expect.poll(() => page.locator('#messages').evaluate(element => element.scrollTop)).toBeLessThanOrEqual(2);
+    await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
+  });
+
+  // 从上面那条拆出来的。两段测的是不同行为，而且**只有这一段依赖动画帧**：
+  // 上面测「不滚动」，不需要帧；这里测「点完之后要一路跟上还在增长的内容」，
+  // 靠的是 rAF 插值（scrollBottom 那一下是瞬时的，之后交给 followRaf 续着跟）。
+  //
+  // 合在一条里的代价是实测出来的：2026-09-22 CI 上这条连红两轮，而本地容器怎么跑
+  // 都过。拿到 CI 的失败截图才看清——「有新内容」按钮仍然亮着、正文停在 line-070
+  // 而流已经走到更后面，距底 581/742px。成因与「流式跟随是连续滚动」同一个：
+  // Linux WebKit 的 rAF 约 1fps（macOS 61），插值追不上内容增长的速度。
+  // 不拆的话，webkit 上会连带失去上面那段本来好好的覆盖。
+  test('点「有新内容」后重新贴底，并收起该入口', async ({ page, browserName }) => {
+    test.skip(browserName === 'webkit', 'Linux WebKit 的 rAF 约 1fps，流式期间的贴底跟随无法收敛');
+    await page.setViewportSize({ width: 390, height: 520 });
+    await page.goto('/');
+    await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
+
+    await page.locator('#msg-input').fill('SCROLL_STREAM_FIXTURE');
+    await page.locator('#send-btn').click();
+
+    const bubble = page.locator('.msg.codex .bubble.md').last();
+    await expect(bubble).toContainText('line-030', { timeout: 10000 });
+    await page.locator('#messages').evaluate(element => {
+      element.scrollTop = 0;
+      element.dispatchEvent(new Event('scroll'));
+    });
+    await expect(page.locator('#jump-to-latest')).toBeVisible();
 
     await page.locator('#jump-to-latest').click();
     await expect.poll(() => page.locator('#messages').evaluate(element => (
