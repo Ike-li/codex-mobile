@@ -25,6 +25,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "protocol:check": "node scripts/gates/protocol-check.mjs",
+    "protocol:check:installed": "node scripts/gates/protocol-check.mjs --against-installed",
     "test": "node scripts/gates/check-test-summary.js --test-concurrency=1 test/*/*.test.mjs",
     "test:local": "node --import ./test/setup/preload-env.mjs --test --test-isolation=none test/*/*.test.mjs",
     "test:e2e": "playwright test",

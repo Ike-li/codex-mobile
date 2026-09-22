@@ -30,6 +30,7 @@ import {
   collectOmittedRequestParams,
   findOmittedRequiredParams,
   formatOmittedRequiredParams,
+  protocolCheckFailed,
 } from '../../scripts/gates/protocol-check.mjs';
 
 const root = process.cwd();
@@ -446,4 +447,74 @@ test('请求 params 形态：真实的 agent-appserver.js 对着真实协议没�
   });
 
   assert.deepEqual(problems, [], formatOmittedRequiredParams(problems));
+});
+
+// ---- 对着已装版本跑 ----
+//
+// 上游稳定版的相邻间隔中位数是 1 天，pin 不可能追。于是本机装的 codex 通常比 pin 新，
+// 而 checkCodexBinary 的硬版本比对会让 protocol:check 在本地直接拒跑——结果是这道门禁
+// 只有 CI 跑得动，而 CI 装的正是 pin 的那一版。中间那些版本没有任何东西在看。
+//
+// --against-installed 补的就是这段盲区：基线仍是 .protocol/stable，但允许对着本机那版
+// 比一遍。此时协议文件必然大面积 diff（0.147.0 → 0.153.4 实测 122 个文件），那是预期
+// 的信息，不是失败；真正说明「桥会坏」的是另外三项。
+
+test('对着已装版本跑：协议文件漂移是信息，不是失败', () => {
+  const base = { missing: [], unknownFields: [], omittedParams: [] };
+
+  assert.equal(protocolCheckFailed({ ...base, drifted: true, againstInstalled: true }), false,
+    '对着比 pin 新的版本比，文件当然会漂——把它算成失败这个模式就没法用了');
+  assert.equal(protocolCheckFailed({ ...base, drifted: true, againstInstalled: false }), true,
+    '严格模式（CI 装的就是 pin）下漂移仍然是硬失败，这一侧不能退化');
+});
+
+test('对着已装版本跑：桥会坏的那三项仍然是失败', () => {
+  const base = { drifted: false, missing: [], unknownFields: [], omittedParams: [], againstInstalled: true };
+
+  for (const key of ['missing', 'unknownFields', 'omittedParams']) {
+    assert.equal(protocolCheckFailed({ ...base, [key]: [{ method: 'x' }] }), true,
+      `${key} 非空说明桥在这一版上会坏，正是这个模式要报的东西`);
+  }
+  assert.equal(protocolCheckFailed(base), false, '四项都干净才算通过');
+});
+
+test('protocol check CLI：--against-installed 下版本比 pin 新也照跑，并标明两个版本', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'protocol-cli-installed-'));
+  const pinned = readFileSync(join(root, '.codex-version'), 'utf8').trim();
+  const newer = '9.99.9';
+  try {
+    const fakeBin = join(dir, 'bin');
+    const fakeCodex = join(fakeBin, 'codex');
+    mkdirSync(fakeBin, { recursive: true });
+    writeFileSync(fakeCodex, [
+      '#!/usr/bin/env node',
+      "import { cpSync, rmSync } from 'node:fs';",
+      "import { join } from 'node:path';",
+      'const args = process.argv.slice(2);',
+      `if (args[0] === '--version') { console.log('codex-cli ${newer}'); process.exit(0); }`,
+      "if (args[0] === 'app-server' && args[1] === 'generate-ts') {",
+      "  const out = args[args.indexOf('--out') + 1];",
+      "  rmSync(out, { recursive: true, force: true });",
+      "  cpSync(join(process.env.CCM_REPO_ROOT, '.protocol', 'stable'), out, { recursive: true });",
+      '  process.exit(0);',
+      '}',
+      'process.exit(2);',
+    ].join('\n'));
+    chmodSync(fakeCodex, 0o755);
+    const env = { ...process.env, CCM_REPO_ROOT: root, PATH: `${fakeBin}:${process.env.PATH}` };
+
+    const relaxed = spawnSync(process.execPath, ['scripts/gates/protocol-check.mjs', '--against-installed'],
+      { cwd: root, encoding: 'utf8', env });
+    assert.equal(relaxed.status, 0, relaxed.stderr || relaxed.stdout);
+    assert.match(relaxed.stdout, new RegExp(newer.replace(/\./g, '\\.')), '报告要说清这是对着哪一版跑的');
+    assert.match(relaxed.stdout, new RegExp(pinned.replace(/\./g, '\\.')), 'pin 也要出现，否则读的人不知道基线是什么');
+
+    // 正对照：默认模式下版本对不上仍然拒跑，严格性不因为新模式而松掉。
+    const strict = spawnSync(process.execPath, ['scripts/gates/protocol-check.mjs'],
+      { cwd: root, encoding: 'utf8', env });
+    assert.notEqual(strict.status, 0, '默认模式必须仍然要求本机 codex 与 pin 一致');
+    assert.match(strict.stderr, /does not match/i);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });

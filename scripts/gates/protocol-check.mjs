@@ -331,6 +331,21 @@ export function hasProtocolDrift({ methodDiff, typeDiff, fileDiff }) {
   return Object.values(methodDiff).some(diff => diff.added.length || diff.removed.length);
 }
 
+/**
+ * 四项检查 → 退出码。againstInstalled 只改文件漂移那一项的性质。
+ *
+ * 对着比 pin 新的 codex 比对时，协议文件必然大面积 diff（0.147.0 → 0.153.4 实测 122 个
+ * 文件）。那是「上游又发了几版」，不是「这个仓库坏了」，算成失败这个模式就没法用。
+ * 而 missing / unknownFields / omittedParams 说的是另一回事——桥消费或发送的东西在那一版
+ * 上已经不成立了，升上去就会坏。两种模式下它们都是硬失败。
+ */
+export function protocolCheckFailed({
+  drifted = false, missing = [], unknownFields = [], omittedParams = [], againstInstalled = false,
+} = {}) {
+  if (drifted && !againstInstalled) return true;
+  return missing.length > 0 || unknownFields.length > 0 || omittedParams.length > 0;
+}
+
 export function formatProtocolDrift({ methodDiff, typeDiff, fileDiff }) {
   if (!hasProtocolDrift({ methodDiff, typeDiff, fileDiff })) {
     return 'Protocol export drift: OK';
@@ -523,7 +538,7 @@ function toPosix(path) {
   return path.split(sep).join('/');
 }
 
-function checkCodexBinary(pin) {
+function checkCodexBinary(pin, { requirePin = true } = {}) {
   const version = spawnSync('codex', ['--version'], { encoding: 'utf8' });
   if (version.error?.code === 'ENOENT') {
     throw new Error(codexInstallMessage(pin));
@@ -534,17 +549,18 @@ function checkCodexBinary(pin) {
   }
 
   const text = `${version.stdout || ''}\n${version.stderr || ''}`;
-  if (!text.includes(pin)) {
+  if (requirePin && !text.includes(pin)) {
     throw new Error(`Installed codex does not match .codex-version ${pin}.\nFound:\n${text.trim()}\n\n${codexInstallMessage(pin)}`);
   }
+  return text.trim().split('\n')[0].replace(/^codex-cli\s+/i, '').trim();
 }
 
 function codexInstallMessage(pin) {
   return `codex binary not found or not pinned. Install with:\n  npm i -g @openai/codex@${pin}`;
 }
 
-function generateProtocolToTemp(pin) {
-  checkCodexBinary(pin);
+function generateProtocolToTemp(pin, { requirePin = true } = {}) {
+  const installed = checkCodexBinary(pin, { requirePin });
   const outDir = mkdtempSync(join(tmpdir(), 'codex-protocol-'));
   const generated = spawnSync('codex', ['app-server', 'generate-ts', '--out', outDir], {
     cwd: ROOT,
@@ -562,12 +578,12 @@ function generateProtocolToTemp(pin) {
     rmSync(outDir, { recursive: true, force: true });
     throw new Error(`codex app-server generate-ts failed.\n${generated.stderr || generated.stdout}`);
   }
-  return outDir;
+  return { outDir, installed };
 }
 
-function runProtocolCheck() {
+function runProtocolCheck({ againstInstalled = false } = {}) {
   const pin = readPinnedCodexVersion();
-  const generatedDir = generateProtocolToTemp(pin);
+  const { outDir: generatedDir, installed } = generateProtocolToTemp(pin, { requirePin: !againstInstalled });
   try {
     const baselineMethods = readProtocolMethodSets(STABLE_PROTOCOL_DIR);
     const generatedMethods = readProtocolMethodSets(generatedDir);
@@ -600,6 +616,11 @@ function runProtocolCheck() {
     const coverageReport = formatMissingProtocolCoverage(missing);
 
     console.log(`Codex protocol pin: ${pin}`);
+    if (againstInstalled) {
+      console.log(`Compared against installed codex: ${installed}`);
+      console.log('  基线仍是 .protocol/stable。文件层差异在这个模式下只是「上游又发了几版」，');
+      console.log('  不计入退出码；下面三项报出问题，才说明桥升到这一版会坏。');
+    }
     console.log(driftReport);
     console.log(coverageReport);
     console.log(formatUnknownNotificationFields(unknownFields));
@@ -607,11 +628,13 @@ function runProtocolCheck() {
     console.log(`Legacy allowlist: ${sortSet(LEGACY_METHOD_ALLOWLIST).join(', ') || '(empty)'}`);
     console.log(`Experimental allowlist: ${sortSet(EXPERIMENTAL_METHOD_ALLOWLIST).join(', ') || '(empty)'}`);
 
-    const failed = hasProtocolDrift({ methodDiff, typeDiff, fileDiff })
-      || missing.length > 0
-      || unknownFields.length > 0
-      || omittedParams.length > 0;
-    return failed ? 1 : 0;
+    return protocolCheckFailed({
+      drifted: hasProtocolDrift({ methodDiff, typeDiff, fileDiff }),
+      missing,
+      unknownFields,
+      omittedParams,
+      againstInstalled,
+    }) ? 1 : 0;
   } finally {
     rmSync(generatedDir, { recursive: true, force: true });
   }
@@ -619,7 +642,9 @@ function runProtocolCheck() {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   try {
-    process.exitCode = runProtocolCheck();
+    process.exitCode = runProtocolCheck({
+      againstInstalled: process.argv.includes('--against-installed'),
+    });
   } catch (err) {
     console.error(err?.message || err);
     process.exitCode = 1;
