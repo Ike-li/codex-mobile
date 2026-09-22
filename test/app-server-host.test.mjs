@@ -5,6 +5,22 @@ import { AppServerHost } from '../app-server-host.js';
 import { ThreadRegistry } from '../thread-registry.js';
 import { childEnv } from '../app-server-transport.js';
 
+// 等一个只由 unref 定时器驱动的 promise 时，必须有东西吊着事件循环。
+// 请求超时定时器在生产代码里是 unref 的（线上有 HTTP listener 吊着，无影响），测试里没有，
+// 于是事件循环先排空，node --test 判定「promise 仍挂起而事件循环已结束」，把用例标成
+// cancelled——而 cancelled 不计入 fail，汇总看起来像通过。
+// app-server-transport.test.mjs 早就为同一个病加过这个 helper，但解法没传到这里，
+// 于是自那条超时用例引入起 CI 每次必红（不是间歇，是确定性的）。
+// 那边有一份同源实现：test/ 下的用例彼此不 import，两处各自保持自包含。
+async function withLiveEventLoop(fn) {
+  const keepAlive = setInterval(() => {}, 1_000);
+  try {
+    return await fn();
+  } finally {
+    clearInterval(keepAlive);
+  }
+}
+
 function fakeChild() {
   const child = new EventEmitter();
   const writes = [];
@@ -1193,10 +1209,10 @@ test('request 传给 transport 的 options 不能被丢掉', async () => {
   registry.register(rt, { instanceId: 'inst-a' });
   host.attach(rt);
 
-  await assert.rejects(
+  await withLiveEventLoop(() => assert.rejects(
     () => host.request(rt, 'thread/list', {}, { timeoutMs: 10 }),
     /timed out|timeout/i,
     'timeoutMs 必须传到 transport；丢掉它这个 promise 会永远挂着',
-  );
+  ));
   host.dispose();
 });
