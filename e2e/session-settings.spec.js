@@ -16,7 +16,7 @@ test('permission presets require confirmation, persist and keep advanced control
   await page.reload();
   await expect(page.locator('#perm-trigger-text')).toHaveText('帮我批准');
   await page.locator('[data-testid="composer-defaults"]').click();
-  await expect(page.locator('[data-mode="plan"]')).toBeDisabled();
+  await expect(page.locator('#mode-list')).toHaveCount(0);
   await page.locator('#settings-advanced summary').click();
   await page.locator('[data-granular="rules"]').click();
   await expect(page.locator('#perm-trigger-text')).toHaveText('自定义');
@@ -76,7 +76,7 @@ test('full access and host reset become effective only after a new turn', async 
   await expect(page.locator('.error-msg'), 'turn/start 失败会回滚权限覆盖，后面的状态断言就失去意义').toHaveCount(0);
   await page.locator('[data-testid="composer-defaults"]').click();
   await expect(page.locator('#permission-state')).toHaveText('当前已生效');
-  await expect(page.locator('#permission-effective')).toContainText('dangerFullAccess');
+  await expect(page.locator('#permission-effective')).toContainText('完全访问');
   await page.locator('[data-permission="host"]').click();
   // 点击可能被静默吞掉：permission-list 的 handler 里有
   //   `if (!capability?.enabled) return;`（public/js/app.js）
@@ -97,16 +97,10 @@ test('full access and host reset become effective only after a new turn', async 
   // effectivePermissions.source==='host' 同时成立，两者任一不成立都显示同一句
   // 「所选设置将在下一轮生效」——这正是这个 flaky 一直难定位的原因。
   //
-  // #permission-effective 的内容就是 JSON.stringify(sessionStatus.effectivePermissions)，
-  // 所以先单独钉住 source 这一半，把二分做完：这条先红 = 服务端没把 source 更新成
-  // host；这条绿而下一条红 = applied 是对的，selectedPermission 被 adopt 改走了。
-  // 用 textContent 轮询而不是 toContainText：此刻 #settings-advanced 还没展开。
-  await expect
-    .poll(async () => (await page.locator('#permission-effective').textContent()) || '',
-      { message: 'effectivePermissions.source 应为 host' })
-    .toMatch(/"source":\s*"host"/);
+  // permission-state「主机配置已应用」要求 selectedPermission==='host' 且
+  // effectivePermissions.source==='host'。人话生效行不再倒 JSON。
   await expect(page.locator('#permission-state')).toContainText('主机配置已应用');
   await page.locator('#settings-advanced summary').click();
-  await expect(page.locator('#permission-effective')).toContainText('workspaceWrite');
-  await expect(page.locator('#permission-effective')).not.toContainText('dangerFullAccess');
+  await expect(page.locator('#permission-effective')).toContainText('工作区可写');
+  await expect(page.locator('#permission-effective')).not.toContainText('完全访问');
 });

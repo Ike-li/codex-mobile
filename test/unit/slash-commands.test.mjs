@@ -10,6 +10,7 @@ import {
   SLASH_ACTIONS,
   UNSUPPORTED_SLASH,
   slashHelpLines,
+  slashPickerItems,
 } from '../../public/js/compose/slash-commands.js';
 
 test('已接入的命令解析成 action，动作 id 来自分发表', () => {
@@ -41,10 +42,17 @@ test('不收参数的命令带了参数就不是命令意图，照旧当普通�
   assert.equal(resolveSlashCommand('/diff src/foo.js'), null);
 });
 
-test('/plan 和 /chat 仍然走模式分支，并保留后续文本', () => {
-  assert.deepEqual(resolveSlashCommand('/plan'), { kind: 'mode', cmd: '/plan', mode: 'plan', rest: '' });
-  assert.deepEqual(resolveSlashCommand('/plan 先列步骤'), { kind: 'mode', cmd: '/plan', mode: 'plan', rest: '先列步骤' });
+test('/chat 仍然走模式分支，并保留后续文本', () => {
   assert.deepEqual(resolveSlashCommand('/chat'), { kind: 'mode', cmd: '/chat', mode: 'default', rest: '' });
+  assert.deepEqual(resolveSlashCommand('/chat 继续'), { kind: 'mode', cmd: '/chat', mode: 'default', rest: '继续' });
+});
+
+test('/plan 在协议接通前是 unsupported，不进挑选层', () => {
+  const plan = resolveSlashCommand('/plan');
+  assert.equal(plan.kind, 'unsupported');
+  assert.equal(plan.cmd, '/plan');
+  assert.match(plan.reason, /计划模式/);
+  assert.ok(!slashPickerItems().some(item => item.cmd === '/plan'));
 });
 
 test('codex 有、移动端接不了的命令报 unsupported 并给出原因', () => {
@@ -86,21 +94,22 @@ test('非命令输入返回 null', () => {
 // 这条是这次改动的核心契约：popup 曾经列出 /status /diff /compact 等条目，
 // 点了却只是把文本塞进输入框当消息发。UI 承诺过的命令必须真的能执行，
 // 否则用户以为自己压缩了上下文，其实是往对话里塞了句 "/compact"。
-test('slash popup 里的每个条目都必须真的接上动作', () => {
-  const html = readFileSync(join(process.cwd(), 'public', 'index.html'), 'utf8');
-  const popup = html.slice(html.indexOf('id="slash-popup"'));
-  const block = popup.slice(0, popup.indexOf('</div>\n\n'));
-  const cmds = [...block.matchAll(/data-cmd="([^"]+)"/g)].map(m => m[1]);
-
-  assert.ok(cmds.length > 0, '没解析到 popup 条目，选择器过时了');
-  for (const cmd of cmds) {
+test('slash picker 的每个条目都必须真的接上动作', () => {
+  const items = slashPickerItems();
+  assert.ok(items.length > 0, '挑选层不能是空表');
+  assert.equal(items.length, Object.keys(SLASH_ACTIONS).length);
+  for (const { cmd } of items) {
     const resolved = resolveSlashCommand(cmd);
-    assert.ok(resolved, `${cmd} 在 popup 里但解析不出来`);
-    assert.ok(
-      resolved.kind === 'action' || resolved.kind === 'mode',
-      `${cmd} 在 popup 里但是 ${resolved.kind}——UI 不能列出执行不了的命令`,
-    );
+    assert.equal(resolved?.kind, 'action', `${cmd} 在挑选层但是 ${resolved?.kind}——不能列出执行不了的命令`);
   }
+});
+
+test('index.html 的斜杠挑选层由分发表生成，不写死条目', () => {
+  const html = readFileSync(join(process.cwd(), 'public', 'index.html'), 'utf8');
+  const start = html.indexOf('id="slash-popup"');
+  assert.ok(start >= 0, '缺少 #slash-popup');
+  const block = html.slice(start, html.indexOf('</div>', start) + 6);
+  assert.doesNotMatch(block, /data-cmd=/, '挑选层条目必须从 SLASH_ACTIONS 生成，不能在 HTML 里写死');
 });
 
 test('/help 列出的就是分发表本身，不会和实现漂移', () => {

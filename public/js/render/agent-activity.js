@@ -74,10 +74,17 @@ export function repeatedCallsLabel(toolName, count) {
   return `${toolName} · ${count} 次调用`;
 }
 
+export function displayCommand(command) {
+  const raw = String(command || '').trim();
+  const wrapped = raw.match(/^\/bin\/(?:ba|z|k|da)?sh\s+-lc\s+(?:"([\s\S]*)"|'([\s\S]*)'|(\S+))$/);
+  if (!wrapped) return raw;
+  return wrapped[1] || wrapped[2] || wrapped[3] || raw;
+}
+
 export function activeLabel(activity = {}) {
   switch (activity.type) {
     case 'command':
-      return activity.command ? `正在运行 ${activity.command}` : '正在运行命令';
+      return activity.command ? `正在运行 ${displayCommand(activity.command)}` : '正在运行命令';
     case 'search':
       return activity.query ? `正在网络上搜索 ${activity.query}` : '正在搜索网页';
     case 'file-change':

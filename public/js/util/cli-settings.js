@@ -365,6 +365,14 @@ export function formatComposerEffort(effort) {
   return optionById(FALLBACK_REASONING_OPTIONS, id)?.title || '';
 }
 
+export function composerEffortVisible(effort, model) {
+  const id = normalizeReasoningEffort(effort);
+  if (!id) return false;
+  const defaultEffort = normalizeReasoningEffort(model?.defaultReasoningEffort);
+  if (!defaultEffort) return false;
+  return id !== defaultEffort;
+}
+
 export const PERMISSION_PRESETS = Object.freeze({
   ask: { approvalPolicy: 'on-request', approvalsReviewer: 'user', sandbox: 'workspace-write' },
   'auto-review': { approvalPolicy: 'on-request', approvalsReviewer: 'auto_review', sandbox: 'workspace-write' },

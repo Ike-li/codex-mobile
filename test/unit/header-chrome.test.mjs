@@ -8,7 +8,8 @@ import {
 test('RTT chip hides invalid samples and labels milliseconds or seconds', () => {
   assert.deepEqual(formatRttChip(NaN), { visible: false, label: '', tone: '' });
   assert.deepEqual(formatRttChip(-1), { visible: false, label: '', tone: '' });
-  assert.deepEqual(formatRttChip(42), { visible: true, label: '延迟 42ms', tone: 'good' });
+  assert.deepEqual(formatRttChip(42), { visible: false, label: '延迟 42ms', tone: 'good' });
+  assert.deepEqual(formatRttChip(200), { visible: false, label: '延迟 200ms', tone: 'ok' });
   assert.deepEqual(formatRttChip(450), { visible: true, label: '延迟 450ms', tone: 'warn' });
   assert.deepEqual(formatRttChip(1500), { visible: true, label: '延迟 1.5s', tone: 'bad' });
 });

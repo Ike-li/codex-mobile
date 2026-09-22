@@ -49,10 +49,10 @@ test('MCP 出错时照报，不受偏好开关影响', () => {
   }
 });
 
-test('偏好打开后，过程状态也播报', () => {
+test('偏好打开后过程状态仍静默——开关已经从界面拿掉', () => {
   const prefs = { ...DEFAULT_PREFERENCES, mcpStatusMessages: true };
-  assert.equal(shouldAnnounceMcpStatus({ name: 'cua_repl', status: 'starting' }, prefs), true);
-  assert.equal(shouldAnnounceMcpStatus({ name: 'cua_repl', status: 'ready' }, prefs), true);
+  assert.equal(shouldAnnounceMcpStatus({ name: 'cua_repl', status: 'starting' }, prefs), false);
+  assert.equal(shouldAnnounceMcpStatus({ name: 'cua_repl', status: 'ready' }, prefs), false);
 });
 
 // 上游可以随时加新状态值。未知状态按「不是已知的失败词」处理会漏报真故障，

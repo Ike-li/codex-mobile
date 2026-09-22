@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   activeLabel,
+  displayCommand,
   summarizeActivities,
   workedForLabel,
   repeatedCallsLabel,
@@ -15,6 +16,19 @@ import {
 
 test('正在跑的命令用现在时，并带上命令正文', () => {
   assert.equal(activeLabel({ type: 'command', command: 'npm test' }), '正在运行 npm test');
+});
+
+test('活动行去掉 /bin/zsh -lc 外壳，只留人能认的命令', () => {
+  assert.equal(displayCommand('/bin/zsh -lc ls'), 'ls');
+  assert.equal(
+    displayCommand(`/bin/zsh -lc "python3 -c 'print(40+2)'"`),
+    `python3 -c 'print(40+2)'`,
+  );
+  assert.equal(displayCommand('npm test'), 'npm test');
+  assert.equal(
+    activeLabel({ type: 'command', command: '/bin/zsh -lc ls' }),
+    '正在运行 ls',
+  );
 });
 
 test('命令正文拿不到时退回通用文案，而不是渲染成「正在运行 undefined」', () => {

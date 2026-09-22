@@ -39,9 +39,21 @@ test('区分跑过的验证与其中失败的', () => {
       { command: 'ls', exitCode: 0 },
     ],
   });
-  assert.equal(outcome.checks.length, 3);
+  assert.equal(outcome.checks.length, 2, 'ls 不是验证');
   assert.deepEqual(outcome.failed.map(item => item.command), ['npm run lint']);
   assert.equal(outcome.allPassed, false);
+});
+
+test('只跑了列目录或 print 时没有验证项', () => {
+  const outcome = summarizeTurnOutcome({
+    diff: '',
+    commands: [
+      { command: '/bin/zsh -lc ls', exitCode: 0 },
+      { command: `/bin/zsh -lc "python3 -c 'print(40+2)'"`, exitCode: 0 },
+    ],
+  });
+  assert.equal(outcome.checks.length, 0);
+  assert.equal(outcome.allPassed, null);
 });
 
 test('没有命令时不谎称验证通过', () => {

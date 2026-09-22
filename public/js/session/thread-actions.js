@@ -27,6 +27,8 @@ const ACTION_NOUNS = {
   archive: '归档',
   unarchive: '取消归档',
   rename: '重命名',
+  compact: '压缩',
+  rollback: '回退',
 };
 
 // 缺表/缺列最常见的成因是:跑着的 codex 比 ~/.codex 里的状态库旧。状态库是全局共享的,

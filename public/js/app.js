@@ -12,6 +12,7 @@ import { createIndexedDbMessageStore } from '/js/outbox/indexeddb-outbox.js';
 import {
   isDefinitelyUnattempted,
   isProvisionalInstanceOrphan,
+  outboxDeliveryLabel,
   requiresManualDisposal,
   shouldSurfaceInOutboxView,
 } from '/js/outbox/outbox-recovery.js';
@@ -22,24 +23,28 @@ import {
   threadStatusPresentation,
   needResolutionLabel,
   resolveThreadTitle,
+  needsYouSessionLabel,
 } from '/js/session/thread-status.js';
 import { resolveComposerPrimaryMode } from '/js/compose/composer-mode.js';
 import { projectLabel } from '/js/session/project-label.js';
-import { compactPath, parentPath } from '/js/files/display-path.js';
+import { compactPath } from '/js/files/display-path.js';
 import { loadExpandedDirs, persistExpandedDirs, toggleExpandedDir } from '/js/files/drawer-dirs.js';
 import { renderMarkdown } from '/js/render/markdown.js';
 import { createTranscriptStream } from '/js/render/transcript-stream.js';
 import { splitStreamingMarkdown } from '/js/render/markdown-stream.js';
 import { createLongPress } from '/js/ui/long-press.js';
 import { commandCard, fileChangeCard } from '/js/render/tool-cards.js';
-import { activeLabel, groupSummary, workedForLabel, thoughtLabel } from '/js/render/agent-activity.js';
+import { classifyAgentEvent, DEST } from '/js/render/event-presentation.js';
+import { activeLabel, displayCommand, groupSummary, workedForLabel, thoughtLabel } from '/js/render/agent-activity.js';
 import { resolveConnectionBanner, resolveInsecureTransportBanner } from '/js/net/connection-banner.js';
 import { formatRttChip, formatWorkspaceChangeBadge } from '/js/ui/header-chrome.js';
 import { contextFromTokenUsage, formatContextMeter } from '/js/session/token-usage.js';
 import { createConfirmController } from '/js/ui/confirm-dialog.js';
-import { readPreferences, writePreference, shouldAnnounceMcpStatus } from '/js/ui/ui-preferences.js';
+import { readPreferences, shouldAnnounceMcpStatus } from '/js/ui/ui-preferences.js';
+import { mcpPanelHtml } from '/js/ui/mcp-panel.js';
+import { accountPanelHtml } from '/js/ui/account-panel.js';
+import { emptyLandingItems } from '/js/ui/empty-landing.js';
 import { threadActionConfirm, threadActionErrorMessage } from '/js/session/thread-actions.js';
-import { summarizeTextChange } from '/js/files/file-diff-summary.js';
 import { summarizeTurnOutcome } from '/js/render/turn-outcome.js';
 import { diagnoseHealth, HEALTH_LAYERS } from '/js/net/health-diagnosis.js';
 
@@ -66,6 +71,7 @@ import {
   PERMISSION_PRESETS,
   formatComposerModel,
   formatComposerEffort,
+  composerEffortVisible,
   GRANULAR_APPROVAL_KEYS,
   formatComposerMode,
   normalizeCollaborationMode,
@@ -78,13 +84,12 @@ import {
   serviceTiersForModel,
   visibleModels,
 } from '/js/util/cli-settings.js';
-import { resolveSlashCommand, slashHelpLines } from '/js/compose/slash-commands.js';
+import { resolveSlashCommand, slashPickerItems } from '/js/compose/slash-commands.js';
 import { icon, hydrateIcons } from '/js/ui/icons.js';
 // 沿用 escHtml 这个本地名字：94 处调用点原样不动，改名不是这次搬迁的目的。
 import { escapeHtml as escHtml } from '/js/util/html-escape.js';
 import { renderAnsi } from '/js/render/ansi-html.js';
-import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/util/client-encoding.js';
-import { buildPreview, truncationNotice } from '/js/files/file-preview.js';
+import { createDeviceToken, urlBase64ToUint8Array } from '/js/util/client-encoding.js';
 import { createUnreadTracker } from '/js/session/unread-tracker.js';
 import { installClientErrorReporting } from '/js/net/client-log.js';
 
@@ -782,9 +787,50 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
     if (isEmpty) {
       followTranscript = true;
       jumpToLatestBtn.hidden = true;
+      renderEmptyLanding();
     }
   }
 
+  function renderEmptyLanding() {
+    const root = $('empty-actions');
+    if (!root) return;
+    const lastThread = (appThreads || []).find(item => item?.id) || null;
+    const items = emptyLandingItems({ lastThread, changedCount: workspaceChanged });
+    root.innerHTML = items.map(item => {
+      if (item.action === 'continue') {
+        const sub = item.title ? `<span class="suggestion-text-sub">${escHtml(item.title)}</span>` : '';
+        return `<button type="button" class="suggestion-card" data-empty-action="continue" data-thread-id="${escHtml(item.threadId)}" data-cwd="${escHtml(item.cwd)}">
+          <span class="suggestion-icon">${icon('chat')}</span>
+          <span class="suggestion-text">${escHtml(item.label)}${sub}</span>
+        </button>`;
+      }
+      return `<button type="button" class="suggestion-card" data-empty-action="changes">
+        <span class="suggestion-icon">${icon('notepad')}</span>
+        <span class="suggestion-text">${escHtml(item.label)}</span>
+      </button>`;
+    }).join('');
+    root.querySelectorAll('[data-empty-action="continue"]').forEach(btn => {
+      btn.onclick = () => {
+        const thread = (appThreads || []).find(item => item.id === btn.dataset.threadId);
+        if (!thread) return;
+        socket.emit('thread:select', { threadId: thread.id, cwd: thread.cwd, title: thread.title }, ack => {
+          if (!ack?.ok) {
+            appendSystem(ack?.error || '无法打开会话', true);
+            return;
+          }
+          applyTargetAck(ack);
+          clearMessages();
+          loadNativeThreadHistory(thread);
+          renderDrawerProjects();
+        });
+      };
+    });
+    root.querySelectorAll('[data-empty-action="changes"]').forEach(btn => {
+      btn.onclick = () => workspacePanel.open('changes');
+    });
+  }
+
+  let workspaceChanged = 0;
   const storedCliSettings = loadCliSettings(localStorage);
   let selectedModel = storedCliSettings.model || '';
   let selectedReasoning = storedCliSettings.effort || '';
@@ -960,7 +1006,17 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
       approvalPolicy: applied.approvalPolicy, approvalsReviewer: applied.approvalsReviewer,
       sandbox: applied.sandboxPolicy?.type,
     }) ? '当前已生效' : '所选设置将在下一轮生效';
-    $('permission-effective').textContent = applied ? JSON.stringify(applied, null, 2) : '等待当前会话返回配置';
+    const sandboxId = {
+      readOnly: 'read-only',
+      workspaceWrite: 'workspace-write',
+      dangerFullAccess: 'danger-full-access',
+    }[applied?.sandboxPolicy?.type] || '';
+    $('permission-effective').textContent = applied
+      ? formatPermissionBadge({
+        approvalPolicy: typeof applied.approvalPolicy === 'string' ? applied.approvalPolicy : '',
+        sandbox: sandboxId,
+      })
+      : '等待当前会话返回配置';
     syncAttachAffordance(modelRecord);
     renderPopoverItems($('approval-list'), APPROVAL_OPTIONS, 'approval', effective.approvalPolicy);
     renderPopoverItems($('sandbox-list'), SANDBOX_OPTIONS, 'sandbox', effective.sandbox);
@@ -1076,18 +1132,22 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
 
     const modelTextEl = $('model-trigger-text');
     const record = currentModelRecord();
-    if (modelTextEl) {
-      modelTextEl.textContent = formatComposerModel({
-        model: displayModelId(),
-        displayName: record.displayName,
-      }) || '模型';
-    }
+    const modelLabel = formatComposerModel({
+      model: displayModelId(),
+      displayName: record.displayName,
+    });
+    if (modelTextEl) modelTextEl.textContent = modelLabel;
+    const modelWrap = $('model-trigger');
+    if (modelWrap) modelWrap.hidden = !modelLabel;
+    const permSep = $('perm-leading-sep');
+    const modeVisible = normalizeCollaborationMode(selectedMode) === 'plan';
+    if (permSep) permSep.hidden = !modelLabel && !modeVisible;
 
     const effortText = formatComposerEffort(selectedReasoning);
     const effortWrap = $('effort-trigger');
     const effortTextEl = $('effort-trigger-text');
     if (effortTextEl) effortTextEl.textContent = effortText;
-    if (effortWrap) effortWrap.hidden = !effortText;
+    if (effortWrap) effortWrap.hidden = !composerEffortVisible(selectedReasoning, record);
 
     const modeWrap = $('mode-trigger');
     const modeTextEl = $('mode-trigger-text');
@@ -1098,7 +1158,7 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
     const defaults = $('composer-defaults');
     if (defaults) {
       defaults.title = [
-        formatComposerModel({ model: displayModelId(), displayName: record.displayName }) || '模型',
+        formatComposerModel({ model: displayModelId(), displayName: record.displayName }),
         formatPermissionBadge({
           approvalPolicy: selectedApproval || sessionStatus?.approvalPolicy || '',
           sandbox: selectedSandbox || sessionStatus?.sandbox || '',
@@ -1230,6 +1290,34 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
 
   // Redesign - Slash Autocomplete trigger & control
   const slashPopup = $('slash-popup');
+
+  function bindSlashPickerItems() {
+    slashPopup.querySelectorAll('.slash-item').forEach(item => {
+      item.onclick = () => {
+        hideSlashPopup();
+        // 点条目 = 提交这条命令。分发只留 sendMessage 一份，免得 popup 和手打命令
+        // 走出两套行为——旧代码就是这么漂出 bug 的：popup 只把文本塞回输入框，
+        // 于是 /compact 变成了发给模型的一句话。
+        inputEl.value = item.dataset.cmd;
+        sendMessage();
+      };
+    });
+  }
+
+  function renderSlashPopup() {
+    slashPopup.innerHTML = slashPickerItems().map(item => `
+      <div class="slash-item" data-cmd="${escHtml(item.cmd)}">
+        <span class="slash-icon">${icon(item.iconName)}</span>
+        <div class="slash-details">
+          <span class="slash-name">${escHtml(item.cmd)}</span>
+          <span class="slash-desc">${escHtml(item.desc)}</span>
+        </div>
+      </div>
+    `).join('');
+    bindSlashPickerItems();
+  }
+  renderSlashPopup();
+
   inputEl.addEventListener('input', () => {
     const val = inputEl.value;
     if (val === '/') {
@@ -1313,19 +1401,11 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
     applyComposerMode();
   });
 
-  document.querySelectorAll('.slash-item').forEach(item => {
-    item.onclick = () => {
-      hideSlashPopup();
-      // 点条目 = 提交这条命令。分发只留 sendMessage 一份，免得 popup 和手打命令
-      // 走出两套行为——旧代码就是这么漂出 bug 的：popup 只把文本塞回输入框，
-      // 于是 /compact 变成了发给模型的一句话。
-      inputEl.value = item.dataset.cmd;
-      sendMessage();
-    };
-  });
-
   // Hide popup on click outside
   document.addEventListener('click', e => {
+    // 发送钮点下去会先执行 /help（打开挑选层），同一记点击再冒泡到这里。
+    // 把发送/停止当成「外面」会刚打开就关掉，手机上 /help 等于没反应。
+    if (e.target.closest('#send-btn, #followup-btn, #send-btn-container')) return;
     if (!slashPopup.contains(e.target) && e.target !== inputEl) {
       hideSlashPopup();
     }
@@ -1335,14 +1415,6 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
     // 用量气泡同理。环自己的 onclick 负责 toggle，冒泡到这里时 target 还是环，
     // contains 为真所以不会被当场关掉。
     if (!contextMeterEl.contains(e.target)) setContextDetailOpen(false);
-  });
-
-  // Empty state Suggestion cards
-  document.querySelectorAll('.suggestion-card').forEach(card => {
-    card.onclick = () => {
-      inputEl.value = card.dataset.prompt || card.dataset.cmd || '';
-      sendMessage();
-    };
   });
 
   function processAgentEvent(ev) {
@@ -1367,6 +1439,9 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
 
     if (ev.type === 'text_delta' || ev.type === 'tool_use' || ev.type === 'tool_output_delta') hideTyping();
     if (ev.type === 'result' || ev.type === 'error') hideTyping();
+
+    const presentation = classifyAgentEvent(ev, uiPrefs);
+    if (presentation.dest === DEST.DEBUG) return;
 
     switch (ev.type) {
       case 'device_status':
@@ -1453,22 +1528,13 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
       case 'account_updated':
         break;
       case 'compact':
-        handleCompact(ev.payload);
-        break;
       case 'rollback':
-        handleRollback(ev.payload);
-        break;
       case 'rate_limits':
-        handleRateLimits(ev.payload);
+      case 'skills_changed':
+      case 'external_agent_config_import':
         break;
       case 'mcp_status':
         handleMcpStatus(ev.payload);
-        break;
-      case 'skills_changed':
-        handleSkillsChanged(ev.payload);
-        break;
-      case 'external_agent_config_import':
-        handleExternalAgentConfigImport(ev.payload);
         break;
       case 'mcp_use':
         handleMcpUse(ev.payload);
@@ -1493,7 +1559,9 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
         setBusy(false);
         break;
       case 'system':
-        appendSystem(ev.payload.message, ev.payload.isError);
+        if (presentation.dest === DEST.STREAM) {
+          appendSystem(ev.payload.message, ev.payload.isError);
+        }
         break;
       case 'pending_devices':
         handlePendingDevices(ev.payload);
@@ -1502,10 +1570,8 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
         handleUsage(ev.payload);
         break;
       case 'raw_item':
-        handleRawItem(ev.payload);
         break;
       default:
-        handleRawItem({ envelopeType: ev.type, item: ev.payload });
         break;
     }
   }
@@ -1697,7 +1763,7 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
       + active.map(need => {
         const summary = need.kind === 'question'
           ? (need.payload?.questions?.[0]?.question || 'Codex 有问题等待回答')
-          : (Array.isArray(need.payload?.command) ? need.payload.command.join(' ') : (need.payload?.command || need.payload?.reason || '有操作等待审批'));
+          : displayCommand(Array.isArray(need.payload?.command) ? need.payload.command.join(' ') : (need.payload?.command || need.payload?.reason || '有操作等待审批'));
         const action = need.state === 'unknown'
           ? '<span class="tool-output tool-err" style="background:transparent;padding:0;">结果未知，等待上游终态</span>'
           : '<button class="native-mini-btn" type="button" data-need-action="open">处理</button>';
@@ -1709,8 +1775,12 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
         // 至少让用户知道这是个会话标识而不是渲染出错。
         // 待改进：当前活跃 thread 的标题没有独立来源，要拿到它得改数据流。
         const thread = appThreads.find(item => item.id === need.target?.threadId);
-        const threadLabel = thread?.title
-          || (need.target?.threadId ? `会话 ${need.target.threadId.slice(0, 8)}` : '');
+        const threadLabel = needsYouSessionLabel({
+          thread,
+          threadId: need.target?.threadId || '',
+          currentSessionId,
+          currentTitle: $('thread-title')?.textContent || '',
+        });
         // threadId 走 data 属性：深链恢复需要完整 id，让它搭显示文本的便车会把
         // 「给人看的文案」和「给机器读的数据」焊死——改文案就得改测试。
         return `<div class="needs-you-row" data-need-id="${escHtml(need.needId)}" data-thread-id="${escHtml(need.target?.threadId || '')}">
@@ -1925,6 +1995,12 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
     const name = resolveThreadTitle(appThreads, currentSessionId);
     if (name === null) return;
     titleEl.textContent = name;
+    const visible = $('header-thread');
+    if (visible) {
+      const show = Boolean(currentSessionId && name && name !== '新会话');
+      visible.hidden = !show;
+      visible.textContent = show ? name : '';
+    }
   }
 
   function goHome() {
@@ -1960,6 +2036,8 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
     const label = formatWorkspaceChangeBadge(git);
     el.textContent = label;
     el.hidden = !label;
+    workspaceChanged = Number.parseInt(label, 10) || (label === '99+' ? 99 : 0);
+    if ($('empty-state')?.style.display !== 'none') renderEmptyLanding();
   }
 
   function updateStatusDetail(payload) {
@@ -1998,8 +2076,6 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
 
   function handleThreadEvent(payload) {
     if (!payload?.event) return;
-    const labels = { archived: '已归档', unarchived: '已取消归档', deleted: '已删除', name_updated: '已重命名' };
-    appendSystem(`Thread ${labels[payload.event] || payload.event}: ${(payload.threadId || '').slice(0, 8)}`, false);
     refreshNativeThreads();
   }
 
@@ -2033,33 +2109,12 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
     if (payload.scope === 'host') scheduleThreadListRefresh();
   }
 
-  function handleCompact(payload) {
-    appendSystem(`上下文压缩完成: ${(payload?.threadId || currentSessionId || '').slice(0, 8)}`, false);
-  }
-
-  function handleRollback(payload) {
-    appendSystem(`已回退 ${payload?.numTurns || 1} 轮: ${(payload?.threadId || currentSessionId || '').slice(0, 8)}`, false);
-  }
-
-  function handleRateLimits(payload) {
-    const limit = payload?.rateLimits?.limitName || payload?.rateLimits?.limitId || 'rate limit';
-    appendSystem(`Rate limits updated: ${limit}`, false);
-  }
-
   // 启动过程默认静默——4 个 server 各报 starting/ready 就是 8 条系统消息，
   // 实测把「你是谁」的回答整个挤出首屏。想看的话设置面板里能打开，
   // 抽屉的 MCP 面板也一直能查。出错不受这个开关管，见 ui-preferences.js。
   function handleMcpStatus(payload) {
     if (!shouldAnnounceMcpStatus(payload, uiPrefs)) return;
     appendSystem(`MCP ${payload?.name || 'server'}: ${payload?.status || 'updated'}`, Boolean(payload?.error));
-  }
-
-  function handleSkillsChanged() {
-    appendSystem('Skills changed', false);
-  }
-
-  function handleExternalAgentConfigImport(payload) {
-    appendSystem(`External config import ${payload?.status || 'updated'}: ${payload?.importId || ''}`, false);
   }
 
   // token 用量是状态不是事件：`last.totalTokens` 是当前上下文的快照，每次请求
@@ -2218,6 +2273,14 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
       unread.setManualUnread(thread.id, !unread.isManual(thread.id));
       return;
     }
+    if (action === 'compact') {
+      startCompact(thread.id);
+      return;
+    }
+    if (action === 'rollback') {
+      rollbackThread(thread.id);
+      return;
+    }
     // 归档 / 重命名是**本机用户自己的元数据操作**，不该产生未读。app-server 的
     // recencyAt 按协议是「用于最近排序的时间戳」，没有承诺只随对话推进（见
     // logic/unread.js 头注），所以本地操作后顺手记一笔已看，把这条最常见的
@@ -2263,12 +2326,24 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
     });
   }
 
+  function closeNativePanel() {
+    nativePanel.hidden = true;
+    checkEmptyState();
+  }
+
   function renderNativePanel(title, bodyHtml) {
     nativePanel.hidden = false;
-    nativePanel.innerHTML = `<div class="native-panel-header"><span>${escHtml(title)}</span><button class="native-mini-btn" type="button" data-close-native>Close</button></div>${bodyHtml}`;
+    nativePanel.innerHTML = `<div class="sheet-card native-sheet">
+      <div class="sheet-handle"></div>
+      <div class="native-panel-header"><span>${escHtml(title)}</span><button class="native-mini-btn" type="button" data-close-native>关闭</button></div>
+      <div class="native-panel-body">${bodyHtml}</div>
+    </div>`;
     const close = nativePanel.querySelector('[data-close-native]');
-    if (close) close.onclick = () => { nativePanel.hidden = true; };
+    if (close) close.onclick = closeNativePanel;
   }
+  nativePanel.addEventListener('click', event => {
+    if (event.target === nativePanel) closeNativePanel();
+  });
 
   function scheduleThreadListRefresh() {
     if (threadRefreshTimer) clearTimeout(threadRefreshTimer);
@@ -2279,7 +2354,7 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
     }, 250);
   }
 
-  function refreshThreadsForCwd(cwd, { showPanel = false } = {}) {
+  function refreshThreadsForCwd(cwd) {
     if (!cwd) return;
     // 归档与未归档是两份不同的列表,来回切开关会同时挂起两个请求。响应没有顺序保证,
     // 晚到的那份若不认领自己属于哪个视图,就会盖掉用户已经切回去的列表——
@@ -2299,18 +2374,16 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
       if (cwd === serverCwd) appThreads = next;
       renderSessionList();
       if (cwd === serverCwd) {
-        if (showPanel) renderNativeThreadList();
         renderThreadTitle();
+        if (messagesEl.children.length === 0) renderEmptyLanding();
       }
     });
   }
 
-  function refreshNativeThreads(showPanel = false) {
+  function refreshNativeThreads() {
     if (serverCwd) expandedDirs.add(serverCwd);
     const targets = expandedDirs.size ? [...expandedDirs] : (serverCwd ? [serverCwd] : []);
-    for (const cwd of targets) {
-      refreshThreadsForCwd(cwd, { showPanel: showPanel && cwd === serverCwd });
-    }
+    for (const cwd of targets) refreshThreadsForCwd(cwd);
   }
 
   function renderArchivedToggle() {
@@ -2335,24 +2408,14 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
     setArchivedThreadsView(!showArchivedThreads);
   }
 
-  function renderNativeThreadList() {
-    const rows = appThreads.length
-      ? appThreads.map(t => `<div class="native-list-row">
-          <div class="native-row-title">${escHtml(t.title || t.id)}</div>
-          <div class="native-row-meta">${escHtml((t.id || '').slice(0, 8))} · ${escHtml(t.cwd || '')}</div>
-        </div>`).join('')
-      : '<div class="native-list-row">No native threads</div>';
-    renderNativePanel(showArchivedThreads ? 'Archived Threads' : 'Native Threads', rows);
-  }
-
-  function startCompact() {
-    if (!currentSessionId) {
-      appendSystem('No active thread to compact', true);
+  function startCompact(threadId = currentSessionId) {
+    if (!threadId) {
+      appendSystem('没有可压缩的会话', true);
       return;
     }
-    socket.emit('thread:compact', { threadId: currentSessionId, cwd: serverCwd }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || 'Compact failed', true);
-      appendSystem('Compact requested', false);
+    socket.emit('thread:compact', { threadId, cwd: serverCwd }, ack => {
+      if (!ack?.ok) return appendSystem(ack?.error || '压缩失败', true);
+      appendSystem('已请求压缩上下文', false);
     });
   }
 
@@ -2376,151 +2439,23 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
     });
   }
 
-  async function rollbackThread() {
-    if (!currentSessionId) {
-      appendSystem('No active thread to rollback', true);
+  async function rollbackThread(threadId = currentSessionId) {
+    if (!threadId) {
+      appendSystem('没有可回退的会话', true);
       return;
     }
     const raw = await confirmDialog.prompt({ title: '回退会话', body: '回退多少轮？', initial: '1' });
     if (raw === null) return;
     const numTurns = Math.max(1, Number.parseInt(raw, 10) || 1);
-    socket.emit('thread:rollback', { threadId: currentSessionId, numTurns, cwd: serverCwd }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || 'Rollback failed', true);
-      appendSystem(`Rollback requested: ${numTurns}`, false);
-    });
-  }
-
-  function loadNativeModels() {
-    socket.emit('models:read', { cwd: serverCwd }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || 'Model list failed', true);
-      const caps = ack.capabilities || {};
-      const modelRows = (ack.models || []).map(model => {
-        const id = model.model || model.id || '';
-        const name = model.displayName || id;
-        return `<div class="native-list-row">
-          <div class="native-row-title">${escHtml(name)}</div>
-          <div class="native-row-meta">${escHtml(id)}${model.isDefault ? ' · default' : ''}</div>
-          <div class="native-row-actions"><button class="native-mini-btn" data-model-id="${escHtml(id)}">Use</button></div>
-        </div>`;
-      }).join('') || '<div class="native-list-row">No models</div>';
-      renderNativePanel('Models', `<div class="native-list-row"><div class="native-row-meta">namespaceTools:${Boolean(caps.namespaceTools)} · image:${Boolean(caps.imageGeneration)} · web:${Boolean(caps.webSearch)}</div></div>${modelRows}`);
-      nativePanel.querySelectorAll('[data-model-id]').forEach(btn => {
-        btn.onclick = () => {
-          applyComposerModel(btn.dataset.modelId);
-        };
-      });
-    });
-  }
-
-  function openFileBrowser(path = serverCwd) {
-    const targetPath = path || serverCwd || '/';
-    socket.emit('fs:readDirectory', { path: targetPath, cwd: serverCwd }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || 'Read directory failed', true);
-      const parent = parentPath(targetPath);
-      const rows = [
-        parent ? `<button class="native-mini-btn" data-dir="${escHtml(parent)}">..</button>` : '',
-        ...(ack.entries || []).map(entry => {
-          const child = joinPath(targetPath, entry.fileName);
-          const action = entry.isDirectory ? `data-dir="${escHtml(child)}"` : `data-file="${escHtml(child)}"`;
-          return `<div class="native-list-row">
-            <div class="native-row-title">${entry.isDirectory ? 'Folder' : 'File'} ${escHtml(entry.fileName)}</div>
-            <div class="native-row-actions">
-              <button class="native-mini-btn" ${action}>${entry.isDirectory ? 'Open' : '@ 引用'}</button>
-              <button class="native-mini-btn native-danger" data-remove="${escHtml(child)}" data-remove-dir="${entry.isDirectory ? '1' : ''}">删除</button>
-            </div>
-          </div>`;
-        })
-      ].join('');
-      renderNativePanel('Files', `<input class="native-input" value="${escHtml(targetPath)}" data-file-path>${rows || '<div class="native-list-row">Empty directory</div>'}`);
-      const pathInput = nativePanel.querySelector('[data-file-path]');
-      pathInput.onkeydown = event => {
-        if (event.key === 'Enter') openFileBrowser(pathInput.value.trim());
-      };
-      nativePanel.querySelectorAll('[data-dir]').forEach(btn => {
-        btn.onclick = () => openFileBrowser(btn.dataset.dir);
-      });
-      nativePanel.querySelectorAll('[data-file]').forEach(btn => {
-        btn.onclick = () => readNativeFile(btn.dataset.file);
-      });
-      nativePanel.querySelectorAll('[data-remove]').forEach(btn => {
-        btn.onclick = () => removeNativePath(btn.dataset.remove, btn.dataset.removeDir === '1', targetPath);
-      });
-    });
-  }
-
-  // 删除不可逆，手机误触率又远高于桌面，所以走真正的确认框而不是 window.prompt。
-  // 目录的 recursive 由这里显式声明——服务端不替用户默认成 true。
-  async function removeNativePath(path, isDirectory, refreshFrom) {
-    const accepted = await confirmDialog.confirm({
-      title: isDirectory ? '删除目录' : '删除文件',
-      body: isDirectory
-        ? `${path}\n\n将连同目录下的全部内容一起删除，且无法撤销。`
-        : `${path}\n\n删除后无法撤销。`,
-      danger: true,
-    });
-    if (!accepted) return;
-    socket.emit('fs:remove', { path, recursive: isDirectory, cwd: serverCwd }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || '删除失败', true);
-      appendSystem(`已删除 ${path}`, false);
-      openFileBrowser(refreshFrom);
-    });
-  }
-
-  function readNativeFile(path) {
-    socket.emit('fs:readFile', { path, cwd: serverCwd }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || 'Read file failed', true);
-      const text = decodeBase64Text(ack.dataBase64 || '');
-      const preview = buildPreview(text, { maxChars: 2000 });
-      addInputPart({ kind: 'mention', name: path.split('/').pop() || path, path });
-      inputEl.focus();
-      renderNativePanel('File Preview', `<div class="native-list-row">
-        <div class="native-row-title">${escHtml(path)}</div>
-        <div class="native-row-actions"><button class="native-mini-btn" data-edit-file type="button">编辑</button></div>
-        <pre class="tool-output" style="max-height:180px;">${escHtml(preview.body)}</pre>
-        ${preview.truncated ? `<div class="native-row-title">${escHtml(truncationNotice(preview))}</div>` : ''}
-      </div>`);
-      nativePanel.querySelector('[data-edit-file]').onclick = () => editNativeFile(path, text);
-    });
-  }
-
-  function editNativeFile(path, original) {
-    renderNativePanel('编辑文件', `<div class="native-list-row">
-      <div class="native-row-title">${escHtml(path)}</div>
-      <textarea class="native-input" data-file-editor rows="12" spellcheck="false">${escHtml(original)}</textarea>
-      <div class="native-row-actions"><button class="native-mini-btn" data-file-save type="button">保存</button></div>
-    </div>`);
-    const editor = nativePanel.querySelector('[data-file-editor]');
-    nativePanel.querySelector('[data-file-save]').onclick = () => saveNativeFile(path, original, editor.value);
-  }
-
-  // R-16：写入前强制看到 diff 再确认。只问「要覆盖吗」不够——用户得能看出改了什么。
-  async function saveNativeFile(path, original, next) {
-    const summary = summarizeTextChange(original, next);
-    if (summary.unchanged) return appendSystem('内容没有变化，未写入', false);
-    const preview = summary.hunk.map(line => `${line.sign}${line.text}`).join('\n');
-    const accepted = await confirmDialog.confirm({
-      title: '写入文件',
-      body: [
-        path,
-        `第 ${summary.firstChangedLine} 行起：+${summary.added} 行 / -${summary.removed} 行`,
-        '',
-        preview + (summary.truncated ? '\n…（差异过长，仅显示开头）' : ''),
-      ].join('\n'),
-      danger: true,
-    });
-    if (!accepted) return;
-    const dataBase64 = btoa(unescape(encodeURIComponent(next)));
-    socket.emit('fs:writeFile', { path, dataBase64, cwd: serverCwd }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || '写入失败', true);
-      appendSystem(`已写入 ${path}`, false);
-      readNativeFile(path);
+    socket.emit('thread:rollback', { threadId, numTurns, cwd: serverCwd }, ack => {
+      if (!ack?.ok) return appendSystem(ack?.error || '回退失败', true);
+      appendSystem(`已请求回退 ${numTurns} 轮`, false);
     });
   }
 
   function loadAccountPanel() {
     socket.emit('account:read', { cwd: serverCwd }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || 'Account read failed', true);
-      renderNativePanel('Account', `<pre class="tool-output" style="max-height:220px;">${escHtml(JSON.stringify({ account: ack.account, usage: ack.usage, rateLimits: ack.rateLimits }, null, 2))}</pre>`);
+      renderNativePanel('账号', accountPanelHtml(ack));
     });
   }
 
@@ -2590,18 +2525,13 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
 
   function loadMcpPanel() {
     socket.emit('mcp:read', { cwd: serverCwd }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || 'MCP read failed', true);
-      const rows = (ack.servers || []).map(server => `<div class="native-list-row">
-        <div class="native-row-title">${escHtml(server.name)}</div>
-        <div class="native-row-meta">${escHtml(server.authStatus || '')} · tools:${Object.keys(server.tools || {}).length}</div>
-      </div>`).join('') || '<div class="native-list-row">No MCP servers</div>';
-      renderNativePanel('MCP', rows);
+      renderNativePanel('MCP', mcpPanelHtml(ack));
     });
   }
 
   function loadSkillsPanel() {
     socket.emit('skills:read', { cwd: serverCwd }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || 'Skills read failed', true);
+      if (!ack?.ok) return appendSystem(ack?.error || '无法读取 Skills', true);
       const skills = (ack.entries || []).flatMap(entry => (entry.skills || []).map(skill => ({
         ...skill,
         cwd: entry.cwd,
@@ -2609,9 +2539,9 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
       const rows = skills.map((skill, index) => `<div class="native-list-row">
         <div class="native-row-title">${escHtml(skill.name)}</div>
         <div class="native-row-meta">${escHtml(skill.description || skill.path || skill.cwd || '')}</div>
-        <div class="native-row-actions"><button class="native-mini-btn" data-skill-index="${index}">Use</button></div>
-      </div>`).join('') || '<div class="native-list-row">No enabled skills</div>';
-      renderNativePanel('Skills', rows);
+        <div class="native-row-actions"><button class="native-mini-btn" data-skill-index="${index}">插入</button></div>
+      </div>`).join('') || '<div class="native-list-row">没有已启用的 skill</div>';
+      renderNativePanel('技能', rows);
       nativePanel.querySelectorAll('[data-skill-index]').forEach(btn => {
         btn.onclick = () => {
           const skill = skills[Number(btn.dataset.skillIndex)];
@@ -2625,23 +2555,23 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
 
   function detectExternalAgentConfig() {
     socket.emit('externalAgentConfig:detect', { cwd: serverCwd, includeHome: false }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || 'Detect failed', true);
+      if (!ack?.ok) return appendSystem(ack?.error || '无法检测可导入配置', true);
       const items = ack.items || [];
       const rows = items.map((item, index) => `<div class="native-list-row">
-        <div class="native-row-title">${escHtml(item.description || 'Migration item')}</div>
-        <div class="native-row-meta">${escHtml(item.cwd || 'home')}</div>
-        <div class="native-row-actions"><button class="native-mini-btn" data-import-index="${index}">Import</button></div>
-      </div>`).join('') || '<div class="native-list-row">No importable config</div>';
-      renderNativePanel('Import', rows);
+        <div class="native-row-title">${escHtml(item.description || '可导入的配置')}</div>
+        <div class="native-row-meta">${escHtml(item.cwd || '本机')}</div>
+        <div class="native-row-actions"><button class="native-mini-btn" data-import-index="${index}">导入</button></div>
+      </div>`).join('') || '<div class="native-list-row">没有可导入的配置</div>';
+      renderNativePanel('导入配置', rows);
       nativePanel.querySelectorAll('[data-import-index]').forEach(btn => {
         btn.onclick = async () => {
           const item = items[Number(btn.dataset.importIndex)];
           if (!item) return;
-          const accepted = await confirmDialog.confirm({ title: '导入配置', body: item.description || 'Import this config?' });
+          const accepted = await confirmDialog.confirm({ title: '导入配置', body: item.description || '导入这份配置？' });
           if (!accepted) return;
           socket.emit('externalAgentConfig:import', { migrationItems: [item], cwd: serverCwd }, importAck => {
-            if (!importAck?.ok) return appendSystem(importAck?.error || 'Import failed', true);
-            appendSystem(`Import started: ${importAck.importId || ''}`, false);
+            if (!importAck?.ok) return appendSystem(importAck?.error || '导入失败', true);
+            appendSystem('已开始导入配置', false);
           });
         };
       });
@@ -2651,30 +2581,30 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
   function openHostConfigPanel() {
     renderNativePanel('宿主配置', `
       <div class="native-list-row">
-        <div class="native-row-meta">这些操作直接改动宿主机的 Codex 配置、插件与账号。每一项都会单独要求确认并写审计。</div>
+        <div class="native-row-meta">这些操作直接改动这台电脑上的 Codex 配置、插件与账号。每一项都会单独要求确认并写入审计。</div>
       </div>
       <div class="native-list-row">
-        <div class="native-row-title">Config</div>
+        <div class="native-row-title">配置</div>
         <div class="native-row-actions">
-          <button id="host-config-write-btn" class="native-mini-btn" type="button">Write</button>
-          <button id="host-config-batch-btn" class="native-mini-btn" type="button">Batch</button>
+          <button id="host-config-write-btn" class="native-mini-btn" type="button">写入一项</button>
+          <button id="host-config-batch-btn" class="native-mini-btn" type="button">批量写入</button>
         </div>
       </div>
       <div class="native-list-row">
-        <div class="native-row-title">Plugins</div>
+        <div class="native-row-title">插件</div>
         <div class="native-row-actions">
-          <button id="host-plugin-install-btn" class="native-mini-btn" type="button">Install</button>
-          <button id="host-plugin-uninstall-btn" class="native-mini-btn" type="button">Uninstall</button>
-          <button id="host-marketplace-add-btn" class="native-mini-btn" type="button">Add Market</button>
-          <button id="host-marketplace-remove-btn" class="native-mini-btn" type="button">Remove Market</button>
-          <button id="host-marketplace-upgrade-btn" class="native-mini-btn" type="button">Upgrade Market</button>
+          <button id="host-plugin-install-btn" class="native-mini-btn" type="button">安装</button>
+          <button id="host-plugin-uninstall-btn" class="native-mini-btn" type="button">卸载</button>
+          <button id="host-marketplace-add-btn" class="native-mini-btn" type="button">添加市场</button>
+          <button id="host-marketplace-remove-btn" class="native-mini-btn" type="button">移除市场</button>
+          <button id="host-marketplace-upgrade-btn" class="native-mini-btn" type="button">升级市场</button>
         </div>
       </div>
       <div class="native-list-row">
-        <div class="native-row-title">MCP / Account</div>
+        <div class="native-row-title">MCP / 账号</div>
         <div class="native-row-actions">
-          <button id="host-mcp-call-btn" class="native-mini-btn native-danger" type="button">Tool Call</button>
-          <button id="host-logout-btn" class="native-mini-btn native-danger" type="button">Logout</button>
+          <button id="host-mcp-call-btn" class="native-mini-btn native-danger" type="button">调用工具</button>
+          <button id="host-logout-btn" class="native-mini-btn native-danger" type="button">退出登录</button>
         </div>
       </div>
     `);
@@ -2704,13 +2634,13 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
   function runHostConfigAction(eventName, buildPayload) {
     let confirmation;
     try {
-      confirmation = promptRequired('Confirm action', eventName);
+      confirmation = promptRequired('确认这项操作（输入动作名）', eventName);
     } catch (err) {
       appendSystem(err.message, true);
       return;
     }
     if (confirmation === null) return;
-    if (confirmation !== eventName) return appendSystem(`${eventName} confirmation mismatch`, true);
+    if (confirmation !== eventName) return appendSystem('确认内容与动作名不一致，已取消', true);
     let payload;
     try {
       payload = buildPayload();
@@ -2720,8 +2650,8 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
     }
     if (!payload) return;
     hostConfigEmitters[eventName]({ ...payload, cwd: serverCwd, confirmAction: confirmation }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || `${eventName} failed`, true);
-      appendSystem(`${eventName} completed`, false);
+      if (!ack?.ok) return appendSystem(ack?.error || '宿主配置操作失败', true);
+      appendSystem('宿主配置操作已完成', false);
     });
   }
 
@@ -2729,14 +2659,14 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
     const value = prompt(label, initial);
     if (value === null) return null;
     const trimmed = value.trim();
-    if (!trimmed) throw new Error(`${label} required`);
+    if (!trimmed) throw new Error(`${label}不能为空`);
     return trimmed;
   }
 
   function hostConfigWrite() {
     runHostConfigAction('host:configWrite', () => ({
-      keyPath: promptRequired('Config keyPath', 'model'),
-      value: promptRequired('Config value', 'gpt-5.5'),
+      keyPath: promptRequired('配置键', 'model'),
+      value: promptRequired('配置值', 'gpt-5.5'),
       mergeStrategy: 'replace',
     }));
   }
@@ -2744,8 +2674,8 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
   function hostConfigBatchWrite() {
     runHostConfigAction('host:configBatchWrite', () => ({
       edits: [{
-        keyPath: promptRequired('Config keyPath', 'approval_policy'),
-        value: promptRequired('Config value', 'on-request'),
+        keyPath: promptRequired('配置键', 'approval_policy'),
+        value: promptRequired('配置值', 'on-request'),
         mergeStrategy: 'upsert',
       }],
       reloadUserConfig: true,
@@ -2753,40 +2683,36 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
   }
 
   function hostPluginInstall() {
-    runHostConfigAction('host:pluginInstall', () => ({ pluginName: promptRequired('Plugin name') }));
+    runHostConfigAction('host:pluginInstall', () => ({ pluginName: promptRequired('插件名') }));
   }
 
   function hostPluginUninstall() {
-    runHostConfigAction('host:pluginUninstall', () => ({ pluginId: promptRequired('Plugin id') }));
+    runHostConfigAction('host:pluginUninstall', () => ({ pluginId: promptRequired('插件 ID') }));
   }
 
   function hostMarketplaceAdd() {
-    runHostConfigAction('host:marketplaceAdd', () => ({ source: promptRequired('Marketplace source') }));
+    runHostConfigAction('host:marketplaceAdd', () => ({ source: promptRequired('市场来源') }));
   }
 
   function hostMarketplaceRemove() {
-    runHostConfigAction('host:marketplaceRemove', () => ({ marketplaceName: promptRequired('Marketplace name') }));
+    runHostConfigAction('host:marketplaceRemove', () => ({ marketplaceName: promptRequired('市场名') }));
   }
 
   function hostMarketplaceUpgrade() {
-    runHostConfigAction('host:marketplaceUpgrade', () => ({ marketplaceName: promptRequired('Marketplace name') }));
+    runHostConfigAction('host:marketplaceUpgrade', () => ({ marketplaceName: promptRequired('市场名') }));
   }
 
   function hostMcpCall() {
     runHostConfigAction('host:mcpToolCall', () => ({
-      threadId: promptRequired('Thread id', currentSessionId || ''),
-      server: promptRequired('MCP server'),
-      tool: promptRequired('MCP tool'),
-      arguments: JSON.parse(prompt('Arguments JSON', '{}') || '{}'),
+      threadId: promptRequired('会话 ID', currentSessionId || ''),
+      server: promptRequired('MCP 服务'),
+      tool: promptRequired('MCP 工具'),
+      arguments: JSON.parse(prompt('参数 JSON', '{}') || '{}'),
     }));
   }
 
   function hostAccountLogout() {
     runHostConfigAction('host:accountLogout', () => ({}));
-  }
-
-  function joinPath(base, name) {
-    return `${String(base || '/').replace(/\/+$/, '')}/${name}`.replace(/^\/\//, '/');
   }
 
   function loadNativeThreadHistory(s) {
@@ -2835,7 +2761,6 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
         continue;
       }
       if (m.kind === 'raw') {
-        handleRawItem({ item: m.item });
         continue;
       }
       if (m.role === 'user') {
@@ -2936,17 +2861,11 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
     if (payload.parts?.length) {
       html += `<div style="font-size:11px;opacity:.8;margin-bottom:4px;">${icon('pin')} ${payload.parts.map(partDisplayName).map(escHtml).join(', ')}</div>`;
     }
-    const deliveryLabel = unboundRecovery
-      ? (needsReconcile
-        ? '原会话目标已失效，正在按请求 ID 核对；不会自动重发'
-        : (manualDisposal
-          ? '原会话目标已失效且已尝试发送；不会自动重发，也不会自动恢复'
-          : '原会话目标已失效，连接后将恢复到当前会话'))
-      : (needsReconcile
-        ? '结果未知，正在核对；不会自动重发'
-        : (manualDisposal
-          ? '已被运行时拒绝；丢弃后这条会话的队列才会继续'
-          : '弱网等待同步 (Offline Queue)'));
+    const deliveryLabel = outboxDeliveryLabel({
+      unboundRecovery,
+      needsReconcile,
+      manualDisposal,
+    });
     const foreignHint = foreignThread ? '<span class="offline-label">↪ 来自其他会话</span>' : '';
     html += `${escHtml(text || (payload.parts?.length ? '(结构化引用)' : '(附件)'))}${foreignHint}<span class="offline-label">${deliveryLabel}</span></div>`;
     el.innerHTML = html;
@@ -3130,7 +3049,7 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
       // 命令跑的时候输出是流式的，收起来就等于看不见。ChatGPT 同样是进行中展开、
       // 结束后收起——收起的动作在 collapseTurnActivities 里做。
       open: model.running,
-      detailHtml: `<div class="tool-cmd">${escHtml(command || 'streaming output')}</div>`
+      detailHtml: `<div class="tool-cmd">${escHtml(displayCommand(command) || 'streaming output')}</div>`
         + `<div class="tool-output live-output${model.ok === false ? ' tool-err' : model.ok === true ? ' tool-ok' : ''}">${model.output ? renderAnsi(model.output) : ''}</div>`
         + (model.exitCode == null
           ? ''
@@ -3144,7 +3063,7 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
 
   // 跑挂了的命令不进摘要就没人看得见——退出码非 0 时行首直接写明，不必展开。
   function commandDoneLabel(command, model) {
-    const name = command || '命令';
+    const name = displayCommand(command) || '命令';
     return model.ok === false ? `${name} · 失败` : name;
   }
 
@@ -3282,7 +3201,7 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
     card.className = 'tool-card';
     card.dataset.card = 'decision';
     card.innerHTML = `<div class="tool-name">${icon('warning')} 需要审批</div>`
-      + `<div class="tool-cmd">${escHtml(payload.command || payload.kind || '需要确认的操作')}</div>`
+      + `<div class="tool-cmd">${escHtml(displayCommand(payload.command) || payload.kind || '需要确认的操作')}</div>`
       + renderApprovalDetails(payload)
       + `<div class="approval-btns">`
       + `<button class="approve-btn" data-d="accept">批准</button>`
@@ -3362,7 +3281,7 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
     card.dataset.card = 'decision';
     card.innerHTML = `<div class="tool-name">${icon('question')} 需要回答</div>`
       + questions.map(q => renderQuestion(q)).join('')
-      + (payload.autoResolutionMs ? `<div class="tool-output" style="opacity:.7;background:transparent;color:var(--text-muted);">autoResolutionMs: ${escHtml(String(payload.autoResolutionMs))}</div>` : '')
+
       + `<div class="approval-btns"><button class="approve-btn answer-submit" type="button">提交</button><button class="deny-btn answer-cancel" type="button">跳过</button></div>`;
     appendRaw(card, 'codex');
     const cardKey = payload.needId || String(payload.approvalId);
@@ -3468,22 +3387,6 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
       }).join(''),
     });
     card.classList.add('file-change-card');
-    appendRaw(card, 'codex');
-    scrollBottom();
-  }
-
-  function handleRawItem(payload) {
-    finalizeStream();
-    const label = payload?.item?.type || payload?.envelopeType || 'raw';
-    // raw 不进「做了什么」摘要：它是没认出来的协议 item，降级显示是为了不静默丢弃，
-    // 不是一件 agent 做过的事。
-    const card = activityRow({
-      type: 'raw',
-      iconName: 'receipt',
-      label: `Raw: ${label}`,
-      detailHtml: `<pre class="tool-output tool-json">${escHtml(JSON.stringify(payload.item || payload, null, 2))}</pre>`,
-    });
-    card.dataset.card = 'meta';
     appendRaw(card, 'codex');
     scrollBottom();
   }
@@ -3747,7 +3650,7 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
     if (!turn.querySelector('.bubble.md')) return;
     const bar = document.createElement('div');
     bar.className = 'turn-actions';
-    bar.innerHTML = `<button type="button" class="turn-action" data-action="copy" aria-label="复制回复">${icon('copy')}</button>`;
+    bar.innerHTML = `<button type="button" class="turn-action" data-action="copy" aria-label="复制回复">${icon('copy')} 复制</button>`;
     bar.querySelector('[data-action="copy"]').onclick = () => copyTurnText(turn, bar);
     turn.appendChild(bar);
   }
@@ -3843,7 +3746,12 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
       : '发送';
     sendBtn.setAttribute('aria-label', sendBtn.title);
     const followUpBtn = $('followup-btn');
-    if (followUpBtn) followUpBtn.hidden = !state.followUpVisible;
+    if (followUpBtn) {
+      followUpBtn.hidden = !(state.stopVisible || state.followUpVisible);
+      followUpBtn.dataset.mode = state.stopVisible ? 'stop' : 'send';
+      followUpBtn.title = state.stopVisible ? '中断' : '发送下一条';
+      followUpBtn.setAttribute('aria-label', followUpBtn.title);
+    }
   }
 
   function interruptCurrentTurn() {
@@ -3944,6 +3852,10 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
       return;
     }
     messagesEl.scrollTop = messagesEl.scrollHeight;
+    // content-visibility: auto 会让 scrollHeight 低估还没布局的最后一张卡。
+    // 先把最后节点滚进视口逼它布局，再钉回真正的底部（含 padding）。
+    messagesEl.lastElementChild?.scrollIntoView({ block: 'end', inline: 'nearest' });
+    messagesEl.scrollTop = messagesEl.scrollHeight;
     followTranscript = true;
     paintJumpToLatest();
   }
@@ -3993,12 +3905,10 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
     if (sendBtn.dataset.mode === 'stop') interruptCurrentTurn();
     else sendMessage();
   };
-  $('followup-btn').onclick = sendMessage;
-  $('native-thread-refresh').onclick = () => refreshNativeThreads(true);
-  $('native-compact-btn').onclick = startCompact;
-  $('native-rollback-btn').onclick = rollbackThread;
-  $('native-models-btn').onclick = loadNativeModels;
-  $('native-files-btn').onclick = () => openFileBrowser(serverCwd);
+  $('followup-btn').onclick = () => {
+    if ($('followup-btn')?.dataset.mode === 'stop') interruptCurrentTurn();
+    else sendMessage();
+  };
   $('native-account-btn').onclick = loadAccountPanel;
   $('native-mcp-btn').onclick = loadMcpPanel;
   $('native-health-btn').onclick = loadHealthPanel;
@@ -4006,13 +3916,6 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
   $('native-skills-btn').onclick = loadSkillsPanel;
   $('native-import-btn').onclick = detectExternalAgentConfig;
   $('native-host-config-btn').onclick = openHostConfigPanel;
-  // 工具按钮在抽屉里:点任一按钮后关闭抽屉,让主区的数据面板可见
-  const nativeControlsRegion = $('native-controls');
-  if (nativeControlsRegion) {
-    nativeControlsRegion.addEventListener('click', (e) => {
-      if (e.target.closest('.native-control-btn')) closeDrawer();
-    });
-  }
   inputEl.addEventListener('keydown', e => {
     if (e.key !== 'Enter' || e.shiftKey) return;
     e.preventDefault();
@@ -4031,12 +3934,18 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
     switch (action) {
       case 'review': startReview(args); return;
       // 命令表逐行长度不一，系统消息默认居中会让左边参差不齐，单独左对齐。
-      case 'help': appendSystem(`手机端可用命令：\n${slashHelpLines().join('\n')}`, false, 'slash-help'); return;
+      case 'help':
+        document.querySelectorAll('.slash-item').forEach(item => { item.style.display = 'flex'; });
+        inputEl.value = '/';
+        inputEl.style.height = 'auto';
+        showSlashPopup();
+        inputEl.focus();
+        return;
       case 'session-settings': openSessionSettings(); return;
-      case 'diff': workspacePanel.open(); return;
+      case 'diff': workspacePanel.open('changes'); return;
       case 'compact': startCompact(); return;
       case 'new-session': createNewSession(); return;
-      case 'files': openFileBrowser(serverCwd); return;
+      case 'files': workspacePanel.open('files'); return;
       case 'mcp': loadMcpPanel(); return;
       case 'skills': loadSkillsPanel(); return;
       case 'account': loadAccountPanel(); return;
@@ -4058,9 +3967,11 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
     }
     if (slash?.kind === 'action') {
       runSlashAction(slash.action, slash.args);
-      inputEl.value = '';
-      inputEl.style.height = 'auto';
-      hideSlashPopup();
+      if (slash.action !== 'help') {
+        inputEl.value = '';
+        inputEl.style.height = 'auto';
+        hideSlashPopup();
+      }
       applyComposerMode();
       return;
     }
@@ -4326,13 +4237,11 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
   // ── 设置与状态 ──────────────────────────────────────────────────────
   const settingsSheet = $('settings-sheet');
   const settingsSheetOverlay = $('settings-sheet-overlay');
-  const prefMcpStatus = $('pref-mcp-status');
 
   function openSettingsSheet() {
     // 先收抽屉：它是这张 sheet 的来路，留着只会在 sheet 旁边露出一条，
     // 而且两层都能滚，手指落在哪一层全看运气。
     closeDrawer();
-    prefMcpStatus.checked = Boolean(uiPrefs.mcpStatusMessages);
     settingsSheetOverlay.hidden = false;
     settingsSheet.hidden = false;
   }
@@ -4346,11 +4255,6 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
   $('settings-sheet-close').onclick = closeSettingsSheet;
   settingsSheetOverlay.onclick = closeSettingsSheet;
 
-  prefMcpStatus.onchange = () => {
-    uiPrefs = { ...uiPrefs, mcpStatusMessages: prefMcpStatus.checked };
-    writePreference(localStorage, 'mcpStatusMessages', prefMcpStatus.checked);
-  };
-
   // #native-panel 不是浮层,它插在页面顶部把消息流挤下去 —— sheet 不收起来就看不见它。
   // 用冒泡而不是逐个包装 onclick:那些按钮的 onclick 早已各自绑定,包装一遍要动 7 处。
   $('settings-sheet-body').addEventListener('click', ev => {
@@ -4360,9 +4264,8 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
   $('header-context').onclick = () => {
     workspacePanel.open();
   };
-  $('header-home').onclick = goHome;
   $('header-new').onclick = () => {
-    createNewSession();
+    goHome();
     closeDrawer();
   };
   $('confirm-modal')?.addEventListener('click', event => {

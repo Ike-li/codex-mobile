@@ -61,19 +61,6 @@
   <div id="drawer-body">
     <div id="drawer-projects"></div>
   </div>
-  <div id="drawer-tools">
-    <!-- 这里只留「对当前会话/工作区做事」的按钮。账号、主机状态、设备这类
-         与某个会话无关的入口收进了 #settings-sheet——12 个按钮平铺时没有分组，
-         找一个要扫一遍全部。 -->
-    <div class="drawer-section-label"><span class="drawer-section-icon" data-icon="tools"></span> 工具面板</div>
-    <div id="native-controls">
-      <button id="native-thread-refresh" class="native-control-btn" title="刷新原生会话">Threads</button>
-      <button id="native-compact-btn" class="native-control-btn" title="压缩当前上下文">Compact</button>
-      <button id="native-rollback-btn" class="native-control-btn" title="回退当前会话">Rollback</button>
-      <button id="native-models-btn" class="native-control-btn" title="读取模型能力">Models</button>
-      <button id="native-files-btn" class="native-control-btn" title="只读文件选择">Files</button>
-    </div>
-  </div>
   <button id="btn-general-settings" type="button" title="本机偏好、账号与主机状态" aria-label="打开设置与状态">
     <span class="drawer-section-icon" data-icon="gear"></span>
     <span>设置与状态</span>
@@ -94,25 +81,15 @@
   </div>
   <div id="settings-sheet-body">
     <section class="settings-group">
-      <h3 class="settings-group-title">消息流</h3>
-      <label class="settings-toggle-row" for="pref-mcp-status">
-        <span class="settings-toggle-text">
-          <span class="settings-toggle-title">MCP 启动状态</span>
-          <span class="settings-toggle-desc">每个 MCP 服务启动、就绪时各在消息流里播报一条。关掉后只有起不来才提示。</span>
-        </span>
-        <input type="checkbox" id="pref-mcp-status" class="settings-toggle" role="switch">
-      </label>
-      <button id="push-subscribe-btn" type="button" class="settings-action-btn" hidden>开启推送通知</button>
-    </section>
-    <section class="settings-group">
       <h3 class="settings-group-title">账号与主机</h3>
       <div class="settings-actions">
-        <button id="native-account-btn" class="settings-action-btn" title="账号与用量">Account</button>
+        <button id="native-account-btn" class="settings-action-btn" title="账号与用量">账号</button>
         <button id="native-mcp-btn" class="settings-action-btn" title="MCP 状态">MCP</button>
         <button id="native-health-btn" class="settings-action-btn" title="连接与运行诊断">诊断</button>
         <button id="native-devices-btn" class="settings-action-btn" title="已接入的设备">设备</button>
-        <button id="native-skills-btn" class="settings-action-btn" title="Skills 状态">Skills</button>
-        <button id="native-import-btn" class="settings-action-btn" title="导入 AGENTS/CLAUDE 配置">Import</button>
+        <button id="native-skills-btn" class="settings-action-btn" title="已加载的技能">技能</button>
+        <button id="native-import-btn" class="settings-action-btn" title="导入 AGENTS/CLAUDE 配置">导入</button>
+        <button id="push-subscribe-btn" type="button" class="settings-action-btn" hidden>开启推送通知</button>
       </div>
     </section>
     <section class="settings-group">
@@ -142,6 +119,7 @@
         <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
       </svg>
       <span id="header-project">项目</span>
+      <span id="header-thread" hidden></span>
       <span id="header-changes" hidden></span>
       <span class="header-pill-chevron" aria-hidden="true">›</span>
     </button>
@@ -155,12 +133,7 @@
     <div id="workdir-container" hidden>
       <select id="workdir-select"></select>
     </div>
-    <button type="button" id="header-home" class="header-icon-btn" title="回空会话" aria-label="回空会话">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor" aria-hidden="true">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12 12 2.25 21.75 12M4.5 10.5v9.75a.75.75 0 00.75.75h4.5v-6h4.5v6h4.5a.75.75 0 00.75-.75V10.5" />
-      </svg>
-    </button>
-    <button type="button" id="header-new" class="header-icon-btn" title="创建新会话" aria-label="创建新会话">
+    <button type="button" id="header-new" class="header-icon-btn" title="空白草稿" aria-label="空白草稿">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor" aria-hidden="true">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
       </svg>
@@ -189,8 +162,7 @@
 <!-- Cross-thread approvals and questions -->
 <div id="needs-you-panel" hidden aria-live="polite"></div>
 
-<!-- Native app-server data panel (controls live in the drawer's 工具面板 section) -->
-<div id="native-panel" hidden></div>
+<div id="native-panel" class="sheet-overlay" hidden role="dialog" aria-modal="true"></div>
 
 <!-- Messages Container -->
 <div id="messages" aria-live="off"></div>
@@ -198,82 +170,15 @@
 
 <!-- Empty State Landing Screen -->
 <div id="empty-state" class="empty-state">
-  <h1 id="empty-heading" class="empty-heading">我们来构建什么？</h1>
+  <h1 id="empty-heading" class="empty-heading">这轮改什么？</h1>
   <p id="empty-project" class="empty-project" hidden></p>
-  <div class="suggestions-grid">
-    <button type="button" class="suggestion-card" data-prompt="探索并理解当前项目的结构和关键文件">
-      <span class="suggestion-icon" data-icon="search"></span>
-      <span class="suggestion-text">探索并理解代码</span>
-    </button>
-    <button type="button" class="suggestion-card" data-prompt="在当前项目里构建一个新功能、应用或工具">
-      <span class="suggestion-icon" data-icon="hammer"></span>
-      <span class="suggestion-text">构建新功能、应用或工具</span>
-    </button>
-    <button type="button" class="suggestion-card" data-prompt="审查当前代码并提出具体的修改建议">
-      <span class="suggestion-icon" data-icon="pencil"></span>
-      <span class="suggestion-text">审查代码并提出修改建议</span>
-    </button>
-    <button type="button" class="suggestion-card" data-prompt="排查当前项目里的问题和失败，并给出修复">
-      <span class="suggestion-icon" data-icon="warning"></span>
-      <span class="suggestion-text">修复问题和失败</span>
-    </button>
-  </div>
+  <div id="empty-actions" class="suggestions-grid"></div>
 </div>
 
 <div id="at-mention-popup" hidden></div>
 
-<!-- Slash Autocomplete Popup -->
-<div id="slash-popup" class="slash-popup">
-  <div class="slash-item" data-cmd="/help">
-    <span class="slash-icon" data-icon="compass"></span>
-    <div class="slash-details">
-      <span class="slash-name">/help</span>
-      <span class="slash-desc">列出手机端可用的命令</span>
-    </div>
-  </div>
-  <div class="slash-item" data-cmd="/status">
-    <span class="slash-icon" data-icon="chart"></span>
-    <div class="slash-details">
-      <span class="slash-name">/status</span>
-      <span class="slash-desc">查看本会话的模型、权限和推理强度</span>
-    </div>
-  </div>
-  <div class="slash-item" data-cmd="/plan">
-    <span class="slash-icon" data-icon="clipboard"></span>
-    <div class="slash-details">
-      <span class="slash-name">/plan</span>
-      <span class="slash-desc">切换到计划模式，不发送消息</span>
-    </div>
-  </div>
-  <div class="slash-item" data-cmd="/diff">
-    <span class="slash-icon" data-icon="search"></span>
-    <div class="slash-details">
-      <span class="slash-name">/diff</span>
-      <span class="slash-desc">查看当前工作目录下的文件差异</span>
-    </div>
-  </div>
-  <div class="slash-item" data-cmd="/review">
-    <span class="slash-icon" data-icon="notepad"></span>
-    <div class="slash-details">
-      <span class="slash-name">/review</span>
-      <span class="slash-desc">审查未提交改动；跟一句话则按该指令审查</span>
-    </div>
-  </div>
-  <div class="slash-item" data-cmd="/compact">
-    <span class="slash-icon" data-icon="broom"></span>
-    <div class="slash-details">
-      <span class="slash-name">/compact</span>
-      <span class="slash-desc">压缩上下文以释放 token</span>
-    </div>
-  </div>
-  <div class="slash-item" data-cmd="/permissions">
-    <span class="slash-icon" data-icon="shield"></span>
-    <div class="slash-details">
-      <span class="slash-name">/permissions</span>
-      <span class="slash-desc">查看或修改当前的安全权限设定</span>
-    </div>
-  </div>
-</div>
+<!-- Slash Autocomplete Popup：条目由 SLASH_ACTIONS 在运行时生成 -->
+<div id="slash-popup" class="slash-popup"></div>
 
 <!-- Attachment tray -->
 <div id="attach-tray" hidden></div>
@@ -282,16 +187,18 @@
 <div id="input-area">
   <button type="button" id="jump-to-latest" aria-label="查看最新消息" hidden>有新内容 ↓</button>
   <div id="msg-input-container">
-    <textarea id="msg-input" placeholder="接下来我们该写什么代码？" rows="1"></textarea>
+    <textarea id="msg-input" placeholder="描述要改的代码" rows="1"></textarea>
     <div class="input-controls-row">
       <div id="composer-chips" class="composer-chips">
         <button type="button" id="composer-defaults" data-testid="composer-defaults" title="会话设置">
-          <span id="model-trigger-text" class="pill-part">模型</span>
+          <span id="model-trigger" hidden>
+            <span id="model-trigger-text" class="pill-part"></span>
+          </span>
           <span id="mode-trigger" hidden>
             <span class="composer-sep" aria-hidden="true">·</span>
             <span id="mode-trigger-text" class="pill-part"></span>
           </span>
-          <span class="composer-sep" aria-hidden="true">·</span>
+          <span class="composer-sep" id="perm-leading-sep" aria-hidden="true" hidden></span>
           <span id="perm-trigger-text" class="pill-part">权限</span>
           <span id="effort-trigger" hidden>
             <span class="composer-sep" aria-hidden="true">·</span>
@@ -311,9 +218,12 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
           </svg>
         </button>
-        <button id="followup-btn" type="button" title="追加到当前任务或排队" aria-label="发送下一条" hidden>
+        <button id="followup-btn" type="button" title="中断" aria-label="中断" hidden>
           <svg class="icon-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 19V5m0 0l-6.5 6.5M12 5l6.5 6.5" />
+          </svg>
+          <svg class="icon-stop" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <rect x="7" y="7" width="10" height="10" rx="2" />
           </svg>
         </button>
         <div id="send-btn-container" hidden>
@@ -351,25 +261,6 @@
       <div class="popover-list reasoning-list settings-wrap-row" id="reasoning-list"></div>
       <div class="popover-section-label bordered" id="speed-section-label">速度</div>
       <div class="popover-list speed-list settings-wrap-row" id="speed-list"></div>
-      <div class="popover-section-label bordered">会话模式</div>
-      <div class="popover-list settings-grid-2" id="mode-list">
-        <div class="popover-item selected" data-mode="default">
-          <span class="popover-item-icon" data-icon="chat"></span>
-          <div class="popover-item-details">
-            <span class="popover-item-title">对话模式 (Chat)</span>
-            <span class="popover-item-desc">常规双向问答与代码交互</span>
-          </div>
-          <span class="popover-item-check">✓</span>
-        </div>
-        <button type="button" class="popover-item" data-mode="plan" disabled title="当前稳定协议尚未提供已验证的模式切换能力">
-          <span class="popover-item-icon" data-icon="clipboard"></span>
-          <div class="popover-item-details">
-            <span class="popover-item-title">计划模式 (Plan)</span>
-            <span class="popover-item-desc">当前连接暂不支持</span>
-          </div>
-          <span class="popover-item-check">✓</span>
-        </button>
-      </div>
       <details id="settings-advanced">
       <summary class="popover-section-label bordered">高级设置</summary>
       <div class="popover-section-label">审批策略</div>
@@ -381,7 +272,7 @@
       <div class="popover-section-label bordered">沙箱环境 <span class="label-sub">-s / --sandbox</span></div>
       <div class="popover-list settings-grid-3" id="sandbox-list"></div>
       <div class="popover-section-label">当前生效配置</div>
-      <pre id="permission-effective" class="tool-output"></pre>
+      <p id="permission-effective" class="permission-effective"></p>
       </details>
     </div>
   </div>
@@ -414,6 +305,8 @@
     <div id="thread-menu-title" class="sheet-title"></div>
     <div class="sheet-menu">
       <button type="button" data-action="rename">重命名</button>
+      <button type="button" data-action="compact">压缩上下文</button>
+      <button type="button" data-action="rollback">回退</button>
       <button type="button" id="thread-menu-unread" data-action="toggle-unread">标为未读</button>
       <button type="button" id="thread-menu-archive" data-action="archive">归档</button>
       <button type="button" data-action="delete" class="sheet-menu-danger">删除</button>

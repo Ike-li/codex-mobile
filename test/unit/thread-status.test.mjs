@@ -6,6 +6,7 @@ import {
   mergeThreadList,
   threadStatusPresentation,
   needResolutionLabel,
+  needsYouSessionLabel,
   resolveThreadTitle,
 } from '../../public/js/session/thread-status.js';
 
@@ -27,6 +28,29 @@ test('找得到会话就用它的名字,未命名才叫新会话', () => {
   assert.equal(resolveThreadTitle([{ id: 'a', title: '  X  ' }], 'a'), 'X');
   assert.equal(resolveThreadTitle([{ id: 'a', preview: 'P' }], 'a'), 'P');
   assert.equal(resolveThreadTitle([{ id: 'a' }], 'a'), '新会话');
+});
+
+test('需要你横幅副标题用会话名，当前会话列表里没有时也不露裸 id', () => {
+  assert.equal(
+    needsYouSessionLabel({ thread: { title: '修审批卡' }, threadId: 'thr_long_id' }),
+    '修审批卡',
+  );
+  assert.equal(
+    needsYouSessionLabel({
+      threadId: 'thr_current',
+      currentSessionId: 'thr_current',
+      currentTitle: '这一轮',
+    }),
+    '这一轮',
+  );
+  assert.equal(
+    needsYouSessionLabel({ threadId: 'thr_current', currentSessionId: 'thr_current' }),
+    '当前会话',
+  );
+  assert.equal(
+    needsYouSessionLabel({ threadId: 'mock_thread_abcdef' }),
+    '会话 mock_thr',
+  );
 });
 
 test('thread status ignores a host update older than the status already rendered', () => {

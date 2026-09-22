@@ -9,7 +9,7 @@ export function summarizeTurnOutcome({ diff = '', commands = [] } = {}) {
 
   // 没有退出码就还没有结论，不能计进「跑过的验证」。
   const checks = (Array.isArray(commands) ? commands : [])
-    .filter(item => Number.isInteger(item?.exitCode))
+    .filter(item => Number.isInteger(item?.exitCode) && looksLikeVerification(item.command))
     .map(item => ({ command: String(item.command ?? ''), ok: item.exitCode === 0, exitCode: item.exitCode }));
   const failed = checks.filter(item => !item.ok);
 
@@ -23,6 +23,11 @@ export function summarizeTurnOutcome({ diff = '', commands = [] } = {}) {
     // 一个验证都没跑过时既不是通过也不是失败——报 true 会是谎报。
     allPassed: checks.length === 0 ? null : failed.length === 0,
   };
+}
+
+function looksLikeVerification(command) {
+  return /\b(test|tests|lint|vitest|jest|pytest|mocha|ava|coverage|typecheck|tsc|eslint)\b/i
+    .test(String(command || ''));
 }
 
 function parseUnifiedDiff(diff) {

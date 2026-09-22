@@ -15,17 +15,17 @@
      对比度从旧绿的 3.20:1 / 4.77:1 抬到 18:1 上下，两档都远超标准。 */
   --accent-light: var(--accent);
   --accent-text: var(--accent);
-  /* 发送/停止按钮的主操作蓝，取自桌面端截图里那颗按钮的众数像素（canvas 统计，
-     发送态和停止态同色）。深浅两套主题共用一个值：白图标 on 它 = 3.64:1，它
-     on --surface 浅色 #ffffff = 3.64:1、深色 #1c1c1c = 4.68:1，三处都过非文本
-     3:1。按钮上只有图标没有文字，不需要 4.5:1 那一档。 */
-  --send-accent: #3a83f7;
-  /* 用户气泡取 ChatGPT 桌面端 compact 视图的原值（compact-message-bubble-
-     background / -foreground）。窄窗里它不是灰的——灰气泡和助手正文、工具行
-     一起构成三层灰阶，谁是谁要靠位置分辨；换成蓝之后「这句是我说的」一眼可辨。
-     对比度 #0c274a on #e8f3fe ≈ 12.9:1，远超 AA。 */
-  --user-bg: #e8f3fe;
-  --user-text: #0c274a;
+  /* 发送/停止是墨色方钮，跟着 --accent 反相：浅色深底浅标、深色浅底深标。
+     图标走 --on-accent。浅色 #ffffff on #0d0d0d ≈ 19:1，深色反过来同样过 AA。 */
+  --send-accent: var(--accent);
+  /* 用户发言是一张指令条，不是聊天气泡。浅石板底 + 深墨字，靠位置靠右、
+     内侧一条墨线辨认「这句是我说的」。#1c2430 on #dde1e8 ≈ 11.4:1。 */
+  --user-bg: #dde1e8;
+  --user-text: #1c2430;
+  /* 空状态标题、口令页标题：系统衬线。中文家族必须写在 serif 之前，
+     否则 Android/Windows 的 serif 兜底会截走中文，Songti/Noto Serif 永远轮不到。 */
+  --font-display: ui-serif, 'Iowan Old Style', 'Palatino Linotype',
+    'Songti SC', 'Songti TC', 'Noto Serif SC', 'Source Han Serif SC', 'STSong', serif;
   --codex-bg: transparent;
   --codex-border: transparent;
   --tool-bg: #ffffff;
@@ -173,9 +173,9 @@
     --accent: #f2f2f2;
     /* 去绿后 --accent-light / --accent-text 都是 var(--accent) 的别名，这里覆盖
        --accent 一处，两个别名自动跟到 #f2f2f2，深色块不再需要单独列它们。 */
-    /* 用户气泡取 ChatGPT 桌面端 compact 视图的深色档原值。#f6fafe on #173e76 ≈ 9.9:1。 */
-    --user-bg: #173e76;
-    --user-text: #f6fafe;
+    /* 深色指令条：#e6e9f0 on #32363f ≈ 10.2:1。 */
+    --user-bg: #32363f;
+    --user-text: #e6e9f0;
     --tool-bg: #1c1c1c;
     --tool-border: #2e2e2e;
     --system: #9a9a9a;
@@ -405,6 +405,22 @@ body {
   overflow: hidden;
 }
 #header-context svg { width: 14px; height: 14px; flex-shrink: 0; color: var(--accent-light); }
+#header-thread {
+  min-width: 0;
+  max-width: 42%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--font-2xs);
+  font-weight: 500;
+  color: var(--text-muted);
+}
+#header-thread:not([hidden])::before {
+  content: '·';
+  margin-right: 4px;
+  color: var(--text-muted);
+}
+#header-thread[hidden] { display: none !important; }
 #header-project {
   min-width: 0;
   overflow: hidden;
@@ -742,7 +758,7 @@ body {
   flex: 1;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: var(--space-8) 16px 28px;
+  padding: var(--space-8) 16px 72px;
   display: flex;
   flex-direction: column;
   align-self: stretch;
@@ -752,7 +768,7 @@ body {
   gap: var(--space-8);
 }
 
-/* Empty landing: question + compact task cards */
+/* Empty landing: one display line + a task list */
 .empty-state {
   flex: 1;
   min-height: 0;
@@ -760,17 +776,23 @@ body {
   overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
   text-align: center;
   padding: var(--space-7) 16px 8px;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  align-self: center;
 }
 .empty-heading {
-  font-size: var(--font-3xl);
+  font-family: var(--font-display);
+  font-size: var(--font-4xl);
   font-weight: 600;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
   color: var(--text);
-  margin: 0 0 6px;
+  margin: 0 0 8px;
 }
 .empty-project {
   font-size: var(--font-md);
@@ -779,42 +801,53 @@ body {
 }
 .empty-project[hidden] { display: none !important; }
 .suggestions-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
   width: 100%;
-  max-width: 440px;
-  margin-top: 22px;
+  margin-top: 28px;
+  border-top: 1px solid var(--border);
+  text-align: left;
 }
 .suggestion-card {
   appearance: none;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  box-shadow: var(--card-shadow);
-  border-radius: var(--radius);
-  padding: var(--space-6) 12px 12px;
-  min-height: 88px;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  box-shadow: none;
+  border-radius: 0;
+  padding: 14px 4px;
+  min-height: 52px;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-4);
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
   cursor: pointer;
   font: inherit;
   text-align: left;
   color: var(--text);
 }
 .suggestion-card:active {
-  transform: scale(0.98);
-  background: var(--bg);
+  background: var(--hover-wash-strong);
 }
 .suggestion-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
-  color: var(--accent-light);
+  color: var(--text-muted);
+  flex-shrink: 0;
 }
 .suggestion-icon .ui-icon { width: 16px; height: 16px; }
+.suggestion-text-sub {
+  display: block;
+  color: var(--text-muted);
+  font-size: var(--font-xs);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .suggestion-text {
   font-size: var(--font-md);
   font-weight: 500;
@@ -863,19 +896,14 @@ body {
   word-break: break-word;
   white-space: pre-wrap;
 }
-/* 几何全部取 ChatGPT compact 气泡的原值：16px 圆角、8px/12px 内边距、
-   宽度贴合内容。
-
-   corner-shape: superellipse(1) 是把圆角换成超椭圆（iOS 那种连续曲率）。
-   降级很干净——不支持的浏览器整条忽略，留下普通 border-radius。 */
+/* 用户发言是靠右的指令条：内侧一条墨线、贴条侧收紧圆角。 */
 .user .bubble {
   background: var(--user-bg);
   color: var(--user-text);
-  border-radius: 16px;
-  corner-shape: superellipse(1);
-  box-shadow: none;
+  border-radius: 4px 12px 12px 4px;
+  box-shadow: inset 2px 0 0 var(--text);
   font-size: var(--font-body);
-  padding: 8px 12px;
+  padding: 8px 12px 8px 14px;
   width: fit-content;
   line-height: calc(1em + 6px);
   letter-spacing: -0.01em;
@@ -1429,14 +1457,7 @@ body {
   display: flex;
   align-items: center;
   gap: var(--space-1);
-  /* .assistant-turn 的 flex gap 是 12px——那是段落与段落之间的呼吸量。操作条属于
-     上面那条回复，不是下一个独立块；12px 再叠 6px margin 实测 18px，看着像一个
-     图标掉在正文外面。负 margin 收回一半，落到 8px。 */
   margin-top: calc(var(--space-1) - var(--space-3));
-  /* 按钮 32px 宽、图标 16px 居中，图标左缘因此比正文左缘内缩 8px（实测 9px），
-     一列文字下面挂个缩进的图标，看起来就是没对齐。把这 8px 抵掉——要对齐的是
-     图标本身，不是按钮那个看不见的点击框。 */
-  margin-left: -8px;
 }
 .turn-action {
   background: transparent;
@@ -1447,10 +1468,13 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 32px;
+  gap: var(--space-1);
   min-height: 32px;
+  padding: 0 8px;
+  font: inherit;
+  font-size: var(--font-xs);
+  font-weight: 600;
 }
-/* 不设的话 SVG 落到 13px，比正文小得多、还偏淡，像个没画完的东西。 */
 .turn-action .ui-icon {
   width: 16px;
   height: 16px;
@@ -1825,7 +1849,7 @@ body {
 #send-btn,
 #followup-btn {
   border: 1px solid var(--border-light);
-  border-radius: 50%;
+  border-radius: var(--radius-xs);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1836,14 +1860,14 @@ body {
   color: var(--text);
   padding: 0;
 }
-/* 主操作：蓝底白图标，发送态和停止态同一颗按钮、只换图标，对齐桌面端。
-   白色写死而不是走变量：它压在 --send-accent 上，而那个蓝深浅两套主题共用。 */
+/* 主操作：墨色方钮，发送态和停止态同一颗按钮、只换图标。图标色走 --on-accent，
+   浅色白标、深色深标，跟着按钮底反相。 */
 #send-btn {
   position: absolute;
   inset: 2px;
   background: var(--send-accent);
   border-color: transparent;
-  color: #fff;
+  color: var(--on-accent);
 }
 #send-btn svg,
 #followup-btn svg {
@@ -1851,12 +1875,15 @@ body {
   height: 18px;
   display: block;
 }
-#send-btn .icon-stop { display: none; }
-#send-btn[data-mode="stop"] .icon-send { display: none; }
-#send-btn[data-mode="stop"] .icon-stop { display: block; }
+#send-btn .icon-stop,
+#followup-btn .icon-stop { display: none; }
+#send-btn[data-mode="stop"] .icon-send,
+#followup-btn[data-mode="stop"] .icon-send { display: none; }
+#send-btn[data-mode="stop"] .icon-stop,
+#followup-btn[data-mode="stop"] .icon-stop { display: block; }
 #send-btn[hidden] { display: none !important; }
 /* 唯一会看到 disabled 的时机是停止钮的 interruptPending（中断已发出、还没生效）。
-   只降透明度，不改 color——蓝底上把图标换成 --text-muted 会糊成一团。 */
+   只降透明度，不改 color——墨底上把图标换成 --text-muted 会糊成一团。 */
 #send-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -2307,16 +2334,19 @@ body {
   transform: scale(0.98);
 }
 #native-panel {
-  flex-shrink: 0;
-  max-height: 34vh;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  border-bottom: 1px solid var(--border-light);
-  background: var(--surface);
-  padding: var(--space-4) 12px;
   font-size: var(--font-sm);
 }
-#native-panel[hidden] { display: none; }
+#native-panel .native-sheet {
+  max-height: 85vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+#native-panel .native-panel-body {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  min-height: 0;
+}
 .native-panel-header {
   display: flex;
   align-items: center;
@@ -2393,7 +2423,13 @@ body {
 #auth-gate { z-index: 210; }
 #auth-gate.show { display: flex; }
 #device-auth.show { display: flex; }
-#auth-gate h2, #device-auth h2 { font-size: var(--font-4xl); font-weight: 700; margin-bottom: var(--space-3); letter-spacing: -0.5px; }
+#auth-gate h2, #device-auth h2 {
+  font-family: var(--font-display);
+  font-size: var(--font-4xl);
+  font-weight: 600;
+  margin-bottom: var(--space-3);
+  letter-spacing: -0.02em;
+}
 #auth-gate p, #device-auth p { color: var(--text-muted); font-size: var(--font-body); line-height: 1.6; max-width: 280px; margin-bottom: var(--space-9); }
 #auth-form {
   width: min(320px, 100%);
@@ -2903,18 +2939,15 @@ body {
     color: var(--text);
   }
   .slash-item:hover { background: var(--hover-wash-hover); }
+  .suggestion-card:hover { background: var(--hover-wash-hover); }
   #composer-defaults:hover { color: var(--text); }
   #attach-btn:hover {
     color: var(--text);
     background: var(--bg);
   }
-  /* 主操作按钮悬停压深一档，不能跟着 #followup-btn 变浅灰——那会让蓝底整个
-     消失。追加钮仍是次要样式，保持原来的浅灰。
-     写死而不是 color-mix(var(--send-accent) 88%, #000)：本项目基线约
-     Safari 15.4 / Chrome 108，低于 color-mix 的支持线（见文件上方 @supports
-     那段）。这个值就是那个混合的结果，白图标压在上面 4.57:1。 */
+  /* 主操作悬停走 --accent-pressed，深浅两套都已经反相过，不能跟追加钮一起变浅灰。 */
   #send-btn:hover:not(:disabled) {
-    background: #3373d9;
+    background: var(--accent-pressed);
   }
   #followup-btn:hover {
     background: var(--border-light);
@@ -2945,6 +2978,11 @@ body {
   cursor: not-allowed;
 }
 #settings-advanced summary { cursor: pointer; }
-#permission-state { font-size: 12px; color: var(--text-secondary, #737373); }
+#permission-state,
+#permission-effective {
+  font-size: 12px;
+  color: var(--text-secondary, #737373);
+  margin: 0;
+}
 #permission-effective { white-space: pre-wrap; overflow-wrap: anywhere; }
 #speed-list[hidden], #speed-section-label[hidden] { display: none; }

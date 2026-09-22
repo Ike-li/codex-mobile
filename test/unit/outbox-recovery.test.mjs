@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {
   isDefinitelyUnattempted,
   isProvisionalInstanceOrphan,
+  outboxDeliveryLabel,
   requiresManualDisposal,
   shouldSurfaceInOutboxView,
 } from '../../public/js/outbox/outbox-recovery.js';
@@ -112,6 +113,27 @@ test('a failed record stays visible even when it belongs to another thread', () 
   const provisional = { state: 'needs_reconcile', attempts: 1, payload: { instanceId: 'inst-old', text: 'x' } };
   assert.equal(shouldSurfaceInOutboxView(provisional, { matchesView: false, orphaned: false }), false);
   assert.equal(shouldSurfaceInOutboxView(provisional, { matchesView: false, orphaned: true }), true);
+});
+
+test('队列文案是人话，不冒充断网，也不把运行时内部词扔给用户', () => {
+  assert.equal(outboxDeliveryLabel({}), '发送中');
+  assert.equal(outboxDeliveryLabel({ recordState: 'pending' }), '发送中');
+  assert.equal(outboxDeliveryLabel({ needsReconcile: true }), '结果未知，正在核对；不会自动重发');
+  assert.equal(
+    outboxDeliveryLabel({ manualDisposal: true }),
+    '发送失败。丢弃后才能发送后面的消息',
+  );
+  assert.equal(
+    outboxDeliveryLabel({ unboundRecovery: true }),
+    '原会话目标已失效，连接后将恢复到当前会话',
+  );
+  for (const label of [
+    outboxDeliveryLabel({}),
+    outboxDeliveryLabel({ needsReconcile: true }),
+    outboxDeliveryLabel({ manualDisposal: true }),
+  ]) {
+    assert.equal(/offline queue|运行时/i.test(label), false, label);
+  }
 });
 
 // ---- 变异补漏：批 3 ----

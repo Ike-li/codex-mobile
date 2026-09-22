@@ -188,10 +188,12 @@ export function createWorkspacePanel({
   });
 
   return {
-    open() {
-      setTab('files');
+    open(tab = 'files') {
+      const next = tab === 'changes' ? 'changes' : 'files';
+      setTab(next);
       show();
-      loadFiles(getCwd());
+      if (next === 'changes') loadGit();
+      else loadFiles(getCwd());
     },
     close: hide,
     refreshGit: loadGit,

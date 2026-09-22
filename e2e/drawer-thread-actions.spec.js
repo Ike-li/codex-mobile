@@ -71,6 +71,8 @@ test.describe('抽屉里的会话操作', () => {
 
     const menu = await openThreadMenu(page, row);
     await expect(menu.locator('[data-action="rename"]')).toBeVisible();
+    await expect(menu.locator('[data-action="compact"]')).toBeVisible();
+    await expect(menu.locator('[data-action="rollback"]')).toBeVisible();
     await expect(menu.locator('[data-action="archive"]')).toBeVisible();
     await expect(menu.locator('[data-action="delete"]')).toBeVisible();
   });

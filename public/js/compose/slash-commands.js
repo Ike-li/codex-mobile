@@ -17,21 +17,21 @@ import { parseCollaborationModeSlash } from '../util/cli-settings.js';
 // 第二个捕获组是参数，只有 acceptsArgs 的命令认它，其余带参数就当普通消息。
 const COMMAND_WORD = /^\/([A-Za-z][A-Za-z0-9-]*)(?:\s+([\s\S]+))?$/;
 
-// 已接入的命令。action 是给 app.js 查表用的 id，desc 同时喂给 /help。
+// 已接入的命令。action 是给 app.js 查表用的 id，desc / iconName 喂给 /help 和挑选层。
 export const SLASH_ACTIONS = {
-  '/help': { action: 'help', desc: '列出手机端可用的命令' },
-  '/status': { action: 'session-settings', desc: '查看本会话的模型、权限和推理强度' },
-  '/model': { action: 'session-settings', desc: '切换模型与推理强度' },
-  '/permissions': { action: 'session-settings', desc: '查看或修改审批与沙箱' },
-  '/diff': { action: 'diff', desc: '打开工作区改动面板' },
+  '/help': { action: 'help', desc: '列出手机端可用的命令', iconName: 'compass' },
+  '/status': { action: 'session-settings', desc: '查看本会话的模型、权限和推理强度', iconName: 'chart' },
+  '/model': { action: 'session-settings', desc: '切换模型与推理强度', iconName: 'bot' },
+  '/permissions': { action: 'session-settings', desc: '查看或修改审批与沙箱', iconName: 'shield' },
+  '/diff': { action: 'diff', desc: '打开工作区改动面板', iconName: 'search' },
   // 唯一收参数的命令：无参数审未提交改动，有参数当自定义审查指令。
-  '/review': { action: 'review', desc: '审查未提交改动；跟一句话则按该指令审查', acceptsArgs: true },
-  '/compact': { action: 'compact', desc: '压缩上下文以释放 token' },
-  '/new': { action: 'new-session', desc: '在当前目录新建会话' },
-  '/files': { action: 'files', desc: '浏览工作区文件' },
-  '/mcp': { action: 'mcp', desc: '查看已配置的 MCP 服务' },
-  '/skills': { action: 'skills', desc: '查看已加载的 skills' },
-  '/usage': { action: 'account', desc: '查看账号用量与速率限制' },
+  '/review': { action: 'review', desc: '审查未提交改动；跟一句话则按该指令审查', acceptsArgs: true, iconName: 'notepad' },
+  '/compact': { action: 'compact', desc: '压缩上下文以释放 token', iconName: 'broom' },
+  '/new': { action: 'new-session', desc: '在当前目录新建会话', iconName: 'plus' },
+  '/files': { action: 'files', desc: '浏览工作区文件', iconName: 'folder' },
+  '/mcp': { action: 'mcp', desc: '查看已配置的 MCP 服务', iconName: 'tools' },
+  '/skills': { action: 'skills', desc: '查看已加载的 skills', iconName: 'star' },
+  '/usage': { action: 'account', desc: '查看账号用量与速率限制', iconName: 'receipt' },
 };
 
 // codex 里有、手机端按不下去的命令。原因要具体到「改用什么」，
@@ -47,6 +47,7 @@ export const UNSUPPORTED_SLASH = {
   '/delete': '在会话抽屉里对目标会话操作',
   '/rename': '在会话抽屉里对目标会话操作',
   '/cd': '在目录抽屉里切换工作目录',
+  '/plan': '当前连接还不能切换计划模式',
   '/logout': '在设置面板的账号一栏退出',
   '/vim': '终端专属，手机端没有对应物',
   '/clear': '终端专属，手机端没有对应物',
@@ -62,15 +63,10 @@ export function resolveSlashCommand(text) {
   const raw = typeof text === 'string' ? text.trim() : '';
   if (!raw.startsWith('/')) return null;
 
-  // /plan 和 /chat 后面可以直接跟消息（`/plan 先列步骤`），先于命令词形态判断。
+  // /chat 后面可以直接跟消息。/plan 在协议接通前走 unsupported，不进挑选层。
   const modeSlash = parseCollaborationModeSlash(raw);
-  if (modeSlash) {
-    return {
-      kind: 'mode',
-      cmd: modeSlash.mode === 'plan' ? '/plan' : '/chat',
-      mode: modeSlash.mode,
-      rest: modeSlash.rest,
-    };
+  if (modeSlash?.mode === 'default') {
+    return { kind: 'mode', cmd: '/chat', mode: 'default', rest: modeSlash.rest };
   }
 
   const match = raw.match(COMMAND_WORD);
@@ -91,10 +87,13 @@ export function resolveSlashCommand(text) {
 }
 
 export function slashHelpLines() {
-  const actions = Object.entries(SLASH_ACTIONS).map(([cmd, { desc }]) => `${cmd} — ${desc}`);
-  return [
-    '/plan — 切换到计划模式',
-    '/chat — 切回对话模式',
-    ...actions,
-  ];
+  return Object.entries(SLASH_ACTIONS).map(([cmd, { desc }]) => `${cmd} — ${desc}`);
+}
+
+export function slashPickerItems() {
+  return Object.entries(SLASH_ACTIONS).map(([cmd, { desc, iconName }]) => ({
+    cmd,
+    desc,
+    iconName: iconName || 'compass',
+  }));
 }

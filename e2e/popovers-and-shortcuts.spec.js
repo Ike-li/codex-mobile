@@ -48,9 +48,10 @@ test.describe('Popovers And Slash Suggestions', () => {
     await input.pressSequentially('/');
     const slashPopup = page.locator('#slash-popup');
     await expect(slashPopup).toBeVisible();
-    for (const command of ['/status', '/diff', '/compact', '/permissions']) {
+    for (const command of ['/status', '/diff', '/compact', '/permissions', '/files', '/mcp']) {
       await expect(slashPopup.locator(`.slash-item[data-cmd="${command}"]`).first(), `${command} slash item should be visible`).toBeVisible();
     }
+    await expect(slashPopup.locator('.slash-item[data-cmd="/plan"]')).toHaveCount(0);
 
     // 2. 点条目 = 执行命令。旧行为是把 "/status " 塞回输入框等用户按发送，
     //    一发就变成给模型的一句普通文本——app-server 不解析斜杠命令。
@@ -66,13 +67,13 @@ test.describe('Popovers And Slash Suggestions', () => {
     const defaultsBox = await defaults.boundingBox();
     expect(defaultsBox.height, 'composer chips must stay on one line').toBeLessThanOrEqual(40);
     await expect(page.locator('#model-trigger-text')).not.toHaveText('');
+    await expect(page.locator('#model-trigger-text')).not.toHaveText('模型');
     await expect(page.locator('#perm-trigger-text')).toHaveText('请求批准');
+    await expect(page.locator('#effort-trigger')).toBeHidden();
 
     await defaults.click();
     await expect(page.locator('#session-settings')).toBeVisible();
-    await expect(page.locator('#mode-list .popover-item[data-mode="default"]')).toBeVisible();
-    await expect(page.locator('#mode-list .popover-item[data-mode="plan"]')).toBeDisabled();
-    await expect(page.locator('#mode-trigger-text')).toHaveText('对话');
+    await expect(page.locator('#mode-list')).toHaveCount(0);
     await page.locator('#settings-advanced summary').click();
     await expect(page.locator('.msg.user')).toHaveCount(0);
     await expect(page.locator('#state-label')).toHaveText('idle');
@@ -94,8 +95,8 @@ test.describe('Popovers And Slash Suggestions', () => {
     await input.fill('/plan');
     await input.press('Enter');
     await expect(page.locator('.msg.user')).toHaveCount(0);
+    await expect(page.locator('.msg.system-msg.error-msg').last()).toContainText('/plan');
     await expect(page.locator('#msg-input')).toHaveValue('/plan');
-    await expect(page.locator('#mode-trigger-text')).toHaveText('对话');
 
     expectNoForbiddenRuntimeErrors(runtimeErrors);
   });
@@ -201,11 +202,22 @@ test.describe('斜杠命令兜底', () => {
     await expect(errors.nth(1)).toContainText('/help');
     await expect(page.locator('.msg.user')).toHaveCount(0);
 
-    // /help 自己要真的列出命令，它是发现其余命令的唯一入口。
+    // /help 打开命令挑选层，不把整张表塞进对话。
     await input.fill('/help');
     await input.press('Enter');
-    await expect(page.locator('.msg.system-msg').last()).toContainText('/compact');
-    await expect(input).toHaveValue('');
+    await expect(page.locator('#slash-popup')).toBeVisible();
+    await expect(page.locator('#slash-popup')).toContainText('/compact');
+    await expect(page.locator('.msg.system-msg.slash-help')).toHaveCount(0);
+    await expect(input).toHaveValue('/');
+
+    // 手机上是点发送，不是按 Enter。同一记点击会冒泡到 document 的「点外面关掉」
+    // 监听——打开又立刻关上，挑选层等于没出现。
+    await page.locator('#msg-input').fill('占位');
+    await page.locator('#msg-input').fill('/help');
+    await page.locator('#send-btn').click();
+    await expect(page.locator('#slash-popup')).toBeVisible();
+    await expect(page.locator('#slash-popup')).toContainText('/compact');
+    await expect(input).toHaveValue('/');
 
     // 绝对路径不是命令意图——误判会把正常消息拦下来。
     await input.fill('/usr/bin/codex 这个路径不对');

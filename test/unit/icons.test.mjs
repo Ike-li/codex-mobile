@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { icon, ICONS } from '../../public/js/ui/icons.js';
 import { APPROVAL_OPTIONS, SANDBOX_OPTIONS } from '../../public/js/util/cli-settings.js';
+import { slashPickerItems } from '../../public/js/compose/slash-commands.js';
 
 const html = readFileSync(new URL('../../public/index.html', import.meta.url), 'utf8');
 const appJs = readFileSync(new URL('../../public/js/app.js', import.meta.url), 'utf8');
@@ -37,8 +38,11 @@ test('P0/P1 surfaces resolve through icon names instead of emoji', () => {
     readFileSync(new URL('../../public/js/ui/icons.js', import.meta.url), 'utf8'),
     /\[data-icon\]/,
   );
-  for (const name of ['compass', 'chart', 'clipboard', 'search', 'notepad', 'broom', 'shield', 'chat', 'tools', 'warning', 'hammer', 'pencil', 'hourglass']) {
+  for (const name of ['hourglass', 'archive', 'gear']) {
     assert.match(html, new RegExp(`data-icon="${name}"`));
+  }
+  for (const item of slashPickerItems()) {
+    assert.ok(ICONS[item.iconName], `slash ${item.cmd} 的 iconName "${item.iconName}" 不在 ICONS`);
   }
 
   // slash / empty / mode / tools 标题不再内嵌 emoji 字符。

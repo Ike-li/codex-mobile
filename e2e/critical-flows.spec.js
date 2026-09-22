@@ -80,9 +80,10 @@ test.describe('关键用户旅程', () => {
     await expect(page.locator('#followup-btn')).toBeHidden();
 
     await page.locator('#msg-input').fill('FOLLOW_UP');
+    await expect(page.locator('#send-btn')).toHaveAttribute('data-mode', 'send');
     await expect(page.locator('#followup-btn')).toBeVisible();
-    await expect(page.locator('#send-btn')).toHaveAttribute('data-mode', 'stop');
-    await page.locator('#followup-btn').click();
+    await expect(page.locator('#followup-btn')).toHaveAttribute('data-mode', 'stop');
+    await page.locator('#send-btn').click();
 
     await expect(page.locator('.msg.user').filter({ hasText: 'FOLLOW_UP' })).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('已向当前运行任务追加指令').last()).toBeVisible({ timeout: 10000 });

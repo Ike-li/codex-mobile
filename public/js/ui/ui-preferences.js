@@ -15,7 +15,7 @@
 const PROGRESS_STATUSES = new Set(['starting', 'ready', 'updated']);
 
 export const DEFAULT_PREFERENCES = Object.freeze({
-  // 默认静默:这是用户唯一抱怨过的噪音源。想看的人到设置里打开。
+  // 过程态始终静默。旧版本若写过 mcpStatusMessages:true，读出来也不再灌进对话。
   mcpStatusMessages: false,
 });
 
@@ -78,12 +78,12 @@ export function writePreference(storage, key, value) {
  * 未知状态归入告警侧:上游随时可能加新状态值,按「不是已知失败词就静默」处理会漏掉
  * 真故障,按「一律报」处理最多是多一条消息。两种错法的代价不对称,选代价小的那边。
  */
-export function shouldAnnounceMcpStatus(payload, prefs = DEFAULT_PREFERENCES) {
+export function shouldAnnounceMcpStatus(payload) {
   if (payload?.error) return true;
 
   const status = payload?.status;
   if (typeof status !== 'string') return true;
   if (!PROGRESS_STATUSES.has(status)) return true;
 
-  return Boolean(prefs?.mcpStatusMessages);
+  return false;
 }

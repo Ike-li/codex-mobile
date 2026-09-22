@@ -423,10 +423,36 @@ async function simulateToolCards(input, targetThreadId = threadId) {
     item: {
       type: 'somethingProtocolAddedLater',
       id: `raw_${turnId}`,
-      note: '未识别的 item 会降级成 Raw 卡片，而不是被静默丢弃',
+      note: '未识别的 item 不再进对话；这条只留给 UNKNOWN_ITEM_FIXTURE 守准入',
     },
   });
 
+  notify('turn/completed', {
+    threadId: targetThreadId, turn: { id: turnId, status: 'completed' },
+  });
+  activeTurnId = null;
+}
+
+// 单独一轮、只有未识别 item：混在 TOOL_CARDS 里会被折进 <details>，DOM 计数才看得到，
+// 用户却看不见。单独放才能守「消息流里没有 Raw 卡」这条外部可观察的准入。
+async function simulateUnknownItem(input, targetThreadId = threadId) {
+  turnCount++;
+  const turnId = `turn_${turnCount}`;
+  activeTurnId = turnId;
+  notify('turn/started', {
+    threadId: targetThreadId, turn: { id: turnId, status: 'inProgress' },
+  });
+  notify('item/completed', {
+    threadId: targetThreadId, turnId,
+    item: {
+      type: 'somethingProtocolAddedLater',
+      id: `raw_${turnId}`,
+      note: 'protocol residue must not become a chat bubble',
+    },
+  });
+  notify('item/agentMessage/delta', {
+    threadId: targetThreadId, turnId, itemId: `msg_${turnCount}`, delta: 'unknown item ignored',
+  });
   notify('turn/completed', {
     threadId: targetThreadId, turn: { id: turnId, status: 'completed' },
   });
@@ -447,6 +473,15 @@ async function simulateFileChange(input, targetThreadId = threadId) {
         { path: 'src/readme.md', kind: { type: 'modify' }, diff: '-old\n+new\n' },
       ],
     },
+  });
+  notify('turn/diff/updated', {
+    threadId: targetThreadId, turnId,
+    diff: [
+      'diff --git a/src/example.js b/src/example.js',
+      '--- a/src/example.js',
+      '+++ b/src/example.js',
+      '+export const ok = true',
+    ].join('\n'),
   });
   notify('turn/completed', {
     threadId: targetThreadId, turn: { id: turnId, status: 'completed' }
@@ -603,6 +638,8 @@ rl.on('line', async (line) => {
           simulateSlowTurn(input, targetThreadId).catch(() => {});
         } else if (input.includes('TOOL_CARDS_FIXTURE')) {
           simulateToolCards(input, targetThreadId).catch(() => {});
+        } else if (input.includes('UNKNOWN_ITEM_FIXTURE')) {
+          simulateUnknownItem(input, targetThreadId).catch(() => {});
         } else if (input.includes('FILE_CHANGE_FIXTURE')) {
           simulateFileChange(input, targetThreadId).catch(() => {});
         } else if (input.includes('approve') || input.includes('echo')) {
@@ -651,6 +688,15 @@ rl.on('line', async (line) => {
         });
         break;
 
+      case 'account/read':
+        respond(msg.id, { account: { type: 'chatgpt', email: 'mock@example.com', planType: 'plus' }, requiresOpenaiAuth: false });
+        break;
+      case 'account/usage/read':
+        respond(msg.id, { summary: { lifetimeTokens: 123000 } });
+        break;
+      case 'account/rateLimits/read':
+        respond(msg.id, { rateLimits: { limitName: 'Codex', planType: 'plus' } });
+        break;
       case 'configRequirements/read':
         respond(msg.id, { requirements: null });
         break;
@@ -748,6 +794,40 @@ rl.on('line', async (line) => {
           webSearch: true,
         });
         break;
+
+      case 'mcpServerStatus/list': {
+        const detail = msg.params?.detail;
+        if (detail != null && detail !== 'full' && detail !== 'toolsAndAuthOnly') {
+          process.stdout.write(JSON.stringify({
+            id: msg.id,
+            error: {
+              code: -32602,
+              message: `Invalid request: unknown variant \`${detail}\`, expected \`full\` or \`toolsAndAuthOnly\``,
+            },
+          }) + '\n');
+          break;
+        }
+        respond(msg.id, {
+          data: [
+            'codex-security',
+            'codex_app',
+            'codex_apps',
+            'computer-use',
+            'cua_repl',
+            'github',
+            'node_repl',
+          ].map(name => ({
+            name,
+            serverInfo: null,
+            tools: {},
+            resources: [],
+            resourceTemplates: [],
+            authStatus: 'notLoggedIn',
+          })),
+          nextCursor: null,
+        });
+        break;
+      }
 
       default:
         respond(msg.id, {});

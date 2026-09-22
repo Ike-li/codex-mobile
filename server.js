@@ -1565,9 +1565,9 @@ function ackOk(ack, payload = {}) {
 }
 
 // socket 处理器共用的失败出口（thread:*、models:read、files:search、account:read、
-// mcp:read、externalAgentConfig:import 等）。这里给出的字符串会被客户端的
-// appendSystem(ack?.error, true) 直接渲染进手机上的消息列表，所以必须过 sanitize —— 全仓
-// 其他用户可见的错误（agent-appserver 的 turn/start、turn/steer、启动失败）都是这么做的，
+// mcp:read、externalAgentConfig:import 等）。字符串会进浏览器：多数调用方 appendSystem
+// 写进对话，MCP 面板把失败留在面板里。必须过 sanitize —— 全仓其他用户可见的错误
+// （agent-appserver 的 turn/start、turn/steer、启动失败）都是这么做的，
 // 唯独这条路曾经把原始 error.message 直送浏览器。
 //
 // 后果不是理论上的：externalAgentConfig:import 解析带 API key 的外部配置、mcp:read 读带

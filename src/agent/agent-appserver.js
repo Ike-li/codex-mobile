@@ -1503,7 +1503,9 @@ export class ThreadRuntime {
   async listMcpServerStatus(options = {}) {
     await this.ensureInitialized();
     return this.request('mcpServerStatus/list', definedParams({
-      detail: options.detail ?? 'Summary',
+      // 0.147 的 McpServerStatusDetail 只有 full | toolsAndAuthOnly。旧值 Summary
+      // 会被当成非法变体，错误再经 mcp:read 冒到手机对话里。
+      detail: options.detail ?? 'toolsAndAuthOnly',
       limit: options.limit,
       cursor: options.cursor,
       threadId: options.threadId ?? this.sessionId ?? null,

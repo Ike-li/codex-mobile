@@ -21,6 +21,7 @@ import {
   formatComposerPermission,
   formatComposerModel,
   formatComposerEffort,
+  composerEffortVisible,
   normalizeCollaborationMode,
   collaborationModePayload,
   collaborationModeFromThreadSettings,
@@ -272,8 +273,13 @@ test('composer chips use short labels that will not wrap on a phone toolbar', ()
   assert.equal(formatComposerPermission({}), '默认');
   assert.equal(formatComposerModel({ displayName: 'GPT-5.6-Sol', effort: 'max' }), 'GPT-5.6-Sol');
   assert.equal(formatComposerModel({ model: 'gpt-5.4-mini' }), '5.4-mini');
+  assert.equal(formatComposerModel({}), '');
+  assert.equal(formatComposerModel({ model: '   ' }), '');
   assert.equal(formatComposerEffort('max'), '最大');
   assert.equal(formatComposerEffort(''), '');
+  assert.equal(composerEffortVisible('medium', { defaultReasoningEffort: 'medium' }), false);
+  assert.equal(composerEffortVisible('high', { defaultReasoningEffort: 'medium' }), true);
+  assert.equal(composerEffortVisible('medium', {}), false);
   for (const label of [
     formatComposerMode('default'),
     formatComposerPermission({ approvalPolicy: 'on-request', sandbox: 'workspace-write' }),
@@ -563,7 +569,6 @@ test('session settings panel HTML contracts define compact grid layouts and nece
     'session-settings',
     'session-settings-close',
     'session-settings-body',
-    'mode-list',
     'approval-list',
     'granular-list',
     'permission-list',
@@ -582,7 +587,7 @@ test('session settings panel HTML contracts define compact grid layouts and nece
   }
 
   // 紧凑网格类名约定契约
-  assert.match(indexHtml, /class="[^"]*settings-grid-2[^"]*" id="mode-list"/, '#mode-list 应当具备 settings-grid-2 紧凑双列布局类');
+  assert.doesNotMatch(indexHtml, /id="mode-list"/, '计划模式协议未通，会话设置里不放禁用占位');
   assert.match(indexHtml, /class="[^"]*settings-grid-3[^"]*" id="approval-list"/, '#approval-list 应当具备 settings-grid-3 紧凑三列布局类');
   assert.match(indexHtml, /class="[^"]*settings-grid-3[^"]*" id="sandbox-list"/, '#sandbox-list 应当具备 settings-grid-3 紧凑三列布局类');
   assert.match(indexHtml, /class="[^"]*settings-grid-2[^"]*" id="model-list"/, '#model-list 应当具备 settings-grid-2 紧凑双列布局类');

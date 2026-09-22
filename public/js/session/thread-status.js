@@ -41,6 +41,23 @@ export function mergeThreadList(currentThreads, refreshedThreads) {
 // 顶栏标题取自「当前渲染的这份会话列表」,但列表并不总是包含当前会话:切到已归档视图时
 // 整份列表都被换掉,刷新回来之前还有一段空窗。返回 null 表示「这份列表答不上来,别动标题」——
 // 回落成「新会话」会让顶栏和正文里仍挂着的对话互相打脸。
+export function needsYouSessionLabel({
+  thread = null,
+  threadId = '',
+  currentSessionId = '',
+  currentTitle = '',
+} = {}) {
+  const listed = String(thread?.title || thread?.preview || '').trim();
+  if (listed) return listed;
+  if (threadId && threadId === currentSessionId) {
+    const current = String(currentTitle || '').trim();
+    if (current && current !== '新会话') return current;
+    return '当前会话';
+  }
+  if (threadId) return `会话 ${String(threadId).slice(0, 8)}`;
+  return '';
+}
+
 export function resolveThreadTitle(threads, currentSessionId) {
   if (!currentSessionId) return '新会话';
   const thread = (Array.isArray(threads) ? threads : []).find(item => item?.id === currentSessionId);

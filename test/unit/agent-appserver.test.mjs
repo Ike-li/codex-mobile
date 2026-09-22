@@ -961,7 +961,7 @@ test('P1 native controls call stable app-server methods with protocol params', a
   assert.equal(calls[13].params, undefined);
   assert.equal(calls[14].params, undefined);
   assert.equal(calls[15].params, undefined);
-  assert.deepEqual(calls[16].params, { detail: 'Summary', limit: 10, threadId: 'thr_source' });
+  assert.deepEqual(calls[16].params, { detail: 'toolsAndAuthOnly', limit: 10, threadId: 'thr_source' });
   assert.deepEqual(calls[17].params, { cwds: ['/tmp/work'], forceReload: true });
   assert.deepEqual(calls[18].params, { includeHome: false, cwds: ['/tmp/work'] });
   assert.deepEqual(calls[19].params, {

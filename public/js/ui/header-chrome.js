@@ -8,7 +8,7 @@ export function formatRttChip(ms) {
   else if (ms < 400) tone = 'ok';
   else if (ms < 1000) tone = 'warn';
   else tone = 'bad';
-  return { visible: true, label, tone };
+  return { visible: tone === 'warn' || tone === 'bad', label, tone };
 }
 
 export function formatWorkspaceChangeBadge(git) {

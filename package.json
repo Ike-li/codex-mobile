@@ -37,7 +37,8 @@
     "mutate:docker": "docker compose -f docker/docker-compose.test.yml run --rm mutate node scripts/mutate.js",
     "config": "node scripts/config.js",
     "qr": "node scripts/qr.js",
-    "setup": "node scripts/setup.js"
+    "setup": "node scripts/setup.js",
+    "walkthrough:live": "node scripts/live-walkthrough.mjs"
   },
   "dependencies": {
     "compression": "^1.8.1",

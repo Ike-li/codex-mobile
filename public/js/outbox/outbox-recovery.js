@@ -33,6 +33,21 @@ export function requiresManualDisposal(request, { orphaned = false } = {}) {
 // isProvisionalInstanceOrphan 那一关（那个函数见到 threadId 就直接返回 false），
 // 于是永远不渲染——用户不知道消息没发出去，也没有任何入口清掉它。
 // 已经失败的记录不该被藏起来，哪怕它属于别的会话。
+export function outboxDeliveryLabel({
+  unboundRecovery = false,
+  needsReconcile = false,
+  manualDisposal = false,
+} = {}) {
+  if (unboundRecovery) {
+    if (needsReconcile) return '原会话目标已失效，正在按请求 ID 核对；不会自动重发';
+    if (manualDisposal) return '原会话目标已失效且已尝试发送；不会自动重发，也不会自动恢复';
+    return '原会话目标已失效，连接后将恢复到当前会话';
+  }
+  if (needsReconcile) return '结果未知，正在核对；不会自动重发';
+  if (manualDisposal) return '发送失败。丢弃后才能发送后面的消息';
+  return '发送中';
+}
+
 export function shouldSurfaceInOutboxView(request, { matchesView = false, orphaned = false } = {}) {
   if (!request) return false;
   if (matchesView || orphaned) return true;
