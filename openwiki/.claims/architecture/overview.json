@@ -1,0 +1,162 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:c7a15a10bbd19af83093bf75aba83bd62a28cd88d317a887224502aa5a38808a",
+  "claims": [
+    {
+      "id": "claim_36c4cdb0252e47ad8b7ab3762f5f79c7",
+      "statement": "产品定位是本机 codex app-server 的手机控制面而非另一个 agent：会话是 Codex 原生 thread，存在 ~/.codex，与终端 codex resume 看到的是同一批数据。",
+      "evidence": [
+        {
+          "resource": "repo://README.md#L12-L20",
+          "version": "repo-lines-v1:sha256:b7ccf33e5a2ffe69490d22fa324f1cb1b0274b889e6749c307835e2515ce6513:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNWNiMDY4MmJjNWVlYzZhZjdkMTMzMGM4ZDJiOWZkM2E0YTUwYTU4OTFiYzVhY2RjMzFmOGRhMDZlMjMwOGRlYSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDI5ZDU3YWNjMzc0NTBhODU0YzM4NDdkM2I2OTI0ZDhhYzJmMmUwYWFhYTQ4N2NkZDU4MDI0YmQ4ZTA2ZjJlZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTE1ZDkzMzhmY2FiZDE0OGVkMmQwN2JjYWJlMjM2NDVlMDRiNzIzZTZhZWZkYzJkMDY1NDBiZDAxNjcxMDcyMyJ9"
+        },
+        {
+          "resource": "repo://package.json#L1-L6",
+          "version": "repo-lines-v1:sha256:c5edc5fc9dabb57cadcfc25c53abbe29fd4ac535e2f596ca97339d330022dac9:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYTZmYjA4ZmRhMWFjYjk1N2I2MTE2YmQzNzgxMWExZmU0MWEwMTYxMWMwNjMxZWRiZjc4NmQ2ODg5YTI3YTU1YyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDBmYTZiN2M3YWRjMTFjZTA5OGE0YTljZjc1MmViZDg1ZGQzZTU4YWMwZjhlODA0ZDkzMjljYWY5YjRhYmZlNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTMxZDU3MWQ5OTBmYWRmNTU2YjcyN2IzNmFhYzUzZWIxY2UwNzkxODMxMGU3NmYyYjBiNzI0YmFiMjY4MGMyZCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_ce9556155bf8464e802eb564b4e92198",
+      "statement": "前端入口是 public/index.html 以 type=module 加载的 /js/app.js，配合三个 vendored 库（marked / DOMPurify / highlight.js）与服务端提供的 Socket.IO 客户端脚本。",
+      "evidence": [
+        {
+          "resource": "repo://public/index.html#L344-L350",
+          "version": "repo-lines-v1:sha256:47af47500e54ce961f9a22418e69e242134467205cf5c612988055d6985cc9b0:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjUwYjhkNWVhMzc4OTVkNjMxYTI2OWZjZDEwYTAzZDAyOWNlNDQ4NDc0MmVkNGJkZjcwNDc0YzcwYzIxZjAzYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzQ0NDJkZmUzYzU1YTIxNDFmZmM5ZDA2Y2QxZGJiZTBjNTRjMDExMjFmZDY3MTI0NzBmYWE1ZjQ4YTA0MzRmYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjEsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDNlZDgxY2QxNmRmODhkNjkyMTY2NDZkOGRhZGE3NjM0YjMzYTY5ODZlOWMyM2E3MjYzMWQxOTMzYjYzNWE1MiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_4a6e0251c0a945218cd5e088f28796f9",
+      "statement": "浏览器端 Socket.IO 客户端禁用自动连接、只用 websocket transport，并在握手 auth 里携带 deviceToken。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/app.js#L446-L450",
+          "version": "repo-lines-v1:sha256:881035492b5c4bdf796ed94beb6866997d4ed6d72526b305ddbf1fa009d66c7a:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzQ4ZDU3NzA1MDkxMmIxMzU4MDEyOTIwZTQ4NDVlNDg4ZGE4ZGU4YjRhMTQ5NzFmYTMyNTJlMGQxOTI3NzM4YSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZGNmMjg2OWQ3OTgyNzdmY2FjM2U5OGZhN2ZiNTRjYmM0Y2FiYjVkODEzYTYyZjc0MjZhNTAzYWFiOTMzZDU0OCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNmUyZDYxYjU2MDdkYjAxYmRiNDE1ZmM1NWI3ZmIyNjMzZDFjOTZhZDM3NjhhZjlkZjBkMzM1M2IzYmNiZDIxYiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_f8ac8d7bbe454e56ac8b221edbe47ffa",
+      "statement": "会话与 socket 解耦：ThreadRuntime 挂在服务端，事件按 instance:<id> 房间广播，因此多设备可以同看一个会话、某台设备断开不影响 turn 继续跑。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L1-L3",
+          "version": "repo-lines-v1:sha256:2859192af947127d42728e63decb95a4d3f6a652c64ee9f0d410755e25edbbb0:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjQ4MzEyMGRiYTE2MzIxNWY2ODAxYWIwMTFmMGIwMTg4NGE4ZDEyYmVhYTA3Y2Q1OWUzOTYzMmUwZjQxYWVlNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYmEzNzY2ZjEzYmFiOTg1NTJkYTc0ZGY2ZDliZmZlOTQxZDYxODhiMGQwYjljYzI2NTYwNGM1Y2ZmZjgxYTVkNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDczYTRjYzY2MDRhNWI3MmVlNTUyYWFmODM0ODJmNzRhZDBiMDg1Mzc5NTUxODg3ZDNjZGM1YTY0YTBlYWQyZSJ9"
+        },
+        {
+          "resource": "repo://server.js#L1258-L1264",
+          "version": "repo-lines-v1:sha256:c6a136a2434c280241684e74451be77cb59a5d3ee9c5ae01e489e06237b6aaa1:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDVmZjNiZWFlMThkOTQ3NTc3ODlkZWUyMjE3MzI3NmFjNzAzOWNjZDM1YmJiMWZhNmUzYTMyM2M2OTU1MTdhNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMTFkNzE1M2UzYWQyMWZjNmNlN2NjZGUwMmQ3NGM1YjA0YzI5Zjg4YmI5Yjc5ZWY0YWY1YTllNmU4NWZkZjk2ZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjdmODJiNmI5YzlkYTMyMmNkNmVhMDViMDg0NGIxNzdkOTRiMjc2MmNhM2M4NDVlNGNjMDhiM2M4NGQ0YjU4YiJ9"
+        },
+        {
+          "resource": "repo://server.js#L1428-L1484",
+          "version": "repo-lines-v1:sha256:43fa500269f787fb87119cb9bbada7012375484b81e6033602c765a7a92d6396:eyJzZWxlY3RlZExpbmVDb3VudCI6NTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA5YTJiYmMxMzYyY2M5YTRjMTBiNmUxM2QxNTM0NDg3MTY4YzcyOTY3YmE1YjdkMThiZjgzMDQyZDU5ZjZmODAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIyZTY3YWNiY2E1MjJhZGIyN2UzOTJlZDcxMGRiNDEzY2FhMDMzYzNmOTFiNjAyM2MzMDc1Y2E2YWRkYTAwZDAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9e60d8078be1467294b3707f925e539c",
+      "statement": "启动期配置校验失败会直接 process.exit(1)，而不是带着一份看起来配了、实际没生效的配置继续运行。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L69-L83",
+          "version": "repo-lines-v1:sha256:96e8f001c2f223e49fa1800fbd46f4ffdcbf532686b9382d69bebef8e854bb43:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc4OTk2ZTg1ZTQ3NThhNGE4MTE3YzM2NDgyMWZkYzViM2JmZTkyZjdlNzdkYTg3YTAyN2RkNGJiYTEyNTVkODUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUwODk1NjdjYTY2ZjUwMzQzZmIwNTA4NDE5OTVhZjUzMTY5ZGU4ZDAzYTcyMzQ3ZWY4NTU1Nzg2OTgyM2NjYjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdhNmRkMDQzMTAxOGI1NjI0NGI2OTk5ODVjOTVjYzdlMWFhYjhjNGY4ZTBiMTM4OGE1YzAyZWY1MWUzODAzZWIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7c353f50ac4b4002a070e54911c680d9",
+      "statement": "工作区刻意不回落到 homedir()：早期的 WORK_DIR || homedir() 会把整个家目录（~/.ssh、~/.aws、其他项目的 .env）纳入 agent 文件作用域，现在没配就拒绝启动。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L382-L396",
+          "version": "repo-lines-v1:sha256:f6ee8a7c9dcd826c8734c6aff9bd808fa114150007f92338038dda0487238d42:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJhYTc5ZmFjOTk4YzhkNWYwZDgyNTQ1MmIzZDlkZjE3YzVjNmY2YzhlOWI1Yjg3YWM1NDVhYmEzZWM1NTY3NmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZiMGJmYjE1YjNlNmE5YzdjOGE2N2RlMjVkZmZlN2U4NGE1MTlhNjZkZTk1Y2I5NjlkMmU5YjYyYmM4NWE4M2MiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAwZWJhM2NkMDkyOTIyYWUyYjJmNmY3OGU5NjRiZjNhN2Y4OTBjZTllYjBlNjQzMGVmOGFhNTZmMzlmNTFlYzQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVmZmE5ODZjZWZjYmVjN2JmNzg3MWFjM2RkNDNjOTdhOGVjNGZmN2ViM2ZlMzM5NGYzMTZmZDA5ZjBhN2QyYTQifQ"
+        },
+        {
+          "resource": "repo://server.js#L85-L90",
+          "version": "repo-lines-v1:sha256:1db62c867bf0d14ba6f0bb4f90a1a4801c08f91dfcceedb890c5133dfbacb145:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDZkYTExOTg2MjhmOTU0YTI5MjI3YzFkNzNiNmVkMjgyZDk5MDJiNGFkNTVhYTM5MzRhMDAzZWE4ZTc1MmE1NCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMmExYTJlNDA5ZjhmYzkwMjYzZGI5MzkxMDUxYzg4OTI1NjI1YjZjNTg0YTNhYjE3MWRkMzM1NDZiNGFjZjM0NiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOGJjNjk2NWVmZWNmNGU0ZWUxMzJiYjViM2I0MGJlZWJiYjQzNDQyNWI1M2NlODNlYjllZGY0OWM4YmNkYzU1MSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_643d9527a2a844d3957e1809b28e5a98",
+      "statement": "server 启动预检与 doctor 共用同一份 codex 二进制探测与判定（probeCodexBin + codexBinDiagnostic），以免同一个故障在两处得到两种描述。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L311-L343",
+          "version": "repo-lines-v1:sha256:9d38888b65862493a5d0009f3ddb930b79980bfcdd276e9fe580508cf52821e8:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNiZDJlYzNkZTcyMjg0MjM5MmU3N2VmYWY1ZmQ0NTg4M2ZhMjg0YWZiZTNiMGI2OTdlYTA5YmY5NzA3MzJmZTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkyMDQwZTA5NWE5NGUyYWRhNzRlNDIxZjM3MTg3NTFhOTFhODEwYmZkNjZmNDhmNGU5MzljN2I3NDgwZWI2NzAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ2YzZmZDcwZjcyZDU0YjllZDQ3NTVhNzBiN2MxZDZiNTUwMTZhMjA4YjU5NTQ4N2M2OGM2MDc4ZmU0Y2FhNWIifQ"
+        },
+        {
+          "resource": "repo://src/ops/doctor-runtime.js#L30-L47",
+          "version": "repo-lines-v1:sha256:69520be379178bab8334a7a3a0629f3c211089415e3a4312c7afb32a2fd26ecf:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBhNmEyNzQyMTBkYWNlNGRhN2EyNmYyZmU1MmFmYjU2OWMwNDAyMDYwOTQ4ZGMzY2FlN2Q0NWVmMDM3MWRjOGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhhYjhkNDhlNzNlOWNhNzYzZmVkMWI4YWIxMGRiOGQ1MThiNmZiZWZhNTJiNDg1ZmFlNDBkMDQyODNhNWQzNjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZkYWRjYjJlZjY1MTY4ZWZiMmI1NmYzZmJhYjBhOWZjYzk4NWY0NDUwMWMzMTlkOTAyMTVhMDZhZDZlMzhiYzIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4785bdf0013e4415a0cd9170b8ee8fe4",
+      "statement": "服务 listen 后挂四类维护定时器：附件清理每小时一次，认证会话清理、限流窗口清理、空闲实例与 needs-you 终态回收各五分钟一次，且全部 unref() 不吊住进程。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L3118-L3161",
+          "version": "repo-lines-v1:sha256:c0f006ab206fb339192e6a4cefcc5f1dcbea804c9c4e4e7ec4b9dc51a55740e1:eyJzZWxlY3RlZExpbmVDb3VudCI6NDQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ1MmMxODNkMmZlMTRiMjViNmQ3ZWIxYjJmYjVhZTZkMDYwZGY2ZmFlNTVkMDE3ZDM0MjgwZDQwZThkY2QxMzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRiMjg3YjY3MjI4Nzk4NGJkZjI3ZTA5MWU3Mzk1ZmRiNDZiN2EyMGYwMDY0ODVhNzk1ZTYyNjEwYjRkMzY1OTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNmOTNjM2RhZWEwNjExZjNlNjlmODkzM2E1YTY5ZTkwNWE2MDZmZjNmMWQwODNmMGQ3ZTQ5MTg0NWY2ZGQ4MzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJhYWU3MmE4N2U5YzNkYzQ1MjZjYWY0MmE3OGIwMzQ2ODdlMzliNDYxMzRmOWE4YzZjZGI2NWEyZmM4ZGYzMzUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_6fd4dcc343bd41b5b5ce09271e1c5cea",
+      "statement": "关闭路径必须 dispose AppServerHost 才能给 codex 子进程发 SIGTERM，因为 SIGTERM 不像终端 Ctrl-C 的 SIGINT 会发给整个前台进程组，否则子进程只能靠 stdin 读到 EOF 自行退出。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L3164-L3193",
+          "version": "repo-lines-v1:sha256:a168f9028e3980da8ee4136256e15aa2f0d0cb40a7d6d1547fd6cfe904338d56:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3YzQ4ZjQ3YzgwNDNlODY1YzU2YjFiMzEwMWZhNzA3OTUzYTBiNDJmMDI4MjVkMzNkZjZiZmQyZTk4ODM1ZDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE4NDI3YjAzM2U3MTI5YmY4NTdjMjdiYjBkYTI0ODMxZTZjMmFlY2E3OWIxYTNiZDFlN2Q2NTU4OTZmMWU5YjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY2NDZmOTJjNTFmMTcwNGY2Y2FhNGJjNGVkZDJjMzU5YWJjNTYxODRjYmVjNDM3Njc5OWVkYmRmMzg2M2E4ZDEifQ"
+        },
+        {
+          "resource": "repo://server.js#L3197-L3212",
+          "version": "repo-lines-v1:sha256:43f35eeeb4093f5c7d29d45e6b8ba8a24ddf827255aa02c7523acb21bf055680:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY2ZGEyMmI3M2JhMGMxYThhZDcxOWMzMGM1NzhlYWJiODhjNGM3MzdhNzZhZDJjZTUxMzkyM2RhNTJkMzc3NTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY2NDZmOTJjNTFmMTcwNGY2Y2FhNGJjNGVkZDJjMzU5YWJjNTYxODRjYmVjNDM3Njc5OWVkYmRmMzg2M2E4ZDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImMwMjBjODgxZjAxOTJkMDdkYzA1NDljNjE2NzdlZmUwY2RhOTI4MTUwOGIyNDRiZDY4MjhkM2IwZWI0ZjJlZDkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9077f01ebcd642e294e89a82ea63db3b",
+      "statement": "shutdown 刻意不等 httpServer.close 的异步回调，Socket.IO 的长连接会让它迟迟不返回，而需要的清理在 close 之前已同步做完。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L3197-L3212",
+          "version": "repo-lines-v1:sha256:43f35eeeb4093f5c7d29d45e6b8ba8a24ddf827255aa02c7523acb21bf055680:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY2ZGEyMmI3M2JhMGMxYThhZDcxOWMzMGM1NzhlYWJiODhjNGM3MzdhNzZhZDJjZTUxMzkyM2RhNTJkMzc3NTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY2NDZmOTJjNTFmMTcwNGY2Y2FhNGJjNGVkZDJjMzU5YWJjNTYxODRjYmVjNDM3Njc5OWVkYmRmMzg2M2E4ZDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImMwMjBjODgxZjAxOTJkMDdkYzA1NDljNjE2NzdlZmUwY2RhOTI4MTUwOGIyNDRiZDY4MjhkM2IwZWI0ZjJlZDkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_96dfc6fa2fa542fbac188b3f082e27ec",
+      "statement": "网关内核心状态是四张内存表：agents（instanceId → ThreadRuntime）、ThreadRegistry、MessageReceiptLedger、NeedsYouRegistry，全部随重启清零。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L1231-L1240",
+          "version": "repo-lines-v1:sha256:576d124fcad9a44a75f48897144a3002814c0356bfedad73dbd244e099f0f925:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMwNTA1YzRjYTI1NjY5NDdhZmFlNGRjMzVlYjFlM2ZlYzM4YzNlNjZkNTIyZGZkNzcwOTNkOTk4MjA0N2I1ZmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEyMTBlNjZjNmQ2M2YwMjU1NGI4MDE1YTQ1YmQyMjhmNGY1ZmY1YWQ3NDAyMWZhZThkOTVjYzM2NTRhZDBkZWMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImViMWVhMTVhMGY3YjFkNzc0MWMwOTJkZTgwMmQzOWZkYTQ0MzRlY2YwNWY5NDM1OGM2ZjM2OWNhOTExNmUyMmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY4NTk1MjlhNWIwMmYyMWJkNmIyOTI0NjA4NTgxZjU0MmQ2MjY3OTVjNGQwYTU5YzA3MmVmNTViZmE0NmM3OTgifQ"
+        },
+        {
+          "resource": "repo://server.js#L3177-L3187",
+          "version": "repo-lines-v1:sha256:71dd264d5dbbaab91437a0fcb726ecdcdfee36e4bc4f44d9e703c30d7699bdcb:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQyZjRlYzg5MjA3Yzg2ODdhMDZjZGMxMTljZmVhNDlkZDA0YjAxY2ZhYjNiNmE2Yjc3NDkzNGI1YjFiNGM4ODYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFmYjBkNDVhNTlhZDJlOWVmODg3ZjY0YWJlZjZmOGViMjVmN2U1MGJhNjE5OTk3OGNhZTE5OWJhZWUxMjA4ODQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJlMWQ3MGU2N2I0ZTA0NDlhMzVkYjMwZjQ0NjJhODRlYmY0MjY3ZDBkZjYzZDk3NGJjNzdkNmUzNmE2NTVkMDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU5MDU2YmVjZDJjMzY5MzY0OGQ2NjQ2ZTY4OGEwNGYyNDRjZjg3NjVkYmY2NGUxYzdlNmQ0NWZmNDVmMTJhMjMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b5e411fac4b24ce0ada6b62baac15b20",
+      "statement": "没有 AUTH_TOKEN 时监听地址解析会拒绝非 loopback 绑定，启动失败并退出。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L92-L99",
+          "version": "repo-lines-v1:sha256:3aaa446bcb313993b6036cc9cf548817edd2735acb0ec3f3b6ad98ce3fc8b539:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzlhMmRhMzg4OTQ2ZjJiMzBjZTZlNjg1ZWQ1ZWFmMGRmZTEzNGZhYTViY2FiOTMxNzFmZTMwYTBhNDFhNzA3YSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTRlYTBmNGY5YTA0MmFmYTRmZjJiOTIwZTNkNjc1NWVlMWZjNGZiMDQ3MDA2ZmY0M2IwZTQ4YmMxMjgwYzc1MCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiN2UyZDUzNTIzYmZlZmMyMDNlOTNjYzNhNzI3Zjg0MWFjZWNmMDk5ZDE5N2JmMmY0OTc5MjNmNDZkMmUwOGNhNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjM1OTQxYzUwODcwOTE4NWZkZGE4ZDM1OTQxODk1NGVjYjI4ZmI5M2NkMzg3YzQ3ODIyMGIyNDA1YWRhZDIyYSJ9"
+        },
+        {
+          "resource": "repo://src/auth/server-security.js#L34-L45",
+          "version": "repo-lines-v1:sha256:afbc4fe23e72d07e5ec56c86e7d3b0ad80bb99d0a4aea2722bfae13532eafc65:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ1ZDI1ZGJjMTg4NDU4YjJhY2FiYmFhNjE2YmMzMjdiZmEzMWZlNDE4NmI0MjcxNmM0NTY1Yjc3YTY0NTY1N2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU5NDBmYTBjNTcwZWVmMjFmZmY3Y2Q4YzU1YTYwOTQ0YWIxYTgyNTM0YTJmOGQyMTdiZGRiNDA0YzdhNmY3NDMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI1YTU5MDMxYzc0OTIyZTY0ZjBiOWJiODhmNjJkM2ZkZjY4MjA1YzUxZDI5OTJiN2VkM2UwYjBhODY5OTIwZGIifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.5.2",
+    "at": "2026-09-22T08:36:26.702Z"
+  }
+}

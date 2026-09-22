@@ -1,0 +1,166 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:d04d052ae8be8a76254693fa73448144fc641776d86d97ea8b939b6d10c349e6",
+  "claims": [
+    {
+      "id": "claim_4a1476fadc53446f9c82102aedfb37c1",
+      "statement": "所有契约事件经 on(socket, event, handler) 包装注册，包装器做两件事：fail-closed 地丢弃 socket.deviceApproved 不为 true 的设备事件，以及把处理器抛出的异常转成一条脱敏后的 error 类 agent:event。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L1536-L1554",
+          "version": "repo-lines-v1:sha256:3b305f26f88bc9533ca112d9d46717e2346e6e3929bc9d8c7209040185dea597:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI1N2JhOGEwOTY4MjgzZTQzMjU0ZjhhOWYxOTA2OTFkZTA4ZTA1ZDAwNmMyYjc1MGRkYTAxMTFmNTVjOTc5ZTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA3YmYxNDk4Mzc0ZTQ5ODU2ZmU1ZmJjYTY5NTUxZDYyMTY4ZGU2MjJjYzVhZDMzZGFhZDAxOGVkM2Q3YTY4YWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUzMmZmNDcwNmQ1MjJmOGJlMjUyZmRiMjU3MmE4MzdkMGI4NDU4MGI0NDQ3NWU1NmYyOTUxNTlhYTE4MDE1YjMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ad70dbd06e274ca58eace391bffee3cb",
+      "statement": "ackError 必须对错误消息过 sanitize，因为这条失败出口被 externalAgentConfig:import、mcp:read、account:* 共用，报错里可能带着密钥并显示在手机屏幕上；它刻意不加 errorCode、也不套 sanitizePath。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L1566-L1583",
+          "version": "repo-lines-v1:sha256:21334c9cea2707e7f171661dc997e07f58bd57d5f87663208ae682393bc4218d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA5NWRiZTdmZDk1NzE5NzUwOWJkOGIwM2JjNWFjMWM3ZDE2ZTE1ZjEyYmJhMDJiNTc2NTNiY2I1MDkxMzAzMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYzNjE3ZmNiMzY0YTFhOGZiOGFiM2I3NzJlNTZlYjYzMWQzNDNkY2Q4MTdmNzdjMTE5YmEyZGM2MDk3YWUwYjIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_14b25880be864600ae0ca22157b14902",
+      "statement": "agent:event 信封固定为 { seq, epoch, sessionId, instanceId, cwd, ts, type, payload }，seq 由 ThreadRuntime 单调递增，epoch 在 runtime 重建时换新。",
+      "evidence": [
+        {
+          "resource": "repo://src/agent/agent-appserver.js#L1669-L1686",
+          "version": "repo-lines-v1:sha256:2f5ccb76504994301f2e41f1256b442c169fb0673706e1d935ca0c278fc4b523:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBiNzYyNGIyNDM3MzQ0OGQ3NzBmMjY4YzUwYjkxN2YxYThkNmMwOWRiNzUxYmY0ODhlMGIzNzAwMjk0OGRlMzMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMzOWUxYTk0YWM3YzE0MTg2MTg2YTAwZTNjMGEyMzZiNmVmMGQ2ZWU4NjZlNjc0ZDNmZDgxNGE1ZmMzOGJmMmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBlOTM0ZjE0ODk3ZGYzNmY1OGFmMWE2YmNiNTQ3MzkzYjI5Y2RiNmI0MTRhNDgzOWY2MDlkZDNhMDU5YjI3M2YifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fb290b641dd8406b86fd2b2fc29dd634",
+      "statement": "服务端自己合成的信封（error、system、instances 等）用 seq: 0 与 epoch: 'server'，表示它们不参与断线重放。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L1546-L1561",
+          "version": "repo-lines-v1:sha256:bcb9cf2f961a2e3985a14bf9a1af14779094a5406a4253a2e6b4bcfca795835f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxYjlhNjZmNWU0MDliYmVkZDFjY2Q1ZDdjNDA3YzIyNjU5NDNjZjAwNWY2ZDhlZTdhZjdiMTlkMjVmNjc4YWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYzOTc5MmYxNmFlNmJiMTgwNGQzMWQ1MjkzYzI4YjIwOGU5MGI3ZDVhZWMyNTFmNmI3OTZjNzY1ZDhjM2M1NWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIyOWM4MWFhYWE3MDIzNjZiNDgxZjkzYTZjY2RlYTY2MWZjOWNkZjYyYzRhYWJiMGZkOTYzODU5ODBiMzgxOTYifQ"
+        },
+        {
+          "resource": "repo://server.js#L1643-L1654",
+          "version": "repo-lines-v1:sha256:97003133f5a21cfa712ceb27f93735d65be6ed2de324c444dd85fea34810db7c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUzNDM4MjNkNGQwZjc0NmUxYmU1MWZmYTRiNTgyNTU2MGU0NWIwOTBmYzhkYWY0NTYyNTJhODVmMjY2OThlNGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU5ZjFiZmNiZGUyMzdhMTIxNDEyMDUyNDRhOWNhNDAzM2I4OGVkYzAwNTlmNmQ1YzAzM2U0MTcxMmRhYTEyMWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBlODZjNjY3ODdjODNmMTFlY2M4ZWM1ZWJkOWEzNTFkMDU0YmQxM2I0ZjM4MjRhYzE2ZjJmY2I3YmM0ZTcwMGYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_10551284b7474bf3be0d52b617325bc8",
+      "statement": "事件缓冲溢出时从头裁剪并置 bufferTrimmed，eventsSince(lastSeq) 据此判出缺口（gap），有缺口就不能靠重放补齐。",
+      "evidence": [
+        {
+          "resource": "repo://src/agent/agent-appserver.js#L1680-L1693",
+          "version": "repo-lines-v1:sha256:4d37f982acce31d4d0dd77333ab43c28d2af98a8991c80d324753bb4290eae90:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM5M2YwMDRiMzVjZDNhYjZmODgxMWJkYmMwMmY0MjI4M2RjMTY4NDJlOTJlNTJiZmI4ZGZjOTY2NzgyNDg2N2UiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzNDE5YjFjMWU1OGZiMWI5NzQ4MDkxZTEwM2VmY2FlYWYyZWQyOWIwYjljNjU4MzY0ZDlhNTkwMTdhYTc0NjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVlNjYyZTM3NDA5NjlmZTI3NjVkN2ZhY2EwMDc1NzE0MGZlZjUyM2U2MTQ5YWRjMmNlOGNjYjE0NTNkZDNlMjAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_600d0369e1374efdb32c239bfd85bfab",
+      "statement": "每个 socket 加入 instance:<id> 房间，runtime 事件向该房间广播，因此同一会话的多台设备看到同一条事件流。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L1258-L1264",
+          "version": "repo-lines-v1:sha256:c6a136a2434c280241684e74451be77cb59a5d3ee9c5ae01e489e06237b6aaa1:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDVmZjNiZWFlMThkOTQ3NTc3ODlkZWUyMjE3MzI3NmFjNzAzOWNjZDM1YmJiMWZhNmUzYTMyM2M2OTU1MTdhNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMTFkNzE1M2UzYWQyMWZjNmNlN2NjZGUwMmQ3NGM1YjA0YzI5Zjg4YmI5Yjc5ZWY0YWY1YTllNmU4NWZkZjk2ZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjdmODJiNmI5YzlkYTMyMmNkNmVhMDViMDg0NGIxNzdkOTRiMjc2MmNhM2M4NDVlNGNjMDhiM2M4NGQ0YjU4YiJ9"
+        },
+        {
+          "resource": "repo://server.js#L1456-L1461",
+          "version": "repo-lines-v1:sha256:d9ac3480d2ec763981b1c373593434eecac893a49ba2972817d0f2de6b23b116:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZGI1ODYxODkwMDJjMDYwMmFiODAxZGI1MDVjMmQzMTM1MTJhMmYyNTg4YTE1ODFlNmE3MTQyNDBkNjkxYmY4MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDhhYWNlYzM4OWNjNmViZTQxYTliMzNjZmExMWQ4NjYwYmE4NTA3NWE3MGNlY2VkYjVmYTNjZjE4ZDg4ZGQzNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjY0OTdiZjVjMzk0YWE5OWQ5YTBmMDJhZmQ3ZTJlYTA3NTUwMTQ4MjNkNzUwYmYzNTQ0MjkyZGNlZDdkNzViNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZWZmN2JjMzRkNzAxOTk2MGJkMTY5YjljMGI2NjczNjEzOTI3YzFjZDkyMzY3NWFkNDZjYjdmMWI0Njk1MDU4MSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_c7bdd032c7014f7ba89d465aa4b1d950",
+      "statement": "前端的 GLOBAL_EVENT_TYPES 列出不属于任何单一视图的广播事件（instances、pending_devices、needs_you_changed、status_line、account_*、rate_limits、mcp_status、skills_changed 等），而 thread_status 带 scope=host 时同样全局。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/ui/view-routing.js#L1-L27",
+          "version": "repo-lines-v1:sha256:897259191202d5d374277bdce5c947f799b8c23914815f64ed8235b7c4700fe7:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4MzM0MWU4NGRiNDJiMjlkNTRlZTFhNDE4YjgyMTQwOGMzYTYxMGE5ODcwZThjZDkxMGZkZTQ5MTBkZTU5NDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRkN2ZhNjEwNjUzYzI0NGQ2YWUyOWM0NDkyMjk2NjY3M2JkYWM0N2RkYzkxZWM2ZjQ2YjcxODgyMTY3MmFkZmUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_90c0abe3855748f7818f4007a3f6d629",
+      "statement": "outboxRequestMatchesView 必须先比 threadId 再比 instanceId：一个 instance 上可以先后开多个 thread，反过来比会把旧 thread 的排队消息当成属于当前视图而发进错误的会话。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/ui/view-routing.js#L36-L48",
+          "version": "repo-lines-v1:sha256:287f1dc4cbf008062c7de20b4a0a69ed5d2e8bfec82341bc1575d32f88927260:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ0ZDEyZDdjYThkMDljYTE2NmMzYjY5OTViOWVmMDczZjQ1ZTRjYWRhOTQwNGY3YTYzNmQ5OWRlZTY4NTEwNDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY3YzM1NzFiYTUxNzg5MzZjNmJjZDYyMzc5ZTMyZjg1ZWU4MmUwMjJkNzE4OTczMmQ2ZDBhMGI3ZGE1MmNhNmMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5e136c2da6884e34913d2d4cda038399",
+      "statement": "emitWithAck 把 socket 回调包成 promise，默认 10 秒超时并额外监听 disconnect；两个错误类都带 resultUnknown 标记，表示超时不等于没送到。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/net/socket-ack.js#L1-L55",
+          "version": "repo-lines-v1:sha256:d60848708909e5e595699b92db26745285578da14aed03b8aeaa2fc0516d1e67:eyJzZWxlY3RlZExpbmVDb3VudCI6NTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3MWRlM2YzNjZiOGQ0ZTE2OGIyNDIzYjNmODFjNjZhOTBiMTA0YzMwZWZkNzIwMmQ2MzgzOWU5OTI2NWYzM2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_78d253b3c793412991821f21b9622e06",
+      "statement": "宿主机配置类于件要求 payload 里的 confirmAction 等于本次动作名（逐动作确认），缺失时写一条 denied 审计并拒绝。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L1719-L1730",
+          "version": "repo-lines-v1:sha256:d1ff8a735d9d6e575d7af6b01e8b55a719daae61a9873251a91b4c2cf0c9695e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEzYjAwOTMxYjc3ODI0OTg3NTJlM2IxOWU2MDMwZWE1MTYwZjNmNDFjNTkyODdjZDgwODQ0NWQ2MDk1Mzc4OGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZlNjQxMmJkMjIwMzBmZDM5Zjg4NTM2ZTk4YWU2MDE4YTIxMmM5ZThlYmE5ZTc2ZjRmMTc2NWJjZDRlZmNmZjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg1Njc1YjU0YjM2NTFkMmU0M2ZjN2U4MjJmOTEyY2RmNmYwYzg1Y2ViOGM2MWMwYWIwMmE2MjU4ZTI1Nzk2ZTEifQ"
+        },
+        {
+          "resource": "repo://server.js#L1761-L1782",
+          "version": "repo-lines-v1:sha256:aae87e627cb9fa1c3aa86db7865f4cecd3aecb4ce026ff130aa7b622eb443860:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk5NGI2NWJhMTZmNjkyMzMzY2NhNDQ1M2NiNzY5YzkzMzI0OWMwNThkMWVmMWZmNzIwYjc2NTFjMGIwOTg3MDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ2NzU0NGZiZThmNTZlYmE4ZmM2ODZmMzAzMDRjYzVjMWZjN2MyNzExZTEwOWEzYjUxYWRlNGZiYTVhMWQ1ODMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9af1e935666a4c4582d5d35cf3af29c4",
+      "statement": "宿主机文件变更逐次写安全审计，只记路径、字节数与结果而不记内容，否则审计日志就成了代码的第二份副本。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L1732-L1759",
+          "version": "repo-lines-v1:sha256:751fa34ce756d1f772764fc417ba4f80f0654752f10f71c0fc7a1582b2f01a07:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI1ZWE2MWY1ZjFlNDBlNjhjMzk2ODc0MTIxODdhYjY2ZGY0Mzg4ZjYxZGU1M2JjZTAzMGU0ZGE3NWJlZTJlNDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI2MmM0ZmZlZGM1NzYzNTZmYzllZGE5N2E2NTY3MzU1YTFiOTZkNzQ3NTk0MTEyMWM0ZTcxMDY5ODYyZDQ4NjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFiN2M2YjNiODcyNWI1NWM0YTBmZTdhMWNhOWQyNWRmMmMyNGM0NWJmN2U3MjBkZjI3NzUxMGI1NzE0YTVlOTYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_55212c51b13143e09758641ebaa84052",
+      "statement": "HTTP 面只有少量端点：/health、/metrics、/auth/session（POST 与 DELETE）、/auth/enrollment/rotate、/push/vapid-public-key、/push/subscribe，其中推送订阅需要已批准设备且 body 限 4kb。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L752-L766",
+          "version": "repo-lines-v1:sha256:470b36c78ab57682531a8d6f8c960c8489ce7174209adf965915f2bd4378d7f3:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNjYTRkNTM5NDc1NmEwNjNmOGY5NDAxYzQyYjNhMmQ3YTk1ZTZmYWY5ZjU5MWUxM2ViMmMyNDE3YTQ1NjYzNDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQzYzQzNjY5ZmEzOWUyNjUzNTllMTViY2EzZjhiMmZiNWY0Yjk5YjQ1ODdkZjE2ZTg2YWY5OTljZTQzMjViMmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkyMDQwZTA5NWE5NGUyYWRhNzRlNDIxZjM3MTg3NTFhOTFhODEwYmZkNjZmNDhmNGU5MzljN2I3NDgwZWI2NzAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJiZDVmOTA0ZTM4OWZlNTI4MDVmNDdiYWU1ZmYwMDlkZTlkYzM3ZTcwOTZmNjI5OThlNThlNGQxZTQ0ZTEyNWEifQ"
+        },
+        {
+          "resource": "repo://server.js#L814-L851",
+          "version": "repo-lines-v1:sha256:045d574bd62c9da2bd7ff3cd4af634b989cba8f2c70004eb1d4f9be87abaf8ce:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM2Y2Q5YzZjZThkMGRmNWFmNGU1NGNhZTg2YTc1OWEyOTlmMjg0ODdkOTQ1ZmZmZWZhOTU1ODU3NmQ1OWQ1YTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI2NmYzNjE5YWQ3MGQyYjM5OGIzNGY1OTNiZWM5YjkwNTVkYTQzYzBiOGVhMjFlZWVhNGNjNjVmM2ViMWNlYjgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI3NzlkMTE4ZDZlM2NiZjQ1MDUzOTc0OGRlZTdhNDMwN2FjYmU2NDQ2Y2JhMjk3ZjI3NjBmYTVkMGJiYTFiYzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjliNzQ1MzczNDQxNzcwMDA2YjIwOTI1NmNiYWNjNWU3ZWNjYmZhZDM1YmE5MjQ2MjQ5MDljNjQxZGI2ODIwMGYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_6e38478bd76743b9809ccb03615f7bf9",
+      "statement": "thread:list 的 limit 会被 clamp 到 1..200，因为只用 Number.isInteger 放行会把负数和巨值原样送进 app-server。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L1598-L1602",
+          "version": "repo-lines-v1:sha256:80cd2db1c86b6708f80b7b2d8f8e3040ac3d83d87cb9a0039fabe4ce01ed6367:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzQwM2M0ZTExNTc1Y2VmNDIxMzBlYmViNzU1ZGVkMmJkMzIxY2U5NjBkZjYxZTM0ZWJhNDg5MzU2OTQ3YmRlZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiY2MzMzM4Y2ZiMGE3MDU2NmMwYWM3MjY0NjEyY2I2NGUxOTUxMGQ4NTczY2EwOWU3ZjYzMDU2ODdlMDdiY2ZlZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzJhNDg1YmU3YjljYTExYTJiMDE0YjhkNDBiZTYxODMzN2YwYmM4YTNhN2M3YTNiZTk2OGRkODg2MWZhYWZkNiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_f0a111e3aaaa4d1e9b82e0dcdc5ad02a",
+      "statement": "ensureControlAgent 为只读面板提供连接：优先复用 socket 当前 viewing 或 control 实例，cwd 不匹配时新建一个并把 socket 加进对应房间。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L1585-L1596",
+          "version": "repo-lines-v1:sha256:b403601c141b5fc98975e396b75b1342fceafa3ec187244efe148177859f478f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4MGZjMGZlNjBhYWFkYzBjNDljODQ3YzBiNzY4NzQxMzQwMDBkYjNmZWFiNjMwNmJlZWVmZWJmMTM0ZmI2MTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUyYTdmYzBjOWMxNTFlODQ3MTE0YjY4MDNjN2U5MDljMzI1MWY4ZDFmNjRkOWRhNGM5ZTc2ZTFmOGRhMGJhZGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZkMjVjNTdlMDhkZDQ3MmZlMDUyYzJhNTI5YTlhMWNjZjZkZTJjOThhMzMwMjI5MmY5NTNhMGZmYjcxOWJiYjYifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.5.2",
+    "at": "2026-09-22T08:36:26.702Z"
+  }
+}

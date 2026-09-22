@@ -1,0 +1,228 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:bd36898620a1c7f58b2f35c36974db5eebd2b201f5782bf01673edb35f141ef2",
+  "claims": [
+    {
+      "id": "claim_3e31b754065e436f9e4b834efcd921de",
+      "statement": "CODEX_SCHEMA 是配置项的单一事实源（有哪些键、什么类型、默认值），条目里不放校验函数，校验按 kind 分支集中在 checkOne()。",
+      "evidence": [
+        {
+          "resource": "repo://src/ops/codex-schema.js#L1-L35",
+          "version": "repo-lines-v1:sha256:e81a954806a13c548c64172765be060232e5af411cd834626e9f539d4f43039f:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyMWRkNDNkMDRmOTRlZDVlMzVmYjlhZmEzMzI0ZWExNjExOTE1YzU0NTE4NjIzNTE2MzRlY2QxOWMzOGM0NTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU4Y2YxZGNkODRlNTIyMjRiZDFmYWRiOTE0NTQ3ZjZhYzYwOTQ0ODg3YzI5NTRjZWVkMmQwZTYwNDQzNzczOTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIzNzU1M2RiZmI1MzdhMzg4OWY3NGU1MzQyYjhmNWVlZGQzNTljODc0YWJiNzJmOTI1NDZjOWRhYjI0MDBhYTMifQ"
+        },
+        {
+          "resource": "repo://src/ops/codex-schema.js#L243-L268",
+          "version": "repo-lines-v1:sha256:0f87c44af74e58493c366f74649274e6898574c9d704671747dc0b4b84e993d0:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRmYmM4YTZhNTBjNTAzY2NkZmMyODIyMDdkYmNjMzA4YTliYTI3MmM5NjE2MjQ2YjBlMGY2ZTA1YjI1MDdkYzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgzZTI5NDdlZTg1YzhhOGNkMmIwODExZDQ4YWIwYjQ4NjY4Njc3OThjMWQwZTcxZDZkMzI0ZDAzZDA4Yjg0MDIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_33923f280ffa434ca935235901e907b3",
+      "statement": "PORT 的下界是 0 而非 1，因为 0 表示让系统分配随机端口；照搬「端口必须大于等于 1」会静默掉掉这个语义，症状是配了 0 却起在 3001。",
+      "evidence": [
+        {
+          "resource": "repo://src/ops/codex-schema.js#L48-L53",
+          "version": "repo-lines-v1:sha256:5f91a908e9025e5500f330484827ddf5770205cebd087fc2f67cd90ac281e513:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzVlMWEwYzdiZWYzOTZhNzExNTBkNzYzNjQ5NDEyOWM3M2RhZTU1YzM4OGNlZTQyNDRiNDFiMzA4ZjViYmU1ZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGQ1Y2QyZmI0ZjNkZjg4NDUxNTI1NWIzOTUyM2YyZjhiNTQ3MmJlZWE5ZjU2NmZmY2EyMDRkYjgwMjU2MTA0MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMWYzNjgwOTM2ZDA2NTk3YzFjYzA1MzE2ODI0ZTkzYzM1N2MzODhhMDY2MDEyMTIyYzE4OTYzYThlY2ZhYjNiZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjIwZjg1NDY1NDE4NDJlMjI2MGMyMmQ0NDAwNzc1NDAzNDZiNGVmOWY5OThmYmMzYTExNjA0ZWIzZmIyZTMyYiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_2c2dd5ae951641ea97580f7c5e767372",
+      "statement": "validateConfig 按 kind 分档决定失败方向：enum 非法是启动期硬错误（拼错一个字母就换了一套安全边界），number 越界只告警并回落默认值，成套缺项告警。",
+      "evidence": [
+        {
+          "resource": "repo://src/ops/codex-schema.js#L270-L307",
+          "version": "repo-lines-v1:sha256:ccd4e556c173b350b6109cf276a3e272a0fe9f3cd5788adb90df4f040067ee11:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZmYTkyY2NhYmQxMjljMzMzNDdkMGEzZTg4YjMyM2NlZTA2NmZlNDdjMjNkMDFhZjAzMGY1ZjFiMTY1MzhkOGQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fdd96b3cb66341e7b7eed3a5d6de9afb",
+      "statement": "codex.config.json.example 由 buildExampleConfig() 从 schema 生成而非手写，并且只输出非 secret 且非 readonly 的项，因为示例文件要提交进仓库、不该有任何形似凭据的东西。",
+      "evidence": [
+        {
+          "resource": "repo://codex.config.json.example#L1-L10",
+          "version": "repo-lines-v1:sha256:22124d30789b153c4d55701b7510cc43fda93d2e10ccc1d93fca50b1e98102e4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2ZmIwOGZkYTFhY2I5NTdiNjExNmJkMzc4MTFhMWZlNDFhMDE2MTFjMDYzMWVkYmY3ODZkNjg4OWEyN2E1NWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAwYzIwZjFiZjllMzQyN2IzMmNiYjk2MjJhMjg0ODJmMDlmZjdiNGRmODllZGVlZmYwNDI5YWJjM2RhNmFhMGYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZiYTU2MjY0ZDE4NTY5NjIxNDk2YTFmMjYxODEwMDE4ZjNmNGRmMjJkZjU0NzBkMjAzMTc5ZThlODU0OGFiZGQifQ"
+        },
+        {
+          "resource": "repo://src/ops/codex-schema.js#L309-L327",
+          "version": "repo-lines-v1:sha256:6185a371dc0a75ff95aadca1ca962c6e0e647931b580fc6734dee68062bff57f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjlhNDU3ZDM0NDRlYmQxYWE0OGM4MmNkYmRiODUxMTI1N2QxYmQ5NDAyZGZhZTY4YjE4OTg2MDU4MWMzNzQzMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_cacb88f3a11d4f90b0abc80e5d8de121",
+      "statement": "PASSTHROUGH_KEYS 登记了四个不进 schema 但要透传的键（CODEX_DATA_DIR、CODEX_SERVER_NO_START、WORK_DIR、WORK_DIRS），目的是让拼错的配置项与没配置不再行为相同。",
+      "evidence": [
+        {
+          "resource": "repo://src/ops/codex-schema.js#L180-L194",
+          "version": "repo-lines-v1:sha256:6e69a50baf0b747c1e309edba9c70fc83f30e71bb586e57dcedfcdbf7150b9b9:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwOWM1ZDdlZjk5NDFhMGM5NTUyN2RhYjkyZDU0ZWRjODA2ZWRjNzEwYWNiNzQ2MzlhNjFlMDQ1MGFhNmMyODkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM5NjA1MmQ5OWQ2Mzk3YzcxODg0NzllZTQxYWRlNmFkYTYxNmUzMDNlMzJjNjM2Njc4YTViZmM5ZjdlZGI2YTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNkYzA5ZjQxZjM2MDkxMDg1ZWQxZmEyYzFiNmI4YmQ3MTE2OGUyMjVhMmJiOGQ2YjgyMTdiN2FmZjkxMDhmNjQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d2ca4538f7794fc5860ede28d2402540",
+      "statement": "codex.config.json 不是合法 JSON 或顶层不是对象时直接抛错，不回落空配置，因为回落会让 server 以未设 AUTH_TOKEN 启动并静默降级绑 127.0.0.1。",
+      "evidence": [
+        {
+          "resource": "repo://src/ops/config-file.js#L1-L11",
+          "version": "repo-lines-v1:sha256:43021cab008815d1772ea40805d3834ee6ce95ad119ea18060f93df72add02ba:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3ZTRhZmJiNGRhMjdhZDg5NTJhYmJiMmE0ZGQ4MWZlNDYwZjRkM2VkMjkzZjE4ZjU4MjgyMDBhNmYwMTU0YjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIwOGU2NTQwYmIwMWJjODEwYTg4NmU2YzQ3MDI4MTllZjNkZmY2NGJhZTM2ZDc3MWRjN2YwNjFkMThkOGJiZjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1YjMzOGY0ZDJmMzRlMTJiMTQ0NjVhNTgwZDQ3YmQzNTQ1MzEyYWY5ODc2ZTFhZjE3Njc4MzhhN2UzZjAzYTYifQ"
+        },
+        {
+          "resource": "repo://src/ops/config-file.js#L29-L45",
+          "version": "repo-lines-v1:sha256:174003ba112cf0fc98829e30edbc8f5eb8dc6248d995b0bd20a7196b60a02d50:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJhN2FkNjhjMDQwMzU1YjAyZWJjYWZhZjQwNTFkNjg1YWE4NmZiM2NkYjkwYWVlMWMwZWEzYWJkMjNiNDM4MTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAxZTdjNDU0ZGIwNjVjOGRmYjE4NGFkMGFlNjRmM2UyMGQ0NTJmMzYxMGYzY2NmYWFlZGNiMDBhZTkwM2ExYmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJlMzU1ZDRiZDgzYzI4OTk1Y2U4ZTJhMmIwOWM5Mzg0YzBhZWI3MmFiYjNiNGNjOTQxZTYxNzJiMjMwZjU4NTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_dacbf8a4592e4c0aadd877b14ffd59c4",
+      "statement": "同时存在 codex.config.json 与 .env 时以前者为准并告警后者已被忽略；只有 .env 时提示迁移命令；两个都没有是全新安装的正常态且零告警。",
+      "evidence": [
+        {
+          "resource": "repo://src/ops/config-file.js#L24-L57",
+          "version": "repo-lines-v1:sha256:4c72dc9be1603b0904808a0452579183eaa2a06bdc55460b545a738baf399148:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQwNzlmNjNlNjMzYzRkM2U0NDQwZWU5NjA1ZDllYzk2OTc4ZjYyZWQ5YjM4OWQ1MzY2NDUzOTkzZjE2YWIzN2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU3MTc5NzhhNWI1NmQ2ZTdiMTI2NzM5YzE5OTJlYWZmODA4OTQxNzEzM2Y5OGM4NDM3NzVhMzdlMTAzMTY2NDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM4MjZjNzNkYTdkMmY2ZWM5YWY5ZGI0OWQ0Yjc1ZTY4MDJkZDAwODBhZTA3NDBkOTliMDc5NGE2OWU3ODIwYmYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2033d243edc241d8a2fc3fedf7a4f7d3",
+      "statement": "优先级是 shell 环境变量 大于 配置文件 大于 消费点默认值，判据是 key 的存在性而非值的非空性，因此 export PORT= 的空串会挡住配置文件里的 PORT（逐字复刻 dotenv 语义，刻意保留）。",
+      "evidence": [
+        {
+          "resource": "repo://src/ops/config-file.js#L59-L85",
+          "version": "repo-lines-v1:sha256:59b248d2b08871bcec0de6c14c3e7e010e428a029a5566dfb8a18bb17d4835f4:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEzZTI5Yzk2NGJlYWRkM2ZiODk2MTZjNTEwODViZjIyYzRjZjk3MGE2OGQwNWMyY2Y4ZDI4MTg3YjYxZjFhOTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImMzY2FkMjQzZjkyNTU3MmY4MDU2MTg4ZjE4MzExOTM3NDdjYTExYjI1ZTQzOGVmNGZlN2JkYWQ1ZmZkNTIzYzgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7f6ac932b5824919942fca922122655f",
+      "statement": "配置值仍要投影回 process.env，因为消费点都是 process.env.X 的读法，而 childEnv() 直接展开 process.env 传给 codex 子进程。",
+      "evidence": [
+        {
+          "resource": "repo://src/agent/app-server-transport.js#L1-L13",
+          "version": "repo-lines-v1:sha256:a3a97b8523e49c059c98ac98d25ad758584d14d770f2d8a6cf694c87e28e7007:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNmMDhiZTEzNmVkYzU2ZGIyNzM5ZWRmMjZjYjQyNTIzNzQzNjEyOTk1OTJkYTI1MWQ0M2Q4ZWUzOTkzZTAxZDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFjNzhhZDVkZDZlYTRmN2Q4OTI5OTIwOTUyMjRhYjdiMDlmZDU2MTJmMGVjYjc3Mjg0Y2MxNmMyZDdiNmJlN2EiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQwYTYyM2U4ZjJjNjcwNmUxNjQ4MGViYjNhMTg4YzI1Njc0MzA3ZjcxMDkxNTAzMjEyOTQ0NTJlMWNmMWI5OTUifQ"
+        },
+        {
+          "resource": "repo://src/ops/config-file.js#L87-L99",
+          "version": "repo-lines-v1:sha256:4e4e1fe9fa5e20aa8299da22754b19a0afba031b8b814cde87fb15fce35fd976:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMwNmJiOWMxYTQ5MjM1YTlkMzA2YWJhOTI0N2MwNWQ2OWQ5MTEzNTY5ZGQ2YzJhNjNhYTVhMzI5ZWI5OTcxNWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE3YzdhMGYxZTY5ODkzZWVhZTUyM2NjYmY0Y2JmNjZhYmQ3NmM2ZGExNGVkZjhmNjU1YTA5ZDg0OTYyY2YyMzgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d144346867d7461fb34a4976b1212bcc",
+      "statement": "配置加载器改用 dotenv.parse() 而不是 dotenv.config()，因为 dotenv v17 会往 stdout 打随机推广横幅，而 node --test 的 child-v8 通道会因此撞坏帧解析、把整个测试文件判失败。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L57-L70",
+          "version": "repo-lines-v1:sha256:31a4676b1a7b549224521a156786cda80526c862e6bfca8635cc20875781c885:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBlNzkyMGE0ODJkMjVjZGFmY2VkYWNiNzRiNmJiMjE1Y2ZiYWRmZmQ0NmY5N2Y3MTcyOWUyNjU5OTA5NmZmNDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJjYjFkYWFjZDI0NWZkZGQxN2RjZGIxNDM4ZDRhOGQ3OGM0MjYwMTUzM2FkYWUxYzljOGJiZjhlNzhmODE0YTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcxNjdkYTU5OTRkMGU5M2QzNGExYjBkODY2NDI5YzVmOGEzZDhkZTFiZTc1YzQyMDY5ZjIyNGFkNTYwNmM1MWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ5NzUwZjZhOTdkYmU3ZjkxMWRmNDYyMTQ2MGNmOTI0NGU3YzU4Yjc2MGE5MDViZTRlNWFiNTZkNWNmNWU3YjEifQ"
+        },
+        {
+          "resource": "repo://src/ops/config-file.js#L11-L16",
+          "version": "repo-lines-v1:sha256:6bdf26c5abf2efc6b49253811499fe20c90cbd3f02d1294b4a3b7c1758ff7601:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjA4ZTY1NDBiYjAxYmM4MTBhODg2ZTZjNDcwMjgxOWVmM2RmZjY0YmFlMzZkNzcxZGM3ZjA2MWQxOGQ4YmJmNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOWZmNmU4NTQwNjQxYWI0MDk3NWYyMzE0NzQxNjQyMTkzMjc1Y2JhNzNmOWY5MTI4NTU2MGIzMTM2OWQ2ZTE2MCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjBkNTVmMDgwM2Q5MjExMTJhZmRmNGU5MGJjNzllZmExYmM0NzM0NGRlZmQ0NmZlYjBiZmY1ODI4N2ZiNDEwNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTllMjZkNzNlM2I5ZDkzZDVlZTgwOTk0NTYzYTYwYWNlMjBmMDdmODVlZWRiNjZjYWQ4NGY2ZTc0MjEyYjkzZSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_f61a41de017e426da5c4fd5a73c2043e",
+      "statement": "装机向导的决策点 resolveSetupPlan 是纯函数，所有 IO 由调用方查好传入，并且拒绝码的优先顺序把 unknown_flag 排在最前。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/setup.js#L54-L99",
+          "version": "repo-lines-v1:sha256:09bddfe67cd36521450d80529f53319a640b89df19a94ca7814605342aa0ed7e:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMyNzM2NDZjNDdhZGJmZDY2ZmNiMWVlZWJkMTA4ZWE0NDA4N2U0YTYwMjJhNGFiZDY2NzFmNDAxNmRlNDI5ZDciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVjN2MwODcxNmYyNDY1ZDVlNDhmNjc0MTNiY2MxZDZhODc2OWFkOTBjNGY4MzJkMGZiZDk4YjNkZDE1MDhjZmUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_df131deeeb91408b9529772ec8eb3739",
+      "statement": "向导拒绝把家目录当工作区（work_dir_is_home），这与「不配工作区时拒绝启动」是同一条红线的两个入口，只堵一边等于没堵。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/setup.js#L105-L113",
+          "version": "repo-lines-v1:sha256:505ecfb308a551b53653997023b215dcadb31c2a57aefbc11387fce0f060382e:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWQ0MTk1ZmJlMDQ1NTUzN2NiMDIyYWM4YWRmMzlmYmM0MDgzNzhlMGQ4ODlhODQ4MGRjOTQxOTE4YjlhOTZhYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYWExZDFhNjMzOTAyMjljNzk4MzQ3ZTgzYTA0MDU0NDFjOTQwMDAzNTI4NGFkMTY4YzFiZjZjZGYxZDcwYTM3MCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZGFkMTdjMjc5YmJmMjk5YTE1OWVlOGUwNmRhZjFkNmUzNjI2MDU2N2U1NWE2YzkxNzNkNDU3NDE3MGViMmFkZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTRhZjIwMGM0ZmIxMWFhNmI0YzhmZjVjYWUwZmNiYmE5OGFjNWU5Njk2NzIzMmI3YTg2YjJiZDE5MWQ1OTVhMiJ9"
+        },
+        {
+          "resource": "repo://scripts/setup.js#L39-L52",
+          "version": "repo-lines-v1:sha256:97c7acb0a5baf633d0a409a7776630ae8214581aa3b5684657b5e8b9704eab5d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMzOGIyODI3NjlmMzc3ODA0YTM5NGM2MmViODM4NmYzOTk4YTI2ZGJmNmJhOTc0ODFjY2E5MzVmMGJlODgxNWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjlhOTVhOTI1MTY1NWE4ODYzYjllNjU3OTIzZjBmMmJmMWJkMGU3NzVjNmIxNzI0NjE5YjYzNDhmMmViNmMxN2MifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_50af5bed8be84f4aa02512146d57c249",
+      "statement": "非交互终端下不加 --yes 直接拒绝（tty_required），因为交互分支会读到 EOF 然后按从来没人确认过的默认值走完；--yes 模式必须显式给 --work-dir，不给不会回落到家目录。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/setup.js#L74-L83",
+          "version": "repo-lines-v1:sha256:0ca3cbeb166181d4eaff4ea0f054d2dc1937062e1353fa3fd55df90bb6bbb3aa:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc3ZGJmMjk2NDA2YzkyZGQ2NzdmNWY2ZDczOTU3NTAzNzVjYmExMmYzYzg5MDUzMTMzN2ZkOTYxMTRhMmRlMjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQzNTQxOGZiYzNkMTJjZThlODEyNjRmNGFmZjY3OGNmYzIxOTMzMDZmODQ0NmY0YjcwMmM5ZmU0NTEwNWZkMmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhmYTk4MmMyYjAwN2Q2NjZmNTI3Zjg1ZjBmMjczYzYzMWVlMzkwMjQ3MGMyZDRlMjJlNDVmZjA4YTEwMjg2Y2QifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_691c7a84eace4461bc6bbcadabaa4667",
+      "statement": "--host 只接受 127.0.0.1 或 0.0.0.0，不猜意图；不给 --host 时默认落在保守侧的 127.0.0.1，以免跑一遍装机命令就把服务暴露到局域网。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/setup.js#L66-L98",
+          "version": "repo-lines-v1:sha256:bed35287076172eef1ff61dbdeb2bd56e59c77ea319c2f0d6926ca9b2eaec228:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU2YjliYzRkNDUwY2IxYTI4NGZmYzE3NWZiYWU0MDFkNTZhNjQzM2FkYzM1ZTZkM2NkMzI4YjdlZWM4MmQ4MzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk1ODI2OWVmYWI2MGRmMzEwYjFmOWMzOTcwYzllYjI5Y2ZhNTAxNWYxYjY4MWU3OTFhMDZlNjM3Yjg0M2YwYmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY1OWRjZDg4NDIzYTRmMTViZjdmYTdmZTQyMTBlYWMxOTUyOWYwOTQxMWU0YWRkNGYxNWQ0OGY3MDVkOWE4YzEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_659e6f64b9804b0a9bb936309a32e656",
+      "statement": "配置 CLI 是唯一会写配置文件的地方，带四道防线：全或无批量写入、AUTH_TOKEN 只读、迁移窗口闸、未知 flag 不静默忽略。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/config.js#L1-L12",
+          "version": "repo-lines-v1:sha256:73946094cef6f30da1620e2d7bb674e84b0d1b1d2de16b2f59cd4263c8622d89:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNiNjRmOGVhMDM5ZjdhZGFkNmYxNjUzYThkN2FiNGJjNjFmMDVmZTBlNjZiOTBmOWFmYzNjZmQ4NjdjMTU2YTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIwOGU2NTQwYmIwMWJjODEwYTg4NmU2YzQ3MDI4MTllZjNkZmY2NGJhZTM2ZDc3MWRjN2YwNjFkMThkOGJiZjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA3ZTNmOWY2NjI4NzgzYjZkN2VhMmQ2MTM3YmRhM2RhZjUyMGU0ODhmMTIwMGE4OGNhMjgyYzViMzk3ZWU3ZGMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e9310ee5faed4c0887d75a7e3dd783a0",
+      "statement": "只有 .env 而没有 codex.config.json 时 CLI 拒绝写入，因为直接写入会生成一份只含本次改动的 codex.config.json，而它的优先级高于 .env，结果是整份旧配置被静默遮蔽。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/config.js#L136-L142",
+          "version": "repo-lines-v1:sha256:4c710379d7e425f00c8ca88f0f1388f8721a2a3d31b00b1ce9a7fb11d8cc5a65:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOGEwNTgxM2ZiNDc2ZTZkMDJhMTQ3MWFjNGIzMWI3MmM5MzE5MDI4YWZjYjk1NmMxZjZjMmJiODcxNjg3ZWQxZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDA3ZDMxMTdkMTdmMjY0MjE0OTUxNzAzMTI0NjlhOWM4NWI1MjdmNTEyY2E4NDFkYjUzNWQzZmI2NDkyYWMyZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNWZmNzc2MGU4ZWE5NDcxOGI3NjYxZGE4MmUzZTRiODFiZDIxYTg2ODExNjIzY2E3MjM4MGQ4ZWMwZmY5M2FmNyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_1d1e90f6a39548e994e887b5da168ace",
+      "statement": "migrateEnvValues 的工作区折叠顺序不可换（先展开 WORK_DIRS 再把 WORK_DIR 折进首项），否则结果只剩 WORK_DIR 自己而迁移仍然报成功；读不出来的东西一律保留原键并告警。",
+      "evidence": [
+        {
+          "resource": "repo://src/ops/config-file.js#L116-L130",
+          "version": "repo-lines-v1:sha256:b22ca3796a591feeb63e98f6adcfdb3e8cbd3aad85f1aa35cc4a4e5bcd3753f7:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjViZDgxYzgxNDcwYzU4MzhjYTViM2Q3NTE3NDM0YjQ0NWRjYzQyY2I5Y2IxODhlNmY2ZTI5YzFlNWFjYWFiYzYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdkMjQzMGJhYWRkMzEwODFmZmMzYjIwYzQzOTM0NzM0ZTJkNmZlMDZjYTRiMjFlM2FkZWI0YWFjNDBmMTIzMWQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_962615b1299947c890e8a17303dcdee8",
+      "statement": "二维码命令含凭据因此必须显式敲、不进启动横幅；渲染必须用全块字符，因为半块渲染的两版实测都扫不出来（终端行距会在模块之间留下横缝）。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/qr.js#L1-L13",
+          "version": "repo-lines-v1:sha256:ad20bd0022f313ffd123552cc05dc95b740e8f4cba18edbf7a30cd19f6d898c5:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE0ZDk2YjlkMTI4YzlkNGYzOTc0NzNjOTkwYWQ4MDVhYzg1NTg4MmQwY2E4MDY2Yjc2ZWRkNWRiZDhkODE5ZmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4NWUwYjFmODFmNDgwOGMzMWU0M2IxYjZhMDdjY2NlYjQ0YWQ1Yjk5OTcwMWEwODQ0ODQ5OTFmYTFjNzAzMmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY5M2RjNTZmZDllZGUyYTkxYmViNmYzY2YxYzRkNmIzNzU2MThkZDIzOTI5YzBlM2M5M2I3NWE1MjhkNDZiMjkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_71ae6c64155e4bdf9804d59f5f808c68",
+      "statement": "QR 与 PNG 编码器都是自实现的纯函数，因为装机走 npm ci --omit=dev，加一个运行时依赖等于每个用户都多拉一个包。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/png.js#L1-L6",
+          "version": "repo-lines-v1:sha256:68224075c2521773368ee521dff44b4bb113be464a05580ecd3d3e0f11d1807d:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNWQzMzQ3YTk5ODQwOTg4ZjRlODg0Yjg1YzdiNGNlOWQwYTdjNzkwMzliNWZkZTdjMTI4ZTc4OWY5NDNlODkwMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDNmODJhZjM0NTM0NDc3MzI2ODY3ZjJmYzEyNDk2ZTVhMGRiYWEwOGU5ZmZhYmIyYzQ1OGQzNmM5ZWY1MTNjMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTljMzBiOTIzNGIxZDYyOWFhYzQ0NjZiNjE1ZWM1YzAyZTM1MDU5OGMyMTQ3MGMzM2MzNGE0OGExZGNkYjNlMyJ9"
+        },
+        {
+          "resource": "repo://src/shared/qrcode.js#L1-L6",
+          "version": "repo-lines-v1:sha256:cd8f491baba91fa9984d0fb05d590fb152db1be183491006d0801061ccfd9f1b:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTM4ZTcwYTVmMjg5MDdiNDg4ZTRmNGI3ZDI0ODUwYWIxYWUwZDI1ODc5OWI4Yjg1MGJjODJlMWY3NjA1Y2FkZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjI2YjZkMmU1ZWZjZjdmNzdkMDRmZTA4MzI2NGEwZTlhMTU2NmIxMzZlNWYxMGFhY2RkZGY0MjczYzY0M2IyMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODA2YjA1ODQ5ODA2ZmI2MDgwOWQ0MzFlODViZGRjNjBlNzg1NWE1NzVlMDA5YzA5OWViODg5NzI5MzA2MGVlYyJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.5.2",
+    "at": "2026-09-22T08:36:26.702Z"
+  }
+}

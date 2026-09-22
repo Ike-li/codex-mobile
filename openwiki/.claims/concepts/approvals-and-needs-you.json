@@ -1,0 +1,232 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:48337d53ea85be6d122012f717a2fac8941854f67ba1d2880a71047e86c11dba",
+  "claims": [
+    {
+      "id": "claim_fda9b1695f8c400e9f8f41cc06cc0d8d",
+      "statement": "ApprovalBroker 同时兜住两代审批方法：v2 的 item/commandExecution/requestApproval 与 item/fileChange/requestApproval，v1 的 applyPatchApproval 与 execCommandApproval，另加 item/permissions/requestApproval 与 item/tool/requestUserInput。",
+      "evidence": [
+        {
+          "resource": "repo://src/agent/approval-broker.js#L8-L29",
+          "version": "repo-lines-v1:sha256:b15fa8b62ef22ef0080f0c10a2fbd42a3d85835eee791ae110039f042a179ca2:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg3NWYxODIxMjBkZWNmOWQzOTMwMjQzZjQ2YzQyZDJjZDE4MzllNzc0Mzg0NzA5NzE0OTBmYmQ2ZmM1OWQ4ZmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjViOGYxZGM4ZDY2YjFlMTk3M2Y4MjAzNDljNGFjOTEyMDM2ZTc2YzQ5ZjI1ODMwYTIwMTM3ODE1NWZkZTQ1OTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNmMmRkNDUwNzQxNWQ2NmIxNTMwOWIwNDMwZDAxYzAwODhmNzFmNDQxNmQ3MTJkNGQ2MjdlYTU1ZjQxOTY4YTcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5cc9258c1128432a88fca4fc5e5e2430",
+      "statement": "两代差异被压在两处：buildApprovalPayload 按方法把不同字段归一成前端只认一种的 payload，resultFor 把决策翻回各代的协议形状，v1 用 approved / approved_for_session / denied / abort。",
+      "evidence": [
+        {
+          "resource": "repo://src/agent/approval-broker.js#L140-L191",
+          "version": "repo-lines-v1:sha256:9fde64db2f9f5407794fc848346a123d65539d02fd3e574ed72eb7a4bd8040dc:eyJzZWxlY3RlZExpbmVDb3VudCI6NTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI0YzI0NGY5YzgxZWMyYzE0YWEwNTVkM2RiZmYyNzcxYjM2OTgxMTkwNjZhNjZlNTE0Nzc2M2NlMDgyYzVhNGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRjYjg4YzhmNzY5ODlkMTI4MDc2YWY0NGNjZjA5NTkwZDdjM2VlZTZkODc2NDMxZWRlNjA2ZGFiMDBhNGYzNWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZjNmNjZWUxNTQ2ZmQ1ZWE3MGJlNTViNzhjMWQ1MGNjYjY4ZDViZjM5MWEwZTBhYmJjNjU2YjJjMTMxNDg2Y2MifQ"
+        },
+        {
+          "resource": "repo://src/agent/approval-broker.js#L206-L226",
+          "version": "repo-lines-v1:sha256:a457831aac2cd0dc8c382b8e6455f099eaedc47939b550245310c89b8d2a8575:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2ZTYzMmE2ZDNlMTAyMTM2YTk5NmM2Zjg4NGUzZjkyMjI5YjgzODgwNWIxMDY1YWQzZGNjYmVkNTdkODBmN2IiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIwYTA1N2E4ZGExY2IzNjA4ZGU0OTkxODQ0ZWVhMzBkOTA1NzJjYzFjYmZmZTZiYzYzZmZjNGZkMTMwYjA0M2MiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE4MGY1ZDMwZjI2ZjRjYjVmM2IyNjE4M2VjZTJjZjRlZmRmMmYwMGZlMTFmZjc4NGI3NGJhMTdhNTI0NTkzYzAifQ"
+        },
+        {
+          "resource": "repo://src/agent/approval-broker.js#L23-L29",
+          "version": "repo-lines-v1:sha256:4c41a8cbdc67fb7fc1ee5c88493772ff385567b439efb32173c72e4c315c7332:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTVlMjZjZDkyMzY2ZjYwZDhlZDkyZDAyMzlmMDdmZWY3NGNhYzE0YWE2OWFkZGY5YzJjYzBkMTFlYjAwYTQ2MyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYWExZDFhNjMzOTAyMjljNzk4MzQ3ZTgzYTA0MDU0NDFjOTQwMDAzNTI4NGFkMTY4YzFiZjZjZGYxZDcwYTM3MCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDM2ZTU1NTE4ZDY0MDgwOTRmNjI2OTU5ZGM5MDg0MWM5ZTUzZWQzYTgzYTBkOTNiNTdjM2VmNmM2NjYxYmY1MCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiM2YyZGQ0NTA3NDE1ZDY2YjE1MzA5YjA0MzBkMDFjMDA4OGY3MWY0NDE2ZDcxMmQ0ZDYyN2VhNTVmNDE5NjhhNyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_c177c472c30e4361938650f213c35ccf",
+      "statement": "权限审批回 { permissions, scope }，scope 由 accept 还是 acceptForSession 决定（turn 或 session）；用户输入请求回 { answers }。",
+      "evidence": [
+        {
+          "resource": "repo://src/agent/approval-broker.js#L206-L219",
+          "version": "repo-lines-v1:sha256:b16873708672e0697fb54b3dda5bc424a7484db9916456ee00c6e83d496f5711:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2ZTYzMmE2ZDNlMTAyMTM2YTk5NmM2Zjg4NGUzZjkyMjI5YjgzODgwNWIxMDY1YWQzZGNjYmVkNTdkODBmN2IiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIwYTA1N2E4ZGExY2IzNjA4ZGU0OTkxODQ0ZWVhMzBkOTA1NzJjYzFjYmZmZTZiYzYzZmZjNGZkMTMwYjA0M2MiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZlYmM2ZTFmODdhMmNiNjY1NWZlMDllNjU3NDVkYTliNTlkYzNlNjA3NGVlNGEzYzM1MjUyMzZmNzJhOGNmNjQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_632c7720d2d247a8905f4636f9e4d5f1",
+      "statement": "文件变更审批依赖一份 item 缓存：registerItem() 在 item 事件到达时记下 changes，审批请求来时按 itemId 取回补进 payload。",
+      "evidence": [
+        {
+          "resource": "repo://src/agent/approval-broker.js#L161-L166",
+          "version": "repo-lines-v1:sha256:c5e8c2b913c402a02635ccd26929dc96265adcca447980be1ce6f3787d2179ef:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTMwZWVlYzIyZjIyMGUzMTUwNzZjZjhiY2E2ZGVkM2ViYTJjZGQ5YmEyYTY1ZGYxMThiZDNjZDIwOGIyODkwNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDg5M2Y0MGUzNzgxZWI4OTZjODJkMDQ2YTA4MDY3YTExZTM1Y2RmMmYxZGZhZjI2ZmVhOTBiOGRiNjY3NjQxMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjkyMTE4NDBlNDA0NTdmNTk0MjQ0NjlkZWJkMzlhN2MwNDM0NDFmYmE3MzA1ODI3MDQzNjQ1YWE2NWMyZWJiNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiY2JlMzNkOWU1NWJmMTUzNTZmMjE5MTk1MjY1YzhjNTYwMTQ2N2U1MjI5YmMyMGU0OGVhODNjZTg1YTk5ZDJmMCJ9"
+        },
+        {
+          "resource": "repo://src/agent/approval-broker.js#L97-L107",
+          "version": "repo-lines-v1:sha256:e1725a5c2cb02f22e9805738ada551ac888fa8e3358784927c1f9dbb27017089:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNhZDA2YWI0YWIxYTZiNTY2NDY2ZjUwYzcwN2Q2ZmU2OTE0YTI5ODJlN2ZkMWE0Y2E1MGRlNGMzNzRiMzI1MzEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJkMDIxNGZlZjM5YmM0ZTM5NmM3OTk3ZjJkOTgxMjA1YTY5NTFjYzI3ZGFhZWYyZWM0NTI0OTJkMTI3MWZmZGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUzYTRmOWEwNjliN2ZiNThjYzBlMzIzNmM3NzM3Y2Y5MjM1NThhZGM0YTM3MDExNTU0YWFjNTk3NzQ5NWQ2MDYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2d3c034e74e24b9f9fddc98e6da6bb62",
+      "statement": "respondApproval 在回包前校验审批目标：前端传来的 threadId / turnId / itemId 只要给了就必须与当初记下的 params 逐个相等，否则拒绝；不在 pendingApprovals 里的 id 直接返回 false。",
+      "evidence": [
+        {
+          "resource": "repo://src/agent/approval-broker.js#L271-L277",
+          "version": "repo-lines-v1:sha256:4a3a33cbb66245b3ed47f1d65c82debcb8a6cf5d65df54f14fc08b66b40ee961:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODlkOWVmOTViYzU5ZGMxZTk5NDM1M2E2MDBjZWUzZDM2NWIyZDE4NmQyYTFhOWZmNDNjNzZmYmY0ZmNhODIyMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjliNTY2Y2U5ZWM0YWY4Y2RiYzJmZDFkZDg4MjZiNTAxYmZlMzMzOWVlNmRjYWFkNTc0YmFlY2IzN2M0OGVlNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZGNkMDQ2MWNmNzhiNDVlOTA1NjEzOWZiMDk5MzcwODhkOWIzNzhjZjM1YjJlYzRkYzcxMDY1YzExNmE4YTE5NSJ9"
+        },
+        {
+          "resource": "repo://src/agent/approval-broker.js#L61-L76",
+          "version": "repo-lines-v1:sha256:bd9bfcaf529810f84dbf53e8be129da7653bf60dab89b3f17ca106b489ee0446:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1MDMyZWZhOWNkYzM4OTI1NzAxMzExYmFhN2YyZGRjZGRmOTM0MWQ3YTQxZDNkMDZkZmQxMjczZmZiZjExNjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYwNjYwNTg5Y2Y1NGJiZTYxNWY3MDliNjllMjk5MzFkNDFjZmJiN2Q4ODM5MGE3ZjdmODQ3OTQ3ZGIwOTMwMDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyOGM0ZmQ5NzI1NzIxMGVlNjhiYzM4OWYyNzRmYjk4NTNlZDAyNTc1YmVhNTYwZDc4NzdjNmM3OTk0YzIwYjMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ce2938781ba4449894675e444ffbfb26",
+      "statement": "declinePending() 与 clearPending() 是两个函数：后者只清集合，前者逐个回一个 decline，因为未决的服务端请求没有响应会让 app-server 侧的 turn 永远等下去。",
+      "evidence": [
+        {
+          "resource": "repo://src/agent/approval-broker.js#L109-L138",
+          "version": "repo-lines-v1:sha256:4968100f5f05a649c76f778f8c91e17f8495b032d80050f91d5ec65406d14991:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2MWY0MWM5ODEwMTY1NDA3MGE0ZmQ2MzBmOGNkYTc2ZDllNmU4NDE4ZTY4N2QwMjRhMjA3ODgyZTU2MjY1ZWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM1NDQxYTA0ZGFlMzNjNTgyMmQ0MmYxYjM2OGM2YTVlMWE1ZjQ4NzJlZmJjMGU0ZmNkNzQ4ZTVlNWI0MzhkOTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE1NzRlZTBmYjY3NzdlNTM0YjQzOTRiYjYyNGY4MDBkZGI4MWU5NzkyMDU5MjUyZjUxNTc2Y2JhYjdhNmU1M2MifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_df72141c70f744fca384b3918fac5845",
+      "statement": "declinePending() 还必须额外发一个 approval_revoked 事件，否则对应的 needs-you 记录永远停在 pending：不参与 prune，还会推给每台重连的手机。",
+      "evidence": [
+        {
+          "resource": "repo://src/agent/approval-broker.js#L119-L132",
+          "version": "repo-lines-v1:sha256:0bb5c0757f8fffbd1b41fd36d891bd96f6a9d97e8193fec79fc66f4a00a383ba:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE5YTNiM2RmZTkzOTcwMGY5ODgwOWVhZjdiZDhkNDZiYjNkNGI1OGJmMmUyMzIxY2E4ZDg0MDYzMDkyNDg0Y2UiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE4MGMzMGIxYzAxYjhiMGU1NDc4NzYxMjI2Y2EzMTMwMjU5NDk2NGQxMThiNTA1MTA2NDAyYmE1MDNmZjM5NmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFmOGI5ZmI3MDNkMzAzZDRhN2Y5ODdkM2JjNWVkYmE5OTE1ZmFhNDY0NTEyZTZlYTIyYzIzMDRhMjVmZWU5ODAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_6abba7ee4fbf4ae8a797bc676730652d",
+      "statement": "needId 是 kind 与完整 target 的 SHA-256 前 24 位，target 的五个字段（instanceId、threadId、turnId、itemId、requestId）全部必填，缺一个直接抛 TypeError。",
+      "evidence": [
+        {
+          "resource": "repo://src/sessions/needs-you-registry.js#L187-L213",
+          "version": "repo-lines-v1:sha256:621ce31d3bc3746d34edc58a8d1e88560902fe4dac7552eb720a0bb3aaa48281:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU4YmJhNjBjNjdiYzE3YWRmODc5NTdjMDlmMTU1MDIzYTIyM2YwYzQ4ZTJjMGY3MGNmZTliYmM4NTRhMjAyNGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE2NDc2M2IwZDYzYzA0ZGZhZGViN2ZmMDA5Zjk3YTc1ZjFiZWY5MDkzYmZhMWI3NTNlN2VjNzQyZDMwMWQxMDYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_516c6ef3266e4069b32ce476e83a903b",
+      "statement": "重开同一条待办时不覆盖，而是比对 payload 指纹：一样返回 duplicate，不一样返回 conflict，两者都不改变状态。",
+      "evidence": [
+        {
+          "resource": "repo://src/sessions/needs-you-registry.js#L20-L54",
+          "version": "repo-lines-v1:sha256:dee8fff1387a80408463bf903ff81de2ef16bdcd7f9338933622a97153a557c2:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUwNTg4ZGFmOTA4YmUyNmM0YWVjMzk5MzlkY2FlOTczMWQ1ZjY3ZTE0YzQ0NzdjOThiNWRlMWY3NDNhYTNjNTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU5OTQwMDY0ZWJjOTRjMWE1MmJkZmY5MzM0NjA1ZDhmMjg1ZDVlYWI3MThiMjE2MWUzMGZhZDdlOTA5MzRmM2YiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVlZGQ4NGYxNDNkMDJhN2FhY2M5Y2IwMzdjMzM2Y2E4NWVjZDUzMWE3ZTlhMDEwZmQ2NjI1MzcyYTZkZWFkNTMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_345fdaf7231943ca90de84224018bae5",
+      "statement": "resolve() 是带 resolving 中间态的状态机：responder 返回 true 进 resolved，返回非 true 进 revoked，抛错进 unknown；并发的第二个请求得到 in_progress 而不会重复执行。",
+      "evidence": [
+        {
+          "resource": "repo://src/sessions/needs-you-registry.js#L66-L117",
+          "version": "repo-lines-v1:sha256:6b0169884cd7ed2c63ccacd0bf2077a2a9e59148a7bcad4b48546467da1c56c2:eyJzZWxlY3RlZExpbmVDb3VudCI6NTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRkMTI2NTNkMGVmYTliNDNiMDFhMjgwOGZhOTBmNDljNzJhMWZjMmVlOGU3ODUxYzJhMmIyOGFkYmVhOWM0OTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJlZWVmZGQ1MTEzZDk5MDU2ZjFlMTlkZTFiN2Q1YmVkZTZlMGEzMDFmOWU4ZjdiZTRlYWQzZjhmOGRhODY2YzgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYzYjE0ZmEzMTFiZTQzNmViODg1ZjdjNWUwNThkYWZjNzRkMjQxM2U0OGZhZDk5NGQzNmVmYzU3OTkzODQxMjYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_72ab2f51876e487eb8a4c32bbe8bf841",
+      "statement": "unknown 是刻意保留的状态：responder 抛错时网关不假设没生效，而是据实上报，user:approval 的 ack 带 resultUnknown: true。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L2370-L2403",
+          "version": "repo-lines-v1:sha256:d4631f2ff9339b36cd99777652a9951ea9bdebb81ed576149595a07f053d3326:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ5NjllY2RkODMzMWNkNmU1ZDU3MjYxOGVhMDliODA1OWFlMzM3NDU1MmZhYzUxNjExYzA0OWVjMGFjZGU0ODQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIzY2Q3NjRmMjVkZGU1ZThjMDQ0OWZmYzNkM2FkNzY0NDdlNWI1NWQ4NDk4N2ViMzMyMTY5ZDA2ODU4N2IxNjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ0NDZiMjA1ODM4YTZhZWNlMWNlOWRhZjUwYjY1ZmZhYjYzZjE3YmYxNzAwNjYxMmVjNmE3ZDU0NDliMTRjNmYifQ"
+        },
+        {
+          "resource": "repo://src/sessions/needs-you-registry.js#L105-L116",
+          "version": "repo-lines-v1:sha256:ba3b37e8e60c4e72c54042ccf82ff47dd6badd960535dc3abdcb5c59e6f1f84a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA4ZGI3NDYwODE4MmNiN2NhNGQ5ZmJhNDlhMzk0OTlhN2YzOTA3YjRlYTAzM2IxNDkyYWQ1Y2YwYmVlZWVjZWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAzNGE2ZTExZjk4YWIxNWNhM2MxZWZmNzU0YjYxN2MyMjA4NzllZWNhMmUxM2RhZmEwMTNhZDE0NWNlNzFlNzkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVkODcwNmFlZTZlZjhiMmI0YzQ0NjJmYzFlNGQzNjMyYjI5OTJkZTU0NzY1MzBmYmE3NGUyODMwZmU0MWMyMTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9fdda89e61004d31b59518fbff353223",
+      "statement": "服务端把登记表结果翻成 ack 错误码：conflict → already_resolved，in_progress → resolution_in_progress，unknown → result_unknown，其余失败 → stale_target，并逐次写安全审计。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L2336-L2404",
+          "version": "repo-lines-v1:sha256:bdbf37fc9042dbdf79ba4caa0eaac4a07050ae4045bea79d5ac993700a55ef9f:eyJzZWxlY3RlZExpbmVDb3VudCI6NjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM4MjA2MDExMWE3ZTkyMWI3NTY2MmEyNDcwMTc0MWQ3ODE2NDZmYTBkNWUyNzk4ZjYxZWMzMWYxZjkwNjkzNDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhM2U0NmY5NDI3NmI2ZjZmNGVkMWYwMmFmNzhiZWY2YTJlZTFjNDM5ZGQ1NTg0Yjk3Mzk0ODMxMzIxNGQyYjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI3YTg5ZjYwOGFhNTliNWUzMmY0YzM4MzE0NGVhYzE4NTg4OTE3ZWYxY2E0NWI5YzIyMjczYTQ3ZDM0MzViNTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU3ZTFkNGMxMWE3NzRjOGViNmM4MGQ5YjJjNDU4NWFhMjcwMDM3MjNiMDgyMzhjNDNiOWIyNzIzNDU0OTY5MzYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_af29002774cb493b8a518b0469e1a30d",
+      "statement": "三类事件会自动关单：approval_revoked 按 requestId 精确关一条（revoked），result / error / turn 终态 status 按 instance 批量关（expired），TTL 到期后 prune 删掉终态记录。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L1383-L1427",
+          "version": "repo-lines-v1:sha256:b19eb16b45db83c418ede8c4fb0905120ecf460b94e4779cf2a0cedc2b81466a:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNkNTRjYTdiZjg4MmRlMDZiYzRlYWIwYmY2MDQ0NzgzZjg3ODc4OTM0M2IwOWFlNjUyNDNkYzc4MjU1N2ZlNDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdhYTE2NDA1MTU3NzNlNTU1NzhkOTBjNmI1MTAxM2I1MTNjN2VkMGEyOGUwNWU0NjU3M2ZkZWNhYTg4N2U5NmMifQ"
+        },
+        {
+          "resource": "repo://src/sessions/needs-you-registry.js#L119-L141",
+          "version": "repo-lines-v1:sha256:dccd8302399476f934f3450ba5135ff011b0e1e879a9c08728335b74e9a641c4:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ5NmY2MDM3ZDVjNTc1ODM5NWUyMzhmZTU3NDY1MmM4MzMwMGUzZmMyNmI4MmZkMzc3NWQ1NjMzYjQwNWQ1ZDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk3ZDg2MzJlNTRlOTI5OGFiYjk1ODcyN2UyZDUxNDA4YWJhZjEzNjYwMzUzNzkxMDE0MGFiZjY1YjMwYWI2MTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU5YjYxZjM5YmRiNDNjMmMzZjQ3OTI4OGIyYzE2YjkwMDMyMjU3MGE0MjAyMzliZTUyNGVlZGY1MDYzNWFmNjcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_862bad6bf27b4017aac6fa73f195c647",
+      "statement": "终态记录保留默认 TTL 一小时，prune 只挂在 open() 上，因此 server 另外每五分钟主动调一次，否则长期没有新审批时它不会自己释放。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L3153-L3159",
+          "version": "repo-lines-v1:sha256:9306dda1db76159a8ae6dbf97f129851e21ea13157eac68585ac1d536a0b9072:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiY2JlY2RmZWExNWIyZTExZTY1NjdkMjczYmIxNmQ1NGE1NzliNGQ3Y2Y1NGUzZmExZWQ5YjU3NGVlZDg5ODI3YSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMTE2ODQ0MDY2NTlkNWIwNGJhNTI3NjJkMzZhZWFkMDAyN2Y5YzQ2NjYwZGRmNzBjNGJjY2NiOGM2NTcyODE2OCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTJkMDNiMWMzMjIwMDhkZjRkMDA0ODZmODA3YzQ1YzJhN2QyMjdhMDQ4Y2E5NDY1MWQyODkxYmRmN2M5NDUxOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjcxODkzNDUyMzgyZmYwMGNmOTYxYmIzYjcwNTkzYzU1Y2NjNTcyMmRkM2UwNDQ0NTU4MGJiNmNhYzg3YzA0YSJ9"
+        },
+        {
+          "resource": "repo://src/sessions/needs-you-registry.js#L1-L18",
+          "version": "repo-lines-v1:sha256:319c4cc20b1705821ea05e8d1b77dae99796d2c22a2ca780fe052de728967aaa:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU5OWEyNDVkZDZhNDM4YmNhZWIwMTJlZDkxMGFhN2Y1ODViYjFmZjc1NzEwOTc4MmVhZjI5ZjgyYWM0NzhhOGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImMyZTE2ZTBiZjExMDViZDI2NDVjMGE2N2E0ZGFmMGViZDhjZjBkMTM5YjlkMzIwZTI4YTdhY2JiN2I2NjNjZjMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b04e7ce897a74990b8215d6948bbcd06",
+      "statement": "bannerNeeds 的判据是只列当前看不见的待办：审批卡片已在视野里时不重复上横幅，可见性由调用方测量后作为 inlineNeedIds 传入。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/session/needs-you-view.js#L1-L18",
+          "version": "repo-lines-v1:sha256:6b211494c5c2a8c6b3f000dacf7dc10016c2c90275cd60f5ab45ad8b50469290:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFjNTNkNWY2Y2NlMDA0ZDM5ODQ3OGRiNDUwOTBlMDRjNzQ5ZTVkMjFmNDIzYjZmZjYwZmRiNDYwMzI1NWIwNjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4f677e9251cc4a7a98db38041fdfe3e5",
+      "statement": "pushDecision 只对值得打扰的事件推送：审批与用户输入请求推、approval_revoked 不推、status 只在 process_exit 与 process_error 时推、result 与 error 推。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L209-L246",
+          "version": "repo-lines-v1:sha256:f47841539c2dcc18506f55643cc61aedcde86be835089450d8939eda6ac65346:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUyNmJiMjJiNGY0Y2NhMDljNDBlM2UwMTJlOWQwOTlmYTc2NjU4ZjMxMGE3YWQ4MWY5NGEzYWEzNDJjNDExOGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE4Y2RkOGViMDFlNmFjYzljMzA2N2Y4NzNhZmMxZjFhOWI3ZWYxNDM2YjE0NTUyMDc4ZDc0ZWJhNDk1NjNjMWUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_6f4b695c2b364d979982581c952b8136",
+      "statement": "策略变更推送给全部已注册设备，理由是功能层设限挡不住调松操作，挡不住就必须看得见，手机被盗时其他设备会收到提醒。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L1831-L1852",
+          "version": "repo-lines-v1:sha256:80ff8cc606b927ed7396798f61d9d99378d88160856f95b927901aebd56c0a51:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImViNGM5MjcwMzYxZGVmMWRlMjcyM2JlNGYzZTdiNzg4MTlhMDI1MGUxZTIxNzVkNjJkYmI0ZjgwYTQ2YzY0OTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY3NzI5ODg5ZDAwZjJkODJhYjZmMzZmODA4ZmJkZjhiYjFmNjc4ZWE3YzczMTMwZjljMjg3OGIzN2RjZDI4ZjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM4MTRmZjg0ZWFlOWY4ZDI5N2RlOTU2MWIzZmRjZDBkNWIwNGUwNWIzZDYxMGE1Mjk2NjQ2MDQ5MDJkNmVmMmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjEzNTc2NWFhNjAyNzI1Y2YzMTg5NTE0MTk2ZTI0Mzg5OTQ3OTNjZjQ3OGVhMzEzMWE1ODMyNzYyMWY2MWIwNDQifQ"
+        },
+        {
+          "resource": "repo://server.js#L218-L226",
+          "version": "repo-lines-v1:sha256:64d9040d46ebec405b55326441764639a580a45ad6e4895cd86f07d473c4f0c0:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNmJiMzJlMzRiNzE1M2U1MmE5OTc4OGE5ZDJhM2RhMjk1ZTgwNjBjMjAxMjk4ZGRkZDdlMzc2YmM1ZmQyYzNkNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjdlNTc4OGQ1ZDlkNzNkMjRhODFkYmMwYTVhNzRiZmE4MmM5YzNiM2FmOTllNTJhZjc5NmU5MGI0NjhhOGEzZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZWI4ODI1MjM5M2VlYmFkMzY3ZmIzZTc0YjQ4YzNhNTI4YjBlZGU4M2IwMmJlNWY3YmU4ZTQ5OWZlMjhlNGQ5OCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOWY4ZjQwNTI4Yjc5NGVlMzAzMWNhYmZhOGEwZThiOGRkMzZkYmZhOWE0ZWI1ZmY0N2QxODg2NWQ4ZGQ5NjgxNCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_90307f3f37984178a46d4811caaeb421",
+      "statement": "needs-you 类推送的 tag 是 need:<needId>，使同一条待办的重复推送互相覆盖而不堆叠；data.url 带 thread 与 need 参数，支持点通知直达那一条。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L248-L265",
+          "version": "repo-lines-v1:sha256:54ccbe912f6e2a0cd1e907d335e7bc2bb72ed3baf92e3860e556adc5b44e37eb:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxNmZhNzllZmUxYmViNzMzYzRjYzhlNjFmNDY5YWQ2YmUwZDliMTQwNTA1Zjg3NGJlNzYyZmY1NzE3ZDQ2ODMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU5ZjFiZmNiZGUyMzdhMTIxNDEyMDUyNDRhOWNhNDAzM2I4OGVkYzAwNTlmNmQ1YzAzM2U0MTcxMmRhYTEyMWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjcwYzY5NTI2M2FkZWJmOGJiNGVmZTUzOWZiMjRkMDMwYzUwMmRjOWVmN2NiMzU5YTUwMjhjYzIwZTUwNTgyYTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_35c552adb23445168f2868c46ffe0b29",
+      "statement": "审批审计只记计数与决策词而不记内容：request 事件记 availableDecisionCount / questionCount / changeCount，decision 事件记 decision 与 answerCount，且审计失败不得阻断协议响应路径。",
+      "evidence": [
+        {
+          "resource": "repo://src/agent/approval-broker.js#L228-L269",
+          "version": "repo-lines-v1:sha256:92f83f5c0c4144b59fd317eb914fcae7f495291e33dd8c9cdaeb2fe3df9e255f:eyJzZWxlY3RlZExpbmVDb3VudCI6NDIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MDZjYjE3MjNkODc5ZjUwODgzYjRkNzczZTZhZDM5OWU0NDRhNGU3NTU4OGIxM2Q1NzUyMmJkMDQ2ZGJkNzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMyNjJhNzA3NmUzZmU1NTg4ZjU4ODg5ZjViNGFhZjkzNDJmNjJmNjJkNTEzODlhNmJiZjBlZTc0MzIxY2VlZTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI5OTFhNGJhNGYyMTdjZWRjYzY2ZWM4ZGE2ZDAzZWZlYzY2NDRmN2EwNDAyZmRjZjFjN2JmZTg5MjRhZDVhNzAifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.5.2",
+    "at": "2026-09-22T08:36:26.702Z"
+  }
+}

@@ -1,0 +1,212 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:fd57483d406503c92efa5d11144fc2fe0c7c8ba8c8e81ebe01bc3b8348060dd9",
+  "claims": [
+    {
+      "id": "claim_3f7b7f693e4943c6aebed656c098266e",
+      "statement": "前端是无构建步骤的原生 ESM 应用：index.html 引 marked / DOMPurify / highlight.js 三个 vendored 库与 Socket.IO 客户端，再以 type=module 加载 app.js。",
+      "evidence": [
+        {
+          "resource": "repo://public/index.html#L344-L350",
+          "version": "repo-lines-v1:sha256:47af47500e54ce961f9a22418e69e242134467205cf5c612988055d6985cc9b0:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjUwYjhkNWVhMzc4OTVkNjMxYTI2OWZjZDEwYTAzZDAyOWNlNDQ4NDc0MmVkNGJkZjcwNDc0YzcwYzIxZjAzYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzQ0NDJkZmUzYzU1YTIxNDFmZmM5ZDA2Y2QxZGJiZTBjNTRjMDExMjFmZDY3MTI0NzBmYWE1ZjQ4YTA0MzRmYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjEsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDNlZDgxY2QxNmRmODhkNjkyMTY2NDZkOGRhZGE3NjM0YjMzYTY5ODZlOWMyM2E3MjYzMWQxOTMzYjYzNWE1MiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_555fd5ee8d36402c94515fea6a9b1e67",
+      "statement": "SHELL-01 的前身 public-ui.test.mjs 是一份 1807 行、其中 75 个 test 只断言源码文本长什么样的假绿测试，它包含 374 行逐字重复的段落且全绿时无人发现。",
+      "evidence": [
+        {
+          "resource": "repo://test/invariants/public-shell-guard.test.mjs#L1-L25",
+          "version": "repo-lines-v1:sha256:1dfc49f89070f08b304f8f9d8e8c7f19602f50068b07a346906eda8be276b732:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3OGUzZDI4NmJjZWJiMDdkODM5YWIyZDUwN2Y4YTI1NzU3ODQ2NTk1YmU5OGRlOWVkZWZlNjI5YmNmYjMzNjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRiMTAwNDUyNzg3MWQyMmI3MmQxOTcwYjI3ZDlhMDNhMzc5NGQ4ZmI4MDllNzk3ZGUwMDVlOTBmY2U5MjM2MzEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJmZTJhNjE1M2E2OTg0MTdjYzc0ODdhYzliNmM0Y2YxOWEyMmY0MGQ0MTEzNWY5OGIzZTBhNGE5MmI2NmUzNDgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9b7cbc090092455cbbba205f82cff8be",
+      "statement": "旧的源码文本断言里有两条互相打架而同时绿的规则：一条要求源码必须出现 crypto.randomUUID()，另一条禁止裸调它，结果是门禁在阻止一个明确的改进。",
+      "evidence": [
+        {
+          "resource": "repo://test/invariants/public-shell-guard.test.mjs#L13-L18",
+          "version": "repo-lines-v1:sha256:f3edbe9beec3fd6e12fc5598bece708c554349e89b6b9f6284bae4897d4bce3c:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzg2NDgxMmIzZThiZTdkNWIyMDBkNTc3M2M2ZTViN2UyNzU1ZDU5MzIxMWZlZWNjMDJjMjI4YmNmYjQ1NjFlYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzNiMjk0NGYzYmYwOGY1ZTM1ZTMzZmM4NWIwNzRlY2ZiZmYxZjRhY2I2YmNlNTNjZDgzNzE0NThiNWNlMzk5YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTAzODkzODI0ODBmMWIzZmM0M2FmMWNkMjgyYzZjNzQwNWFkZWM0NDA1OTY0M2M4YTZjMDMwNDc4Y2I2ZWRkNCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjBhOTI3NmNmMDVmMGE3YWE1ZThhZjBjZmY0NDQ2MmI2NzBjOGJhY2IyNDdiZjQ2NTE5YmUxZTY0ZDU4Y2Q3YSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_d29a87883c3b484fad3d663f1e7a126c",
+      "statement": "删掉那份文本断言测试后覆盖率几乎未变（91.30 → 91.33），因为它从不 import 被测代码，对它们的执行覆盖始终是 0。",
+      "evidence": [
+        {
+          "resource": "repo://docs/TESTING.md#L40-L44",
+          "version": "repo-lines-v1:sha256:c19629bfb64f44ab5df83afce3b4312f458e10de9eb8c8b7a30a3c958ffc8d3d:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiM2E0YmE4MjM2M2U4MGExMDRiM2JjODM1NDZlMGRiZTMwZDE2MWI0YTkyZjU5MDIzZTZhODcxMDk5YWQ0Yzg5NyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMThhM2M4MDcyZTkzYjlkZWQ0MWYxNmEyN2I5NTgyYzFkZTZjYWIwNGQ4ZDRhZmNjY2RhNGYyZWI4ZmU4OTNiNCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMGZkZDQwYjZhNjMxYWY2MWZmYWEzMzU2ODllYzM1YzlkYWUzZDY5NmIxMzA1YWJlZTk0MDdjNjNmNjRkN2Y2OCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_e19d23b145a541bebfb0b810a366dbc9",
+      "statement": "外壳绐线的扫描器必须递归遍历 public/js/，因为扁平 readdirSync 对子目录里的新文件完全看不见，且每个消费者另有一条扫描面下限断言兜底。",
+      "evidence": [
+        {
+          "resource": "repo://test/invariants/public-shell-guard.test.mjs#L33-L61",
+          "version": "repo-lines-v1:sha256:1535039b51ec1655e98a2c73cc1279654a96490d56d8e30d8a97397682186f98:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJjOTUxODcwMzRhMDg2ZGM2NzBhNmM1ZGFjOTEzZDg3ODMzYjViNjQ5MjZkY2FlY2Q2MjgxOGVlY2E2YTM5M2IiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI1NjEyOTkyOGE0MTNmN2FiNzU4MDQxOGE4OGQzMjZlZDdhNjk1NzVkOWViMjhhZTQyNWJlMDA3OWUyOTllYmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQyNTUyYTIyNjZiMjU5YzNhOTJiNDNmNzM1NWUxZWVlMWIzNjE4ZGU1MjEwOGY1OGQ2MTRmNTZkZWMzNTZiZDEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3413062d99554fa5a300ec64cae24403",
+      "statement": "每条 agent:event 只能落在 stream / chrome / silent / debug 四个去向之一，未识别类型一律进 debug 而不得自动把 JSON 插进消息流。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/render/event-presentation.js#L1-L13",
+          "version": "repo-lines-v1:sha256:1f74a0a1b09a76c081a8dfb3234dd32e9a4317dd66012ce364a132201fc92571:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUzZDM3YjY2ZjFhMTc4ODY0YTMyNjVkYmUxMGRiMzRiNmUzYzc0MzY5MzFhYzg4MDM3YzE0MDFjZWE4Y2FhYjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNhNDkxYzhlMDQ2OGExZjhhNzhhZGJiOGZkYjg4MDI0ZmMwMTI5YzJjYTU0NDBmYWZjOTg1MzI5ZDBjOWY5NzUifQ"
+        },
+        {
+          "resource": "repo://public/js/render/event-presentation.js#L71-L87",
+          "version": "repo-lines-v1:sha256:07bea9327edb6b58582e45bbb3a729cf938079a0563dbc3e24fede91b69cc03f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZkNTQ2YWQ4ODc0ZDE1ZWY1OWM2NmJkZTA5YWY0MzNhOTcyNjM5NmU1NTFlNGI0NTQ3MzY0NjVjMDRkNzcwNzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRkNWFlOWZhMGM1NmM5YmJmZjAyMzJjYzNjMjMyODhhNjQ2NGMwNjQ3ZThiN2E3NGYxOTNhYzhjNzIyZjY2ZjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk1MTdkZWE3NDZkZmE3MzJkYTA3OGRhNDRiOTRlZjNlZDgzMGE0YWJjYjk3ODY5MjA0NzFiZGQzYjFjMmQwYWMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f1374da91de548259aa9d11e449ac670",
+      "statement": "system 类事件按 payload 再分：命中协议泄漏正则进 debug，willRetry 或背压码 -32001 进 silent，isError 进 stream。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/render/event-presentation.js#L69-L98",
+          "version": "repo-lines-v1:sha256:f4b4e1ba6401b1ac925962a4c8c04939ea57ce9e410d7e6451dd8dd7b8569f14:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg1ZGMxN2VlMWQ3NWNhMDEyMzg3Y2EyZjUxMWU4YzRjYjdkYzNmY2VmYTQ2NTQwZTc4MDY5ZDc2NDYwZjZjOGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM5Mjk5MmRiYWIwMzA3ZmJmMDZjODk3NzNmYjBjODVkYzllNTcxMTkxYTYwODVmYjI2MTRmMTgwNTYzOTk1OGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7722d6c487394bb2be6c9bcd0509862d",
+      "statement": "mcp_status 的噪音静默与告警上报不共用一个开关：只有进度类状态受偏好开关控制，错误与 failed/error/crashed 不受影响。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/render/event-presentation.js#L76-L80",
+          "version": "repo-lines-v1:sha256:5bb8ed80158077ae5ef84e762b7ae6f9c36323cc5ee8fc51422a661c161a2a40:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTUyNDY4OWVjM2JlYjdjOGU1MTFiZGUzMGYyZTAxNmZjMmVlYjllOTZhMGFjMzAyZTQzNDc1OTM3ZjZlM2JjZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjdlNTc4OGQ1ZDlkNzNkMjRhODFkYmMwYTVhNzRiZmE4MmM5YzNiM2FmOTllNTJhZjc5NmU5MGI0NjhhOGEzZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzA2MTkxZDFhYmVlYzAzNjZkNThhZDgxZDQ2MjYxMDJhMjAwZTIxZmMwMzY4ZGRhMmQ3OTljZTA4MWE2ZGQxZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMWQ5NzkwYTY4MDFiNGRlMGY3NmM3MDRkOGM4MTNhYmMxOGQ1ZDcxOWQ0MTM2NDdhODVlM2VkNmRmY2RmNmE0MiJ9"
+        },
+        {
+          "resource": "repo://public/js/ui/ui-preferences.js",
+          "version": "repo-file-v1:sha256:10d4ed3f5a3b4f3e9f6ff59c8a18278c5569cc620b76c58b1192cd17d1f2bb1f"
+        }
+      ]
+    },
+    {
+      "id": "claim_b34058c0c70c4eb98471729fc95cf03a",
+      "statement": "流式渲染分三层：createTranscriptStream 按 40ms 节流合并 delta，splitStreamingMarkdown 把文本切成 stable 与 active，renderMarkdown 只重渲染 active，避免成本随已生成长度线性增长。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/render/markdown-stream.js#L1-L7",
+          "version": "repo-lines-v1:sha256:b6596b6f2e94a4f9d185b4d336a15992143893c3ea4432b1b29634701d122a8a:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZWFmMjJjZjA3MzI1OTJjMjQ3MTQxY2JlNjFlZmExMTAxMjYxMmY1YTMxMjJiOWFmOWJiYWY1MmY1NzI0ZDE5NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOTcyYTQyOTM4MmIyZTE0NzE4ZTBlMzdiMDU3MGE4YTE3MDI5OTFmY2Q4NDk4Y2Q4NDA2MGE4YmY0ZjA1MDE3YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjRkMTY2NzAxNjE0MjMyZmJmYWI4ZjI3MmQ1ZmJhYWY1OTUyZmFjZDMzOTRjOTEyZWZjMmVhYzFiNDQyZTI5NCJ9"
+        },
+        {
+          "resource": "repo://public/js/render/transcript-stream.js#L1-L51",
+          "version": "repo-lines-v1:sha256:6e9781065e0dadb5fe52dfaf36b7fa45d1d68f8df74d0716db34c274fbbc1a53:eyJzZWxlY3RlZExpbmVDb3VudCI6NTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEyZWU1MzlmMWYxNGZhZDA2MDhjZGNiOWRkM2NiMWYyNmRkYjIyMDFlM2UyZDY0OWIwMjgzOTQ4MzFjNzI3MDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f71672497cb241b796ef241f871d3653",
+      "statement": "切点判定保证单调性：围栏内的空行不算切点，候选切点要等下一个非空行到达才判定，只有标记还没跟内容的半截行一律保守算块延续，以免下一帧判定翻转让切点回退。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/render/markdown-stream.js#L8-L66",
+          "version": "repo-lines-v1:sha256:16135fbe8f24a7c5731b82b893a0d8ee6d9c26814abe354b0633c6460416b0dd:eyJzZWxlY3RlZExpbmVDb3VudCI6NTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBlZjQyMDMxMzNkMDIzYzNiYjAxMjhkY2IzMTc1MTlhOWJhZWFkZDRmNTAxYzI1YzMwN2E5ZGQ2Y2E4ZDg0YWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBlMjRmYjRhNjNjMTI3NDQ5NGYwMTk5NTM1MDNkOTcxODllZTk1NzM4OTkyNWMwNWY3MzVlMzI0MjQwMDU1NWUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNmNTljYTRhZTdhZmU1ZGI3ZTI4NmM3NjJjYjg0ZDIzNjJiNTVkODQzN2MyNjFkY2Q5YTRkMjdhMmZhNTU2ZjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_43a2d8b6e4354201aad44e5393e20390",
+      "statement": "enhanceCodeBlocks 有意跑在 DOMPurify.sanitize 之后，因为它注入的复制按钮用的 button 标签在 FORBID_TAGS 里；安全性靠的是它只拼固定结构、不还原已转义内容，并由 e2e/markdown-sanitization.spec.js 在真浏览器里守着。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/render/markdown.js#L158-L173",
+          "version": "repo-lines-v1:sha256:6cf661b8347baa7bff44a1a5767b6897dbe831e2402b341a8cf7aa9088c2bc9b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJjYTRjZDA0MWZhYzBkNDMyMzY3MTkzYWRkZGFiOWQ3OWFjMTYyMmFiM2I4NTBhMjM4YmViYzBmYWJiYmE1YWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM4NzU4NjYyYzcwOTIxOWU0OGZiMGY0YTQ0Nzc5NTVhYjEyZTU3NmMyYjAzMGE2ODgzZjA5OGNiOTY1YTZjYWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_dbcd8d431c834bf08242ebd3b9416476",
+      "statement": "消毒配置额外禁掉表单类标签与 style/for/contenteditable 等属性，并用 afterSanitizeAttributes 钩子给所有 a 标签强制加 target=_blank 与 rel=noopener noreferrer。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/render/markdown.js#L3-L19",
+          "version": "repo-lines-v1:sha256:5c3d87b61513a995190873a2bfaf293f88daf3adb2b23459d1e4bf31a28c5731:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUwYmUwNTliMTZhNmRlYzAyMjlhNTQyNTQ3NWM3MTM1YjAwNWUzYjZmNjZiMzBkYTA5YWUzOTUxNDJjZDYxNDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjoyLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVkNzFiNzBjZjgwYWZhZWNjYjNiMjc3NmNkMGI3NWMyNDA2YzQyZGVkNTI3ZDNhMmE3MjYwZmEwNWVjYmIwYzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJlMjMyZTViNTNmMTUwNWViYjZmMzRiOGI4ZmQyMDQwNmZjOTBjZDg4YjQyODE0ODFiNmY1ZjkwOWZkNmM3MTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_31a8d645c49048d5a8315876237e8274",
+      "statement": "表格必须包一层滚动容器而不能让 table 自己滚：max-width 会把内部表格算法的可用宽度夹到阅读栏宽度，实测中导致中文列被压到 49px、整行被撑到 286px。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/render/markdown.js#L52-L73",
+          "version": "repo-lines-v1:sha256:09f478f8a7346f9fcd9ec06f27934a650f2a93ad1b2e75476105cdb14344d8c4:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJkMGYyZDNhM2FhZGEyNzU4NjQ1NzhkMGE0MzkxNTYzOGQ1NDNmZWNhMmM5NDg1OGRiOTQxMjExZTg2Y2VmMmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRiOTc5ZWYzNjc3MDI5NTAxYTk0NjhiODZlZDdjYTdmYjY0NWQ2MjE4NDg4NjViNWI1NmM1YWE3OWUxZjQyMjUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_97fe0844382e4cb09d3759f881a469ac",
+      "statement": "宽表格的边缘渐隐由模块级 MutationObserver 加 ResizeObserver 维护，不在 wrapTables 里做，因为后者只产出 HTML 字符串而真正的 overflow 要等布局完成后才知道。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/render/markdown.js#L75-L156",
+          "version": "repo-lines-v1:sha256:5fc53e3a5cdb8b2ab21b531cd5d38ec088a8b3a2b446c9371be422e527bad1f4:eyJzZWxlY3RlZExpbmVDb3VudCI6ODIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA1ZjljN2UwODkxNDM5YzJlYmNlMjY0NDMyOTJmOTcyNmI2MmI3NjRkODkzZGRiZTg2ZTMzMmFhOGE0N2FiMDciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA5NGZjMGMxNzNkMWVjM2ZjNTAxZDdkZmE5Mjg1NTAxYzUyN2NmYjQ3MTI1ODNkYTNjYzM2MTgwNTY2YjRiZTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkwNDI1ZDUzNmQ3NGIzNDZjODllMGE1NDBkNDAyN2QzM2Q1MzEzMWVjOTRmNWUzOTRjOGI2ODBjMzA0Mjg3NDEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_be09987d6b1647049e2c3e270b632858",
+      "statement": "renderAnsi 只认少数 SGR 码，256 色、真彩色与背景色一律忽略，因为不认识的码不该变成 class 名进到 HTML 里；它的输出直接进 innerHTML 而输入是 agent 执行任意命令产生的工具输出。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/render/ansi-html.js#L1-L22",
+          "version": "repo-lines-v1:sha256:78ed7633e793a6503804d97ce0b907dacb388f5d339d42f68dc122f399a1353b:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUzZmU4ZDI1M2I3MTU3M2U2NTI0MWUyZDJjY2M5MTg3ZDk5NTg2NmE0ZGI0ZjQ4ZDM0MGY3MTkzM2M3YjhjODEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgwZmE4MWFlNGMxMTk4MjNmZGNiODBjZTM5N2QzYzFmNGQ3MWIwNTFkODM5YTNjMWY1MGY0MmEzNzdlNDZmZTcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4af3db9f41044edb946b51da44924a7a",
+      "statement": "连接横幅有延迟门槛：connecting 等 800ms、offline 等 1000ms 才显示，5 秒后才给重试按钮，online 只在之前显示过横幅时短暂显示 1.6 秒。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/net/connection-banner.js#L1-L57",
+          "version": "repo-lines-v1:sha256:591f4bb5e9ff2dbc0e0476adda284e1d9848aa71d6ffb766061b804226736663:eyJzZWxlY3RlZExpbmVDb3VudCI6NTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVhZjNhYWE1OWM2YWYwZGY5MWQwODc4ZTI2NjdlOWZmZTU5ZTVlNzE2NGVjNjdlODEyYTg3ODdjYjVlOGM0ZDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc1NzU1OTgyZGU4Nzk5N2ZmN2QzNTA4OTc2NjE1MGZhNzIwNmFjOGU2MDg2OTc4ZDdkOGJlYzc4MTNhMGQ3OTkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0091800f1f8b488a9f15c90a21eb6d0e",
+      "statement": "局域网模式不强制 TLS，因此用 isSecureContext 判定并在明文连接时挂一条横幅；拿不到该能力时视为安全，免得在不支持的环境里长期挂一条吓人的横幅。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/net/connection-banner.js#L59-L74",
+          "version": "repo-lines-v1:sha256:55f49ea112054bef4d3d8fb91be8b1fa67e1a2f8f21c616512be94912bd4912a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkzMGM1Nzg4MmMwNzc3MDAwMWIyNWZkNmZmNWM0MzdiY2Y1ZWE2NDNhODYxZDMwYmMxYmNlZDdhODYwZTdjOGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU5ZjFiZmNiZGUyMzdhMTIxNDEyMDUyNDRhOWNhNDAzM2I4OGVkYzAwNTlmNmQ1YzAzM2U0MTcxMmRhYTEyMWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_cb6e6cba3b824f34b7bcdfc1a3a27bd2",
+      "statement": "diagnoseHealth 把「连不上」拆成六层并按顺序返回最外层的坏点，因为修好它之前里层是好是坏都无从验证；上游报错被标成 actionable:false。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/net/health-diagnosis.js#L1-L41",
+          "version": "repo-lines-v1:sha256:92331f3aa4628fe38157508e3ca862307eeee4bd38d3680b83f89610bcb8103e:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE2OWY4Yzc5YjA1NDcxZGZiOTI2Y2MzYTViYWM3NzFhMWQxZDEwYTA1MDhhNjQ2YWE5ZjE4NWNhOTM5ZWY5OGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_44c42ccb80ba44a39286ada0c7141464",
+      "statement": "turn-outcome 的判据是完成页不能只显示模型的自述：改了哪些文件、跑过哪些验证、哪些失败都能从本轮的聚合 diff 与命令执行记录客观导出。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/render/turn-outcome.js#L1-L6",
+          "version": "repo-lines-v1:sha256:fd16794755c94bc08e61ee6545a0364d4b734ede1f66f35a41beeac9f52c7605:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzUxMjZhMzQzODQ0MWUzMmMwOGQ4MTI0OGIwY2YyZWNjZmQ2NDYyNzVhMzExYTdiZTJjNjE4NmJmZjEwOTkxOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOTQ5NjBjZTcxZmI4ODBhMTZmYjlkMmNlNzBiMDczNjBhOWQyNzQyNTdlZWE2MGE4Y2NkMzk2NDdkN2Q2MWVjZSJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.5.2",
+    "at": "2026-09-22T08:36:26.702Z"
+  }
+}

@@ -1,0 +1,228 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:3ab1903edd79c67cecfb9fdb4297af77f200a07c9fddec04e9adaa51a263fd01",
+  "claims": [
+    {
+      "id": "claim_5a04d604d8274060a4b37cc01fd82f23",
+      "statement": "doctor 分为判定层（纯函数零 IO）、探测层（spawn/stat/绑端口）与 CLI 宿主三层，分开的理由是混在一起会让判定逻辑只能靠端到端验证，而自检出错的症状恰恰是它说没问题。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/doctor.js#L1-L11",
+          "version": "repo-lines-v1:sha256:e373454d2eb051cea28f050a8d9054fdbafdea25a40c8807a0023f682e1b41ae:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlYzdmOTYwNmZjOWQwMTYxZmI2NDY5OGZmNGYyYjEyMzg0NjVlY2M3MDQwMWE0YzFiNWNmZTNjZDg5MTg3OTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVhYzJkZWM0ZWNlOGFkMzU4NmZhYzlmODQ2YjMwZWRjYzllNGI5ZWUwYjgwZjc5OTVkODQ3YmNlODEwYTA3YTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkwMjRlZDYyNmYwNTVkNWUxNDc2YzQ2ZmQ4MDlkMzZiZjhhZjRjNWRlYzdjNDc4ZDBiNDBjOWU3NTZiYzViMTEifQ"
+        },
+        {
+          "resource": "repo://src/ops/doctor-checks.js#L1-L13",
+          "version": "repo-lines-v1:sha256:df4eb2f160ebedb8989a098a9bb4af1ff87d0ab309be759bc975e00e2d142ec5:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIwYzJiMWVlNDc5NTUyYTA0YTYyMTllZjk2MTZiOGFiYmQwOWU5OTkzOTUzNTEwNzk2Yjg1N2UwNmFlMmZhYmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIxZTQ0MTE5MDIwYTA0YTA2MmI1NmNiNDBjYzU5MWYxYTY0MTRmYjAwYzc0ODY1YTE0MmM4ODJjZDY4NTJhZGMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ2YjgzNzA2NjUwM2RkYzQ1MGM2MWY3YWZmMzcyMWE4ZjMyODc0NzcyMmEzYjUyYTkyZTMzNjU3MDQyZDI2NjAifQ"
+        },
+        {
+          "resource": "repo://src/ops/doctor-runtime.js#L1-L7",
+          "version": "repo-lines-v1:sha256:1a2324e7bf9320dc9247da06743857b4310626161ef431f001ef3027f88456a6:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzBjNDgwZWE4ZTRlMTlmMGJmYTQ0NTRkNGJkMzlkZWM2ZTU5NzQzODkwODQ2MmIyZTE0NmUxZjE2YjExYjdlZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzNmNDhhZThjOTU2MmQ4YWVjZTVlYWE1NGQ4YjBlZmI1OWQ2ZjA3YzYxMDRmMjRjYjg1ZDA1ZjBhZjcyODgzNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZmQ3NjVmMTAzMTBmOTA2NThhNzRjYWZiMzg5MWViMDQ3NWYyZThmMDZiZTkyNDcwYmY0ZGRiOWVhMjhjY2M0ZiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_4f5217fbcc564ded83a7f2661482ef9b",
+      "statement": "runDoctor 不自己读配置，全部上下文由调用方喂入，因为「各读各的」正是 doctor 报绿但 server 起不来的经典成因。",
+      "evidence": [
+        {
+          "resource": "repo://src/ops/doctor-runtime.js#L99-L134",
+          "version": "repo-lines-v1:sha256:07a25fd6022ec839d9b8c709b44c3de8d0745f4b6cc02295da8005ac38c05daa:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUxZDM5Y2M0NTI5NThlODJmYmExMWYwMDQ3OTViNDU3N2E4Y2VjZmY0ODI5YzViNzcwY2Q5MmJiZGVjNDE1MGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkwMWU2MmVmYWQzZGE2YzZkOGZkM2RiOTlhZDJkNzJkODA0YTAwZjhlOGVlYzk4OTBjMzk1NmZiMjUzYzk4ZjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2f4ba410eb55445aa9b66b1624b3498c",
+      "statement": "doctor 的工作区解析判据与 server.js#initializeWorkDirs 逐字相同，且解析不出时返回空数组而不抛，以免自检因为被检对象有问题而自己崩掉。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/doctor.js#L100-L118",
+          "version": "repo-lines-v1:sha256:035f91be19f66feb19483ef48b3011924b9d87cc36de882b30d013ad6778d906:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ5OGVhYTc1YmRmMGM5NjdkMmRmNjkxMWY1MjcxYWEwOWM0OTZmODk2MDQ0YzNkYmNiMTNkNTA3ZjkyNGJjMWQifQ"
+        },
+        {
+          "resource": "repo://server.js#L382-L395",
+          "version": "repo-lines-v1:sha256:c24b75e6d3d8a5339661d4ec62e196547a8d6d0686187c172ebc05a6a69fa73d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJhYTc5ZmFjOTk4YzhkNWYwZDgyNTQ1MmIzZDlkZjE3YzVjNmY2YzhlOWI1Yjg3YWM1NDVhYmEzZWM1NTY3NmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAwZWJhM2NkMDkyOTIyYWUyYjJmNmY3OGU5NjRiZjNhN2Y4OTBjZTllYjBlNjQzMGVmOGFhNTZmMzlmNTFlYzQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkyMTFhMzJmYWUzZjBhZjA2ODY4NDRjYTg2ZTBlYzBmM2I4ZDIzMDY0NTM0NGI1Mjk3YjVhNWZhMWQ0NThlZDgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_49bf1dc162af49ef9f10d188248128f9",
+      "statement": "每条诊断的 safe 字段只出布尔、计数或枚举字面量，绝不出明文令牌、绝对路径或 URL 值，因为它会被贴进 issue 和截图。",
+      "evidence": [
+        {
+          "resource": "repo://src/ops/doctor-checks.js#L10-L13",
+          "version": "repo-lines-v1:sha256:ac2225c15a4390922fee12fd6e06ae37adec3d5d43be40e384f589127a8bbe7c:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTAxZWFkOTM2YTIyODFkNTNkY2MwNjRiN2UyYTJhYjBkNTNiOTJlZjNlZjdiMzRiNjY4NjczMDA3ODk1Yzg2MCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjFlNDQxMTkwMjBhMDRhMDYyYjU2Y2I0MGNjNTkxZjFhNjQxNGZiMDBjNzQ4NjVhMTQyYzg4MmNkNjg1MmFkYyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjg3ZjNjOTlkYjViMTA1MDUzNWM0MWNiZjEyZjEyMjRiNzc4Njc0YmQ4ZTA4OGUxOWE4NjZlYzhlOTFmMWM5OCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDZiODM3MDY2NTAzZGRjNDUwYzYxZjdhZmYzNzIxYThmMzI4NzQ3NzIyYTNiNTJhOTJlMzM2NTcwNDJkMjY2MCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_292db99ecb8c45ae8c7d39d0705e157f",
+      "statement": "schema 探测未执行时 runDoctor 干脆不输出这一项而不是输出一个 ok，因为后者是假绿；探测未成功但不是 schema 问题时走 warn 而非静默通过。",
+      "evidence": [
+        {
+          "resource": "repo://src/ops/doctor-checks.js#L124-L131",
+          "version": "repo-lines-v1:sha256:9da01641a9da87fbb242b984c7b725419ea5939fc5e6bab488c2a07f8ba72988:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiN2Q1ZWQwMjI0NGM1NGNhYmRjNDVkNWZiYzZhMWZmNGJjNDAxNDdiMmRlNDhlNTIzMzhiZDM2YzE4YjhhYTkzYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTIwNDBlMDk1YTk0ZTJhZGE3NGU0MjFmMzcxODc1MWE5MWE4MTBiZmQ2NmY0OGY0ZTkzOWM3Yjc0ODBlYjY3MCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzMxZjU1YjYyYzkxNzQ0YTZlN2Q0MTJiYmU4YjEyZjQzYWJjOTkxMDBkOWRiZGIzOTUyMWEzYWJiYjE1YTZhNSJ9"
+        },
+        {
+          "resource": "repo://src/ops/doctor-runtime.js#L129-L134",
+          "version": "repo-lines-v1:sha256:269b0a1058e30a1a3c8381f7cac9ea0c7485778f4418869d120f322c121aae44:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTFkMzljYzQ1Mjk1OGU4MmZiYTExZjAwNDc5NWI0NTc3YThjZWNmZjQ4MjljNWI3NzBjZDkyYmJkZWM0MTUwYSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTVmNWFlNTEwMzBiN2VmYTdmZDZlMzRlMDU4YzU3NWY0NzBkMTNiZmMzNzRhMjRhMTI0YTBhODA2ZjY5NmQ1YiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjEsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_d02bd4d1086a4b63931cbfd5c39f329e",
+      "statement": "schemaVerdict 是纯函数，输入是错误文本，判据正则 SCHEMA_MISMATCH 来自前后端共享的 thread-actions.js，因此运行时兜底与启动自检认同一个形态。",
+      "evidence": [
+        {
+          "resource": "repo://src/ops/doctor-checks.js#L112-L122",
+          "version": "repo-lines-v1:sha256:c76e68f2af46e9a3050093360a79bec50856893bd8db807b4ee5e05dd6712a0a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEwNzQ2M2FmZmUwMzhjOTM4ODJmYjUwYmFkNThmYzQwMDllZjZlMmI2NDJmMWUwYmQ4MTE5ZTk4ZTNjMGMyMzEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdiYzZkMjQxMmViOTc5NTE5YjE4Njg0YTE1YjMxNTVkY2I0ZDNhZjg4MGQ1ZTY1MGQyMzhlMDE2MTMyZWM3ZTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFiYTQwMTAwMzM1NTM0N2VhZmI4ZmRjODMyMTM3ODcxMDQ2OWY5OGRmNGVjY2E1YmY0YTgzNGU0ZTNhNGVhOGUifQ"
+        },
+        {
+          "resource": "repo://src/ops/doctor-checks.js#L13-L13",
+          "version": "repo-lines-v1:sha256:21e44119020a04a062b56cb40cc591f1a6414fb00c74865a142c882cd6852adc:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjFlNDQxMTkwMjBhMDRhMDYyYjU2Y2I0MGNjNTkxZjFhNjQxNGZiMDBjNzQ4NjVhMTQyYzg4MmNkNjg1MmFkYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjFlNDQxMTkwMjBhMDRhMDYyYjU2Y2I0MGNjNTkxZjFhNjQxNGZiMDBjNzQ4NjVhMTQyYzg4MmNkNjg1MmFkYyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMmEzMzc4MmIzOTIzOTk0NTkyMWMyNDkxZDExMzU1ODgwODVmMTc1MjA1N2FmNmYyMTViMmVkZmE5YmNhMWYwYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDZiODM3MDY2NTAzZGRjNDUwYzYxZjdhZmYzNzIxYThmMzI4NzQ3NzIyYTNiNTJhOTJlMzM2NTcwNDJkMjY2MCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_86e002250fb744a689ccb26f268ed259",
+      "statement": "createProbeChannel 用 AppServerTransport 而不用 AppServerHost，因为后者的第一个参数是 runtime，探测没有 runtime；参数错位会让 app-server 收到一个对象当方法名而永远不回。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/doctor.js#L33-L48",
+          "version": "repo-lines-v1:sha256:991dc71cc858ae72f3b42e090d7213845b021b9e55e0d3aa7d19e5b00b5f6f25:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk3MmE0MjkzODJiMmUxNDcxOGUwZTM3YjA1NzBhOGExNzAyOTkxZmNkODQ5OGNkODQwNjBhOGJmNGYwNTAxN2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE1ZDY1OTFkZjk5NTFkODRkNjg5ZWIwMzE4OWEwZjZkYmRmYTNkZjc0ZDkzNGRhMjJiNGU2OWQ3ODAyNzA1OTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFkZDk3OWI1ZTEyNjY2MWU0NDZkZmUxMmRhYThmNDlhMDQ2MDk3M2ZkZmE1ZDc5ZWY3ZTg0NTBkYjliZmUxOGQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_64779b9eb2a64dfbbc24b021ea9502e8",
+      "statement": "探测通道的握手懒到第一次 request 才做，否则构造即 spawn 会让 --skip-probe 也躲不掉那个子进程；对 src/agent/ 的导入是动态的，以便那一支失败时其余十二项仍能跑完。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/doctor.js#L46-L76",
+          "version": "repo-lines-v1:sha256:7937a8ac3005eafd233a5f8a00c40b76f3a5c7ac9942ab6d5f673e37bb2c022e:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZkZWQxNDMzYWY0NjUyZjIwNjk0Mjc0NjJhYTRiODVjZmRkM2FmOTFmYjE0Y2JkYjI5NDA2ZjA1YjdhYWM4YzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVkNjAxZGIyYTMyMWZhNjNlZWQ4MmY2Yjk3ZDYzODg2ZDlhNmQ0MTQ3MzZmOGMzYjAxZDk0MjZlOTM2ODQ5YmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYwMDVlNTQ5ZjU4YmM4OWVlMGQwMjM0MzNlZGYwMDhkMmNiOGU3NTI1NzE1OWU4OTRhNjc0MTEyZWFjN2QzNjgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ba617130ec284bb6b9355b013c3ce089",
+      "statement": "schema 探测发的是 thread/list 且 pageSize 为 1，只读、零额度，因为发 turn 那类会真的调用模型、与日常回归不消耗额度冲突。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/doctor.js#L78-L98",
+          "version": "repo-lines-v1:sha256:162a08f012bde26cc8d2a0da6a3ae0590773317e55bab0576bce9599b72f8028:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM5NjkzNDA4ZDEyM2Y5YWI5MTM0YmY4YmFmMGZkYTc3NGY0MWI0MzRmMTA2YzU4Y2RmZjdjZTQ3MjE4OWNhZTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkwYTlhMTNlMWQzZWRiNjkyNGRkMGQ5ZDAyZDcxNzQwZDQ4OWFiMjVlN2I5NTE3MzYzN2UxMTI2MGJiNTdlZDgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fc4664b1f7974b8ab8ebcc494c0ff60a",
+      "statement": "metrics 把 counters / gauges / labels 分成三张表且不合并，labels 不并进 gauges 以免消费方拿到类型不一致的字段，getLabel 缺省返回 null 而非 undefined 以免被 JSON.stringify 吃掉。",
+      "evidence": [
+        {
+          "resource": "repo://src/ops/metrics.js#L1-L20",
+          "version": "repo-lines-v1:sha256:f5dee4c54734c0065fc1d994dc602fe136a2809997545a442a77a631642f12d5:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVlOTZjZWFmNmU1OWVkMTVlOGUzNzk4NmM5YzU0ZjhlN2Y5NTk5ZTZjZjJjMmM3MjNkMzNjYzU4OGZiMWMzNjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIxYTg5ZDNiZWNhNTU3YjczYjM2NjY2MTQ0ODg0ZWQzMTY4YWYyYzBlNWViOTExNjQwYmVhM2FlY2NlMjMzNjIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_80eb6d5bd3584e45b75e0ba8e9bec243",
+      "statement": "metrics 没有上限也没有淘汰，安全性靠的是 key 集合是编译期固定的常量串；引入用户可控的 key 会变成内存泄漏面。",
+      "evidence": [
+        {
+          "resource": "repo://src/ops/metrics.js#L12-L19",
+          "version": "repo-lines-v1:sha256:05299db63048df371b8c7c4e3ffd61820e0517e838052d8f86395d0f17c2fbb7:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTAxZWFkOTM2YTIyODFkNTNkY2MwNjRiN2UyYTJhYjBkNTNiOTJlZjNlZjdiMzRiNjY4NjczMDA3ODk1Yzg2MCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjQ2NzM4ZDBjMWVjNjU3MzU2NDE2ODYyZGNkNzgxZWIwOWZlMjRmNGEyYTFhYzNkZGZkOTlhMzk4YjgzNWIwNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTI3ODg2MWNjZGM2MGFhZWExYmI2YmExNjc4ZTRiYThjYWI4NTRiN2QyZGEwMjgxODFkNDlkYmI2NzgzMjVjOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDI3YWZmMzIwNmIzMzkyMzNhOTdlNzVlOGRiYmNlMmYyNmRiODY3OTBjNDcwMTcxMTFkMmQxMjlhN2FkNWYwMyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_37dfec09bee140919cb4b2a3c16da505",
+      "statement": "OPS-01 做双向断言：源码里每个 metrics.inc/gauge/label 的字面量都要在 KNOWN_METRICS 与 /metrics 白名单里查得到，反向登记了却无人埋点的死条目也要红。",
+      "evidence": [
+        {
+          "resource": "repo://src/ops/metrics.js#L53-L67",
+          "version": "repo-lines-v1:sha256:57320fdd9c6178d084c125ffcde7349e849ee008ad557c294ef6eda612f7c0e0:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1ZTI2Y2Q5MjM2NmY2MGQ4ZWQ5MmQwMjM5ZjA3ZmVmNzRjYWMxNGFhNjlhZGRmOWMyY2MwZDExZWIwMGE0NjMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkyMDQwZTA5NWE5NGUyYWRhNzRlNDIxZjM3MTg3NTFhOTFhODEwYmZkNjZmNDhmNGU5MzljN2I3NDgwZWI2NzAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://test/invariants/metrics-contract.test.mjs#L1-L41",
+          "version": "repo-lines-v1:sha256:1c3faeec7ef67bae51dbbd01ecff982a0250f51ea8586acca121e0c28a2c0da8:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdjNzNlYjBhNTQwNzk0OTViY2M1Yjk4ODUyYmUyMTg2ZGNhMmQyNGI5OGI3MTFkMTY5MGNlNzYyNWVkYThmMTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI1YjFhY2JjNjhkNjZkMDg1NDVlMDI5N2UxOWI1YWQyOWExODM1MWY0NzNkYjNiMjc2NDM3Nzk4MmE3ZDlhYzYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3db802c54a61467e8f0a82dd710829da",
+      "statement": "/metrics 的 rpc 分项口径是当前存活 runtime 的累计而非进程累计，空闲 runtime 被回收时它的计数一起消失。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L715-L750",
+          "version": "repo-lines-v1:sha256:a9bcda68a4d51f2020ecadc3e6610f398feda10fca6852e2a13c14d5cf298c5c:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg1MGZmYzgyYjEyYmE2YTdhNzc0MzAzNzVlMWRjNDg3NzI4NzcxY2I2YjhiMTg0YTdmODBjMDZlMjNhNjYwZjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI1OGIyMTkxNzZiMzIwMjYyMzYyYmMzYWJmZTVhNWEwY2FjNjhlOTFmOTQ1ZGI4OWVkOTZjYjg0NWJkODhhZmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ5Y2MyMjM3NDgwNWE5NmU0ODhhZmNkODQ5OTEyNWZiNmI1Y2U3YTlkYmI5ZDlkYjQ4YjJlMjg5ZjkxYjE5ZGYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_bef3ae5185d549dd8fa138d408227afa",
+      "statement": "审计日志采用多代轮转（默认五代，代号越大越旧），因为只留一代的保留窗口太短而审计里最有价值的往往是旧记录；单条超限直接抛错而不写截断的伪记录。",
+      "evidence": [
+        {
+          "resource": "repo://src/ops/audit-log.js#L5-L32",
+          "version": "repo-lines-v1:sha256:d6bd6d451012b414f4352e6d873d89807281bf672693276a844226f0da726d6e:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE1NDBlYTVkOTVjNWI4NTk5NjVlMTE3Y2JkZTQ0ZTkzODY3Y2IxNjExMjEwNjM2MjY5YmIxNmRiYWIwYjI3N2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg0ZjgzMmYwYTNmMjljMjZlM2ZkOGNjZWJjNDMxOGI1ODYzMmU0NzY1NjAzOWJmZGRmOTc3MWNlYzI1ZmVhYTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c5693f92d005409eb6c7e1e84c33f4cd",
+      "statement": "RPC 日志轮转前用 fstatSync 看已打开 fd 的真实大小而不用本实例计数器，因为同一 cwd 上多个 runtime 共写一个文件却各记各的账，而 fd 写法同时消除了 TOCTOU。",
+      "evidence": [
+        {
+          "resource": "repo://src/agent/agent-appserver.js#L1774-L1800",
+          "version": "repo-lines-v1:sha256:861405199b34b9e849d33e134d9495e2f05b420222d1bcb23e89d43bb43892ae:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI4ZTZmNTA4NGUwNGY4Y2NjZDYzYzZjZmZkOGVkMmU5ZjdhMDM0YWMwYzZhZjQ2MWNmZjY1ZDY1ZDc4MWNhNjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjliNjJmNjBkODU5MGE1NzljZjQ2ZjhkNjczNzhjNGM1NzJiOTYyY2VjY2RiOTBjN2E1ZjdiNDJiOTYwNzgyYTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIwNGFmYmFiY2U5NDY2NTZlNjJhZTBhMzYwYTg5MjllOWJiYWQ5MDI3N2U2MGIyZTYwNDJmMjQ4NjhkMmNmNTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU3ZjAwMzQyYjdjYTQ1Y2UyZmE3YjZiYTRmZWUyYzE5MzZiMzgyNGYzYzFhMGRiOTdiZGZiNTI5YzZmNTY2ZWEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d9ac07eec33548359899ab2db3e89e1e",
+      "statement": "RPC 日志轮转失败时放弃这一次并继续追加，否则文件仍然超限、下一帧再次尝试轮转再次抛错，日志就此永久静默。",
+      "evidence": [
+        {
+          "resource": "repo://src/agent/agent-appserver.js#L1789-L1796",
+          "version": "repo-lines-v1:sha256:de81a6acc920d85816078470cc8caf345708edc79c256e374a477804db077cf1:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzA4YzJhMzRlNjdhZTczN2YxZThhZDVkM2EzYzYyMzBiNjA3MzdhODdkMDRjZmY1OWU3NTA0YTgzMWU5NGYzZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTZiMDQ0OTE0Njk3MjJlODM2M2E5NGU0MDQ0NTM4ZTAxM2EyYTIxN2UzNmIxZTU2OGJhNjBhY2I3YjRjOGYyZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMmI2ZTVkOTU4YzkyZjM3Yzc0N2VmZWMzNTcxZDM2ODllYWNjMTM0ZjMwNmY1OWEwNzBiZjI1OTk4ZGE2MDg4NyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiN2ViNTQ2OGZmODAyNWFjNDEzODQwZDRmNjEyMzAxN2ExZDQyYmIxYzBhODM1OGQ2MDllMTc5OTYxNjQ2ZmIwNyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_86661937cfc74d95897922e2ff5fcfa4",
+      "statement": "RPC 日志每帧都显式以 O_CREAT 0600 加 O_NOFOLLOW 打开，因为文件可能在运行中被 agent 的 shell 删掉，而裸 appendFileSync 会按 umask 重建并把 RPC 流量暴露给同机其他用户；ELOOP 时直接停用日志。",
+      "evidence": [
+        {
+          "resource": "repo://src/agent/agent-appserver.js#L1801-L1830",
+          "version": "repo-lines-v1:sha256:ec15c3a42f8b7a85f9ccf7ae15253e28fe7a29876081ad3ea2d36f3a87bb2bd7:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA4ZGI3NDYwODE4MmNiN2NhNGQ5ZmJhNDlhMzk0OTlhN2YzOTA3YjRlYTAzM2IxNDkyYWQ1Y2YwYmVlZWVjZWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg2ZTUzNDE4ZGEwNDk2ZmE2ZGFhMTM4NTE4Yjg5ZjI4ZTM4ZDhjMTBiNTQyMDkyODU0YzIwYWU4OTkxNzBhY2EiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJiNjUwNjI2ODZhZjM5ZGFmZGU5NjdiMjdiNTczYTY3Mzc4YWQyZmQ3Nzg0NWRlZjJjMDIxMTc4YWY4Y2E0OTMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_da5cdee8de814af39af728acdf5ec3c0",
+      "statement": "RPC 日志刻意不像审计那样逐条 fsync，因为流式回复的每个 delta 都是一帧，逐帧 fsync 会阻塞事件循环。",
+      "evidence": [
+        {
+          "resource": "repo://src/agent/agent-appserver.js#L1820-L1830",
+          "version": "repo-lines-v1:sha256:3c94f30c73d3b717372b30620576e3f0c2bac35ce5a55a0e85ea329e5018ebba:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRiOTM3OWIxZGE1MmQwM2IyMGFkYjBjOWEyNTU5ZTlhOWMzOWQ2NmUwYzI0MTVlZmI3ZTY1ZDRlNGY2ZWRhYTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFkYjNlN2NkMGMzYTYyMzA0NzY2ODE2MWQxMDRlOTlkODYyMDljYTNlNzc1NGEyNWIxMTlhNDkwNzg3ODA0MjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJiNjUwNjI2ODZhZjM5ZGFmZGU5NjdiMjdiNTczYTY3Mzc4YWQyZmQ3Nzg0NWRlZjJjMDIxMTc4YWY4Y2E0OTMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5475901f1f4d4958be499d2a283699b1",
+      "statement": "状态栏每 4 秒刷新一次，git 状态有 5 秒 per-cwd 缓存和单飞；单飞不是优化，因为缓存写在五次 await 之后，并发调用会全部 miss 并各自 spawn 五个 git 子进程。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L3111-L3116",
+          "version": "repo-lines-v1:sha256:423489911361088e2512734bed5d902de582c0521e2d67e75a009a4511c4aeef:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzRjYzAwMGJlMmJlNjY3YmU2MDY4YTI3Njk4NzM4OGIyMTM5YWUzMzM1YTBjMDkyYjk0YTAzZmUwNzJjZjliMCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZGU3ZDYxNGU5YTA4NDkxOTI4MDIxNTVkODRmYTUyNWVkNTM1MTI3OGM1OGJiMTY1YzE3ZmRlMjYzMzYzZjFiZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOWRjZGZjMDI1OWNjZGRjODM1MGM0NjVmMTRlMjkzNmZmNjhiZTM2OGFhZWZiZTVmMzFhM2IxNjg1Mzc1OTllNiJ9"
+        },
+        {
+          "resource": "repo://src/ops/statusline.js#L8-L57",
+          "version": "repo-lines-v1:sha256:44ab2d06fef0e6a973bf50c7e0404fcac7dd2652427fdf8b81dd01d87e862cee:eyJzZWxlY3RlZExpbmVDb3VudCI6NTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE0ZDE1ODQ5OTJkMzA5MGQ0MzQwZmY1MjUxZmM0ZDM1NTg1ZTVlYzM5OTU3N2QzYWRiZDQyMDMxMjczZWQzMWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVlYzI3Y2ZjNzAxNjkzZjQwYjc2NTEzN2U5YTlhNDM0MWFiMGNkNzU0ZjcxNWI2NDZiZDg2Nzg1ZmRiMTJhOTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAxOGMwOGE3NGEyZTY0ZjJjMzE4OGRkN2JiYTI1ODRkNDkzYThhYWU4MDcxMjY5YmUyZDQ1MzljMmNmYTE0ZWUifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.5.2",
+    "at": "2026-09-22T08:36:26.702Z"
+  }
+}

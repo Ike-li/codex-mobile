@@ -1,0 +1,222 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:eb58529a12fb14ca13b9a01e6fac34c1223adc51657dd316951bea528c344c27",
+  "claims": [
+    {
+      "id": "claim_6a2ee1d419944bdd85e7cd923ce3f783",
+      "statement": "npm run test:ci 是一条完整链：lint、protocol:check、check-import-boundaries、check-invariant-ids、npm test、check-coverage-delta、test:e2e 依次执行。",
+      "evidence": [
+        {
+          "resource": "repo://package.json#L26-L40",
+          "version": "repo-lines-v1:sha256:a9559351cedfbf29168b9be124d94ca5ef591a8a0fc4b6738cd4eb83b0f31569:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBmNTBlNzc2N2YzZmFhMTVjOTdkNzU0ZTVlZmQ2NDRlZjNiYmJlOGZhMDE2MjQ2NjE4ODI3MTliMDZkMDA2ODciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFlNTE5ZWFkYTY0MDQwNzdmZjE5MjU0YTBhM2JlZTQyNTU0ZGEyODc3NjIxYzYyMGY4NzQ4NmUxMWFlZDFlNTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ1MDE0MmQxYmUyOWMxZmFiZmM0YWI3ZDc5MmFlMjk5MmJkMjE5ZjMyNjNhZWMzMzVjMzFmY2ZlNDMyNTc3NGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdjYTAzM2FlMGIwMTk0NWE5OTNiNDM4NjczZDE4MzQ5OTFiYmNkZjdlMWU3Y2FmN2MzMjc0YzdjODY3OWQ4YjEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a116ecd30f8149afb58debff2a596107",
+      "statement": "check-test-summary 存在的理由是 node --test 把 cancelled 与 skipped 与 fail 分开计数而退出码不一定反映它们；app-server-transport 的四个用例曾每次被标 cancelled 而汇总显示 fail 0。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/gates/check-test-summary.js#L1-L15",
+          "version": "repo-lines-v1:sha256:b45d0f18a3e037f077034598ff22e50bcf862f2964fe2fd43e16028e0c0c5aa3:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdmZjA2NTUxNDMxNGI2NDAwNWZlNTYzZmI4NmNlODk2MjY0NGUzYjI4MDg2Mjc0NTk5ZTkyMTI5MGIwMjlmYTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlkYTUzYmEyOGYyZTA4NmRjZjQ0YTExZWY3YjgwZmYxN2M1OTY4MzE0ZmMyYWEwYmQ0MzdiZjBkMGM1MTQ1ZTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI2NWE4MzI0YjY2NDhkZDhiYWNiZjZmZmUxNWQxYjVmYWUxZDZhYmMzMjE0ZDUyN2MwZmI0MzdiNmNiZGJkYjYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_29eb9c67052d44fd9538eeabad7f2271",
+      "statement": "汇总行正则要求整行只有符号加关键字加数字，避免把测试名或注释里的这些词当成汇总；读不到汇总行一律当失败（fail-closed）。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/gates/check-test-summary.js#L34-L56",
+          "version": "repo-lines-v1:sha256:addba868a4408cea4ba40df29a1cab499c446ebb1054ee3ea67769c19093dcfb:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdiNDk3N2I2NzUxZmNlOTVhNzkyZDU2YjI2MjIyYzZhOWExODkxYTIwYjdlZjg4NWFhOTg4ODBmMmFjYTAxMTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg3MGJjMWRmM2E2NDk0ZjA2MzU2MTVhMGM4ZjIzNDhlMTZhNTk2MmZiZDMwOWNhNDExMWQ0NTA0YjVkYTkxNjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImEwZWM2ZmM3ODdjNzI2MTc5MGZlNGJhZTQ5ZmYzZjY0NjI5ZGJkMjRkZTk2ZDMwMmM1ZGUzMjlkMmJlNjFmYjAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4f3b164b783f4aae9b1c98c4e5713f19",
+      "statement": "check-test-summary 包装器硬编码注入 test/setup/preload-env.mjs 的落盘隔离预加载，不靠调用方传参，而绕过包装器的入口各自在 package.json 里显式写同一份预加载。",
+      "evidence": [
+        {
+          "resource": "repo://package.json#L26-L36",
+          "version": "repo-lines-v1:sha256:0877d1dd3ae5150588b34a5c69e148bcf6e7c6a2f7a113a90878b5aa3fb07143:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBmNTBlNzc2N2YzZmFhMTVjOTdkNzU0ZTVlZmQ2NDRlZjNiYmJlOGZhMDE2MjQ2NjE4ODI3MTliMDZkMDA2ODciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlOGE3NGM4YzIwZjgzNWM1ZTc2YTNlOWRkOWI0MjBiYzk2YmQ5NzhjN2ZkZDU4ZWEyMTljNmQ3MzAxMjU0YWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ1MDE0MmQxYmUyOWMxZmFiZmM0YWI3ZDc5MmFlMjk5MmJkMjE5ZjMyNjNhZWMzMzVjMzFmY2ZlNDMyNTc3NGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgyZWEzNmVhZmRkZTc1ZmQyMWZmODU5NjAxMDYwNDk0NmYyZGZiMDM2ZjRkYTEzNGYzMzcyYTM5YzNjZWNmNmIifQ"
+        },
+        {
+          "resource": "repo://scripts/gates/check-test-summary.js#L16-L25",
+          "version": "repo-lines-v1:sha256:1f56bce7439594f4fac1585412ad9f6ea5d20c0f988dd3f4ab4172e2bffbc787:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEwMWVhZDkzNmEyMjgxZDUzZGNjMDY0YjdlMmEyYWIwZDUzYjkyZWYzZWY3YjM0YjY2ODY3MzAwNzg5NWM4NjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE0NmZmNmU3NzA5YmE0OTIwZjgzYzkxYTY5NjA0NGNkYzViNGJlZWMyYTNlMzNlYjk4MTVlYjI1OTM0NjY2ODciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNiNjMwNDA1ZDg4MWVjZjM0MmI3MTBmNjU0MjYwYmY3Y2ZkZGViNmI3MDUzZjQ1NDljNGM4ZDcyMjcyNTQ1MzYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7f9a54d202824016b6721ff0ec5727be",
+      "statement": "覆盖率门禁有两层阈值：绝对下限 statements 80 / branches 60 / functions 80 / lines 80，以及相对基线最大跌幅 2 个百分点。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/gates/check-coverage-delta.js#L20-L31",
+          "version": "repo-lines-v1:sha256:bd21a198d1a1fa67db0fd616c55d2c30ab3fc70bf2b5d83baeab80eb138d02bb:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVmZTAzMTdjM2QyNjUwZGQ0MDk5YWQ4OTgzMjY0YzA0OWNhMzAxNjljYzE5YzgzOWY0YzhlZTNjMzcxYTc1OTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjEwZTg5YWQxMmZhN2U3MDYyODNlY2M4MGRiYTQ4MzRiMjY2YzNiOGJlZDMzYjc2MzBlMmIzYzVhMjllYzk2NGUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ce560af172b04a88af730ef1270bf89e",
+      "statement": "覆盖率数据取自 c8 的 json-summary 而不是解析文本表格，因为早期的 tail -20 写法必然截掉汇总行，门禁每次以「无法解析覆盖率报告」退出而静默失效。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/gates/check-coverage-delta.js#L1-L9",
+          "version": "repo-lines-v1:sha256:f0d135143e7f245471110c82ca5c378cd51c8098ad19217bb02f77a148ed43df:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYTU5YzQ3ODcyYjcxZjEyNTg5OTQyODkyNDY0ZTc2NGMwZGIzNTBjMjBiNzIyMjg2NDU2MTVjYzM2ZTBhMDcyNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTQ3ODFiNjAxZjlkYzJkZWUzMWExMzY5OTE3NWNjNmE2NjgxYTgzMWJhOTk0YTczODBmMjlkYTk0NzI4ZDIzMCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOGI2YWRmZTIwNDgxNjNkODBjZjMyZGQxODFhOGE5OGI4YTRmZDQ4NWE0MjRhMzA3MTk0YjA0ZjNiMzY5MTBiNCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_f0a447caa9ee474a8e2f502f8e99aa8d",
+      "statement": "check-invariant-ids 把四种失效形态各自变红：没写守护行、悬空编号、登记表里的死条目、扫描面塌陷。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/gates/check-invariant-ids.js#L1-L19",
+          "version": "repo-lines-v1:sha256:d32fb6dbb0f7f65c3030affa9593c54002e8a3ba8686324ca21c77c08acde4ff:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMzYmNjOWIwMjZmMGZjYmM3ZTAzNDI3MTJiNTJlYjc2YWRiY2Y1ZGM5ODlhOGFmYjEzMmZhOWIxOTgyZTQwOTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU0ZTg2ZjA3OGFiMTYwNzI2Y2NlZDcxZWVhMjEzNDFiMzE3NjJlY2FkYzM1YTJjODJhOTgwYmM1NDNiNjhmODQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_637a701038ba4ca79500bb2ed263408c",
+      "statement": "死条目检测的扫描面故意放宽到整棵 test/ 树，因为 GATE-02 与 TEST-01 两条不变量由门禁守、按判据住在 test/infra/，收窄会把它们误判成死条目。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/gates/check-invariant-ids.js#L14-L17",
+          "version": "repo-lines-v1:sha256:36bbb902d57f5af06d546da828f049de6b2cc7d764cca2ead0a979d428947fa0:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDcxN2MxODVlMzU3MDM2ZjYzZjQyM2I0NTUyYjQ1YTU3NmZjYmUwMzlkZDc0NWUxOTViOGJmNGMxMDYxYzM1NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMTAxZWFkOTM2YTIyODFkNTNkY2MwNjRiN2UyYTJhYjBkNTNiOTJlZjNlZjdiMzRiNjY4NjczMDA3ODk1Yzg2MCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjk5ZmI2ZjdlOTBiMDA4ZWY2NDlkMjJhNDk3Mjg5ZThiNWI4Y2Q1YzhlNjAzNTAzNzg2MzE4OTQwMzBhNzU5YiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODE4ZTc2MDgyZjhlOWRhMGRjNTQ4YjQ1ZGJiYzNhOGM5OGNhOGQ4OGUwZjNmYjVlMTY5NjE3N2VmZWJhOGM5ZSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_53411b26fcee4074a285c8bffdcdfffa",
+      "statement": "不变量编号正则要同时认带连字符段与单字母加数字两种形态，上一版会把 R-SEC-1 切成 SEC-1，而半匹配比匹配不到更坏。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/gates/check-invariant-ids.js#L30-L45",
+          "version": "repo-lines-v1:sha256:0daf1e1d9efb7c0711413fd5829ae3c3213cd6b461e20d0492e266b403bcc154:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhNmI4NjFkMTg3Y2VhODFhOGY3NDFjZmVkYTc0OTRkZjg4MzJkNzEzYTNlZTIyYTlmNDdkYzA1NmMwNmMzMTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhkMWVjNWEyNjQ1NjBmYjMxNjQyMTQ4MmQzODQwMGYyZGY3Y2Y3MjA1OWFhNzNmNDE0MzY1MTcyNzMxMzY0NDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJhMzc1OGFhMGE0MTU2MGRjMTJiN2FmODkyN2Q0NjM5OWM3YzAzNWE2MDUxZWQ0YTdmOGQ4NWQyN2IxMmI0MmQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_10824e9ed46448caab34cc9de19f131b",
+      "statement": "gate-wiring 要求 scripts/gates/ 下每个文件要么出现在递归展开后的 test:ci 里、要么在 NOT_IN_CHECK 里写明理由，而展开必须认 npm test 这个内置别名。",
+      "evidence": [
+        {
+          "resource": "repo://test/infra/gate-wiring.test.mjs#L1-L50",
+          "version": "repo-lines-v1:sha256:db3c530c0c342cd4c39ce83ade35be4adc3c45d1f5be956b9b5a331b942a8670:eyJzZWxlY3RlZExpbmVDb3VudCI6NTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAzMjMyZjVhM2IwMjgyODc1YTE0NmRjZThmYmQyODFlMTQwODljOTJkNjg1NDc5YTk2NDI4NjQwOWVhNzQxYzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVmM2E3ODVmYjUxN2VjNmVjODM4Yzc1ZTA4YjI3OTg1NWZjYTA5NjM3YTJkMDM1OGVhMjY2MWRhZjc5YTVmODkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI2ZjI5N2E5M2U1YWE0YTFjZGIzYmQ5YWRhMWZhN2QyNDY1ODNjODVjYjAyMjRmZmI5ZmJmZWYxMzQ2YmViNDgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9e5788fbfe4f408ea53a7e545c39526c",
+      "statement": "接线闸采用白名单而不是给每个门禁加一条断言，因为后者是用治理治治理；白名单让新增门禁默认必须接线，默认值落在不需要人记性的那一侧。",
+      "evidence": [
+        {
+          "resource": "repo://test/infra/gate-wiring.test.mjs#L9-L19",
+          "version": "repo-lines-v1:sha256:e5de901c5175698768fc1c858fec3e081bac7182904b215546043eddde0fbb33:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEwMWVhZDkzNmEyMjgxZDUzZGNjMDY0YjdlMmEyYWIwZDUzYjkyZWYzZWY3YjM0YjY2ODY3MzAwNzg5NWM4NjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJhOTY1Yjc3NjU2ZjVmMmRlZDc4NTAwNzEyOGU4NWZkM2E0ODlkNTE3NDFiMmIyN2ZjOTczOTFjOTJhMjhkNjgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI0YzkxZGNhMDI3NTlhZjczY2EyOWU4NTM4OTA3NGExNzFhMDAzMmViZjVlYmQxZGQ2NDE2OWJhNjVlZGI5NWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdhY2Y4ZWM3MjViYjM4ZWVkNjg4OGMyMTI0ZWQwMzEwM2U5ZWY1ZTFiZWJhYWVmY2ZmN2I2OWYwZGE0OGE1MWUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8f2b5ca5d6f7494ab989e795a04becbd",
+      "statement": "门禁必须独立成 scripts/gates/ 目录，因为接线闸的判据就是「这个目录里放的都是门禁」；混在 scripts/ 里时白名单要列十二条例外而又回到靠记性。",
+      "evidence": [
+        {
+          "resource": "repo://test/infra/gate-wiring.test.mjs#L15-L19",
+          "version": "repo-lines-v1:sha256:8118d319c23c6338f1f1b92d548446f8e565cf460a9b9a8d34c842f179af75ec:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOGE2M2YzMDMwNTJiOGUyMWNmOWI1MTAzYWI1ZGZiMzMwZjA4Mjc5NDdmOWMyZmEzMzkxNTExZGRhMjliMjBmNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMmE5NjViNzc2NTZmNWYyZGVkNzg1MDA3MTI4ZTg1ZmQzYTQ4OWQ1MTc0MWIyYjI3ZmM5NzM5MWM5MmEyOGQ2OCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDBjMDc4MjBhZWQ5NDk4MDRjNzNlMWNiODZhMjdmMDVjOTdjMzU0ZWEyMTllMWRhZThkZDEzNzc0MTU5ZGYxNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiN2FjZjhlYzcyNWJiMzhlZWQ2ODg4YzIxMjRlZDAzMTAzZTllZjVlMWJlYmFhZWZjZmY3YjY5ZjBkYTQ4YTUxZSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_ee8ac1bec0374c66a89ce99c0e9e412e",
+      "statement": "workflow 不跑 test:ci 而是把各段拆成独立 step，所以「加进 test:ci」与「CI 上真的会跑」是两件事，ci-workflow 的第一条断言就是堵这个缺口。",
+      "evidence": [
+        {
+          "resource": "repo://test/infra/ci-workflow.test.mjs#L32-L55",
+          "version": "repo-lines-v1:sha256:4db7cd3c860d89bad38f5ac05a8bccfad3755a784b947cef006c0892d4a41da2:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZmM2VhOTY5YWZkYTNiZDUwMjY5ZTdjMjlmZjc1ZTA4N2ViY2NmNDcxNjhiMmQ3M2MyZjcwODMxMzFkNjMyOTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFkMDg5MWUzZjk1ODc5NDVjOTVkY2JmNzQ1ZTdkYzJkNGJjODViZDkzOTUzN2UyY2ZlZjZjNzNiODA4YWIwNjYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_74a4b98eb8e946dfa04bc496db05423b",
+      "statement": "给 workflow 写测试的直接理由是一次真实退化：矩阵默认 fail-fast 让 Node 22 的失败取消了 Node 20，而所有真门禁都只在 Node 20 上跑，GitHub 上只看到一个红叉。",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/test.yml#L12-L19",
+          "version": "repo-lines-v1:sha256:63886f25440956306e03b5433513f6db3f554269564c0b21b914b0a64b3c9624:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjIwMDU3Nzc3NmM2NjhiNzAxZDcxNjVhOTcyY2JhYmI2ZWRlZDEyOGJiODVmYTcwYzMyNjBiNThlMGU5YjA0NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiN2VjNjgyMTEwNTVkMjQ0MmY1MzE5MTY0YTU4N2Q1ZTYzMTcyNDZkODNjNzJiYTIxM2Y0ZTc5M2YwYTFkN2I1OCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYmRiODg1MTY1YzRlZWU5ZGY4MmM1ZmJkNTBkNGNlZWJlN2Y1NmYwZjE1Njc2NjBmMTQ0NTUyMWVkMDcwMzBhNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzMzMmMyZGVjNzEyNGM2MGUyMDllNjUyMTAyNTk0MWVkNmFiZGUyM2FlMDM3OTk0OTQ1NjgwOTQ4Y2I5OGVlMyJ9"
+        },
+        {
+          "resource": "repo://test/infra/ci-workflow.test.mjs#L1-L10",
+          "version": "repo-lines-v1:sha256:83c7c2d9ece8682ff59c9e2caea2ba0017f2959f3c114f91007f3ee0c11cd134:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkwYTU1ZDZlYjAyMWZhYzM2ZWI4ZDk1YmRiZTk4N2Y2NzgxNTkzYWZlOWU1MWY0ODc1NWQ1OGMzY2Q4ZmM5NTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNlNWQ4MGNlZWY1ZmIyODBiOGM2Y2Q1Y2JiNzJiNDM4MjYzYTI3NmQ5YjlhYjdkYWY5OWQyMzU5MWY5N2ViYjkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk5YmJkMjczNzg3ZWIzYWQ2ZTI1MGYwZTRiN2M4NTRjNzI5NjhhODc5Y2RiYmJhNWRhNjdiY2U1ODllNjZhMTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_80c53112041d4be6a7b1b32700bd810b",
+      "statement": "ci-workflow 的断言直接对 YAML 文本做关键字比对而不引入 YAML 解析器，因为 js-yaml 在本仓只是 eslint 的传递依赖、随时可能消失。",
+      "evidence": [
+        {
+          "resource": "repo://test/infra/ci-workflow.test.mjs#L9-L11",
+          "version": "repo-lines-v1:sha256:7755cb91c042df52e834045f34d60efd4cc3af1331e407036905265b5ade9369:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjgyODE4MTA4YmNkYWYwNTBlZGYzNzIyZjg4OGFlNzVmNzg4ZDY3OWU1NmMwMWNiZWU4YjJjYzhiNzg4NDNjMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMmE5NjViNzc2NTZmNWYyZGVkNzg1MDA3MTI4ZTg1ZmQzYTQ4OWQ1MTc0MWIyYjI3ZmM5NzM5MWM5MmEyOGQ2OCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjU0ODk3OTk1NWVjZTE0NjQ3NTVlMDMwYzY4NzViN2E5YzM4NWNmYjM2YWY1ZWQ0MmZiNTcyZjFkNDQyYTIzOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNThmZjY5MWE4MDllM2E4MTJhNDA4Yzg4ZjQyZTgyYjk1MmIwMWMxY2FhYTY2ODZkOGU2Y2U0NDQwZDE0YmI3ZSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_d61dd21049be466b92d3083516edfe83",
+      "statement": "workflow 被八条断言钉住，包括关闭 fail-fast、不得用 continue-on-error 吞掉失败、生产依赖高危漏洞阻断、全量 audit 报告必须留成产物、覆盖率门禁不只在 pull_request 上生效、CI 安装的浏览器覆盖全部 project。",
+      "evidence": [
+        {
+          "resource": "repo://test/infra/ci-workflow.test.mjs#L37-L120",
+          "version": "repo-lines-v1:sha256:0642856efe273e663b35125b4bacd1946c619b5b08bdb96f7383a0e40f891ee6:eyJzZWxlY3RlZExpbmVDb3VudCI6ODQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU4YmRlYmNmZTRhMWI2ZGFiYjQwYmMxY2U5YzFlMDk5MTVjZGM5NTM3ZDVmNDg4Y2UxY2U0ZDg3MjllNmM1NzMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYyNzgwYWMxYTJkZTc2MDU3NzAxZTA5ZWIyNzg0YjkyODdmZGY1MjFkZmU4M2YxOTBmNzZjMjAwZDY2MDYyMzYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI2NTdkMjgxZjM5M2ZlZTM2ZWNiY2E3NzJlNTQ0NDg4MzUzYjM2MTk5MjVmNzdlZDEwYzQ2YzMzMjcyZmMyYzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxNmQ2MzU4NDIxMzg4NzQyZGMwNmUwNjBmNDc5N2U3MDYyYzJhMTI2MTdkZTMwZjNmYTFmNTQ2YjZkYWVhZjYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_23ca88022ade4d14aefa25f47402109e",
+      "statement": "覆盖率退化门禁必须在 push 路径上也生效，因为 fast-forward 合并走的是 push 路径，只在 PR 上跑等于给自己留后门；它已包含绝对阈值门禁，后者不再单独跑。",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/test.yml#L55-L63",
+          "version": "repo-lines-v1:sha256:9721586e90bd1f94dfa00dc7945d4bb4593a7691e5660124227dc3aa6d441c7a:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjZjNzA5M2VmMWQ5Yjg3NmU4NDkxZjQ2MmEyNDBhMzM4NDk3ODJhOGRjYWJiYTAxMDAxNGI2ZWM5YWM2NGE1ZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNWQyNTMxNWFmZWM5NTVkNDVlNWEzYWMwZDI4MWIzMTc2NTRiNWE1NWJjOTU5OTk3OWI5N2I2Mjk4ZjcyNTVhYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzA5MDIxMTdjMjM1MTQ5MDE1YzU4NGExYjJjNjY0ZGE5MTcwMTI0YTNmZjYwM2JkMTU3ODQzMmMwM2U5ZWE3YiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_8090fcc2345241508cada06dc7e41359",
+      "statement": "覆盖率只在 Node 20 腿上跑，因为产物只从 Node 20 上传、Node 22 那份没有任何步骤消费，却是最重的一步。",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/test.yml#L46-L54",
+          "version": "repo-lines-v1:sha256:ba403d13eb5aa101303e62ede85a5309b74bc57cdc8e8d99d971ce513aecfd8b:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjI0NTcyYjcyMzFlMDdlMzMxNTkwNWFjYTNkMTYwMDFjNzM5NjhkZjZjN2NjZGU3MWRlOTlhMzI2ZDg0ZTU0NyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjYyMWI5ODMyZTkzNzVjOWNiYTkzNzAwOTcwOTc0YjQxOTRmNGIwNDVmZDg3NDUzMjJjODkyNDdhZTY3Yzc5OSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjEyMWRhMWM2MjRjZWU5ZjY1MmE4NGZjN2ZhMGIyYzg3MjhlMjUzN2E3MzZlNTU5MzU5ZWFiODZjZjY3NjNlZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOGEyYWEwMTZhNjhhMTRiYWMxYzNiYTJkOTVkNTBkZjM3ZWM2YTJkNjYyYTVhMzBlMzhjZTYyNTdjYzA4NTJlYSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_9093baceb1c74ce99491a99c3ec5b849",
+      "statement": "依赖审计分阻断与咨询双轨：生产依赖的高危漏洞必须让构建变红（传输层就是 socket.io），而 devDependencies 的漏洞不阻断但报告必须留成 artifact。",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/test.yml#L96-L124",
+          "version": "repo-lines-v1:sha256:b6685de3a4411c81689ce4c45de105203f9eeb725c44c200370c804160dc4ff3:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMzMzczMzRhZWMwZGNiMjRlNDBlM2MyMGRjMDlkNTlhZjY3NDNkMDI3ZGJmZjUwYzFhY2EwODk3NDcxMTc2NzAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkMTcwOGM4YWUyOWU1YTFiNzA3ZWUxZjg4MTRhMTc3ODQwNGRlMDc3YTg0ZGM4MGM2NzJlYzg3ZDlkMzgxZWIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjlkYWI4N2UwYzVhYjcyNTE1Y2MyMTVhYWQ1ZjljOTRkNzVjZjI0ODg4MzkwY2RiYTExNzk5YjZhNzJiYzA0MDciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjliZjQ1ZDJiYzIxMDg5NWU2N2JkMWQyMGRhYWFjMWI1OTgyYTc2NjQwODI5ZmQxZjFiYjRhNjk5NTUyOTI5NDIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f60c801332ce47858960cae395795051",
+      "statement": "npm run test:local 不经 check-test-summary 包装，因此不能用它判断门禁是否通过。",
+      "evidence": [
+        {
+          "resource": "repo://docs/TESTING.md#L118-L124",
+          "version": "repo-lines-v1:sha256:b9385d933a07989c32162b5ca813c40a01760ddbeafa005b179ea459601a0933:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzQ5N2RkN2QzNTY3OGExYmZiZjYwNzYzZjY5ODZiMTUzYzg0MWMzZGQ5NDE0MWZiNDc3YmE0NGJjYTUwODdmNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZmE0N2QwOTBmNDZkZmQyODAxZTY0OWM4NDNmYjUwNjRmMGFmMzRmY2FjM2MzY2Y3OWFlZjMxMGY5MjQyOGE2ZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOWVlMzM1MTIwNGNiMTQzYTFkYjliZTBjNTZjMjg3MDk0Yzg1MGE5OWVjM2I0ZGU4MTJmMTg2YzU2YzI4ZTBkNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiM2QzZjUxZTAwYjZiNjFlMzZjNDY2NTc3NTU3OWQ1YzIyMWQ5N2U2N2Y4NzI1NjVlZTBiZDMxY2NlOWJiYjliMSJ9"
+        },
+        {
+          "resource": "repo://package.json#L26-L36",
+          "version": "repo-lines-v1:sha256:0877d1dd3ae5150588b34a5c69e148bcf6e7c6a2f7a113a90878b5aa3fb07143:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBmNTBlNzc2N2YzZmFhMTVjOTdkNzU0ZTVlZmQ2NDRlZjNiYmJlOGZhMDE2MjQ2NjE4ODI3MTliMDZkMDA2ODciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlOGE3NGM4YzIwZjgzNWM1ZTc2YTNlOWRkOWI0MjBiYzk2YmQ5NzhjN2ZkZDU4ZWEyMTljNmQ3MzAxMjU0YWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ1MDE0MmQxYmUyOWMxZmFiZmM0YWI3ZDc5MmFlMjk5MmJkMjE5ZjMyNjNhZWMzMzVjMzFmY2ZlNDMyNTc3NGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgyZWEzNmVhZmRkZTc1ZmQyMWZmODU5NjAxMDYwNDk0NmYyZGZiMDM2ZjRkYTEzNGYzMzcyYTM5YzNjZWNmNmIifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.5.2",
+    "at": "2026-09-22T08:36:26.702Z"
+  }
+}

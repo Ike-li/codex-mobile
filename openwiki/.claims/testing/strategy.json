@@ -1,0 +1,204 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:ba5a1cb6f29098c8a3762e747f6449264e9979b1478e204cea5353ed207ad97b",
+  "claims": [
+    {
+      "id": "claim_95eddd57bb48410fb0aea80d797c9e2a",
+      "statement": "测试分六个执行槽（静态门禁 G、纯函数单测 U、带 IO 单测 I、浏览器行为 E、变异 M、真 Codex 冒烟 S），而 test/ 下的四个目录分的是组织轴而非运行轴，判据按 infra → integration → invariants → unit 顺序问。",
+      "evidence": [
+        {
+          "resource": "repo://docs/TESTING.md#L12-L36",
+          "version": "repo-lines-v1:sha256:f9077eade4ff98c74ee0920f5c85cac139997dc8cd351376e9d88d448271f86c:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY1MmQ3MTExMDNkNTBhNDM3ODMwYzZmYmNkMDRmYjRiYWI0OWEwZjgyZjZkMjZkMWM3OTFjNmU4NDg4ZGQwOTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE5MjNjYjNlMjUxZWY1NjlkODA5NWQxMTY0ZmFlMDdjMWJiMGM0ZGZmNWE4YzE1MTU1NjA4OGFhZTRiNmIxNDQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjExYmYwNGQyMGZkZmE4MWE0ZWJkNzBhZjVkOWI5ZjRiM2I4ODBhNDlkOWFjZGEzZTEzOThlYmQ1MjExNzA3YzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE4YTNjODA3MmU5M2I5ZGVkNDFmMTZhMjdiOTU4MmMxZGU2Y2FiMDRkOGQ0YWZjY2NkYTRmMmViOGZlODkzYjQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c2a7909e5b7d41b6b6444f6a713b56ba",
+      "statement": "选槽顺序是能静态看穿就 G、能抽成纯函数就 U、判据是可达性或可读性就 E、其余 I；且不得新增按缺陷后果分的目录。",
+      "evidence": [
+        {
+          "resource": "repo://docs/TESTING.md#L38-L47",
+          "version": "repo-lines-v1:sha256:98fdae26da8f4b029db9a453f665bc8282aff0fa30403daf1c29ab42c5272f4a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRlMGI2ZjJmMjJlMzA0MWQ4MjYwZTVmYWY3NDNhNWY4N2I2NzVjNDJlYjAwOWEwYmI4NzA5NTQyYzI2NDFjOGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc0MDAyMzJkY2Y5YTcxMDgyMjBlN2YxNDAzNGNlNWJmNGExNjI1MTdhNjg3NmM0NzEzMmM3ZWM1N2Y5YzM3MzQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBlNjEzY2U3YWEyYjcwZWUzYjdiZTMxZmEzOTYwN2E4MzZkYzM4MTE4MmJhZTA1YTNkYWE1MmNmOWU2NzNkNjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk5NWY2YTg2MDU2NjBhOWU1ZDQ0OTdiOTY5NTNlMzA0ODVlMTE1MTYxYTkzMTc1Y2VmYzY5ZjUzMTExNjM1YmIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ab8151b3c009410ba131f71d7242c6fb",
+      "statement": "同一缺陷在源码文本、单元契约、浏览器行为三层观察的成本差一个数量级，而源码文本层只证明代码写了、不证明功能能用，不得再往回加。",
+      "evidence": [
+        {
+          "resource": "repo://docs/TESTING.md#L38-L52",
+          "version": "repo-lines-v1:sha256:1f8d0ffee68244c27b548b1b610045e7e97e3ed711f63d7eee0f1b0fee9d273a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRlMGI2ZjJmMjJlMzA0MWQ4MjYwZTVmYWY3NDNhNWY4N2I2NzVjNDJlYjAwOWEwYmI4NzA5NTQyYzI2NDFjOGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhmMmY1YjZmNTRlNTViODkxMDRiMzBkMmFkZDJiMDQyZjNkNDE3OWFhYzcwOTQwMDZlMzNkODFmNjI2NzEzYzQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBlNjEzY2U3YWEyYjcwZWUzYjdiZTMxZmEzOTYwN2E4MzZkYzM4MTE4MmJhZTA1YTNkYWE1MmNmOWU2NzNkNjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ4M2E3NjI3MDA3ZTZmY2Q0NTdlYTJkYjFkYTBlY2EwYjZkYmQxOTUxN2RmNjA2YTNjMmRiMGJiMmQ3OGFhYTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b8c3b59185d64754931c045334a3f232",
+      "statement": "MCP 启动状态的静默判定被抄成纯函数放在 U 槽，因为 mock app-server 不发那条通知，这条路径在 E 里根本走不到、只靠 E2E 会一直零覆盖。",
+      "evidence": [
+        {
+          "resource": "repo://docs/TESTING.md#L50-L52",
+          "version": "repo-lines-v1:sha256:38b762889883cb42de7a8835ccdd24e25ab5ae5a322ad437b4f1b8ec1ce6e4db:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOGYyZjViNmY1NGU1NWI4OTEwNGIzMGQyYWRkMmIwNDJmM2Q0MTc5YWFjNzA5NDAwNmUzM2Q4MWY2MjY3MTNjNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDMwZTBjNGQwNDA5YjY5MDgwZTJiNmUyZjE0ZjUxYWFlYmQ0ZWI5ZWY0MjQ0YmQ1ZTQ1MGZjN2EyNGEzMTcyMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDgzYTc2MjcwMDdlNmZjZDQ1N2VhMmRiMWRhMGVjYTBiNmRiZDE5NTE3ZGY2MDZhM2MyZGIwYmIyZDc4YWFhNSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_115059c5386244ee9c8f4fd16bb3779d",
+      "statement": "本仓的 fail-closed 是逐条选过的而非通用原则，五个场景各自有方向，其中噪音与告警不共用一个开关。",
+      "evidence": [
+        {
+          "resource": "repo://docs/TESTING.md#L54-L68",
+          "version": "repo-lines-v1:sha256:416551b3c45d8c47a3c5f9123e02b7965574fee4953f536b4470e2db3e2ea05d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRmMmIyYzExMTBjNDA3ODE4ODcxYzQxZmE3ZjcyNGZiZjQ4MjNkNDdhNWRkMWQ1MmMzM2I1NjlhNDExNWRkNjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjcyYTIzZmE0N2MwYjM4ZTM2ZmQwYWE1ZDQ0NWYwMTU1YzFmZGQ5MjIxOGEwYTEyYjY5NmRmMTNhYTNkM2I4OWQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2924d9bdc0a946909281355b460bdf3b",
+      "statement": "落盘隔离必须是预加载，因为 DATA_DIR、审计文件路径、推送订阅路径与 devices 的数据目录都是模块级常量、import 时就求值，而 ESM 静态 import 在链接阶段完成、早于文件自身的顶层语句。",
+      "evidence": [
+        {
+          "resource": "repo://docs/TESTING.md#L84-L90",
+          "version": "repo-lines-v1:sha256:470a109e76d26e3d47b7a56a8ba0dd08d17895aedcdacff0c976fa44e06c2023:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNWNmOTk1YmQ5OTVjYTI2ZGMwODMzNDgxOTAyYmU1MDVjNmJlZTY5YTc5ZTVhM2U1ZThkMWE3ZTQwZDFlZGJlYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTk1YWMzNzdlMzIzZWM2OWQ0ZmVmMDkyMTRhYWQ5ZGE2ZDU0OTMxY2Q3NmVmNGU2M2FhNjQwOGVkNDQyYzAyNSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_3e9266fef5ee499cbff6c8b0a15ab545",
+      "statement": "TMPDIR 也要一起收，因为被测模块的异步或防抖落盘发生在 after 之后，它的 mkdirSync(recursive) 会把刚删掉的目录重新建出来。",
+      "evidence": [
+        {
+          "resource": "repo://docs/TESTING.md#L90-L94",
+          "version": "repo-lines-v1:sha256:57433de51f2deaaf500c29b0b7620f6ea0be2b69eb2c29d808f3fdb4e9503e28:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzA2ODAzMDYwMTI1MDExODVmNTBkY2EwMjAwZWFmMjc5NmY4NDFmMzBhMWIyMmJlNTZiNWIxYWM5OWY4MDM2OCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZmI4YzBhMTM0NmRjM2M0OGI0MjJhMTZiMWYwMTBhZjZjNWVkZWYxZmI5Njk3NDM2YjY1MTY0MjRlZDBmMTcxYiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_1034f92cc6db475b84cc2ce32964ccac",
+      "statement": "变异测试有硬闸：没有 CCM_IN_CONTAINER 直接拒绝运行，因为改坏的可能恰恰是算路径或删除目标的代码；真正挡住它的是容器里的一次性 HOME，不依赖任何代码正确性。",
+      "evidence": [
+        {
+          "resource": "repo://docs/TESTING.md#L74-L80",
+          "version": "repo-lines-v1:sha256:538cfa010773c63f138c6f5f0986df3d070bb7dec33545fdadcd613d037e227c:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODI0NDgyOWNlNzkyMzIzMWIyNzkzZmNmMDRhOGMzNmYxY2FkZjQwYmIwOTNmNWFlYjRkZjZjZmY4OWU0NDIxNCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNWNmOTk1YmQ5OTVjYTI2ZGMwODMzNDgxOTAyYmU1MDVjNmJlZTY5YTc5ZTVhM2U1ZThkMWE3ZTQwZDFlZGJlYiJ9"
+        },
+        {
+          "resource": "repo://scripts/mutate.js#L1-L12",
+          "version": "repo-lines-v1:sha256:e475dcb9c4f625058b18a221714281a173bd8062ef05dba0ac1cb27a9b27de1d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJmYzNjMzM3YTI4NzM0MDc0MGMxMTNiMzUzZGQ2M2I4NmY4ODcwYjI1Yjk4OTNmNjc2ODAxMDBmNWRmM2E3YmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEwMWVhZDkzNmEyMjgxZDUzZGNjMDY0YjdlMmEyYWIwZDUzYjkyZWYzZWY3YjM0YjY2ODY3MzAwNzg5NWM4NjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI4MjU0MzYzMzQxMGU0NTI1NGNlY2M0ZDA3ZjY4Yzk3YTlmOTAwOTM1ODVjMWUwYjQzYWE4YmFkYjhjMmVkN2YifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_433915c91f21445fafb1ec9012bcd4ba",
+      "statement": "一条测试要做两侧验收（正常代码下绿、注入对应缺陷后红），只做前者的话「断言咬住了行为」与「断言什么都没咬住」在输出上完全一样。",
+      "evidence": [
+        {
+          "resource": "repo://docs/TESTING.md#L160-L172",
+          "version": "repo-lines-v1:sha256:0442568e51b2ae5064f80e4d62651d8fe06c9fdf49e9b192d470028304feed74:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRhY2MxYzhlMTVkNjE5ZGE0OGYxNWJmODQ1Yzk3YzM2YzFiMjY2NjExNWZlODAyZWFlNDZiNjkwOTU0YjlkMzQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZkMmZhYmVmZTJiNDZiMGNhYjMyMTE3MGU0MGZiOTM4ZDA0ZjdiY2I3ZDhmZDJiZjZiMTQ1YjEyNDdkMjA4OTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE1OTljODFmZWQ4ZDI4NjViYjQ2N2ZmOGVjNGI0YThjZTQ1NTgwMjlmNzExNjhiNDZkZGM5OGU0NWIwM2FkZjcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_44232a9365e74f408515c18c658f771a",
+      "statement": "变异测试免疫三类问题：fixture 编错外部契约、扫描面塌陷、门禁根本没被执行；其中第二类有实测案例（把协议类型声明从 type 换成 interface 后 71 个类型的字段一个都读不出，门禁照样报 OK）。",
+      "evidence": [
+        {
+          "resource": "repo://docs/TESTING.md#L179-L186",
+          "version": "repo-lines-v1:sha256:4e1912694c9c211d77ca30d784922cb3f5f404664cf0990927a7c9db6060f1c4:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTBjNTIxYThiNGYzYTUzZTE0M2YyZTk4ZDkzMzkzYTkyMzMyZDU4ZDBlNmNlNTcwYjI2NjBmZDNiYzcxMzc3MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMDAwODExOTY1ZDAyOTY0OGU5YjFmMDZlZTllYTY3MmUzNmMyOTRlODRjODAzZWE2MDQ0ODhiOTRiZTE0Y2JlMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTI5NGJhY2M0NmRiNjQxMTcwOWVjYTM2ODgzNmEyN2E5MDhjZDQ0ZjU0NWI3MmZiY2Q4MDVkMjBhZjAyNGQwYyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_ecf56492b0084b37977ea6ec379fd9fd",
+      "statement": "改行为时要先改断言再改实现，否则是让测试追认实现而不是让测试约束实现。",
+      "evidence": [
+        {
+          "resource": "repo://docs/TESTING.md#L225-L228",
+          "version": "repo-lines-v1:sha256:cb1e049a877334ecede0983b45f2f1f21f5c7f94092686225fcce3bd65636229:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNGQ1NzgyZjU2ZjQzNmVmNzczN2UxZGQ4ZGQwMTVjNTE1NGExNjhjOWJlZjRlNjM5YzVlNjFkNGQ3ZDk1MDRlMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmY4NjA2ZDExM2Q4MDdkMzMyOTFiNDJkZWQ1OGE0MTFlYWVlMjU4NzcxOTU5ZDIzOGNmYWZhMzUyZDJlNDVlZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjhjN2YyYWQ3OTMwYWUxYzhjOGFhNGRiMTZkM2Q4YzE4NWI1ZGI4NDZhNmEzMjk2OGU5ZjY4NjFlZGQ3ZTlhYiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_c83c0dfb322e44fea9111825fdb526e1",
+      "statement": "删测试比删生产代码更需要证据，因为生产代码删错了会有测试红、测试删错了什么都不会红；四步流程包括核对 test 总数减少量正好等于被删文件的 test 数。",
+      "evidence": [
+        {
+          "resource": "repo://docs/TESTING.md#L241-L249",
+          "version": "repo-lines-v1:sha256:7f7eac07fc2b83849750c9890ac06effb051976c06c5213b78dc71ee5cb8369a:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTc4YzBhMGM3YTdlMzg0ODBmZGI0NTAxYzc0NDJjN2E5NTA2MTkzOGYwZWJmOWViZmZiYWQ3Nzc0YWI0ZGM4NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDc5ODU1MGEzYjJjZWM5MzdlODZiNGZmYTIxMThmM2NjZTU1YTEzMmU1OTkzNzlmYzNhZDAzYzJhMzdkOTBlYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTYzNzFlYmZiZmY3ZGYyZjNjZmNmZmM3ZDA4MmRhMGJkOGVkODMyZjY5OWRiYjJjODNjYjQ1YjNhN2JhOWIwNSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_9481d836a24c439ea32234a587f2ef5d",
+      "statement": "交付前要把验证过程写进 commit，因为没有留痕位置的规则只约束得住诚实的人；有未验证项时 Not-tested 必须写。",
+      "evidence": [
+        {
+          "resource": "repo://docs/TESTING.md#L250-L263",
+          "version": "repo-lines-v1:sha256:905f2ee53cdf50d076306025424d0a1adc2c7310b1d84fab7d67d916c34bf7ed:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg2ZTE0OTI1N2VhNzlkMDc2ZmU4MjAwYjQzZWNjMDI3YWY1YjJkNGRlOTA4MDFlNzRkMjU2ZjliYzU4NDE0MWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFmZjBmOWMxN2Q2Y2ZhOThkYzk2NTg4NDZmMTdkOTA4NGE1Y2M2MTEyYmMxNDIyZWFkNGJiN2FlYmMyNDJkN2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNlNDg4OTRiZjZhYWY2MGZlNjFmOGUyZjM0MDFiZDU4MjZmYjViNzI1OTY1MmYzODBmOGM3Y2I2NTljMmFhOWEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_902788439cf94fb189522fa5b466459c",
+      "statement": "覆盖率退化门禁的价值不在数字而在它真的会跑：它曾只挂在 pull_request 上且被 fail-fast 连坐取消，结构上从来没跑成过，分支覆盖在 80 个提交里从 87.88 掉到 76.89 而没有任何东西变红。",
+      "evidence": [
+        {
+          "resource": "repo://docs/TESTING.md#L361-L366",
+          "version": "repo-lines-v1:sha256:75a0d59e01c56b80ca6bf5d7dafa18b276569ffd62d84b96f72cdc11e7b48801:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMmQ1NDk5ZmM0ZjM5YWRhYzY3OGQ5MmEwZDdkZDJmYTZlNDM0NmUzNGZmZTE1MzMxMTM2MzA4NDQzNmRiODNkMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMDAxZjJlYzE3NTkzYzEwNTRlYjQ2MzY3ZDg0NTNlZjI0YTE3M2NlOTZiNzExN2Q5MWY5YTY4ZDQ0ZmVmOGIwMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiN2EyM2JlNTk0ZTdkNzcxZTdiMmYwNTU3YmIzMGVmMGIyNDZiZjEzMzFiZGViMGE1NjA1YmQ3NDYzMzFiODBhMiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_8064b2a26b2c4baaa2aac0c9e7ee964d",
+      "statement": "不该再加绝对覆盖率门槛，因为退化门禁已包含它；覆盖率容易被凑且凑了不产生保护——那 1807 行源码文本断言删掉后覆盖率只动了 0.03pp。",
+      "evidence": [
+        {
+          "resource": "repo://docs/TESTING.md#L374-L378",
+          "version": "repo-lines-v1:sha256:bc76d18a2b36a7fdc383055037887774359aa335b107070a08790cfbad658f64:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiM2UzZWJkNGI4OWYyODcyNWExYzA3NTBhM2FiMjdmZGZiZmI5NWE4MzNmN2U5NmI2MWJmYzlkOTNmMWZmZmIwNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNmY5YzJiMmI1Mzk4NTU4ZDg4ODkzNWRjOTk1NjAwYjU3NjllMjMwOWMxYzU4YzM4NTFjODg5Y2ZkY2M2ZWI5MyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiY2U2ZjBiOTI4NTQ4M2ViZTAyZmU0N2RjYWY2NjQ5NDAxNzFiMDQyYzg4MmNmNTZlODBlMzk5NTdkY2I4ZjRhYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMWM3ODJhZTlkZjQzZDc3OWYxMDEzZDMxZjNkMjAwM2I5OTQ2ZTY3NWJlYzBjMTZjZmNmYWRhMTc0MmIwNjBlMiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_dc471d500a724750b2e4e9ecde101957",
+      "statement": "某次刷新基线时 functions 跌而 branches 涨 5.84pp 是同一件事的两面：新增的 CLI 宿主层进了分母，而它们的判定层被测得很厚，只看一个数字会得出相反的结论。",
+      "evidence": [
+        {
+          "resource": "repo://docs/TESTING.md#L368-L378",
+          "version": "repo-lines-v1:sha256:de31c4b92e4e4be4151dadd4e7cd2f0aef6259419a8fa6cec4d1267283223143:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZmOWMyYjJiNTM5ODU1OGQ4ODg5MzVkYzk5NTYwMGI1NzY5ZTIzMDljMWM1OGMzODUxYzg4OWNmZGNjNmViOTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcyN2RkOWU2ODAxMjg5NzM4MWVmMmY4YWJjMWQyOGU5MjQ2NDBkNDBlYTQ4MDE5ZmJhZjc2YTZlMjc2MGY1ZTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFjNzgyYWU5ZGY0M2Q3NzlmMTAxM2QzMWYzZDIwMDNiOTk0NmU2NzViZWMwYzE2Y2ZjZmFkYTE3NDJiMDYwZTIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5183a15fb0fd42188eb3e98306ac0186",
+      "statement": "c8 排除 test/、e2e/、coverage/ 与 public/vendor/，后者是第三方压缩代码、不该计进本仓覆盖率。",
+      "evidence": [
+        {
+          "resource": "repo://.c8rc.json#L1-L8",
+          "version": "repo-lines-v1:sha256:145fc6f126cb44f4c422039fc5b5b4bc6d17e1318ee58be9a9362a12a347ee06:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYTZmYjA4ZmRhMWFjYjk1N2I2MTE2YmQzNzgxMWExZmU0MWEwMTYxMWMwNjMxZWRiZjc4NmQ2ODg5YTI3YTU1YyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_c1c7e0b7b7254c7ab2574789ff607355",
+      "statement": "写 UI 规则的元规则三条：门禁死于误报比死于漏报更常见、扫描面塌陷的判据不能是 scanned 大于 0、为误报写豁免之前先确认判据本身没问反问题。",
+      "evidence": [
+        {
+          "resource": "repo://docs/TESTING.md#L307-L314",
+          "version": "repo-lines-v1:sha256:cc660b8a8ab3e7a8b7e5dbebc13eabeb75e77c5f1de99b74d29d6d23172feb2e:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNWM5YjNhMmYwMTUzOTM1ZWFiMTY5MjhmNjZjMmE5NjA5ZGM2ODI0YTZjMzE1OTUzMDZjMWU3ZDRmYmQ5Y2FmNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzFhYWNlYTg0ZGQ1YzAzZTU3MWRjOTc2Nzg2YThmM2VmMGZhODcxNDRiM2Q5MjhhYzhjNTk1M2Q1YWNmMDI4NiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODMxMDljNTQ1M2VhNGU4OGYwOGYwZmE2M2E5ZDg2MWRkMzE4MmUwNTNiZGFjNjY2YzEwZTkyMGVlZjFhOWYxNCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_40b6dac00ac74185a37d7563dba21d65",
+      "statement": "public/js/app.js 约四千行装在一个 IIFE 里、里面的东西一个都导不出来，是本仓公开承认的最大测试债。",
+      "evidence": [
+        {
+          "resource": "repo://docs/TESTING.md#L38-L40",
+          "version": "repo-lines-v1:sha256:c373d063c8f75ec0e822f61fcccc3336b0f61809f099dee092d9434c3a385ac7:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNGUwYjZmMmYyMmUzMDQxZDgyNjBlNWZhZjc0M2E1Zjg3YjY3NWM0MmViMDA5YTBiYjg3MDk1NDJjMjY0MWM4ZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiM2E0YmE4MjM2M2U4MGExMDRiM2JjODM1NDZlMGRiZTMwZDE2MWI0YTkyZjU5MDIzZTZhODcxMDk5YWQ0Yzg5NyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMGU2MTNjZTdhYTJiNzBlZTNiN2JlMzFmYTM5NjA3YTgzNmRjMzgxMTgyYmFlMDVhM2RhYTUyY2Y5ZTY3M2Q2NCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMGQxN2ViMTc2N2JiMTY3MWU5YjM1Y2ZkZDNlMGIzZDU1NGQzZmM2NzFkYTI1YzY0ZWZkNTQ0YTM2ZDQ2NGIxYSJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.5.2",
+    "at": "2026-09-22T08:36:26.702Z"
+  }
+}

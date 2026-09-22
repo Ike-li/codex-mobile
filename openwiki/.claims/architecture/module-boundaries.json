@@ -1,0 +1,176 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:c330f3ba9aa2e8fe18dd7cd5f5e036b0f7fd905de51c7b7fa965d998883caad5",
+  "claims": [
+    {
+      "id": "claim_d396c3c21429448ba1604d1d9096fef4",
+      "statement": "后端 src/ 按六个域分层且层序固定为 shared(0) < files(1) < auth/ops/sessions(2) < agent(3)，layer-order 规则禁止低层引高层，因此 src/shared 是零出边的叶子。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/gates/check-import-boundaries.js#L137-L181",
+          "version": "repo-lines-v1:sha256:358de2c3a037f255bffbee6bf377a32692b601a6dfdc28a8f913bf1db04e4040:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRkNWNkMmZiNGYzZGY4ODQ1MTUyNTViMzk1MjNmMmY4YjU0NzJiZWVhOWY1NjZmZmNhMjA0ZGI4MDI1NjEwNDEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEyMmYyOTFkOTNiMjQ5NzAyZDdkZmU0NmU1MjQ5ZTRlM2RiNmE3NTAyMDU1ZDY5ZTQyNjFlNzc3OTk4ZDEyMDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNhZTg1NmIxY2VmNDY0NjM3MzY5MTg5OTEwYzM3ZjdiMjliMmIzMDVjMGNiYjNhOTNjYzE3ZDIzMmU0MDA4MTYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_cc4c4d9c5b504ed08c7cf5cbbdbc1cc0",
+      "statement": "DOMAIN_RANK 的顺序是从已有跨域边统计出来的而非凭空设计，目的是让门禁从落地第一天就是绿的，任何一次依赖方向反转会当场变红。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/gates/check-import-boundaries.js#L137-L156",
+          "version": "repo-lines-v1:sha256:e8b69c5fc24e0ff4d4ab1b920594aca80774606ff2d1a6adee684b0784af5fb0:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEyMmYyOTFkOTNiMjQ5NzAyZDdkZmU0NmU1MjQ5ZTRlM2RiNmE3NTAyMDU1ZDY5ZTQyNjFlNzc3OTk4ZDEyMDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE4MjUwMGNiMjI4Y2IyNWE2MDE5ZWNmYWFlOWNiZTBjNDE4OWMxMWY2NGE0NWIwY2E1NmUyN2M4MDYzMGYwNDMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0dcee4361ada4177be1339fadf2ae401",
+      "statement": "后端只允许 import 三个具名的前端文件（cli-settings.js、token-usage.js、thread-actions.js），白名单是文件粒度而非目录粒度，以免「再共享一个」变成零成本。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/gates/check-import-boundaries.js#L168-L172",
+          "version": "repo-lines-v1:sha256:1d12322d01e820d52777716bcc6d4637a30738a818eff74048ded6c722b6925a:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjExMWYyMzlhYzY1YzlmZWNkNGY3OTc1ZDRlZTBjNjc3YjU4YThlYTY3ODUyZWEyNWQyNzkyMzkyNTE4ZDJmOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGQ1Y2QyZmI0ZjNkZjg4NDUxNTI1NWIzOTUyM2YyZjhiNTQ3MmJlZWE5ZjU2NmZmY2EyMDRkYjgwMjU2MTA0MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOGI1MmNiZThhMDVhOWM1ZjQ2ODQwZDAwZGQ0YTQyOTExZmRkMTgwYjZhMWZlMjVjNzk5MzY1NmJhMThhOGQ1YiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjhhM2I1NjI0ZDgxZjI1M2Y3MjRkMDJhMGQxNzRmZDhmNjI5OTdlNDM4ZjQ5ODUzOGVlMWExODgwNzU0ZmFhYiJ9"
+        },
+        {
+          "resource": "repo://scripts/gates/check-import-boundaries.js#L55-L72",
+          "version": "repo-lines-v1:sha256:903b5bbef9de0b5234877efbb10b43b040df0e6627ed4d1402ac29faa55d023d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1ZTI2Y2Q5MjM2NmY2MGQ4ZWQ5MmQwMjM5ZjA3ZmVmNzRjYWMxNGFhNjlhZGRmOWMyY2MwZDExZWIwMGE0NjMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg1NzUyNmIzYjczMDQ5YTJlN2QyNjkzZmM0NjIzZWI5Yzc2YTlmZGVjZTgzY2RjOGJmZjRlMTljYWNmMmE0ZjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIxZmFiNWZmYTAwMTQ5ODIwYTQyZjNkNmU5Yzg2ZmViNDFmODY2OGM4MWFjM2E1YTUzYzI2ZTU4YmJiMmQwZGYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_773c932ea7ca4a4aab5200bfdcab044b",
+      "statement": "token-usage.js 被共享的原因有实际事故支撑：src/ops/statusline.js 曾独立写一份字段名且用了 snake_case，而 app-server 给的是 camelCase，导致三个字段全部落到默认 0 并静默显示错误用量。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/session/token-usage.js#L1-L10",
+          "version": "repo-lines-v1:sha256:a935182bad3cdc4e675ff1a789a8dd9841441e696ca93a34f62b6217a1b9efe0:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVlNjAwM2E2ZmQ5OWJhNGIyYjVjOGNmODFkZDQ3ZTlhMzBhNTU2ZjlmMTcxMTJhMDBkNWJmNzY2YzdmMTQ0OTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRjOWFmZmU2OWU4MDY0MThiNGFhNjU3NTMzYWMxN2IxODY4OGRlZmUyMDhlODFiYTQwZjIwNDJmM2NjMWU5MjIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ0MjlkNGJlZmYxZjBhOTQ3OWQzODE4ZmNjNGUyNGE1NDViZGE2YWNmMmVmZjBhN2RjNzBlMjYyOWUxNzkyMzIifQ"
+        },
+        {
+          "resource": "repo://src/ops/statusline.js#L1-L10",
+          "version": "repo-lines-v1:sha256:291162dc8efa1d7cd0eba20e286984ab776cb10a8f2417ccc9d8dced200e1b9d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMyYTQ5N2FjY2ZkOGRiZDQ1OTU4YzgyZDBiYjQ5YTEwNjg3MGVlNjFkMDQyNzJjMDI2OGQxNzBkNzMwMTUzMDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVmZWFiYmVjZDJhMjNkZmQyY2Y3ODkzNGY4MTcxYzViOTc1NmNiYmRiZDQ0NTE3MDFkNjNmYjQxYTY3NDNjYjEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUyMWNlODQ3MTdlZjliZDViMTkxOWMyNDRjYzMwOGJlMDI0MTI5MGVhYzQ4ZGViOTllMmQ0MTJkNDQ5MmQ3MDMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a029d49612c8466b92def5844d1079f6",
+      "statement": "组装根是汇点：ASSEMBLY_ROOTS 规定 server.js 不得被任何文件 import，src/agent/agent-appserver.js 只能被 server.js import。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/gates/check-import-boundaries.js#L182-L186",
+          "version": "repo-lines-v1:sha256:5ccff10d40e91f4bf0b2df7110fd98a46497be47acf1911a77965c83a3e62a76:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjExMWYyMzlhYzY1YzlmZWNkNGY3OTc1ZDRlZTBjNjc3YjU4YThlYTY3ODUyZWEyNWQyNzkyMzkyNTE4ZDJmOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGQ1Y2QyZmI0ZjNkZjg4NDUxNTI1NWIzOTUyM2YyZjhiNTQ3MmJlZWE5ZjU2NmZmY2EyMDRkYjgwMjU2MTA0MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZGVjNmYxNjdhZmQ5YzQ3NTIyMzNhYjNmNTIzZmNkM2FlMTljMDRiOGEzZTI0ODYwYzQ5MTZmNDU4YWZjNzAzYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNmE1YWQyNDFkMzE2NmY3ZjdkZDMwYWUwMDZkZjM4NDBhYzFjNTQxZTIyNWZkMjM1MjczYjIwNGVjNjIxMjhjMCJ9"
+        },
+        {
+          "resource": "repo://scripts/gates/check-import-boundaries.js#L47-L53",
+          "version": "repo-lines-v1:sha256:cf0e37fb145c1c84e2f54e5ce0aa2a7561bbb1f35e8cf5af7899e38e4ddb8ba3:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTAxZWFkOTM2YTIyODFkNTNkY2MwNjRiN2UyYTJhYjBkNTNiOTJlZjNlZjdiMzRiNjY4NjczMDA3ODk1Yzg2MCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYzY4OTQ3NGM2MzcwYzBhNmJhNzVlYTAyM2JjMzE0ODI2NzU2Yjk2ZGQwMDJiYzg3YTg4ZTMzZTg3NGM3NWYxYSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzc3NWU4ZmU2ZGMzNzVhNTViYjliODY1NmIwYTI3MjBkZmRjNDI1Y2M4OGQzZjllNGZmN2JhODM1YTg2NDc0ZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjY0ZGRjMzY1NmJmNmUzM2MzZWRmMjMzZTBlMjZlOWJhMjRhNTliYTkxODZkYmJmZGI4NWY3NTJjMmUzYjljYyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_bfb2dd5ad8c34d7c90a2baa628a1e6d6",
+      "statement": "analyze() 在解析出零条 import 边时主动报 scan-collapsed 而不是当作全部合规，因为扫描面塌陷与合规在断言上完全一样。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/gates/check-import-boundaries.js#L233-L240",
+          "version": "repo-lines-v1:sha256:8c1853e7cb182398cbb27670ecc03749cbf7b73f1515dfdc78f8193c81b9f73e:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTViMmU4ZDkyZjBlMDEzMWUwNTBiM2UzYTMxZDNhY2I3NzYxZWM4YmVmYWFhYjQ2YjQwYWM1MGU1NzJlZWZmMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjdlNTc4OGQ1ZDlkNzNkMjRhODFkYmMwYTVhNzRiZmE4MmM5YzNiM2FmOTllNTJhZjc5NmU5MGI0NjhhOGEzZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTViMDJhZmZjZjgwNmQzYjA0OTI3Njc3YzViZWVlMWViNWUyZDNhOTM0ZGQwMGFhZjE5OGRmOWY2ZGY0ODMwMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDI4NDI4ZThkMjk4ODFhZjQ1ZTAxMjA3NjljOGY5Yzc3ZDY5NzQyMGM2NmQyMWQ1ODk2ODU4NTJjMzQ3YzIwMCJ9"
+        },
+        {
+          "resource": "repo://test/infra/check-import-boundaries.test.mjs#L185-L190",
+          "version": "repo-lines-v1:sha256:25fae896b7d21ddc9df72fec5d745616fc4708bc4d73cc641ab577ae50d01ad6:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjZmNWI0MGIxNTg0NTdkMTc4NjRmMjE3OTA3ODZkZDVhMmVjZGI2NGI2NmE2NTFmNzg4ZDRlMjVjZDMzMDNkMiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMWUwMzkxZTBhOTRhMmEyNjdlMzA1MDM5YzM5ZDI3OTgzNTdjZmM0YWU2NjMyMjZkZGJlZGI2MzIyMDExMzZiNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNWI3NjBlMGQ4YjBkNDFhNDI4NmQ0YjQ5YjBiYTJhODM2YWVkOTk1NGE3MjAyNzY0OWE0MmI3ZmY1OWVkZjI5NCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_239aa6b768154c62890b5777f0d2d94d",
+      "statement": "import 提取器必须单列一条动态 import 正则并且认反引号，否则边界规则可以被 await import() 整个绕过而门禁照常报绿。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/gates/check-import-boundaries.js#L76-L94",
+          "version": "repo-lines-v1:sha256:dab6e3739a17f6c3a2e82e6ae83d87591b7fc12093a6c04f2fdf4d37f92ba134:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY2YmEyYjU5OTY3MzJlNzEzOTBkM2UwY2M1YjliZmRmZTU4YWUzZDZkMzgzY2VhYTMyNzRiMzc1OTY1NWRlYmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI2ODNkZjM4YTdmMWI4OWJiMTVjMTQ0ODZkMTc1ODNjZDEzYWI1NWE2MjI0NmY1NzRiOGUwZDdlOTA3ZjBjMGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIxZmFiNWZmYTAwMTQ5ODIwYTQyZjNkNmU5Yzg2ZmViNDFmODY2OGM4MWFjM2E1YTUzYzI2ZTU4YmJiMmQwZGYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjlmM2FmNTM1OWM5ZmM3M2I3ODM2ODQyNzcxMGYxZDkzNDA0YjhkNjAxNGU4OWM5ZjQxNGRmYmQ1ZmQ3MDkzMjgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e2324858bbb6438eb7b895a68728ab80",
+      "statement": "提取前会先清掉整行注释，因为注释里的示例调用会被当成真边；实测中 src/ops/config.js 的一句说明性 import 曾让门禁报出一条并不存在的循环依赖。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/gates/check-import-boundaries.js#L96-L125",
+          "version": "repo-lines-v1:sha256:91139c918adfca9a19a6724ba9193647cb6ed1d7dc24f3395e14710ab2b3800e:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRjZTI3ZTZiMGE2MDFlNTI1MDhhZjEyMWQxODVhY2VjYTE3ZDQyNTgwYzQ3NGU5YTQzNjNhODc0ZDU2MzI0ODUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjViYWEyOTIxZTNkYzZhNDM2NDg4OWM0ZWFiNzJiZWY5ZDYyNmUzOTJhZDg0ZjU1MWZmNGIzNjI2ZDk2ODRhNmUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_737d7e00d02d4f27a0e502bbdb264064",
+      "statement": "resolveSpecifier 必须认 /js/ 与 /vendor/ 这种相对站点根的说明符，否则 app.js 与 workspace-panel.js 的全部 import 边对门禁不可见。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/app.js#L1-L10",
+          "version": "repo-lines-v1:sha256:2e85698ca3181f00f89f4e09da8e9c2163e7e38bad340197f4710f52cd9f6917:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU4MjAwOTY0YTk3ODYzNTUyMmIyYWIwOTBjNjUwNjVkOGVmOGU4NWM0NzMwYmIyZWIwNDYwZDM0YzY3N2RkYmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyNjc1MDE5NmViM2Q5ODE5ZjE0YjAzNTdiNDI0MjdlNWRhZTJkZTJhMGE0NjBhZGVmYWRkZjgzZWU2ZmVhMTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhkMzhjZGJjYjk2NTM2MDExMTQ1ZDk1ZjI0ZjU5ODhkNzJjNWVhNWY0Mzg4ODZiMjE1OTZiZmZhMGEwNGVjZmUifQ"
+        },
+        {
+          "resource": "repo://scripts/gates/check-import-boundaries.js#L296-L309",
+          "version": "repo-lines-v1:sha256:6ac2c0a4e280eef0f7fef5e60123dfa434c7898d61826d01554b9fc7bc3fb9e7:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJkMGYyZDNhM2FhZGEyNzU4NjQ1NzhkMGE0MzkxNTYzOGQ1NDNmZWNhMmM5NDg1OGRiOTQxMjExZTg2Y2VmMmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI3MjNiYWUyNjBlODUwNWJkOGVmYjQ4NWU1MGFjOWRmYzhhZjY3N2E2N2Y1ZjdlYmNiYTFhYmM5OGNmMTFmYzAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ec63547d6b17417c82b121cdc2e70c58",
+      "statement": "根目录与 public/js/ 直属一层各自有白名单：根目录只允许 server.js（eslint/playwright 配置被排除在依赖图外），public/js/ 直属只允许 app.js 与 sw.js。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/gates/check-import-boundaries.js#L250-L270",
+          "version": "repo-lines-v1:sha256:7d54ad61b16db17ea65025249ec6078dc4b97b208d5a4a6e294c943b14de9574:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwNjEzZmI0NTQ2ZjM4MGNjNjBmNmVhYWNlMzIzNDBhMjkyZjMzMzk2NDIwOWUxNjdkZDJkYzA4ODhlZWVmMTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk3ZDg2MzJlNTRlOTI5OGFiYjk1ODcyN2UyZDUxNDA4YWJhZjEzNjYwMzUzNzkxMDE0MGFiZjY1YjMwYWI2MTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE0MjA0N2U4ZDhjZGFlZWNjZTg5MzM0YjEyYTA2NThkZWMxODAyYzE3NTQxMTlkNjc2YzNmNmI3Mjc5Y2FmNTIifQ"
+        },
+        {
+          "resource": "repo://scripts/gates/check-import-boundaries.js#L30-L46",
+          "version": "repo-lines-v1:sha256:b1ed8a5aac9a64f726af613a217666fb89974ebf41496973fda30c5d4550b31b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY2YmEyYjU5OTY3MzJlNzEzOTBkM2UwY2M1YjliZmRmZTU4YWUzZDZkMzgzY2VhYTMyNzRiMzc1OTY1NWRlYmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIwNWMzMWUwMDcxYTcwZDQxMWI3NDIyMjkzMWFiNzliYTk3ZjBhMmJlZDE5Yzk4NzAwZGE0NzY4OWFiZWEwMWQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJlODM5YmIyNWM2OTVkMGE3NTk0ZDcyMGJiMDM5NzYzZDMzNDM5YzYwOTFmM2MwNGZjYTIxNWQ4NjAyOGI3NTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdlM2Y0MjM5NzcyMGVlNzFhNTVkNGNiNzFhNWM0YTFlNmUyZjY2NTFiMWIwZDc3YjQzZmEyZmM5YmVlMmI4ZDYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0f7f45cdf4494b558d527a5902a868cb",
+      "statement": "sw.js 必须留在 public/js/ 直属是因为 Service Worker 的作用域由它自己的 URL 决定，挂靠 server.js 专门为 /js/sw.js 发的 Service-Worker-Allowed 头才能管住整站，两处必须同时改。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/gates/check-import-boundaries.js#L40-L46",
+          "version": "repo-lines-v1:sha256:05fd41df2a0af162eeeaeff4393f5df423f5642a30bf4c19a1ee39e4765a90be:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMGYzYTE2YjcxYzliOWEzNjJiZjE3MDFmNzVjZmJjYzk2MjAyNGYyMzg5NjdhNjI4Y2ZkM2I4NGZjMDVkN2YyNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjA1YzMxZTAwNzFhNzBkNDExYjc0MjIyOTMxYWI3OWJhOTdmMGEyYmVkMTljOTg3MDBkYTQ3Njg5YWJlYTAxZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjMxZTA4ZWEyMDExNTdkZjEwMTU0MDNjNmQ5MzcxN2ZmOGRlNWQ3MWYwNzM1OThjZWZjMTdiYjhkYWJhYWJkMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiN2UzZjQyMzk3NzIwZWU3MWE1NWQ0Y2I3MWE1YzRhMWU2ZTJmNjY1MWIxYjBkNzdiNDNmYTJmYzliZWUyYjhkNiJ9"
+        },
+        {
+          "resource": "repo://server.js#L701-L714",
+          "version": "repo-lines-v1:sha256:64eaafbe6f78c8a5e6864680e4157ec97c83bb031105c64200e3f69ecab930de:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI0NTY1ZWY3OTZhOGRjZTYxOTY4ZmQ3N2MwOTVjOGY2ZGM0ZjUxOTBhYjlmMDIyYTdlOGNmMjM0Yzg4YjMwYzMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk3MmE0MjkzODJiMmUxNDcxOGUwZTM3YjA1NzBhOGExNzAyOTkxZmNkODQ5OGNkODQwNjBhOGJmNGYwNTAxN2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ0MGI0NWY5MWY4YmI5NTliNDZhMDk2NTkzOWU4YjI5Mjk2Nzk3OTI1Mjg3MzliOTk5NmQ1ODUyMDZjMzk3MzQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI3ZTgwNDRlMzM2ODk4MzdkYmY3OGRhNjA4MjZiMWMwNDExMTIyNjE2M2U0ZDI3YjU2MGFhYWNjMDk0YTYwMWYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9328290730124bbc9ae163d04d4e5aad",
+      "statement": "门禁的 infra 测试包含两条反向断言来抓清单腐烂：ASSEMBLY_ROOTS 的键与许可 importer 必须在磁盘上存在，SHARED_ALLOWLIST 的每个条目必须仍有后端文件在 import 它。",
+      "evidence": [
+        {
+          "resource": "repo://test/infra/check-import-boundaries.test.mjs#L245-L295",
+          "version": "repo-lines-v1:sha256:89e15d1a7a6ef238a1ee7e5bae71ff19821dfb1a0b45362cde83406a9ef04ebc:eyJzZWxlY3RlZExpbmVDb3VudCI6NTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjEzMWE3MGIyMjg5ZmQ5Y2UwOWVhMzMyMWIyZDUzZDc1M2U4Mzk3YTVjMDIxYjMzNjJlODMyMDhkZGUyNzEyOWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg5ZmY3YTY0M2Y3YmQ0ODY2NWUwODk1ZGI1NDFlZTJjYmZlYzMyNGM0MzE2ZDAwODM0MGQ3YjY4MTI4ODc1MjUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_1a8712799d78475daf7593f67da08fcb",
+      "statement": "除边界规则外，这道门禁还在依赖图上做环检测（no-cycles）并拒绝运行时代码 import scripts/ test/ e2e/（runtime-no-tooling）。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/gates/check-import-boundaries.js#L187-L191",
+          "version": "repo-lines-v1:sha256:355561e179bfab1fa922808892568b39bf7e74053c829be2de6f7f886ddfd00a:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjExMWYyMzlhYzY1YzlmZWNkNGY3OTc1ZDRlZTBjNjc3YjU4YThlYTY3ODUyZWEyNWQyNzkyMzkyNTE4ZDJmOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGQ1Y2QyZmI0ZjNkZjg4NDUxNTI1NWIzOTUyM2YyZjhiNTQ3MmJlZWE5ZjU2NmZmY2EyMDRkYjgwMjU2MTA0MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYThhNTQ5ZGVjYTBkMWU2ZWQ4YjdhMjQ1MGJiMTY3Y2E4OGM2NmQwM2FmMDVjMTY2MDEyNGUwNGI4ZGUxOWFlYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNWU3NTYzNmEwZThiNDc0MzM0YzA0MGUzOWUzZmUxNDhlNDVhZmIyZjI5MzAzYWVjYmQ1OWNjNzVlNzUwMWYzNCJ9"
+        },
+        {
+          "resource": "repo://scripts/gates/check-import-boundaries.js#L206-L228",
+          "version": "repo-lines-v1:sha256:51250e78b87871baa422ce6db79f08c2867ecc4d1e63b5bd5cd5d0c48324b12c:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE2ZTJkMGUyNjNkMjhjYzhhYzk1MDUxNWFhM2JlYmZhZDlhNDRjZTk0NmUxZmQ2YTg2OTNlNTM0NzM4ZmEzNTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFiZGNiZTMxZjk0MzE1MTRlZGNiMWMwZTQ0YTE2MzFhNDM4NzM3YWIyNTUwZmZkOTA3ODA3ZjRlMzZhNjI5ZjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ0MzdjOWRkMWJhODY5ZDQ2YzNkOGZkMTNlOTc2MzEzMjM5ZmY0M2YzM2M4ZDgwNjIyNzI1YmU5ZGMzMzA4NGUifQ"
+        },
+        {
+          "resource": "repo://scripts/gates/check-import-boundaries.js#L272-L279",
+          "version": "repo-lines-v1:sha256:d5555f4c8310d6eba927a391ab3c0706d48c37d96c6e11c10dd162d2c68cd7e2:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYWFmYWI0ZmVjMjAyOTc0OWVhMDc3YTk5YjVmYzkxYjk0NGVhNmY0NjZlMGU3MTRjM2VkMjZlNDljYWVjYTgzMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjdlNTc4OGQ1ZDlkNzNkMjRhODFkYmMwYTVhNzRiZmE4MmM5YzNiM2FmOTllNTJhZjc5NmU5MGI0NjhhOGEzZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTdkODYzMmU1NGU5Mjk4YWJiOTU4NzI3ZTJkNTE0MDhhYmFmMTM2NjAzNTM3OTEwMTQwYWJmNjViMzBhYjYxMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTYyNTA5ZDM4NzJhZWQxYWEwMDI2NGExNjIyN2RjMGMxZTRmODIyOTA4OWE3ZmI4ZTkzMzM2MmVkNWEyOWZjMiJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.5.2",
+    "at": "2026-09-22T08:36:26.702Z"
+  }
+}
