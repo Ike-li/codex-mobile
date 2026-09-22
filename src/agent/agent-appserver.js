@@ -1,11 +1,11 @@
 // agent-appserver.js —— 单 thread 语义 runtime（app-server 是唯一后端）。
 // 生产环境由 AppServerHost/AppServerTransport 共享一个 stdio JSON-RPC 子进程；
 // 本类负责 start/resume/turn、队列、中断、事件映射和审批。
-import { closeSync, constants, fstatSync, mkdirSync, openSync, renameSync, rmSync, writeSync } from 'node:fs';
+import { closeSync, constants, fstatSync, openSync, renameSync, rmSync, writeSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { AppServerTransport } from './app-server-transport.js';
 import { ApprovalBroker } from './approval-broker.js';
-import { fixPermissions } from '../files/file-security.js';
+import { fixPermissions, mkdirBounded } from '../files/file-security.js';
 import { sanitize } from '../shared/sanitizer.js';
 import { buildUserInputs } from '../sessions/user-inputs.js';
 import { truncate, truncatePayload } from '../shared/text-utils.js';
@@ -1821,7 +1821,7 @@ export class ThreadRuntime {
   // 数据而非安全审计，而流式回复的每个 delta 都是一帧，逐帧 fsync 会直接阻塞事件循环。
   ensureRpcLogReady() {
     if (this.rpcLogReady) return;
-    mkdirSync(dirname(this.rpcLogPath), { recursive: true, mode: 0o700 });
+    mkdirBounded(dirname(this.rpcLogPath), { mode: 0o700 });
     // 已存在的文件可能是历史遗留的宽权限，首次修一次；之后每帧的 O_CREAT 0600
     // 保证新建出来的本就是 owner-only。
     closeSync(this.openRpcLog());

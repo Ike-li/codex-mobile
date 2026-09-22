@@ -9,7 +9,7 @@ import { formatClientErrorLine, createSocketErrorLimiter } from './src/ops/clien
 import { codexBinDiagnostic } from './src/ops/doctor-checks.js';
 import { probeCodexBin } from './src/ops/doctor-runtime.js';
 import { createServer } from 'node:http';
-import { existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { isIP } from 'node:net';
@@ -24,7 +24,7 @@ import { MessageReceiptLedger } from './src/sessions/message-receipt-ledger.js';
 import { NeedsYouRegistry } from './src/sessions/needs-you-registry.js';
 import { resolveInputParts } from './src/sessions/input-parts.js';
 import { maskToken, sanitize, sanitizePath } from './src/shared/sanitizer.js';
-import { writeOwnerOnlyFile, appendOwnerOnlyFile } from './src/files/file-security.js';
+import { writeOwnerOnlyFile, appendOwnerOnlyFile, mkdirBounded } from './src/files/file-security.js';
 import { appendJsonlAuditRecord } from './src/ops/audit-log.js';
 import { createPushSender } from './src/ops/push-sender.js';
 import { isPublicEndpointHostname, isPublicIpAddress } from './src/shared/network-address.js';
@@ -1042,7 +1042,7 @@ let trustedDeviceSnapshot = new Set();
 
 function ensureDeviceFiles() {
   try {
-    mkdirSync(DATA_DIR, { recursive: true });
+    mkdirBounded(DATA_DIR);
     if (!existsSync(TRUSTED_DEVICES_FILE)) writeOwnerOnlyFile(TRUSTED_DEVICES_FILE, JSON.stringify([], null, 2));
     if (!existsSync(PENDING_DEVICES_FILE)) writeOwnerOnlyFile(PENDING_DEVICES_FILE, JSON.stringify([], null, 2));
   } catch (err) {
@@ -1655,7 +1655,7 @@ function emitServerEnvelope(socket, type, payload) {
 
 function appendHostConfigAudit(entry) {
   try {
-    mkdirSync(DATA_DIR, { recursive: true, mode: 0o700 });
+    mkdirBounded(DATA_DIR, { mode: 0o700 });
     appendOwnerOnlyFile(
       HOST_CONFIG_AUDIT_FILE,
       JSON.stringify({ ts: Date.now(), ...sanitizeAdminAuditValue(entry) }) + '\n',

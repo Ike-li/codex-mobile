@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import {
   isOpenableTarget,
+  mkdirBounded,
   writeOwnerOnlyFile,
   isOwnerOnly,
   fixPermissions,
@@ -239,5 +240,63 @@ test('isOpenableTarget 放行普通文件与软链，挡住 FIFO 与目录', () 
     }
   } finally {
     rmSync(dir, { recursive: true, force: true }); // safe-rm: mkdtemp 一次性目录
+  }
+});
+
+// ---- mkdirBounded：Node 的递归 mkdir 会活锁，这里要的是有界 ----
+//
+// 背景：Linux 的 procfs 是可写挂载，却对创建条目返回 ENOENT。Node 的
+// mkdirSync({recursive:true}) 把 ENOENT 当成「父目录缺失」→ 去建 /proc（已存在）
+// → 回头重试子路径 → 又 ENOENT → 无限循环，100% CPU 且永不返回。
+// 实测过：CODEX_DATA_DIR 指向 /proc/... 时整个进程挂死（见 audit-vocabulary 那条用例）。
+//
+// 判据必须证明「有界」，不能断言「跑得快」——后者是时序判据，本身就是脆的。
+// 所以在 fs 边界注入假实现，直接数调用次数。
+
+test('mkdirBounded 逐级创建缺失目录，调用次数等于缺失层数', () => {
+  const made = [];
+  const existing = new Set(['/base']);
+  mkdirBounded('/base/a/b/c', {
+    mode: 0o700,
+    exists: p => existing.has(p),
+    mkdir: (p) => { made.push(p); existing.add(p); },
+  });
+  // 由浅到深，一次不多：证明工作量是路径深度而不是重试次数
+  assert.deepEqual(made, ['/base/a', '/base/a/b', '/base/a/b/c']);
+});
+
+test('mkdir 恒抛 ENOENT 时立刻抛出，不重试——这是活锁那条路', () => {
+  let calls = 0;
+  const err = Object.assign(new Error('ENOENT'), { code: 'ENOENT' });
+  assert.throws(() => mkdirBounded('/proc/nonexistent-ccm', {
+    exists: p => p === '/proc',      // 父目录存在，子路径不存在：正是 procfs 的形态
+    mkdir: () => { calls += 1; throw err; },
+  }), /ENOENT/);
+  assert.equal(calls, 1, '只能尝试一次；重试就是活锁');
+});
+
+test('EEXIST 被忽略——并发创建不该让调用方变红', () => {
+  const err = Object.assign(new Error('EEXIST'), { code: 'EEXIST' });
+  assert.doesNotThrow(() => mkdirBounded('/base/a', {
+    exists: p => p === '/base',
+    mkdir: () => { throw err; },
+  }));
+});
+
+test('目标已存在时一次 mkdir 都不发', () => {
+  let calls = 0;
+  mkdirBounded('/base/a', { exists: () => true, mkdir: () => { calls += 1; } });
+  assert.equal(calls, 0);
+});
+
+test('mkdirBounded 真的能在文件系统上建出多层目录', () => {
+  const root = mkdtempSync(join(tmpdir(), 'ccm-mkdirp-'));
+  try {
+    const deep = join(root, 'x', 'y', 'z');
+    mkdirBounded(deep, { mode: 0o700 });
+    assert.equal(existsSync(deep), true);
+    assert.equal(isOwnerOnly(deep, true), true, '中间与末级目录都应是 owner-only');
+  } finally {
+    rmSync(root, { recursive: true, force: true }); // safe-rm: mkdtemp 一次性目录
   }
 });

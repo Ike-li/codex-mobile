@@ -1,6 +1,5 @@
-import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { appendOwnerOnlyFile } from '../files/file-security.js';
+import { appendOwnerOnlyFile, mkdirBounded } from '../files/file-security.js';
 import { truncate } from '../shared/text-utils.js';
 
 const TRUNCATE_SUFFIX = ' ... (truncated)';
@@ -228,7 +227,7 @@ export class ApprovalBroker {
   audit(event, approvalId, method, detail) {
     if (!this.auditPath) return;
     try {
-      mkdirSync(dirname(this.auditPath), { recursive: true, mode: 0o700 });
+      mkdirBounded(dirname(this.auditPath), { mode: 0o700 });
       const line = JSON.stringify({
         ts: Date.now(),
         event,

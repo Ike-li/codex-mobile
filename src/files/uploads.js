@@ -1,10 +1,10 @@
 // uploads.js —— 附件校验与安全落盘。
 // 手机选文件 → base64 → 写入 WORK_DIR/.ccm-uploads/ → 交给结构化 UserInput。
-import { chmod, lstat, mkdir, open, readdir, stat, unlink } from 'node:fs/promises';
+import { chmod, lstat, open, readdir, stat, unlink } from 'node:fs/promises';
 import { join, resolve, basename, sep } from 'node:path';
 import { randomBytes } from 'node:crypto';
 import { constants } from 'node:fs';
-import { rejectableSymlinkComponent } from './file-security.js';
+import { rejectableSymlinkComponent, mkdirBounded } from './file-security.js';
 
 const UPLOAD_DIR = '.ccm-uploads';
 const MAX_FILES = 10;
@@ -148,7 +148,8 @@ export async function saveAttachments(workDir, attachments, decoded = []) {
   const dir = join(workDir, UPLOAD_DIR);
   let symlink = rejectableSymlinkComponent(dir);
   if (symlink) throw new Error(`上传目录路径包含可疑符号链接: ${symlink}`);
-  await mkdir(dir, { recursive: true, mode: 0o700 });
+  // 同步且有界：见 mkdirBounded 的注释。紧邻的 rejectableSymlinkComponent 也是同步的。
+  mkdirBounded(dir, { mode: 0o700 });
   symlink = rejectableSymlinkComponent(dir);
   if (symlink) throw new Error(`上传目录路径包含可疑符号链接: ${symlink}`);
   const directoryStat = await lstat(dir);
