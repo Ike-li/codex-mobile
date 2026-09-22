@@ -142,6 +142,53 @@ export function formatUnknownNotificationFields(problems) {
   return lines.join('\n');
 }
 
+/** ClientRequest 的判别联合 → Map<method, params 类型名>；字面 `undefined` 表示该请求不带 params。 */
+export function parseRequestParamsTypes(source) {
+  const map = new Map();
+  const alias = source.match(/export type ClientRequest\s*=([\s\S]*?);\s*$/m);
+  if (!alias) throw new Error('ClientRequest type alias not found in protocol source.');
+  for (const [, method, typeName] of alias[1].matchAll(/\{\s*"method":\s*"([^"]+)",\s*id:\s*RequestId,\s*params:\s*(\w+)\s*,?\s*\}/g)) {
+    map.set(method, typeName);
+  }
+  return map;
+}
+
+// 只认字面量：`this.request(m, someVar)` 里 someVar 运行时是不是 undefined，静态看不出来。
+// 能覆盖的是真正出过事的那一种——源码里直接写死 undefined。
+export function collectOmittedRequestParams(source) {
+  const methods = new Set();
+  for (const match of source.matchAll(/\bthis\.request\s*\(\s*(['"`])([^'"`]+)\1\s*(?:,\s*undefined\s*)?\)/g)) {
+    methods.add(match[2]);
+  }
+  return methods;
+}
+
+/** 协议声明了 params 结构体，调用点却省略或送 undefined 的那些请求。 */
+export function findOmittedRequiredParams({ omitted, paramsTypes }) {
+  const problems = [];
+  for (const method of sortSet(omitted)) {
+    const paramsType = paramsTypes.get(method);
+    // 方法本身不在协议里由 findMissingProtocolCoverage 报，这里不重复。
+    if (!paramsType || paramsType === 'undefined') continue;
+    problems.push({ method, paramsType });
+  }
+  return problems;
+}
+
+export function formatOmittedRequiredParams(problems) {
+  if (problems.length === 0) return 'Request params shape: OK';
+  const lines = [
+    'Request params drift: this.request sends no params where ClientRequest declares a params struct.',
+    'JSON.stringify drops a key whose value is undefined, so app-server sees a frame with no `params`',
+    'at all and rejects it: -32600 Invalid request: missing field `params`.',
+    'This never degrades — that one request just always fails. Send {} instead of undefined.',
+  ];
+  for (const { method, paramsType } of problems) {
+    lines.push(`  ${method}: protocol requires ${paramsType}`);
+  }
+  return lines.join('\n');
+}
+
 export function readProtocolMethodSets(protocolDir) {
   const out = {};
   for (const [kind, typeName] of Object.entries(PROTOCOL_KINDS)) {
@@ -527,8 +574,9 @@ function runProtocolCheck() {
     const methodDiff = diffMethodSets(baselineMethods, generatedMethods);
     const typeDiff = diffTypeSets(readProtocolTypeSet(STABLE_PROTOCOL_DIR), readProtocolTypeSet(generatedDir));
     const fileDiff = diffProtocolFiles(STABLE_PROTOCOL_DIR, generatedDir);
+    const agentAppserverSource = readFileSync(join(ROOT, 'src', 'agent', 'agent-appserver.js'), 'utf8');
     const usage = collectBridgeMethodUsage({
-      agentAppserverSource: readFileSync(join(ROOT, 'src', 'agent', 'agent-appserver.js'), 'utf8'),
+      agentAppserverSource,
       approvalBrokerSource: readFileSync(join(ROOT, 'src', 'agent', 'approval-broker.js'), 'utf8'),
     });
     const missing = findMissingProtocolCoverage({ usage, protocol: baselineMethods });
@@ -536,10 +584,17 @@ function runProtocolCheck() {
     // 不抛异常也没有失败用例，功能静默失效。对着生成出来的协议比，而不是基线，
     // 这样字段漂移在升级那一刻就报出来。
     const unknownFields = findUnknownNotificationFields({
-      usage: collectNotificationFieldUsage(readFileSync(join(ROOT, 'src', 'agent', 'agent-appserver.js'), 'utf8')),
+      usage: collectNotificationFieldUsage(agentAppserverSource),
       paramsTypes: parseNotificationParamsTypes(readFileSync(join(generatedDir, 'ServerNotification.ts'), 'utf8')),
       declared: readAllNotificationParamsFields(generatedDir),
       allowlist: LEGACY_FIELD_ALLOWLIST,
+    });
+    // 同一族的第二种漂移，在请求方向上：方法名与字段名都对得上，params 的**形态**却不对。
+    // 协议要一个结构体，我们送 undefined —— 整条请求被 app-server 拒掉，而且只有真实
+    // app-server 会拒，假 server 一律照答，所以下游三层测试全是绿的。
+    const omittedParams = findOmittedRequiredParams({
+      omitted: collectOmittedRequestParams(agentAppserverSource),
+      paramsTypes: parseRequestParamsTypes(readFileSync(join(generatedDir, 'ClientRequest.ts'), 'utf8')),
     });
     const driftReport = formatProtocolDrift({ methodDiff, typeDiff, fileDiff });
     const coverageReport = formatMissingProtocolCoverage(missing);
@@ -548,12 +603,14 @@ function runProtocolCheck() {
     console.log(driftReport);
     console.log(coverageReport);
     console.log(formatUnknownNotificationFields(unknownFields));
+    console.log(formatOmittedRequiredParams(omittedParams));
     console.log(`Legacy allowlist: ${sortSet(LEGACY_METHOD_ALLOWLIST).join(', ') || '(empty)'}`);
     console.log(`Experimental allowlist: ${sortSet(EXPERIMENTAL_METHOD_ALLOWLIST).join(', ') || '(empty)'}`);
 
     const failed = hasProtocolDrift({ methodDiff, typeDiff, fileDiff })
       || missing.length > 0
-      || unknownFields.length > 0;
+      || unknownFields.length > 0
+      || omittedParams.length > 0;
     return failed ? 1 : 0;
   } finally {
     rmSync(generatedDir, { recursive: true, force: true });

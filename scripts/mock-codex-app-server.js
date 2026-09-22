@@ -688,7 +688,18 @@ rl.on('line', async (line) => {
         });
         break;
 
+      // account/read 的 params 是 GetAccountParams（结构体），不是 undefined —— 真
+      // app-server 缺 params 直接 -32600。mock 不跟着校验的代价是把一条**恒失败**的
+      // 请求答成成功：桥那边写着 request('account/read', undefined)，账号面板对所有
+      // 真实用户都是错误态，而 e2e 一路绿灯。
       case 'account/read':
+        if (msg.params === undefined) {
+          process.stdout.write(JSON.stringify({
+            id: msg.id,
+            error: { code: -32600, message: 'Invalid request: missing field `params`' },
+          }) + '\n');
+          break;
+        }
         respond(msg.id, { account: { type: 'chatgpt', email: 'mock@example.com', planType: 'plus' }, requiresOpenaiAuth: false });
         break;
       case 'account/usage/read':

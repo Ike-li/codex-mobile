@@ -1487,7 +1487,10 @@ export class ThreadRuntime {
 
   async readAccount() {
     await this.ensureInitialized();
-    return this.request('account/read', undefined);
+    // 同组的 usage/rateLimits/logout 在协议里是 params: undefined，account/read 不是——
+    // 它要 GetAccountParams。送 undefined 会被 JSON.stringify 连键一起丢掉，app-server
+    // 收到的是一帧没有 params 的请求，回 -32600 missing field `params`。
+    return this.request('account/read', {});
   }
 
   async readUsage() {

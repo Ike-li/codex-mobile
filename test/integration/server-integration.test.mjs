@@ -3908,7 +3908,7 @@ test('宿主配置操作无需解锁，但必须带逐动作确认并留审计',
   }
 });
 
-async function startIsolatedServer({ codexBin, rpcLog, spawnLog, eventBufferCap, vapid, initialPushSubscriptions, initialTrustedDevices, initialEnrollmentToken, pushMaxSubscriptions, allowedOrigins = [], trustedProxyIps = [], allowInsecureRemote = false, authMaxFailures, authWindowMs, pendingDeviceLimit, agentIdleTtlMs } = {}) {
+async function startIsolatedServer({ codexBin, rpcLog, spawnLog, eventBufferCap, vapid, initialPushSubscriptions, initialTrustedDevices, initialEnrollmentToken, pushMaxSubscriptions, allowedOrigins = [], trustedProxyIps = [], allowInsecureRemote = false, authMaxFailures, authWindowMs, pendingDeviceLimit, agentIdleTtlMs, fakeAuthMode } = {}) {
   const previous = snapshotEnv();
   const root = mkdtempSync(join(tmpdir(), 'ccm-server-test-'));
   let workDir = join(root, 'work');
@@ -3932,6 +3932,7 @@ async function startIsolatedServer({ codexBin, rpcLog, spawnLog, eventBufferCap,
   altWorkDir = realpathSync(altWorkDir);
 
   process.env.CODEX_SERVER_NO_START = '1';
+  if (fakeAuthMode) process.env.CODEX_FAKE_AUTH_MODE = fakeAuthMode;
   process.env.CODEX_DATA_DIR = dataDir;
   process.env.WORK_DIR = workDir;
   process.env.WORK_DIRS = altWorkDir;
@@ -4164,6 +4165,9 @@ const spawnLogPath = process.env.CODEX_FAKE_SPAWN_LOG;
 if (spawnLogPath) appendFileSync(spawnLogPath, JSON.stringify({ pid: process.pid }) + '\\n');
 const threadId = 'thr_fake';
 const turnId = 'turn_fake';
+// 自定义 base_url 网关下账号三兄弟的实测形态（codex 0.153.4）：account/read 回
+// {account:null, requiresOpenaiAuth:false}，usage 与 rateLimits 一律 -32600。
+const gatewayAuth = process.env.CODEX_FAKE_AUTH_MODE === 'gateway';
 const rl = readline.createInterface({ input: process.stdin });
 
 function send(message) {
@@ -4305,9 +4309,20 @@ rl.on('line', line => {
 	  if (message.method === 'modelProvider/capabilities/read') return send({ id: message.id, result: { namespaceTools: true, imageGeneration: false, webSearch: true } });
 	  if (message.method === 'fs/readDirectory') return send({ id: message.id, result: { entries: [{ fileName: 'README.md', isDirectory: false, isFile: true }] } });
 	  if (message.method === 'fs/readFile') return send({ id: message.id, result: { dataBase64: Buffer.from('hello from fake file').toString('base64') } });
-	  if (message.method === 'account/read') return send({ id: message.id, result: { account: { type: 'chatgpt', email: 'u@example.com', planType: 'plus' }, requiresOpenaiAuth: false } });
-	  if (message.method === 'account/usage/read') return send({ id: message.id, result: { summary: { lifetimeTokens: 123, peakDailyTokens: null, longestRunningTurnSec: null, currentStreakDays: null, longestStreakDays: null }, dailyUsageBuckets: [] } });
-	  if (message.method === 'account/rateLimits/read') return send({ id: message.id, result: { rateLimits: { limitId: 'codex', limitName: 'Codex', primary: null, secondary: null, credits: null, individualLimit: null, planType: 'plus', rateLimitReachedType: null }, rateLimitsByLimitId: null, rateLimitResetCredits: null } });
+	  if (message.method === 'account/read') {
+	    // 见 mock-codex-app-server.js 里的同一处：params 是结构体，缺了就是 -32600。
+	    if (message.params === undefined) return send({ id: message.id, error: { code: -32600, message: 'Invalid request: missing field \`params\`' } });
+	    if (gatewayAuth) return send({ id: message.id, result: { account: null, requiresOpenaiAuth: false } });
+	    return send({ id: message.id, result: { account: { type: 'chatgpt', email: 'u@example.com', planType: 'plus' }, requiresOpenaiAuth: true } });
+	  }
+	  if (message.method === 'account/usage/read') {
+	    if (gatewayAuth) return send({ id: message.id, error: { code: -32600, message: 'chatgpt authentication required to read token usage' } });
+	    return send({ id: message.id, result: { summary: { lifetimeTokens: 123, peakDailyTokens: null, longestRunningTurnSec: null, currentStreakDays: null, longestStreakDays: null }, dailyUsageBuckets: [] } });
+	  }
+	  if (message.method === 'account/rateLimits/read') {
+	    if (gatewayAuth) return send({ id: message.id, error: { code: -32600, message: 'chatgpt authentication required to read rate limits' } });
+	    return send({ id: message.id, result: { rateLimits: { limitId: 'codex', limitName: 'Codex', primary: null, secondary: null, credits: null, individualLimit: null, planType: 'plus', rateLimitReachedType: null }, rateLimitsByLimitId: null, rateLimitResetCredits: null } });
+	  }
 	  if (message.method === 'mcpServerStatus/list') return send({ id: message.id, result: { data: [{ name: 'github', serverInfo: null, tools: {}, resources: [], resourceTemplates: [], authStatus: 'notLoggedIn' }], nextCursor: null } });
 	  if (message.method === 'skills/list') return send({ id: message.id, result: { data: [{ cwd: process.env.WORK_DIR, skills: [{ name: 'release', description: 'Release helper', path: process.env.WORK_DIR + '/.agents/skills/release/SKILL.md', enabled: true }], errors: [] }] } });
 	  if (message.method === 'externalAgentConfig/detect') return send({ id: message.id, result: { items: [{ itemType: { type: 'agentsMd' }, description: 'AGENTS.md', cwd: process.env.WORK_DIR, details: null }] } });
@@ -4851,6 +4866,34 @@ test('thread:list forwards an empty modelProviders filter so third-party gateway
         .filter(message => message.method === 'thread/list')
         .map(message => message.params?.modelProviders);
       assert.deepEqual(forwarded, [[]], '不传该参数会让第三方网关的会话整体从抽屉里消失');
+    } finally {
+      socket.disconnect();
+    }
+  } finally {
+    await fixture.close();
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('account:read keeps the account when usage and rate limits are gated behind chatgpt auth', async () => {
+  // 实测 codex 0.153.4：配了自定义 base_url 的 model_provider 时，account/read 回
+  // {account:null, requiresOpenaiAuth:false}，而 usage 与 rateLimits 一律回
+  // -32600 "chatgpt authentication required"。这不是故障，是这种用法本来就没有
+  // OpenAI 账号用量。Promise.all 会让这两条必然失败的请求把整个面板拖成错误态。
+  const root = mkdtempSync(join(tmpdir(), 'ccm-gateway-account-test-'));
+  const codexBin = createFakeCodexBin(root);
+  const fixture = await startIsolatedServer({ codexBin, fakeAuthMode: 'gateway' });
+  try {
+    const socket = await connectSocket(fixture.url, fixture.authToken);
+    try {
+      await waitForAgentEvent(socket, 'init');
+      const account = await emitWithAck(socket, 'account:read', {});
+
+      assert.equal(account.ok, true, '两条附加信息读不到，不等于账号面板读不到');
+      assert.equal(account.account.requiresOpenaiAuth, false, '这个字段是识别第三方网关的唯一信号');
+      assert.equal(account.account.account, null);
+      assert.equal(account.usage, null, '读不到就是没有，不是把整块拖挂');
+      assert.equal(account.rateLimits, null);
     } finally {
       socket.disconnect();
     }

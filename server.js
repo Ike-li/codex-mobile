@@ -2726,12 +2726,22 @@ io.on('connection', socket => {
   on(socket, 'account:read', async (payload = {}, ack) => {
     try {
       const ai = ensureControlAgent(payload?.cwd, socket);
-      const [account, usage, rateLimits] = await Promise.all([
+      // 三条各自成败。实测 codex 0.153.4：认证不是 ChatGPT 时（API key，或 config.toml
+      // 把 model_provider 指到自定义 base_url 的第三方网关），usage 与 rateLimits 一律回
+      // -32600 "chatgpt authentication required"。用 Promise.all 的话这两条必然失败的
+      // 请求会把读到了的 account 一起拖掉，面板对这批用户恒为错误态。
+      // account 读不到才是真读不到，仍然报错；另两条读不到就是没有。
+      const [account, usage, rateLimits] = await Promise.allSettled([
         ai.readAccount(),
         ai.readUsage(),
         ai.readRateLimits(),
       ]);
-      ackOk(ack, { account, usage, rateLimits });
+      if (account.status === 'rejected') throw account.reason;
+      ackOk(ack, {
+        account: account.value,
+        usage: usage.status === 'fulfilled' ? usage.value : null,
+        rateLimits: rateLimits.status === 'fulfilled' ? rateLimits.value : null,
+      });
     } catch (err) {
       ackError(ack, err);
     }

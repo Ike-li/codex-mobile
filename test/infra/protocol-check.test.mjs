@@ -26,6 +26,10 @@ import {
   collectNotificationFieldUsage,
   findUnknownNotificationFields,
   formatUnknownNotificationFields,
+  parseRequestParamsTypes,
+  collectOmittedRequestParams,
+  findOmittedRequiredParams,
+  formatOmittedRequiredParams,
 } from '../../scripts/gates/protocol-check.mjs';
 
 const root = process.cwd();
@@ -386,4 +390,60 @@ test('通知字段用法对得上协议：只要读得出字段就不抛，个�
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+});
+
+// ---- 请求方向的 params 形态 ----
+//
+// 通知方向守的是「读了协议没有的字段」，这一族守的是它的镜像：**送了协议不接受的形态**。
+// 实际出过的事：readAccount() 写成 this.request('account/read', undefined)，而协议里
+// account/read 的 params 是 GetAccountParams。JSON.stringify 把值为 undefined 的键整个
+// 丢掉，app-server 收到一帧没有 params 的请求，回 -32600 missing field `params`，
+// 于是账号面板对所有人恒为错误态。mock、fake codex、e2e 断言三层都没红——假 server
+// 不校验 params，e2e 的正则又把「无法读取」列进了通过条件。
+
+test('请求 params 形态：从 ClientRequest 抽出每个 method 的 params 类型', () => {
+  const source = 'export type ClientRequest ='
+    + '{ "method": "account/read", id: RequestId, params: GetAccountParams, }'
+    + ' | { "method": "account/logout", id: RequestId, params: undefined, };\n';
+
+  const types = parseRequestParamsTypes(source);
+  assert.equal(types.get('account/read'), 'GetAccountParams');
+  assert.equal(types.get('account/logout'), 'undefined', '不带 params 的请求要能和结构体区分开');
+});
+
+test('请求 params 形态：只挑出省略 params 或写死 undefined 的调用点', () => {
+  const source = `
+    this.request('account/read', undefined);
+    this.request('account/usage/read', undefined),
+    this.request('config/read', { cwd: this.cwd });
+    this.request('model/list', definedParams({ limit }));
+    this.request('experimentalFeature/list');
+    this.request('thread/start', startParams);
+  `;
+
+  const omitted = collectOmittedRequestParams(source);
+  assert.deepEqual([...omitted].sort(), ['account/read', 'account/usage/read', 'experimentalFeature/list']);
+});
+
+test('请求 params 形态：协议要结构体才报，声明 undefined 的不报', () => {
+  const paramsTypes = new Map([
+    ['account/read', 'GetAccountParams'],
+    ['account/usage/read', 'undefined'],
+  ]);
+  const omitted = new Set(['account/read', 'account/usage/read', 'thread/notInProtocol']);
+
+  const problems = findOmittedRequiredParams({ omitted, paramsTypes });
+  assert.deepEqual(problems, [{ method: 'account/read', paramsType: 'GetAccountParams' }],
+    'usage/read 的 params 本就是 undefined；协议里没有的 method 交给 findMissingProtocolCoverage 报');
+  assert.match(formatOmittedRequiredParams(problems), /GetAccountParams/);
+  assert.match(formatOmittedRequiredParams([]), /OK/);
+});
+
+test('请求 params 形态：真实的 agent-appserver.js 对着真实协议没有缺 params 的请求', () => {
+  const problems = findOmittedRequiredParams({
+    omitted: collectOmittedRequestParams(readFileSync(join(root, 'src', 'agent', 'agent-appserver.js'), 'utf8')),
+    paramsTypes: parseRequestParamsTypes(readFileSync(join(protocolDir, 'ClientRequest.ts'), 'utf8')),
+  });
+
+  assert.deepEqual(problems, [], formatOmittedRequiredParams(problems));
 });

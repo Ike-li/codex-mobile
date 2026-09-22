@@ -958,7 +958,10 @@ test('P1 native controls call stable app-server methods with protocol params', a
   assert.deepEqual(calls[10].params, {});
   assert.deepEqual(calls[11].params, { path: '/tmp/work' });
   assert.deepEqual(calls[12].params, { path: '/tmp/work/README.md' });
-  assert.equal(calls[13].params, undefined);
+  // account/read 和它下面两个不是一回事：协议里 usage/rateLimits 的 params 就是
+  // undefined，而 account/read 要 GetAccountParams。这行原本也断言 undefined，
+  // 等于把「桥送 undefined、app-server 回 -32600」这个恒失败钉成了预期。
+  assert.deepEqual(calls[13].params, {});
   assert.equal(calls[14].params, undefined);
   assert.equal(calls[15].params, undefined);
   assert.deepEqual(calls[16].params, { detail: 'toolsAndAuthOnly', limit: 10, threadId: 'thr_source' });

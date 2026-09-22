@@ -134,7 +134,9 @@ test.describe('Native Controls Browser Panels', () => {
     await page.locator('#session-settings-close').click();
 
     for (const [selector, label, pattern] of [
-      ['#native-account-btn', '账号', /账号|用量|套餐|mock@example|无法读取/i],
+      // 「无法读取」曾经列在这里，于是账号面板恒为错误态这件事在 e2e 上是绿的。
+      // 钉住 mock 的邮箱：只有 account/read + usage + rateLimits 三条都回来才写得出它。
+      ['#native-account-btn', '账号', /mock@example\.com/i],
       ['#native-mcp-btn', 'MCP', /github/i],
       ['#native-skills-btn', '技能', /技能|没有已启用|无法读取/i],
       ['#native-import-btn', '导入配置', /导入|没有可导入/i],
