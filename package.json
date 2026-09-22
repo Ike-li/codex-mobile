@@ -1,19 +1,19 @@
 {
-  "name": "codex-chat-mobile",
+  "name": "codex-mobile",
   "version": "0.1.0",
-  "description": "Mobile chat UI that bridges your local Codex CLI to your phone — terminal-equivalent agent access.",
+  "description": "Mobile web control panel for your local Codex CLI — run codex app-server on your dev machine and drive it from your phone, including custom base_url gateways.",
   "type": "module",
   "private": true,
   "license": "AGPL-3.0-only",
   "author": "Ike-li (https://github.com/Ike-li)",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Ike-li/codex-chat-mobile.git"
+    "url": "git+https://github.com/Ike-li/codex-mobile.git"
   },
   "bugs": {
-    "url": "https://github.com/Ike-li/codex-chat-mobile/issues"
+    "url": "https://github.com/Ike-li/codex-mobile/issues"
   },
-  "homepage": "https://github.com/Ike-li/codex-chat-mobile#readme",
+  "homepage": "https://github.com/Ike-li/codex-mobile#readme",
   "engines": {
     "node": ">=20"
   },
