@@ -35,6 +35,19 @@ const RICH_MARKDOWN = [
   '- 列表项二',
 ].join('\n');
 
+// 代码块单独一个 fixture 而不是并进 RICH_MARKDOWN：那一份被 markdown-typography
+// 和 markdown-sanitization 拿来量排版，往里塞东西会改掉它们量的对象。
+const CODE_BLOCK_MARKDOWN = [
+  '给你一段实现：',
+  '',
+  '```js',
+  'export function summarizeTurnOutcome({ diff = "", commands = [] } = {}) {',
+  '  const { files, added, removed } = parseUnifiedDiff(diff);',
+  '  return { files, added, removed, hasChanges: files.length > 0 };',
+  '}',
+  '```',
+].join('\n');
+
 function respond(id, result) {
   process.stdout.write(JSON.stringify({ id, result }) + '\n');
 }
@@ -56,6 +69,33 @@ function summarizeInputs(inputs) {
 
 async function sleep(ms) {
   return new Promise(r => setTimeout(r, ms));
+}
+
+// 真实 Codex 在一个 turn 内每次调模型都推一次 tokenUsage：实测日志里
+// 101 条 thread/tokenUsage/updated 对 7 个 turn（约每轮 14 条）。
+// mock 每轮发 3 条就足以暴露「把状态当事件 append」的渲染问题。
+const MOCK_CONTEXT_WINDOW = 272000;
+let mockContextTokens = 0;
+
+function notifyTokenUsage(targetThreadId, turnId) {
+  mockContextTokens += 12000;
+  const breakdown = {
+    totalTokens: mockContextTokens,
+    inputTokens: Math.max(0, mockContextTokens - 500),
+    cachedInputTokens: Math.floor(mockContextTokens * 0.7),
+    cacheWriteInputTokens: 200,
+    outputTokens: 500,
+    reasoningOutputTokens: 120,
+  };
+  notify('thread/tokenUsage/updated', {
+    threadId: targetThreadId,
+    turnId,
+    tokenUsage: {
+      last: breakdown,
+      total: { ...breakdown, totalTokens: mockContextTokens * 2 },
+      modelContextWindow: MOCK_CONTEXT_WINDOW,
+    },
+  });
 }
 
 async function simulateSlowTurn(input, targetThreadId = threadId) {
@@ -111,10 +151,12 @@ async function simulateTurn(input, targetThreadId = threadId) {
     // RICH 分支必须排在 MARKDOWN_FIXTURE 之前:后者是前者的子串。
     : input.includes('RICH_MARKDOWN_FIXTURE')
       ? RICH_MARKDOWN
+    : input.includes('CODE_BLOCK_FIXTURE')
+      ? CODE_BLOCK_MARKDOWN
     : input.includes('MARKDOWN_FIXTURE')
       ? 'Here is **bold** and `code`.\n\n- item one\n- item two'
-    : input.includes('/status')
-      ? '当前没有活跃目标或正在执行的任务。'
+      // 这里曾有条 /status 分支，模拟「模型收到 /status 这段文本并回话」。
+      // 斜杠命令现在在前端就被分发掉了，留着它只会让人以为 /status 该发给模型。
       : `Mock response to: ${input}`;
   const streamDelayMs = input.includes('STREAMING_MARKDOWN_FIXTURE')
     ? 40
@@ -140,6 +182,11 @@ async function simulateTurn(input, targetThreadId = threadId) {
     threadId: targetThreadId, turnId,
     item: { type: 'agentMessage', id: `msg_${turnCount}`, text: responseText }
   });
+
+  // 一个 turn 内多次用量更新（工具循环的每一步都会推）
+  notifyTokenUsage(targetThreadId, turnId);
+  notifyTokenUsage(targetThreadId, turnId);
+  notifyTokenUsage(targetThreadId, turnId);
 
   // Complete the turn
   notify('turn/completed', {
@@ -312,6 +359,106 @@ async function simulateApproval(command, targetThreadId = threadId) {
   });
 }
 
+// 一次推出四种此前 mock 从来造不出来的卡片：计划、MCP 调用、搜索结果，以及
+// 协议里没见过的 item 走 raw 降级。agent-appserver.js 按 item.type 分派
+// （mcpToolCall / webSearch / default→raw_item），turn/plan/updated 出计划卡。
+//
+// 加这个 fixture 是因为 docs/UI_SURFACE.md 把这四张卡列成了界面上存在的东西，
+// 而在此之前没有任何 E2E 或截图能证明它们真的渲染得出来。
+async function simulateToolCards(input, targetThreadId = threadId) {
+  turnCount++;
+  const turnId = `turn_${turnCount}`;
+  activeTurnId = turnId;
+  notify('turn/started', {
+    threadId: targetThreadId, turn: { id: turnId, status: 'inProgress' },
+  });
+
+  notify('turn/plan/updated', {
+    threadId: targetThreadId, turnId,
+    plan: [
+      { step: '读取工作区结构', status: 'completed' },
+      { step: '定位失败的测试', status: 'inProgress' },
+      { step: '提交修复', status: 'pending' },
+    ],
+  });
+
+  // started 出 mcp_use（参数），completed 出 mcp_result（结果），两条并成一张卡。
+  const mcpItem = {
+    type: 'mcpToolCall',
+    id: `mcp_${turnId}`,
+    serverName: 'filesystem',
+    toolName: 'read_file',
+    arguments: { path: 'src/app.js' },
+  };
+  notify('item/started', { threadId: targetThreadId, turnId, item: mcpItem });
+  await sleep(20);
+  notify('item/completed', {
+    threadId: targetThreadId, turnId,
+    item: { ...mcpItem, result: 'export {}\n' },
+  });
+
+  notify('item/completed', {
+    threadId: targetThreadId, turnId,
+    item: {
+      type: 'webSearch',
+      id: `search_${turnId}`,
+      query: 'playwright screenshot clip',
+      results: [
+        {
+          title: 'Page | Playwright',
+          url: 'https://playwright.dev/docs/api/class-page',
+          snippet: 'screenshot() 支持 clip 参数，按矩形区域裁剪截图。',
+        },
+        {
+          title: 'Screenshots | Playwright',
+          url: 'https://playwright.dev/docs/screenshots',
+          snippet: '整页截图、元素截图与遮罩的用法说明。',
+        },
+      ],
+    },
+  });
+
+  notify('item/completed', {
+    threadId: targetThreadId, turnId,
+    item: {
+      type: 'somethingProtocolAddedLater',
+      id: `raw_${turnId}`,
+      note: '未识别的 item 不再进对话；这条只留给 UNKNOWN_ITEM_FIXTURE 守准入',
+    },
+  });
+
+  notify('turn/completed', {
+    threadId: targetThreadId, turn: { id: turnId, status: 'completed' },
+  });
+  activeTurnId = null;
+}
+
+// 单独一轮、只有未识别 item：混在 TOOL_CARDS 里会被折进 <details>，DOM 计数才看得到，
+// 用户却看不见。单独放才能守「消息流里没有 Raw 卡」这条外部可观察的准入。
+async function simulateUnknownItem(input, targetThreadId = threadId) {
+  turnCount++;
+  const turnId = `turn_${turnCount}`;
+  activeTurnId = turnId;
+  notify('turn/started', {
+    threadId: targetThreadId, turn: { id: turnId, status: 'inProgress' },
+  });
+  notify('item/completed', {
+    threadId: targetThreadId, turnId,
+    item: {
+      type: 'somethingProtocolAddedLater',
+      id: `raw_${turnId}`,
+      note: 'protocol residue must not become a chat bubble',
+    },
+  });
+  notify('item/agentMessage/delta', {
+    threadId: targetThreadId, turnId, itemId: `msg_${turnCount}`, delta: 'unknown item ignored',
+  });
+  notify('turn/completed', {
+    threadId: targetThreadId, turn: { id: turnId, status: 'completed' },
+  });
+  activeTurnId = null;
+}
+
 async function simulateFileChange(input, targetThreadId = threadId) {
   turnCount++;
   const turnId = `turn_${turnCount}`;
@@ -326,6 +473,15 @@ async function simulateFileChange(input, targetThreadId = threadId) {
         { path: 'src/readme.md', kind: { type: 'modify' }, diff: '-old\n+new\n' },
       ],
     },
+  });
+  notify('turn/diff/updated', {
+    threadId: targetThreadId, turnId,
+    diff: [
+      'diff --git a/src/example.js b/src/example.js',
+      '--- a/src/example.js',
+      '+++ b/src/example.js',
+      '+export const ok = true',
+    ].join('\n'),
   });
   notify('turn/completed', {
     threadId: targetThreadId, turn: { id: turnId, status: 'completed' }
@@ -480,6 +636,10 @@ rl.on('line', async (line) => {
           simulateTurnGroup(input, targetThreadId).catch(() => {});
         } else if (input.includes('SLOW_TURN')) {
           simulateSlowTurn(input, targetThreadId).catch(() => {});
+        } else if (input.includes('TOOL_CARDS_FIXTURE')) {
+          simulateToolCards(input, targetThreadId).catch(() => {});
+        } else if (input.includes('UNKNOWN_ITEM_FIXTURE')) {
+          simulateUnknownItem(input, targetThreadId).catch(() => {});
         } else if (input.includes('FILE_CHANGE_FIXTURE')) {
           simulateFileChange(input, targetThreadId).catch(() => {});
         } else if (input.includes('approve') || input.includes('echo')) {
@@ -506,6 +666,20 @@ rl.on('line', async (line) => {
         break;
       }
 
+      // inline review：审查结果就是当前 thread 上的一个普通 turn，
+      // 所以这里响应完直接走 simulateTurn，前端不需要为它另开一条流。
+      case 'review/start': {
+        const target = msg.params?.target || {};
+        const targetThreadId = msg.params?.threadId || threadId;
+        respond(msg.id, {
+          turn: { id: `turn_${turnCount + 1}`, status: 'inProgress' },
+          reviewThreadId: targetThreadId,
+        });
+        const label = target.type === 'custom' ? `按指令审查 ${target.instructions}` : '未提交改动审查';
+        simulateTurn(`REVIEW_FIXTURE ${label}`, targetThreadId).catch(() => {});
+        break;
+      }
+
       case 'turn/interrupt':
         activeTurnId = null;
         respond(msg.id, { ok: true });
@@ -514,6 +688,49 @@ rl.on('line', async (line) => {
         });
         break;
 
+      // account/read 的 params 是 GetAccountParams（结构体），不是 undefined —— 真
+      // app-server 缺 params 直接 -32600。mock 不跟着校验的代价是把一条**恒失败**的
+      // 请求答成成功：桥那边写着 request('account/read', undefined)，账号面板对所有
+      // 真实用户都是错误态，而 e2e 一路绿灯。
+      case 'account/read':
+        if (msg.params === undefined) {
+          process.stdout.write(JSON.stringify({
+            id: msg.id,
+            error: { code: -32600, message: 'Invalid request: missing field `params`' },
+          }) + '\n');
+          break;
+        }
+        respond(msg.id, { account: { type: 'chatgpt', email: 'mock@example.com', planType: 'plus' }, requiresOpenaiAuth: false });
+        break;
+      case 'account/usage/read':
+        respond(msg.id, { summary: { lifetimeTokens: 123000 } });
+        break;
+      case 'account/rateLimits/read':
+        respond(msg.id, { rateLimits: { limitName: 'Codex', planType: 'plus' } });
+        break;
+      // 斜杠挑选层的 skill 那一段靠它。此前 mock 没实现，走 default 兜底回 {}，于是
+      // 「/ 面板要同时列出内置命令和 skill」这条链路在 e2e 上根本没有被走到过。
+      case 'skills/list':
+        respond(msg.id, {
+          data: [{
+            cwd: process.cwd(),
+            skills: [
+              { name: 'archify', description: '画架构图', path: '/mock/skills/archify/SKILL.md', scope: 'user', enabled: true },
+              { name: 'tdd', description: '测试先行', path: '/mock/skills/tdd/SKILL.md', scope: 'project', enabled: true },
+              { name: 'disabled-one', description: '未启用的不该出现', path: '/mock/skills/x/SKILL.md', scope: 'user', enabled: false },
+            ],
+            errors: [],
+          }],
+        });
+        break;
+      case 'configRequirements/read':
+        respond(msg.id, { requirements: null });
+        break;
+      case 'config/read':
+        respond(msg.id, { config: { approval_policy: 'on-request', approvals_reviewer: 'user',
+          sandbox_mode: 'workspace-write', sandbox_workspace_write: { network_access: false, writable_roots: [] } },
+        origins: {}, layers: null });
+        break;
       case 'model/list':
         respond(msg.id, {
           data: [
@@ -603,6 +820,40 @@ rl.on('line', async (line) => {
           webSearch: true,
         });
         break;
+
+      case 'mcpServerStatus/list': {
+        const detail = msg.params?.detail;
+        if (detail != null && detail !== 'full' && detail !== 'toolsAndAuthOnly') {
+          process.stdout.write(JSON.stringify({
+            id: msg.id,
+            error: {
+              code: -32602,
+              message: `Invalid request: unknown variant \`${detail}\`, expected \`full\` or \`toolsAndAuthOnly\``,
+            },
+          }) + '\n');
+          break;
+        }
+        respond(msg.id, {
+          data: [
+            'codex-security',
+            'codex_app',
+            'codex_apps',
+            'computer-use',
+            'cua_repl',
+            'github',
+            'node_repl',
+          ].map(name => ({
+            name,
+            serverInfo: null,
+            tools: {},
+            resources: [],
+            resourceTemplates: [],
+            authStatus: 'notLoggedIn',
+          })),
+          nextCursor: null,
+        });
+        break;
+      }
 
       default:
         respond(msg.id, {});

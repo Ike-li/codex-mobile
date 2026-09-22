@@ -1,0 +1,200 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:4962fe5585f22da06f04bc37bf7f5f109f405a79dc60e4a178852a4519388663",
+  "claims": [
+    {
+      "id": "claim_c40f0651a47e4a629cbc7d89b875b19d",
+      "statement": "thread:list 必须显式传 modelProviders 为空数组，否则退回 app-server 默认只列 model_provider 为 openai 的会话，自定义 base_url 网关跑的会话会整体从抽屉里消失。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L2473-L2486",
+          "version": "repo-lines-v1:sha256:c298f7c9be03179de0c104cecacba66cfa7d5657dab7beb2c049d2d15d89e80c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI1Mzk1MTgzMWZkYmYyMjk2ZjE1ZTlkMzljZjZiMzc5NTJkMDllNmY5MDQwYzY2NTNjYjg5ODkzYjM1NmFlNDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcxN2FmMTEwMWM5N2I3YzJmNTI1NDA3ODJlNjM0Y2M0NDQwZjBlOTcwMzQxZTUyZjk3NTIzMTFkNzhiN2Q3ZDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI3ZGZmNjVmNDA3NWY5MDVkOTcxMjUwNmRlMjUyM2VhZjllODRkYTA3YTdmNTU1NDZlNjExZjQzYjJmMDNiY2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE2ZTIzZjVhYzE0NTIyZWYzNjQ4MTUxN2U2ZDU1NDE4ZTkyNDczN2RjM2YyNDRkOGMwNTNhMmZkZGJjYTRkNDkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d2c5204243794c6f824d3ba0673c9f73",
+      "statement": "thread:list 的响应会用 host 缓存的最新 thread 状态覆盖列表项并带上 statusRevision，同时附上本页 thread 的未读位点。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L2487-L2499",
+          "version": "repo-lines-v1:sha256:ce43ac9d026c8a76bb64855fb3b873df6a199bec821d8d3ac350fa321d3f7000:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM0ZGUyMGY2ZWM1ZTg4YWJiNDQ4NmU2NDg4M2ZlZDcwNDY4NWM2NjliMjE2NTM0NzBmZGI2MTY3NDQ4Y2M2Y2MiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcxN2FmMTEwMWM5N2I3YzJmNTI1NDA3ODJlNjM0Y2M0NDQwZjBlOTcwMzQxZTUyZjk3NTIzMTFkNzhiN2Q3ZDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA0ZThjM2E1ZjE2ZjRhYzY4NThmNmM1NWRiZWFjMGM3ZDYxOGUwYzk3ZDViOWFhNWU5NzVlMjM1ZWU3ZjNiYjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYzODI4MjgwODAzYmYzNWFjNDdkZThiZDMzYzMwZDMwOTYzZDVjM2U5MTAzYjE2MWY0NmZmNzhmYzcxNWZlZjMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_954e61942968453498984de418cf226a",
+      "statement": "normalizeThread 把协议字段折成前端形状：时间从秒转毫秒、标题取 name 然后 preview 然后未命名、lastUsedAt 取 recencyAt 然后 updatedAt 然后 createdAt。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L1604-L1621",
+          "version": "repo-lines-v1:sha256:6ff2f194aaf24140a0c9ff2a70c976456531db3b73dfa305db60f7e876ba2593:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMxZDk1YjVlN2ZlOWUxMGVkZmRhZTM2MmE2NTFlZTRmODBjNDkwMWFjOWM2ZjYwMjNjYjI0YTYyYmQ5YWIxN2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAxNmRhZDM0MWJjMmM3NDAwNWNmNTk1NWFhY2VlZjhhMGI0OGY0YjJhNGEwYTA1MzdhZGI5NWEyYjk4MmVlZGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZhM2NmNTE5MjM1NGY3MTYxNWFjNTEwMzRiM2U5N2MyMGVkYTk5NjQzZmNhZjViYmU2ZDQxYWQ1OWJkMTIxNjcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ce911e338fd843bcb047b8e5e7789ca7",
+      "statement": "thread:select 通过 createAgent(threadId, cwd) 复用已有 runtime（先查 registry），随后绑定视图、广播实例列表并发一条 init 事件；真正的 thread/resume 发生在 runtime 的 ensureReady 里。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L1428-L1437",
+          "version": "repo-lines-v1:sha256:eccc2385ccd905bce0c751551ea38b45440fea0b6679108b01c6a30a3df59d86:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA5YTJiYmMxMzYyY2M5YTRjMTBiNmUxM2QxNTM0NDg3MTY4YzcyOTY3YmE1YjdkMThiZjgzMDQyZDU5ZjZmODAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUyODcyZGE3N2IwZjRkOTkyMGIyNGY3MDQzNTZkZWJjNGNlOTNlOTQyY2JmZTUzMzg1OTAzYmVkYTU3ZGE5ZmQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE3ZTU3NTQ5M2Y5ZmYwM2VmNzE0MDIwMDM3Nzc5ZTFkZmZiNTkzMWQwMTkyMmJjOTcyZDAwMmM1MTc1MTYzNTEifQ"
+        },
+        {
+          "resource": "repo://server.js#L2505-L2522",
+          "version": "repo-lines-v1:sha256:3606c670500ea023d3d8d82830eb17a185b49a30732c5e50df7573cf36247fdd:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhNzFhZTk2ZDc1OGU3NGZmOTE1NTMyNzIzMzRkMGI5NDc1YTE4NjZmZWY3ZTNhNzc1NDRmZmU5YmMwZWJhNWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhM2U0NmY5NDI3NmI2ZjZmNGVkMWYwMmFmNzhiZWY2YTJlZTFjNDM5ZGQ1NTg0Yjk3Mzk0ODMxMzIxNGQyYjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcyMGZjOWU2N2RiMDdlZDIzOWJiM2FkMjMxMmVhYWI5YTcwZTFmNmZiYTAxMjg4YjBiYTZlNjFkN2Y4ZWU3ODgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBhMTg1NDhmMjk5Mzg0MmVkMzYyMjUxNmNiOTc4OTcyODZlNTZlNjZmMmMzMjEyNDMyNmEyYmRiOWRlOWNhNzkifQ"
+        },
+        {
+          "resource": "repo://src/agent/agent-appserver.js#L569-L585",
+          "version": "repo-lines-v1:sha256:3b2d65335e8114c4ea7d7cd6934fc6f6c336156bd7dd62f0752d67ce9af8feeb:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIyNDkxOWQ4YWNmMDI3ZGVlMzIyMjNkOGU3YzliMjZiYjgxNGU5ZDE0MTY2ZWM2NGY0MGI3MzgzNDZmOGVlMDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc3ODAxZWI1NzQyM2U2MWRjZjI5MWJlOGZiNDExMmZjMTFmYWJjOTQyYzA4YzRhMTVhYTVjYzk1NjU0M2I1MDUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRmYWYyNTQ3ZTg5N2U1NTgyOTEwNGFlNzA4NjNmYTE0YmRhM2Y1ZGZjMjBjNWMxZjRmNmE2ZGFiNzFmZGQzZmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM1ZDFkNGE3NzMyYmE3ZDY2MjU4NmJkNDZmNjVkN2I3NDZlOGNmNjRlNTdmYTVjZmQ1NTVhNTc5OTI5NjJmZmEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3ec55384aec24a6bbc64f66d0d37413d",
+      "statement": "thread:history 走 thread/read 拿全部 turn，再由 normalizeThreadHistoryMessages 折成前端消息数组，上限 200 条；上限的理由是前端只渲染最后 30 条。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L2524-L2540",
+          "version": "repo-lines-v1:sha256:7c6f5b859e174ea5cdbae2e5406618e78b9623d3d4722f54408e1bcfec4e1760:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY5MmI3MTgzNTZmNjNjY2UwYWQxZTY3MTFlMDBlNTJhZWU2MzIwODVkMDVjYWU5YmU0NDIxOGZhNDU5MzA5OTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhM2U0NmY5NDI3NmI2ZjZmNGVkMWYwMmFmNzhiZWY2YTJlZTFjNDM5ZGQ1NTg0Yjk3Mzk0ODMxMzIxNGQyYjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcyMGZjOWU2N2RiMDdlZDIzOWJiM2FkMjMxMmVhYWI5YTcwZTFmNmZiYTAxMjg4YjBiYTZlNjFkN2Y4ZWU3ODgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU5ZDEzY2JhMTU4MWQ5ZWE1ZGM5MzViODI5NjBlYmM4YTgwOWIwZTEwZTBhYmJkNjk1NWU4ZTYwZjYxNWRkZjcifQ"
+        },
+        {
+          "resource": "repo://src/sessions/thread-history.js#L18-L21",
+          "version": "repo-lines-v1:sha256:ff63c12abae2a6a9cb22cd62900d1c9f04a5294a14d69f4f7014039967313403:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNmEzM2VhZWZhZDE2M2U4Zjg2NmE3OWRjNTgwYmNkODM4NjdhMTFhNjI0YzY2YmE2ZDYzYjNjMmMxOTI0MzMyZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzI4N2U4ZDZhYmZkNDgyN2E0MDAyMDU4OTAxMzc5ZWU5MjZhNjNhMDIyYmIyMDJjNGM5NmQzZGJiYmM0ZTVhOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTE4MjMwMzJkNDk1MzNkMzk2NGQ0MjA5Y2EzZjY2MmNlZTJjMmQwODIzM2VjMjlhYmNiZDE5ODU0ZWNhNDFlZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjA4YjFkMDJlNDM0NjY2ZWE3N2U5MzE3MTMzZDY2NDM2YjVmZjc0ZWZlZDBjMjdiYmVlMWZiNDkwMDFiMjEyYSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_ee801566b1e54caba2cd3dd753655707",
+      "statement": "thread:delete 除了发 thread/delete 还要 dispose 所有指向该 thread 的 runtime、从 registry 释放、清掉 socket 上的引用并广播实例列表。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L2560-L2577",
+          "version": "repo-lines-v1:sha256:803659948e425ef64c0624c066dfd0994f3266fb4f954b0c4b8b02acbe41f1f3:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyODc3YTA2MGRmZTQ1M2MxMGRhMGI2MTNkNjBmNjE0ZDBhYjA0MjQ2ODk3YTYxYmUwNjE4NDFhNTA3ZjcyOGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhM2U0NmY5NDI3NmI2ZjZmNGVkMWYwMmFmNzhiZWY2YTJlZTFjNDM5ZGQ1NTg0Yjk3Mzk0ODMxMzIxNGQyYjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcyMGZjOWU2N2RiMDdlZDIzOWJiM2FkMjMxMmVhYWI5YTcwZTFmNmZiYTAxMjg4YjBiYTZlNjFkN2Y4ZWU3ODgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRlZTJjMzczMDQ4YTlkOTIxNDJlYzQzNWE4Y2I5NGE1ZTQ2YTZlZmQzOWE0NDljMmMzYThkYzViNWU5ZWY1OTIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4bfa3aeb34d94b5a80a9e97a7e68beef",
+      "statement": "会话动作对应的协议方法分别是 thread/archive、thread/unarchive、thread/delete、thread/name/set（空名拒绝）、thread/compact/start、thread/rollback（numTurns 下界 1）。",
+      "evidence": [
+        {
+          "resource": "repo://src/agent/agent-appserver.js#L1349-L1370",
+          "version": "repo-lines-v1:sha256:0d8750f7f806ec7094e2799962814509dc4ddcef1cc3a298c7b2664f0715cd66:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk1MWIxM2JhODdiNDAwNGViYmFmNTEwZjU2MTcwZmU0YWNiNDcxNmQyM2E4M2M4NDY3OWUzODUzZGNmMGU1OTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcxNjcwMGU4YmQ5YWM5MmQ3OGRiY2NiYWMyNTZkZWRiYmM1YmQ4ODVlM2UwYTIyYTZjYjEzNzJmOTJiZjI3YjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ4MDRkMjliMmQwNWY3NDIwN2NmZmE1Y2NlMmI3MTY3NjBiYmE0NTM5ODBkMjU0ZWI1ZDI3YmNkMzFmZDMyNTAifQ"
+        },
+        {
+          "resource": "repo://src/agent/agent-appserver.js#L1409-L1413",
+          "version": "repo-lines-v1:sha256:21c058edb1689b73d1ee32c2b16419e4a33a2bf8603c749c1d01220413da0f0c:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDM3NWRmMmYwMDNiMjM3YTI1ZThhYTJiMDY2NjA5OGI2NWZkMjRiYmNmZjQ0OGIwY2VkNjZhMmFiNjJhYTMzMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNWUxMmI2MTE4OTQzZTMwYzAwNjgzM2U3ODE2MzBhNTNiMzJmNDE3ZWY1Zjk3OTVjM2YxMmYzMzA4MDI0YzVkOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODgxOTJiNzE2YTIwNmYzYWY0NjU0MTljMGYxNTM1ZmVkOTU3M2IwN2Y1MTljOGM0NDEwMTQ2NjliZmZjNzA3YSJ9"
+        },
+        {
+          "resource": "repo://src/agent/agent-appserver.js#L1445-L1453",
+          "version": "repo-lines-v1:sha256:2aeedb3ee2061bc89fccc337870e0055891dcc0de3823d8e829ccdb840a7ac5d:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWEzY2U2NWI0YjM2YjFjMzA1ZjJmZWJhODQ2NmY5NzQ0OTBjMzkzYmEwMTI2YWU4NWM5YzcyOGNhNTlmMDk2MSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTdkODYzMmU1NGU5Mjk4YWJiOTU4NzI3ZTJkNTE0MDhhYmFmMTM2NjAzNTM3OTEwMTQwYWJmNjViMzBhYjYxMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNWUzODVmNmRmYTRjNTNlODQ5OWQ5YmI0M2IzMDllYjZhYjcyMGRkMjM4ZTM1NDI0ZTc4MjdmZDIzNmZmN2FiZiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_5f215b837df3404692e1bd2ecc24e441",
+      "statement": "代码审查固定用 delivery inline 并跑在当前 thread 上；它用 ensureReady 而非 ensureInitialized（空会话也该能发起，thread 是懒建的），并必须手动置 busy 并发一次 turn_started，否则后续 delta 没有 turn 容器可落、审查结果会凭空消失。",
+      "evidence": [
+        {
+          "resource": "repo://src/agent/agent-appserver.js#L1415-L1444",
+          "version": "repo-lines-v1:sha256:99acf204d585b20e193e2e9e740b187ac0f1c9befe430f0b689c45e5dfbe09f2:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVkZTgyNDUyMTBjN2NlNWJjNmQ3YjU0Nzk1NGI4MDIwMzA2NGU3OGIxZmVhMjgyZTNhMDM4ZDQ4YTYyNTM0MWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc4NTdhZTJiYzUxYmJmNmZhZTk4Y2U2YmY0MjZjNWRjMTI1YmEwNzQwZGFjMjY4NzE4ZDE4OTg2NGEwODJjNDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZjY2JiZjVhMmIxZDJiMDAxYjJhYzM0YjIwY2Q2Y2QzYjQ5MjYzMDlmNmVlODliY2MwNGMzMTI3ODllNWFhYTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_938500897d3846db8b6e5e4dddbd2cb1",
+      "statement": "thread:collaborationMode 在没有 threadId 时降级成 turn override 并回 deferred 为 true，而不是报错。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L2579-L2598",
+          "version": "repo-lines-v1:sha256:85da19898ecd97cb80beb25069f5e2bc1aa610ab3d765eda5027a9e6a78779a0:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM2NjE3MWMxODk4NmFmNzJjNGFlZWQ5NzdiYzQzNTNiNGVkM2Q3MjFlNDA5MWMyYWJlNGRjODRhMzlhZmQwZWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhM2U0NmY5NDI3NmI2ZjZmNGVkMWYwMmFmNzhiZWY2YTJlZTFjNDM5ZGQ1NTg0Yjk3Mzk0ODMxMzIxNGQyYjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcyMGZjOWU2N2RiMDdlZDIzOWJiM2FkMjMxMmVhYWI5YTcwZTFmNmZiYTAxMjg4YjBiYTZlNjFkN2Y4ZWU3ODgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg5ZDg4NTljZjY4NTM3OWVkZDUxNmJiOTNhNWJhMDY5NDZmZGNlNDcwNjNmNmNmYTg4MzBiYTZjNzUyZWVjYjQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_779e0dc9f1c44b1b9c8c128c4668dd96",
+      "statement": "threadActionConfirm 只对 archive 与 delete 返回确认内容，archive 的文案指名「显示已归档」入口，因为那份可逆必须先有那个入口才成立。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/session/thread-actions.js#L1-L23",
+          "version": "repo-lines-v1:sha256:feed988e34d356226f4c92756c3e925ce33e74d7cb04e27f494023cc16c78aec:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQyZjA1MTgxOTBlOWQ4NGFmZTY4NGE0N2JmNTUxMjZiYzY1MWI4MjQ2Yzg0YWZhNWIzNDQ1MzRkNTdjODAxNTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIzZGQ3MTllYzZhM2I3YzNkMmM5YzI2YmQ1M2ZlZWRjYjY5YWQ2MDA0YjhiZjU3NjI0ZjM3Y2U4NjEwNzQ4N2YifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_63a691b395d543f3a25abc198035ca66",
+      "statement": "threadActionErrorMessage 只翻译认得出的 SCHEMA_MISMATCH 一类错误、其余原样透出，翻译文案先答「会话未被删除 / 保持原样」、给的是「多半」加一个动作而不是断言，且不给「稍后再试」这种假出路。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/session/thread-actions.js#L34-L59",
+          "version": "repo-lines-v1:sha256:ec88d1da09670e9fd1da1c15b32622cc39dc01f2b84e2b910357f6e3692b4ae9:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUxMzIzNWMxMThlNzVlMjZkZjcxYzBjMDU3ZDM0YmNjOGIzMmJiODk3YmJkMWNiMjI3ZjJlZjUwYmFkNDU4NjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIyNTQ3ZGQ5MjQ4Y2NiZjZiZTM4MGFkZGEyOTdjMDA3MTgxYjI5NGZiNzE4NGE3OWYzODg4YTNlMjI1MDc4YjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_46642b8f30fa43c9b8342ccc2de6af59",
+      "statement": "applyThreadStatus 与 mergeThreadList 都用 statusRevision 做乱序保护：收到的 revision 旧于本地就丢弃，列表刷新回来时本地更新则保留本地。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/session/thread-status.js#L1-L39",
+          "version": "repo-lines-v1:sha256:0a75d658b9841bba9f4af65ec9ec40a4fb3aa8e19023da38d292cca97ebefdd0:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE3NmMyOWU4ZDQ3MjZlZGUwNjZjNmNhYWM3M2JmMmE3YzBkNjViYWM5M2M2OTQ4ZGI2NGM5ODhmOTExYTg3ZTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZjZjgzMWVhOWNhZjEwMzhkNDY5MzFmZmQzNTcyYTdjYzJiNTRiOWFiMGZiY2I5M2Q0NGI4ZDYwMGNiNWU4YjUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a8c77fe842144369be890f694e1e724c",
+      "statement": "needsYouSessionLabel 在当前列表答不上来时返回空串表示「别动标题」，因为回落成「新会话」会让顶栏和正文里仍挂着的对话互相打脸。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/session/thread-status.js#L41-L59",
+          "version": "repo-lines-v1:sha256:a29bc2191d60208cf50f73c51e1bddce064d8ed7baec84a5ea5f1dedbf6078e7:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNjM2ZiNDk1Yjg4MjU4NDA1Mjc0YTI3NDVmZjJmZDc1NTg4OGMzNDE5MGEzZTZkNDg4ZjkwMmU4NzU2YjQwNzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJkMGYyZDNhM2FhZGEyNzU4NjQ1NzhkMGE0MzkxNTYzOGQ1NDNmZWNhMmM5NDg1OGRiOTQxMjExZTg2Y2VmMmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZiYzIwMjdhNWRlYzZmYTU1MTI5YzVkZmE0MjE0YTg5YzhjMWU5ZTNlZDRlM2Q1ZTgyOWU2M2I2NjU4MzBkY2IifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_acb49a37700841f39fb4d884d716938c",
+      "statement": "会话按工作区分组的依据是 cwd 的最后一段，取不到时归「未分类」并保持首次出现顺序。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/session/project-label.js#L1-L24",
+          "version": "repo-lines-v1:sha256:95f4587f25bbfe9c601afe975a5c0842e5cd98ca7e46bef616196c387058b986:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhMGM1MjgzMjEwMTA4ODQxZWVlOTY5NDBiMzc5Nzc5N2M1ZTBiNTJlNTM0MzU4ZTVmOWMzYzc0ZjZjNjU0NWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8d2d2c28f8c94223ac22c7946a223030",
+      "statement": "当前 thread 指针存在 localStorage 的 codex_current_thread_by_cwd 键下、按 cwd 分别记，因此在多个工作区之间切换时各自回到上次的会话。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/session/thread-preferences.js#L1-L10",
+          "version": "repo-lines-v1:sha256:7ac5309d6b8cf9e21b5e4f9d51651418d6157ae74501c731f8144b3488108bb3:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRlMzczZjQ4NmRlMjJiOWY1NWE0MzFjMTQwZDIyMzk0NThhYTU5YTg2ZDA4ODAxYjVmZDFkOGJkMGVkNTBkNzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE5ZGJkMzBlY2U4ZDc0NTg1ZTc5ZThiODk5NWJhYjZmMDZiNjBhNDAwM2I4YTEwNjA2MDdmZjY2ZWFjZWI1MzkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA0MjdiZGQ2OGM1OTRmMTE4OGRiNjVkNzk2ODg2ZTVkNjAyZmEwOTkwNmU5Yjc2ZmQ1ZTQwZWU4N2Y3OTViM2YifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_19e60666fb3441c2b4ae9c7e8fd09bc9",
+      "statement": "session:fork 的目标解析顺序是显式 threadId、显式 instanceId、socket 当前 viewing，解析不出时给一句明确的「当前没有可分叉的会话」而不是抛异常。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L2889-L2936",
+          "version": "repo-lines-v1:sha256:89a9f5fb866863596c61043281545a51f1d43e1af289b0bbc651034c24c4031c:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFiYjY4NDMxNzM2NGIxMDgyYjYyMDM1OWE5NTJhZjEyOWIxODA3MmQzZDJjODUyMTg1ZGNhYTcxMTRmODRkZDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhM2U0NmY5NDI3NmI2ZjZmNGVkMWYwMmFmNzhiZWY2YTJlZTFjNDM5ZGQ1NTg0Yjk3Mzk0ODMxMzIxNGQyYjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk4MjdhZGVjNGY2MWY1MTU0MTNjYWUyMjM2NmQ3MzhmZTQ5NDBlNTI1NmRkYTE4YzUzOWNlNzdjNGY3YTUxOWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdkNmFlODZkYWM2YmRkMjYwZTZiY2I2NDgxZGVjOWE3OGRiN2YyMDAzYzc2NTI0YjZjOTg0YzJlZDM4NGEwOGQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_952314bd70bd4aa3ba6d9be0c86cb72d",
+      "statement": "session:switch 只切视图指针，目标实例不存在时回 errorCode 为 stale_target。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L2938-L2957",
+          "version": "repo-lines-v1:sha256:ccd6cf2ff427b058572d96f9654e50b7ed7a7c0ffd00e4feecca944d71411ddf:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY4MmI0MGY5NGYyNTM2NDNiOTAyMmIzZDdlOGJhYjRlZjA0OTcxYWJiY2VlZjk4YTkzMjVlOGVjM2UwMTFiMmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhM2U0NmY5NDI3NmI2ZjZmNGVkMWYwMmFmNzhiZWY2YTJlZTFjNDM5ZGQ1NTg0Yjk3Mzk0ODMxMzIxNGQyYjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcyMGZjOWU2N2RiMDdlZDIzOWJiM2FkMjMxMmVhYWI5YTcwZTFmNmZiYTAxMjg4YjBiYTZlNjFkN2Y4ZWU3ODgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc4Y2JkMmNjMDU0YjY2YTNkODNiM2MwMTgwOTBmMjUxNjdlZjUzMjJmNjgyY2MzOWM2YzI0ZWM3OTM5NWQ5ZTUifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.5.2",
+    "at": "2026-09-22T08:36:26.702Z"
+  }
+}

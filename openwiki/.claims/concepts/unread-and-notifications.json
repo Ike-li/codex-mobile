@@ -1,0 +1,212 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:1589b5791ca42ee03771961530dd87f6e7b93b34ffb0e04924407f742472098e",
+  "claims": [
+    {
+      "id": "claim_ef93243ee14b4210a84aaa40a618561f",
+      "statement": "未读、「需要你」与服务告警是三条正交的注意力轴，它们的清除条件不同（答过才清 / 时效窗退场 / 看过即清），因此不得挤进同一个指示器。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/session/unread.js#L1-L12",
+          "version": "repo-lines-v1:sha256:18416668593d901aa286c44310e050f679642caf57a063b5f52d680dd7f08dc2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwNGQ2NjkwODMxN2Q0ZDg0NzQ4YWJmM2FhYWRmNjJmZTBjM2YyMmI0ZjAwNTZlZjhkNDc5YWJiYTg0ZGIxYjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg1ZGZjODIwMjU3ODM3NDU3YTFkMTU4Y2I0ZjZmM2I2MjhiMTAwN2Y4ZmZmOTc3YjQxZTdlYzE1MzhhYzc0YjQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg4MTZmMjk1YzU1MTg0MjZmODIyYmQzMGViNTBiNzg3YjE1OTIyY2UwZGUyYmZhZTg0YmQ0OWE3ZjlkZTI3YzEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_dd594f90f2a240e3800ebc0e6f3184ea",
+      "statement": "isSessionUnread 中 manual 必须短路在 isViewing 之前：isViewing 只否定时间判据的可信度，对用户显式标记没有管辖权；顺序反了的话「正看着会话时标为未读」那一刻点不亮。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/session/unread.js#L19-L37",
+          "version": "repo-lines-v1:sha256:39f7ff1696134d4088613ac45db1c05878feb4cb02d77bd695b85d1dbf0eb926:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFlOThkOGI1MGUyMTQ4MzZhZWFmNzhhNDQyMTIyMmNjNmY4M2VmMzM5YWQ1YjczNDc0MjFiZDI3ZmVjMjk0MjciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUwMmY1ZWYyZDBjNTZhZDdmNjc5N2JmNjIyZmM4ZTgxYmZlMTkyYThkZmI3Y2ZlOTJkNjJiNzQ3NmY0OWYyYjYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_6a011ee4e6a3404fa23a34e8f3cf0406",
+      "statement": "手动未读的判据是 manual[id] > seen[id] 而不是「manual 里有没有条目」；旧语义的删除在 LWW 归并里会被别的设备的旧条目复活，改成比时间戳后归并退化成幂等的纯 max()。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/session/unread.js#L101-L108",
+          "version": "repo-lines-v1:sha256:bb2e6494062cd703bec241d9b02a5bea34ad1b12affdf10f0e61bc8b62dc7d14:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjVmOTIwN2FkZDJiZjBhNzMwOGRlN2E3Yzk0YTZhMDQ2MzMyYzNhMDUxNTU3YzYyYzRkNThkODZlNjkwMWQxMCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzQyNDQ1ODQwMTNjYThmZmMyMGJlZmFhYmMzM2ZlODJkOTE5NWRkNDIyMjEyM2JlMDQwOTYyOTZiNWRmNjhkNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjYxZjNkYzk3YTAxNTEzZGY4MDU0NzM1MWNiN2MzZDFhZjcyMWFmYzk3N2FiYmFiOWFhZGY1NWEwZjJhMzJlNCJ9"
+        },
+        {
+          "resource": "repo://public/js/session/unread.js#L39-L45",
+          "version": "repo-lines-v1:sha256:c52eeb95e82bcd2266d152a4863b860b496a81bd123dc7b12ed1df677b338e9d:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMmY3NDNhNjdjMDJhMjczM2ZjYTg0OGFiOTE5YmQxNDY5ZjI3ZjI0YWIxMjUzNGI5ZjAwYjM4MDIyN2UwZDAyZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNTQxYTEzYWFiMGMwYTExZTVhMGZhMTU0NzdlMDI5NjU3MDk3MjBhYjI1MjY4NGQxOGZkY2NlNmQ3YjUwZGFiMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZmQxNDdjYWIyNmRiODM0ZTNlODQ5YzNmMjI4MmYyZDNhYmI4ODA3MTE3ZDJjZDE2YmY5OTU1YjA0NzBlMWE1OSJ9"
+        },
+        {
+          "resource": "repo://public/js/session/unread.js#L9-L12",
+          "version": "repo-lines-v1:sha256:d729eb53c8edcdcb26f15aeb636597654d4cde912e714b9dd54f4312f637ffd7:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTAxZWFkOTM2YTIyODFkNTNkY2MwNjRiN2UyYTJhYjBkNTNiOTJlZjNlZjdiMzRiNjY4NjczMDA3ODk1Yzg2MCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODVkZmM4MjAyNTc4Mzc0NTdhMWQxNThjYjRmNmYzYjYyOGIxMDA3ZjhmZmY5NzdiNDFlN2VjMTUzOGFjNzRiNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMDI5MGY0MTIwMjM0MjIyYTU5MzUwODRiYWY0NzYzYTI0NWQxMmY1YThjNGE2MTE0M2RjMTQwMTQzMGU3YTcwNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODgxNmYyOTVjNTUxODQyNmY4MjJiZDMwZWI1MGI3ODdiMTU5MjJjZTBkZTJiZmFlODRiZDQ5YTdmOWRlMjdjMSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_dc1a5a75423f47708dfebad32dd3fb88",
+      "statement": "resolveDirUnreadBadge 对脏输入返回 pending 而不是 0，因为两态实现会让 null 与 0 同走隐藏分支，用户看到的就不是加载中而是一个宣称「都没有未读」的界面。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/session/unread.js#L47-L58",
+          "version": "repo-lines-v1:sha256:26041df979ea8c76688c2bb3eb82111979865c840c34e97f8385f7edd67c9001:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcwODRkYmJhOTg0ODQ4OTBjZmMxNzIxODYwZTA4OGFlMzQxYzA1NTZhMTEzM2QxNmNiYTE5N2NjYjliMjkzMmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI3YzBlMzBjYjdhNGI5ZGJiY2U1YjdjZjkyMTRhODc3NzE0ZGZiYmY5YzUwMGMxMTk0YmIwMGI1NWQzZGQzNmQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d9c37ffbcddd42d1bc5e3bc1b6190842",
+      "statement": "parseUnreadState 解析失败一律回落且绝不抛，但已有的合法 baselineTs 必须保留：被 now 覆盖等于每次启动重置基线，未读点永远不亮而看起来像功能没做。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/session/unread.js#L129-L147",
+          "version": "repo-lines-v1:sha256:db9724bd46ea9198ad7c540f9be9900ec4968783a58849ce81c622f26240b282:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkyMDQwZTA5NWE5NGUyYWRhNzRlNDIxZjM3MTg3NTFhOTFhODEwYmZkNjZmNDhmNGU5MzljN2I3NDgwZWI2NzAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFiNDdkYTM3OTI0OTM0MThhOTMwNmYwZmJlZjU4Yzg5YzM0NDViMzcyNjA1ODg2MzAyMGNmNjZjNTM1Mjk0NzAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_54fad5e6e35d4631bdb8b69ca23872f4",
+      "statement": "markSeen 与 markEntered 刻意分开：前者只记看到此刻且处于手动未读态时整个跳过，后者是手动未读唯一的自动清除点。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/session/unread-tracker.js#L1-L10",
+          "version": "repo-lines-v1:sha256:171f2a8b8331e36e34094e2a1ff48940b4e7503f42cad120983b1ea1cea1d212:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVjMWVmOWQzODUzNjExM2E1ZWYzYjg1NzQ4MGQ5NGYzNjlkZjBhNGEwMjk2YzM1N2I1Y2Q3YWQ5NGYwMDQ2YzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRhYzNmODkwMTY3NjJiYTdhNjc0MDY4MTBiOTRmZmNiZTBkNGZhZTA3ZTNiYWFiMzAyM2M2NDI5M2U2NDI2ZjYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ5ZTQxNjMxYzE0OTUzZjdjZTAzOTNjZDU1MTU5OWY3NmJmNjIzNWY5MTFmZGVmNTllNmQ1ZjBlMzM1Njg5MTUifQ"
+        },
+        {
+          "resource": "repo://public/js/session/unread-tracker.js#L61-L82",
+          "version": "repo-lines-v1:sha256:20e79f22584b55b9d778d35fe854085fd416d0b8b79d80d9a51302638ad833c9:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRkYTJmODFmOTMyMDUyYzlmYWRkODBlODkyYmE4ZGFmOGE0OTAwNjI3MzkwMTY1OWU5YWVmNTEzNGJiNDAxN2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmMGNkYjk3MmE3YmZiN2VkMjQ2ZjlmZjY3MjM4NWU1NWY0OTY4ZmMxMTA0M2RjNWI2ODRkNTFkZmEzMWRiY2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJiYTg3MGFjODQzNzgyMTA5NjdlZjdkM2RmZDkzNGNjMDE0MTk4MmIxNTNjYTkyYjg5M2JiMGRlOWNjYWYwNTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI1NGJhZDY3OWQwMDQ1ODRhOWI4MTc2MDAyMTExNWNhNjhjYjMzZDNjNmU2MWM1YTdkMDY2MTdkYjNmZjBjZWEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fd24358b807a4a3c8620d523fd32cd81",
+      "statement": "取消手动未读时必须同时记 seen，只删标记会被别的设备的旧条目复活。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/session/unread-tracker.js#L84-L94",
+          "version": "repo-lines-v1:sha256:db0b7faf38f8b1d95d5fe7e5d246e5b3cfa79397897b28fa25b076905da95667:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYxMWUxNDliYjIxYTViMmI5NmYwOTFkNDlmMGJhYjY0MjM1NjQzMzNkZDEwN2RiZTU5ODY1OGExODBhZDJjNmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmMGNkYjk3MmE3YmZiN2VkMjQ2ZjlmZjY3MjM4NWU1NWY0OTY4ZmMxMTA0M2RjNWI2ODRkNTFkZmEzMWRiY2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkzMGVmZjJjNDFkMzhiOWQzNjg1YTgxZDg1MWEzZTYyNWFiOTk3ZmYwOWEwNjViMTI5ZTYxNGMwNTlhZmNmNjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjlhYjQ2NDM5ODM2YWNhNDkxNGVlY2E3ODQ0YjA4YmZlMDY1YjNmNDY4M2UyMTY5ZWE1ZTY5OGM5MDE3ZWYyODMifQ"
+        },
+        {
+          "resource": "repo://src/sessions/read-state.js#L105-L126",
+          "version": "repo-lines-v1:sha256:710ce8c400ea5eb41ff44b0e6a422fb16462b0e7f08dedbc76e321420ccc12fe:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkyZTMyNzIyZjQzYjI3NDA2OTRmZDMwNmVhNTczNzA0ZjNhODU3YWEwYTkyYzQ3ODY3MWJlZWNlNzc0NWZjYWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmMGNkYjk3MmE3YmZiN2VkMjQ2ZjlmZjY3MjM4NWU1NWY0OTY4ZmMxMTA0M2RjNWI2ODRkNTFkZmEzMWRiY2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ0M2Q1YjAwN2VkODNmYjkwOTY5OTI3NzQ5YjMxOTI0NDhkMGRlYjRjYmI3NTI0MGY4MDBhYmIxZThhZDdkNzAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQxMTAzOWY3YzNlY2JkNmI0ZWZkNTdhMDkxMjZjYTMyMzUxZWE0NTgzMjA1Y2ZiNjFhZjY0ZTBjMzg5OTEzZGIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b0f2029205a94971ab85700b52557175",
+      "statement": "客户端 mergeReadState 在 remote 无效时原样返回本地而绝不清空，因为清空的后果是一屏假未读，而原样返回只是降级回每台设备各算各的。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/session/unread.js#L110-L127",
+          "version": "repo-lines-v1:sha256:63dd067209aa240a24e65b7bc021e5e1c7d6585baaf47067743304983ac0879b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQyNzliNjgwNTIwZWQ1MjZkY2M0YzhhYTM3MzUyNzU5MGUyODE5NWU0MGZiZTYxMDdlMWU1YjQ5NWE0NTc3MzUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA1OTMwODQ5YzRhMzZmYWNmOTdiNjFlMTZhYTlkMjBmMDViZTkzNTY3Mjc4YzMxOTk2ZWFiMGY5ZTM4NTZmMmUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9442c83f04bc49fb9762cf50ba28195f",
+      "statement": "未读状态存在浏览器 localStorage 的 codex_unread_v1 键下，读写都包在 try/catch 里以便无痕模式下不落盘也能用。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/session/unread-tracker.js#L16-L38",
+          "version": "repo-lines-v1:sha256:1b9a64f0f63aaab2c7dd0e05b94f16cd09462ca1eac4beb6254600b5ddfbcbdb:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZlM2FmOWQ3M2UxYjc2ZDkwYjc4MTlhYWVkNjEyMTZkNDUzY2Q3ODMwYmY4MWNjNzJkNjY2NjZmNzc0YjU3NmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhhOWMxM2I4MjRkZGYyOWJjOTQzMzdlM2VhYzMyOTU2ZTIzYjY3NmEyNTFmNGQ0N2VlMTI2NzhlMzU3ZTI5NDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI5OGZkYzRhOWQ4YzdiNTA4NTQyMDdjZmYxNmJmZGU5Y2VjNGM1M2Y1ZWRjMjYyMDgzZGY0MDZjMDU0ZmYyOGEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_19f926a2649a4aeb89cbb83ae08e2b0d",
+      "statement": "thread:list 只回本页 thread 的未读位点，裁剪安全的前提是前端 hydrate 逐 key 取 max、只增不减，少回的 key 不会抹掉本地已有位点。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L345-L363",
+          "version": "repo-lines-v1:sha256:7f9f1ccf6bf2b3e4155d33d7ac0205d57d2ab8a12ec3a96f757f07ea43775d84:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNhMzc1ZGE4ZTU4ZmJhZmYzNDkwY2Q2NDhiMzg5MGQxMjcwM2U3YzVkYjM0NzgwZmJmMmE0MTkzOGFhZDg2MzgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxNDQxMGZkMmJhMzMzMTgwOThlNzljZTcxMmVhZTE1Y2VhM2RjMWRkZTRjMDBhZGFlMjM0MGNhOTMyNzA1NDcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b24dbb57edba482e912eaaa84929c39b",
+      "statement": "Push endpoint 由浏览器提供因而是不可信输入，parsePushEndpoint 要求它必须是不带用户名密码的公网 HTTPS 主机名，否则直接拒绝。",
+      "evidence": [
+        {
+          "resource": "repo://src/ops/push-sender.js#L113-L129",
+          "version": "repo-lines-v1:sha256:d9d01762ff07a55c5e34769f46bce3561549a11e55c595efc095bf1d294ec4ca:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJmZTYyYzkxMzY0ZGRhMWY2NjRkOTEzNmYxNzQ1NDM4MjkzNjY4NGM2MGM3MWRkMDE0N2MyZmYwYmMxZjg2ZjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkyMDQwZTA5NWE5NGUyYWRhNzRlNDIxZjM3MTg3NTFhOTFhODEwYmZkNjZmNDhmNGU5MzljN2I3NDgwZWI2NzAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImViYjcwY2MxOTEzOWQwNjdjMGQyNzY0ZGMxNDliNTFlMmQ1MTY4MjMzM2QxNjM0MWM0YmU4MzExM2RiYzAyYmQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_60282e6b686047ac9fb1eaf060028553",
+      "statement": "推送发送把 DNS 解析结果逐条校验为公网地址并把第一个结果 pin 在自定义 lookup 里，同时校验 hostname 一致，以挡住校验与发起之间重新解析的 DNS rebinding。",
+      "evidence": [
+        {
+          "resource": "repo://src/ops/push-sender.js#L131-L148",
+          "version": "repo-lines-v1:sha256:9dfdd12b753c4257047fe71efef2bd3a881813ec4b10497c494d8ac051e02326:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVmZWZkY2I2MDkzNjUwZTM1ZGFiOWNhNjdmZmM0NzRiOTM3M2Q2ZGVkZmFmNjlmZDllNzZmOTM0NTI2NGMxM2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhmMmU0OTkyYjE3MGVjZjA3YWI5OTg2N2I2YmE5NGNiOWE2ZDA1NTU0YTg0ZjU2MGQ1M2MyNzUwNzQzMjBmMmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU0YzU5YmNkMDIzNzllNjM4YjA2NzQ1NDUzYWMyZmE1MDQ3ODYxOGU1MWU3ODNmNTRmZTcxY2M1Yjk4YmIxNTIifQ"
+        },
+        {
+          "resource": "repo://src/ops/push-sender.js#L37-L67",
+          "version": "repo-lines-v1:sha256:c04561b5202efb3141d6b6c4a5a8a23129c875a7ad1c2c71d8cf16c3ce0163d9:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgwZWYwZjlhNDhjNDg2MWNiZjAwYWMyYWMyZTg1ZDQ1NDExMGY0N2RhYjliODJlZjg2YWIxOGEzZWQ2NmQ3ZDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM1Y2RlZjgwODVhZTc0YWI2MzZkNjQ1OWY1YzZkNWZiZmIwZGIyNjRmMWIwZDc1YmFjNTE5YzliM2Y2NzE3YWMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRiMDA2YWVjNmMyN2ZlMzhlOGRiODFjNjljMzdjODE1YWY4OTUyNTA3NmYyZThiOWY1NWE0NWFjNTZkZTc0MWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE5YjI3MGVjNzZiOWMzYjFjZGVjZTVkYWMyZjE4NzZhMjQxMzA5NjNiZDZjNGY4OWQ2NGJlMDBjNzFkMTQ1NjAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d0a943c3ab1a4df0ae5fe5c6af304fa2",
+      "statement": "web-push 生成的 endpoint 必须与校验过的那个逐字相等，且不允许 proxy 或自定义 agent 选项。",
+      "evidence": [
+        {
+          "resource": "repo://src/ops/push-sender.js#L42-L50",
+          "version": "repo-lines-v1:sha256:fab113f0dbe578d19359787becdf4fb535adb6f1157f1080254477e8f14252d6:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTBkZDUxM2JkNDNiZmFkZThjMTE5ZjljNzA5YWNhZDVlOTMyMmM1NzlhNTQ3YzQ4MDJjY2IxY2FiOGI1MGZmNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODcyZmU2NTNkMzUxOTE1ZjI0NWE2YjNjYTQ2ZjM2MzNhZTQ4ODYxZDMyYzBjNjI4MTM4N2Q5Njk4NTRhZGY0NiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNWU1NjJlYjQxZjY1Mzk0NmY2ZWNiNjFlNDlmYzBlY2UzOTg5NTNmOTljYzk5ODQ2NDAwYTBlZjk2M2Y0OWViYiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_c3b4421e27144c568a02fc833f5d6570",
+      "statement": "推送请求有超时（默认 10 秒）与响应体上限（默认 64KB），超限时销毁请求并报错。",
+      "evidence": [
+        {
+          "resource": "repo://src/ops/push-sender.js#L31-L35",
+          "version": "repo-lines-v1:sha256:68a714500a15c3b8988148ec8b1689258f3f4d7416e1072c8784e9223cada8c3:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDUyZjU4YzIyNWRhMjVmMDM5ZDM3ZmYyZjFhMGNiYjZiOTBiMGQ3MzMzMWZlNGIzNzEyMjU3ZjRkZDdiZDAwZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOTUxMzJhZjI3ZTg1ZTliZmE5NGE3ZTQ1ZjZlMWZmNDQ2NDY3YTAxNTZjNGFhNjlmNmNmM2U5NDg2OWYwZmY1YyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZWUzZWFkZjgyOWE1NmY4ZTA3NDMwZTJiNWIxYWVmN2U2ZDcyZGJmOWNjMTdiMjY1YWJmMjgzNjAzNTBlOGI1OSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjBlNWE0ZjYzZWQ2NjBhMWU2NTQxMmU2MzBlOTRmNDc5Mjc0N2E4MjNjMTczZDJkMDVhN2ZkMGY1NjYzNWM3MCJ9"
+        },
+        {
+          "resource": "repo://src/ops/push-sender.js#L6-L12",
+          "version": "repo-lines-v1:sha256:e8d16cdae801e11d1965955535e4a6e8b831899768bbda8a8a58dadd7348e5a3:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjZhNjMxNWQ2YWQ2YzRlMjEzMmMwZmQyNTEzZTc4MTM2YmQ0ZmE3YjcwNTY2NmJhMDJjMWExNjQyNzMyYjZhYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODNlNTQ3ZWIxOWVhZDA0Mzc2ZmRlODEzOWZlNTQ3NGFlNTI3MGRlM2E5ZmI4NjM0Y2ZlMjBkODQ1NTRhMzkxOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDU1Y2FkNTgwMWExOWNhMmY3MjlhYWMxOTcxMzYyYTQzYjVmZWY1OWU3NWJkYjc2NzVjNjc1YTMwOThiZDgxZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMWFiMTg2ODMxZTUxYzM1MzI4M2MxMDllNDllN2I2MjVkNWFiZDIyZTE3NWYwMmE3MTUxYjlhN2E0YjIzYzI3MiJ9"
+        },
+        {
+          "resource": "repo://src/ops/push-sender.js#L69-L84",
+          "version": "repo-lines-v1:sha256:f1bdd9e1ef3e6558c4159addd3daaf38504bf883c4b55ab8879056f181186d6e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA1NDc4YzAxMTAxYTRmNDFhNmE0OWNhNjA4OWY4YTgxYzZkMDAxMDI4ZTMwYmVhNWMzM2ZkMzI0ZGY4ODFmZmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhMzdlM2MwOTQxZDE1NzdjMDM5OGUzYjY3ODRlZjNiM2YwMTI4OGJjZGVjOWE0YmJhMWFiZmFhNzQwYWI2ZjUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU2ZGRlNTE4NWE3OGQ3ODMzZDE5Y2EzNzhiODBlZjU5NTg3NWMxZmEwMzRjZDc5Y2E3ZTU5OWVkYjk5YjJmNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdhNzRiMTIyMDBlMGUxZWIzY2U2NDIzOGJiOTc0MDJhNjllNTlkYzg1OWVkY2E3OTAwZTZhZTUzY2QwMzQ0MjAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e55a0d9e6e88429b9697f76ee7f53c30",
+      "statement": "Service Worker 只做推送，没有缓存也没有离线支持；它只监听 push 与 notificationclick 两个事件。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/sw.js#L1-L34",
+          "version": "repo-lines-v1:sha256:d3cc099e2ad571649796f78ffccb922087f1d7aaff0217b4a91d3705a490609a:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImExZGQzMDFhNGQ5ZjM5ZWNjZDEzZTdjMTJlZmYxNTIzYzBjNDI3MjY3OTNlZWViOTI0OGFlZmQyNzBiMGJhYTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_472156f3549641629e2919fc60c41a87",
+      "statement": "notificationclick 对目标 URL 做同源校验，非同源一律回落到 /，并优先复用已有窗口（navigate + focus）而不是总开新窗。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/sw.js#L17-L33",
+          "version": "repo-lines-v1:sha256:451ceaad92c2cdc529eda412ceb5b7f2020adb1ca39de61df911e12d29fd9164:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI3ZDMzZTFkOTAxMmE2Y2NmYTdiNTZmNWZlNDUyMzY2ZDI0YzUwZjhjYjg2NDE1N2ZiODllNWJkOWVlMWY2MGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk1ZWYwMWJjMDhkYmMzYjYzZTRlNzVlYTNkMjZhNWI5NDE4OTE4NzdlMjdhZDg5MTMyOWM4NDExZDdkOGRjNGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk1YWI4ZDk3YjJmOWU1MGRiZjQ3MDQzNjYxZjE1M2M4YzQ1MmQxZGQ1MzhiYzAzYmM4ZTM1ZTgyZDgzZTY1OTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4dd32da9aadb462caec02757eb1651c1",
+      "statement": "本仓所谓的离线能力指的是 IndexedDB outbox 而不是 Service Worker 缓存，因为 sw.js 明确声明不做缓存。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/outbox/indexeddb-outbox.js#L1-L14",
+          "version": "repo-lines-v1:sha256:5f5810cfd19db1cdac5498b1c9c8ea5456524e0a6ba474556f772958ae19dd9e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc2ZDdkMTVjMzBhZjM2YWM0YmI1MzMzY2Q5ZDYwMzAwMjI4OTQ3YjcxNTJkOGE4MWZlZWQ1ZTVhMjUyNDM0ZDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIzYWJmYzYyYjk1OGU1YjAyNWI5MmM0YjZlNzBlZDg5N2JkMDZiZTczMGZmMWZjODIxMGRiMmEzMDZjNjE5YzQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc2NDM1ZTZkNjJiZDU1Y2M3NjE3MWZlYjRhNzAyMTFmY2I3NTE5NWQ5NTVjZmMyMzA0N2E5OTY4ODlkN2JkOGIifQ"
+        },
+        {
+          "resource": "repo://public/js/sw.js#L1-L2",
+          "version": "repo-lines-v1:sha256:4ae6ae5bf134001ec7a37e4f3f2c0a9e60cf495417decf432c815028e51d3185:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYTFkZDMwMWE0ZDlmMzllY2NkMTNlN2MxMmVmZjE1MjNjMGM0MjcyNjc5M2VlZWI5MjQ4YWVmZDI3MGIwYmFhNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYmY2ZjkzMmM3MTUwYzIwMGQzNWZjZTM3ZWI1NGNlZDA3NTMxYjhhMDYzMDZmYTIxODY5YmRhYWUyNGZmMGVlNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzgxNjNjY2IxNWZiM2I2ODU5YmQwMTViMmU0ZGVlNDUwZWNkYTNjMzM4OThhYmMyN2Y5YWZlNmU1MTdkMzYwOSJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.5.2",
+    "at": "2026-09-22T08:36:26.702Z"
+  }
+}

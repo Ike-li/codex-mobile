@@ -1,0 +1,148 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:0030d119775e2e7bf51bb24b12cb923f84085380eb2ae1ce9f549f53591d5192",
+  "claims": [
+    {
+      "id": "claim_fe87306657b14555bb853e648e936c26",
+      "statement": "架构决定 A2 的判据是「同一个事实会不会既在 codex 的宿主机状态里、又被网关独立存一份」，而不是「有没有写文件」；thread、turn、item、配置、模型列表全部向 app-server 现问。",
+      "evidence": [
+        {
+          "resource": "repo://test/README.md#L14-L17",
+          "version": "repo-lines-v1:sha256:fb3042f19393639ecb5ba20fae3eedb500033a3b13a35daaec7a286fffa7bd1e:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjkwMDllNGZkZjYxODk2YTllM2M1ODBjNGQ0ZDk0NTUwMTkzODM1ZTdlMDYyZDllZmE5Mjk2MGVmNTljYmVhZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNjU5YWY4ZjkxZDcwOGQ5NmJmNTZiNmU3Njc1MzI4OTQ0YmRlNzU1ZDBjZTYzNThhZTdmNjIwMjc1OTU2Yjk4YSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTE0ZTJhZDQ0YzM5YTVkYjEyNTBmYzAzZmRiYTMxMzBhNDVjYmU4OWY4MTc0NGIxMzM0MTdiNzRhMWQ5MDE1MCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGFkNWZiMGY3ZWFkZDE4NGI3NjM1NmQyNTE4MmI3NzQ5MWY1ZTY5MDE5MjA3ZjM1YmYxZGE2YWZjOGY3MjFjZCJ9"
+        },
+        {
+          "resource": "repo://test/invariants/zero-persistence-guard.test.mjs#L1-L11",
+          "version": "repo-lines-v1:sha256:6db50c98fa72aec1949b44977284efec253e66db5b19308bdc128c582a8f5fea:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4YjA5ZTU4OTBiNjM4ZmRlYTBmZTAwMzY4MjQzYWY0M2UzNjUxNjI5N2ExOWY3M2IyYjc2ZGI4NmUxYzQ4YjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJhOTY1Yjc3NjU2ZjVmMmRlZDc4NTAwNzEyOGU4NWZkM2E0ODlkNTE3NDFiMmIyN2ZjOTczOTFjOTJhMjhkNjgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU4ZmY2OTFhODA5ZTNhODEyYTQwOGM4OGY0MmU4MmI5NTJiMDFjMWNhYWE2Njg2ZDhlNmNlNDQ0MGQxNGJiN2UifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5315a6c431384f06b688d3c82630f968",
+      "statement": "data/ 下允许落盘的文件是一张显式七项清单（enrollment-token、trusted-devices.json、pending-devices.json、push-subscriptions.json、security-audit.jsonl、host-config-audit.jsonl、read-state.json），每项都附写了凭什么不算第二份真相的理由。",
+      "evidence": [
+        {
+          "resource": "repo://test/invariants/zero-persistence-guard.test.mjs#L20-L34",
+          "version": "repo-lines-v1:sha256:5df1195e60a9e308a553b3a1bba9342bce52e3b6d62b168b346d16ab9531c5c2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRkZTM3OTIzZGY5ZTdlNjEzYjZjM2M0MDIwYTdhNzAyMTExYmQ5OGMxYjA3ODEyN2U1YmU1NzRlZDllMmZkODgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1ZTI2Y2Q5MjM2NmY2MGQ4ZWQ5MmQwMjM5ZjA3ZmVmNzRjYWMxNGFhNjlhZGRmOWMyY2MwZDExZWIwMGE0NjMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYwMjkyY2NlMGM2Y2U0Njg5NWVlNmI2MTQwZTlmNzNmN2Q3MTE3MzVhMzdkZTMxNmFhMjViZmQ4NDMwNzEwN2MiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhhODZlMzRkNDcxMjNhZTZlYWQ1MDE3N2Y2MDliMjI2NTI3NGJhZjQ5YTdmOTFmOGUzZTRiZWQ1ZmRhNjczNGUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d80abc777dbd4fd39066b7c2a463acfd",
+      "statement": "投递账本、needs-you 注册表与 thread 注册表的「重启即失」是被测试钉住的承诺：这三个模块中不得出现 writeFileSync / appendFileSync / writeOwnerOnlyFile / appendOwnerOnlyFile 任一写盘调用。",
+      "evidence": [
+        {
+          "resource": "repo://test/invariants/zero-persistence-guard.test.mjs#L88-L101",
+          "version": "repo-lines-v1:sha256:ceea0286e755aceaa11c539d06d55f30d5e1ef6e0b13e7515ab3dad647e87c25:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0NDA1OGMyMzM2MTg4ZjliZjNhZWU2NTMwZjg2YzAzYjhhZGM0NzY2ODdiYmFlOTBjYWM4OGVhMDFmYzM5NDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJhYTA5NzExMGJiMjExMjhmMmExMTI2ZjE5NDU1NmQ3MGE2ZTFiNTAyOGY0YzkxNjNlNGM0ZWQwODg0OTNiYjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e79ca01e216a47fca640903423b0a215",
+      "statement": "zero-persistence-guard 包含一条反向断言：允许清单里的每一项必须仍被源码写入，否则清单本身会过期并在下次审查时被当成现状。",
+      "evidence": [
+        {
+          "resource": "repo://test/invariants/zero-persistence-guard.test.mjs#L70-L86",
+          "version": "repo-lines-v1:sha256:304cb627a110d9c16d05c54a2e51a87ab105f2b4ff0df113ed4c5d1c50cce674:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE5NzY5Y2FlMWNkYTc5ZjQ5MWVlYjUwNWVmOGJjNDg2MmM2NGFjZGFiNTg3OTgyMjU0YzA3MTQzYjU3MDcyMTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY3NTFhODIzZTU0ZTA4NzgyNDQ5YTRjYWFlNzM5ZTM2NjMwMDVjN2UzMGFjNGI4ODBkOTNlMzQ2YzExN2FiMzkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ1OWI5N2NkMWEwY2IzN2MyMWUwMWJmZjdkOGY0Yjk2MjZkZWJlN2EwY2NkYjIwMzczZTYyZjgwZWVlZTdiYTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9b50484b001c4b98a6c54185d90d2617",
+      "statement": "两个落盘断言都先要求扫描到至少 5 个落盘点，因为扫到 0 个与「没有新增持久化」在断言上完全一样，而正则失配或文件改名的症状恰恰是全绿。",
+      "evidence": [
+        {
+          "resource": "repo://test/invariants/zero-persistence-guard.test.mjs#L50-L60",
+          "version": "repo-lines-v1:sha256:aa85f2a24a53d21a9ade5bc98396e58028358d4e4d67cc87f0b1688463670c9d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYyYjFjMGJlZjA2OWZmZDg3ZWUyMmUzNDExZjEzZjYzZTlhZWQ0NmIwZWYyYzFjNmFkMDNlYzk4NWZhYzliZDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRkNmUxMTYzNDJlMzk5NTAwZTE0OTgyYmI4MDQ3ZjhhZDAyZjNkYjA2MGM4ZWViZmM2N2FmNDQ3NTVkYzM2NmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg3MjAzMTE3NTkxNmJmYTIyNmRiNjIxMjMzYmIyYTIxZTAwODczYWJhMjhkOTc1MWQwYWY1YTZiM2Q5ZDVlYWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYwZmJhNzI0YzRlMGFlNGUyZDFkZTRlYTFhZmJlNjQ1MzkxZmMwZDA2YTVhNTU5YzdkODFiM2Y2ZWE0ZTMxZTcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_94f0dd7fe4af4ef9964fdd3ed1ca6469",
+      "statement": "落盘点抽取器同时认 join(DATA_DIR, 'x') 与 dataFile('x') 两种写法，不补后一支的话任何走新分层的落盘点对这道闸完全不可见。",
+      "evidence": [
+        {
+          "resource": "repo://test/invariants/zero-persistence-guard.test.mjs#L36-L48",
+          "version": "repo-lines-v1:sha256:e7370caf67d94b02508072e6642c82fb99cbf92584c10bac33374b4e3ca8716e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjExM2EzOWIxODUzYzkwZGUxZTNhYWM1NzVmN2RiNjA4YWZhMmUxYmUyMTEwNjEwZWViMjdiNzVkYWE0MTc1NzEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjEzOTliZWY5NWY1ZDE2ZDIwMWQ5ZjY5NzcxMDYzYzhmMzRjMWVlYjU1M2ZkZjk3ZTQ1MWJmOWQyYzA1ZTBmMWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU5YTIyNTFhMzIyZWU3MGJhZGQ2YjM2M2JlYmZlNzQwMDdhMGVkZTUwNDk4ODI3MGNmNzg5NDEyNTdmMzdhOGQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e41f67d2dc0f4f4ab5107fc1e046248c",
+      "statement": "thread-source-of-truth 守反方向：断言 server.js 不再读写 sessions.json 或 Codex JSONL 历史、sessions.js/history.js/push.js 已从仓库消失、契约层只有 thread:* 而没有 session:list|select|history 这类 legacy 别名。",
+      "evidence": [
+        {
+          "resource": "repo://test/invariants/thread-source-of-truth.test.mjs#L1-L54",
+          "version": "repo-lines-v1:sha256:89e725dc11ce827e33589da19534b1a11d452bee373ca8768a31a5b6c64fac7e:eyJzZWxlY3RlZExpbmVDb3VudCI6NTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlNWRiMGM3OGQ0YzkwNWViYWNlYmM0M2VhZGFmYzU5OWQ3OGJjYWIwYTRkZjRmMzg2NDNlZGI3Yjk2MDQ1YTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg5NzBkOTliOGUzMTc0M2Y2Njc5MjNkOTMzZDRjMDUxN2NmZGQ5ZTFkNTUwNTkzMzgzODMzMDMwZGIzNmJlNzkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU3M2NjOTVhZDI5NTVjODEzYzgyNzY2MmMzZDM5NTMwYzkxY2Y0NTBjOWZkNWU2Nzc3YWIzZmZmNjJkNWRmZjUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_767cff1a4bf842798944c8961945ff8b",
+      "statement": "read-state.json 被归为缓存类：加载时损坏、不存在或形状不对一律当作没有并返回空状态，而不是让 server 起不来。",
+      "evidence": [
+        {
+          "resource": "repo://src/sessions/read-state.js#L50-L62",
+          "version": "repo-lines-v1:sha256:092363949ebdd4e6e61d7b033a958cab0e79f154770a431af94bce4602202dd2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI5NDU0NjMwYTNmYTllODMyOGNkZmZkM2UyMmQyNjExOTM4ODIyZWUyZDA0NThhYTkwMzdjMjRjNmE5OTk4N2UiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZmYWZjYzVhMzhmOWJmMjIxMjg2OGI0ZjdmZWZlZmYzODZiMDg4MTU1MjQ0ODQyOGJlNTM5ZDY5YTcyMGI0YjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImMxY2Y2MDc5NmY4NjZmNmNjYTQyMmE4NGZjMjVjZGQ2NDY3ODljYzBhOWUwMDk1ZWM2MzhiNDgyNzA3NWVlZWMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f584a5d9ef854ea0938b78751cbe15de",
+      "statement": "未读位点的 baselineTs 刻意不在构造时写盘，而是钉在第一个客户端真正用到的时刻，两者可能差着一次长达数天的空转。",
+      "evidence": [
+        {
+          "resource": "repo://src/sessions/read-state.js#L68-L83",
+          "version": "repo-lines-v1:sha256:ee4e2cb98ba62c05fa5bcb42e4b8e45948a9007e7c743e5a73d36c359b1ad072:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRmMmEyZjk5NmYwOGU2ODBiZDI5MjEzNWE2ZmE0OTc4YmRhMjZlNjAyZDg0ZjMzY2IxZDU5NDc3NWQ0MzA0YjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFiZmMxNWQyZTA5OTM5ZDM0MGQ0ZTAwNDE4NTliOTJjMTViMDIzYWNhOGMxMTNiYzk0MDNjYjc5MDkwZTlmMzYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdmZDExYTVjMWZkNzUwNTIwMGVhYzI5OWJiOWQ2NTJiYzhhODk3ZmQ4M2I5Nzk2Mjg0MTA0NDQ4N2U0ZDU1MzUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_36d488ad87074a918c08a6bf02ce4260",
+      "statement": "未读合并在前后端各有一份实现且方向相反：服务端逐 key 取较晚、谁都不权威，客户端远端权威覆盖本地；同向的话客户端的旧 baseline 会往回传染。",
+      "evidence": [
+        {
+          "resource": "repo://src/sessions/read-state.js#L1-L16",
+          "version": "repo-lines-v1:sha256:6dc72378d86b4623677fe00c8f9ce7819724824a91475eac8bd3a7c190b1a426:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRjZjI5ZDE2MmM5YzdhMjYxNGQ4ZTdmZDAwMTE4MWRhNmI0YmEyYjdlZmZjNGJmMWU2NGUxMjY1MDA3OGEwYmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY0YWRjNmU5Y2ExNjhjYTVkMmFhMGVjM2IwMjdiNTk3ZGY1NGI1ZDEzN2Y5Zjc4ODU0MzkwMGI4NTZiNmUyODYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM2YWE2MzAxNTMwYjJjZjgyNjA4YzlhNjVkYTkxNDA1MjJlZjA3ZDA1OTNiMzZmYjgwODkzMDFjODBhODNhYjMifQ"
+        },
+        {
+          "resource": "repo://src/sessions/read-state.js#L128-L142",
+          "version": "repo-lines-v1:sha256:fca8c8e7363b4d23db94f852ea167eebe121bd68b87a925f1e399db95c05a271:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJkNzkyMjZhNjQ3NTYxYWZmNWIxNWI5ODc1OGE1YzM2OWNkM2ViZGIxYWJlY2IyZGQyYTFlZTI0ZmNkYjlmZTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmMGNkYjk3MmE3YmZiN2VkMjQ2ZjlmZjY3MjM4NWU1NWY0OTY4ZmMxMTA0M2RjNWI2ODRkNTFkZmEzMWRiY2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ0M2Q1YjAwN2VkODNmYjkwOTY5OTI3NzQ5YjMxOTI0NDhkMGRlYjRjYmI3NTI0MGY4MDBhYmIxZThhZDdkNzAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVkMDg5ZWU5MWI2Y2Y5Mzc0NGYwODFmYTZiNjE1YjIxY2Q2ODI5MTI3NWVjNzdjODE2YTcwYzVhNjRmM2VlODMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4b7ddd2a8a374ceea4575ecfe96dfc1a",
+      "statement": "resolveDataDir 必须在函数体内读 env：模块级常量会在模块链接阶段求值，早于配置加载，导致 CODEX_DATA_DIR 永远读不到而状态目录静默回落到仓库内的 data/，且没有任何报错。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/data-dir.js#L1-L29",
+          "version": "repo-lines-v1:sha256:0b6e47720c6e40b175b7cbd11767cf9aa4738d0909512b55f0e83bbf3c53e752:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJhM2M3MTYxODU4YjY0ZjJhZWRiOGVmMmQ3ZDcyYjRkZjNlNDg5NTAxNGE1ODY0ZjhiZmQ0NzJjNDA2YzcwNDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY4NWY4YWFkYWEzN2U4MmI2OWExODBhYzZiZDdjZjMzM2UzOWE0MDZhMWI1MWQyOTMwMDJjMWFmYjgzOGFmMDIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7f30740d5dab4bc2969a0765b236b6d6",
+      "statement": "resolveDataDir 把空串当作未设置处理，因为 shell 里 export CODEX_DATA_DIR= 是自然的取消写法，而空串会让 join('', 'x') 塌成相对路径、落到进程 cwd。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/data-dir.js#L23-L29",
+          "version": "repo-lines-v1:sha256:03f3849359c04668584c4233a031c69f5e4b39ee754448be09a4b5c0a6b08a7d:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiM2JiYmE3ZDcwOTlhN2IwODljMGExNmVhMTE5ODU4ODUyOWQzMDNlNzdkZjQ5OTI3MDdhMmRiZWE4YjllZTIzZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjc4ZDQyZjI4ZTVhOWI1MTVjMjVjNjRkZDczM2UyODc3YWFkNTdhYjAwMGRlNWQxMTE1NTA0ZmY3MDIwY2JiZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjg1ZjhhYWRhYTM3ZTgyYjY5YTE4MGFjNmJkN2NmMzMzZTM5YTQwNmExYjUxZDI5MzAwMmMxYWZiODM4YWYwMiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_4d88993997b0462a92337dd393ff8e92",
+      "statement": "RPC 日志不在 A2 的 data/ 清单里，因为它默认写到工作区的 .codex-chat-rpc.jsonl 而非状态根，CODEX_RPC_LOG=0 可以整体关掉。",
+      "evidence": [
+        {
+          "resource": "repo://src/agent/agent-appserver.js#L76-L85",
+          "version": "repo-lines-v1:sha256:47bafe568d4aab31ba4afc846c5d048bb6bf6522688c121c91193bae9473954c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk3MzFlMTZiMTg3NzA0NzgzMTA2MzdhY2ExZTViOGQ1M2I3ZDViNjM3YTdkNWExM2Q4ZTk1MmUwN2Y5NDg4YTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlkZmMzNjdlOTJkYjFhOTFiMjMxYTNkMzFmMWYzNzA1M2NlMGFjYmM3NmJhYmNkMmQyNGJlNmFiN2Q1ODRkZTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA0MzA2N2E2MDk0MWE4ZDcxMTYzM2M2OTNkMzQxYTMxOTdjNjUyNWJiYTE4OTVmNDczY2I0NjZmZTM1ZWNjNzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYwZjUxZjlkMDI0OWIxZjdmMDVjMGNjODkxYWQzMTY2MTlhNjFiNGI5MTRiODQ1OTA2NDIxNGM3YzNjMWEzM2QifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.5.2",
+    "at": "2026-09-22T08:36:26.702Z"
+  }
+}

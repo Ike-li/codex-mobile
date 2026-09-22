@@ -1,0 +1,248 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:84629e2ed6d4745ecb9442c49e9389ef32b4b21351345f7db1f86f3f5f930140",
+  "claims": [
+    {
+      "id": "claim_e69c394d27a9436b8bd6dc4c8fd0b3fa",
+      "statement": "工作区白名单有两条入口（WORKDIRS 数组与旧的 WORK_DIR 加 WORK_DIRS），且不将数组 join 成逗号串喂回旧入口，因为含逗号的目录名会被重新拆坏而拆坏后看起来仍像配好了。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L382-L395",
+          "version": "repo-lines-v1:sha256:c24b75e6d3d8a5339661d4ec62e196547a8d6d0686187c172ebc05a6a69fa73d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJhYTc5ZmFjOTk4YzhkNWYwZDgyNTQ1MmIzZDlkZjE3YzVjNmY2YzhlOWI1Yjg3YWM1NDVhYmEzZWM1NTY3NmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAwZWJhM2NkMDkyOTIyYWUyYjJmNmY3OGU5NjRiZjNhN2Y4OTBjZTllYjBlNjQzMGVmOGFhNTZmMzlmNTFlYzQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkyMTFhMzJmYWUzZjBhZjA2ODY4NDRjYTg2ZTBlYzBmM2I4ZDIzMDY0NTM0NGI1Mjk3YjVhNWZhMWQ0NThlZDgifQ"
+        },
+        {
+          "resource": "repo://src/files/workdir-allowlist.js#L136-L178",
+          "version": "repo-lines-v1:sha256:0235cf75909bb43eb257e7efc844a9bead84b07d85239ac9573b856b950ff09e:eyJzZWxlY3RlZExpbmVDb3VudCI6NDMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU5ZjFiZmNiZGUyMzdhMTIxNDEyMDUyNDRhOWNhNDAzM2I4OGVkYzAwNTlmNmQ1YzAzM2U0MTcxMmRhYTEyMWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_bc7fc807aa354b4ca5c1146d66520cca",
+      "statement": "两条入口都对「一个工作区都没有」fail-loud，因为空白名单的后果不是没有工作区而是范围判定失去参照；旧入口还把「没配」与「配错了」分成两条不同的消息。",
+      "evidence": [
+        {
+          "resource": "repo://src/files/workdir-allowlist.js#L173-L176",
+          "version": "repo-lines-v1:sha256:116f2e221f32defa83cc7a7cfbe06ee44f6df8e2a0131f543fcb17cd706e5b9a:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODY1MjI3MGQzZjMxYzljMDhhYWRmMDRjZDk0NDQ2MjdmNmE0ZTk0YjlmZDExYWRhYTE3ZjFjNzUxNzYyOGZiOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjdlNTc4OGQ1ZDlkNzNkMjRhODFkYmMwYTVhNzRiZmE4MmM5YzNiM2FmOTllNTJhZjc5NmU5MGI0NjhhOGEzZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTdkODYzMmU1NGU5Mjk4YWJiOTU4NzI3ZTJkNTE0MDhhYmFmMTM2NjAzNTM3OTEwMTQwYWJmNjViMzBhYjYxMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjIsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzQyOWZmZThmMGU4NTI2YjY4Yjk4ZmNjYzAxYTBiYTM3YTlkODliOTIxNWNlOWViMjhkMzY3MmViYzgzMDk5NyJ9"
+        },
+        {
+          "resource": "repo://src/files/workdir-allowlist.js#L60-L77",
+          "version": "repo-lines-v1:sha256:dc8610a82dff1fbf36570f4e3c75a5a842637f84cc9bb85461a13b225a28cf6e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUzOGYyMTJlZTRkZTYxYWUzY2UwNDYxN2QwMDAzY2E1MzIwY2IyM2MyMzlmZTY5NmYzNWVmYjcyZDYyZGYzNWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI0NTZkZTZkNzk4ZDBmYzQyYzRjYzM4N2NlNjVlYjA3MGVkNjE0N2E5ODg2ZjdiODdlNjAwY2ZhMmJlNTExZTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM2N2VkYmJlOTk4MDQyM2MzNjA5ZTRiZWRiODkzNzkxNzkwMmZjYTExNDA2Mjg4OGE3NjQ4ODFiYTYxZDhlZWEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e8b9b646d0d24e99be617eb3b061ab93",
+      "statement": "新入口对相对路径直接抛错，因为相对路径会让允许列表取决于进程从哪个目录启动，而那是权限边界不该依赖的东西。",
+      "evidence": [
+        {
+          "resource": "repo://src/files/workdir-allowlist.js#L154-L171",
+          "version": "repo-lines-v1:sha256:8c768ea56a7ea1a623302d9c454824dbe7bad1eb686f29eace8b4d7d256702c4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVjZmU4OGZhZDE3NTg1N2MxZjFkZjhhNjg5MDczN2IzYzY3NzE5YzNkNzU1N2ZmOWQ2Yzg1YzIxMjkxNzVkZTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFhYjhjMmJiYjdhNzAzNDEwOThjMDJjZTUwYWY5NTkyZjEwMjkwOGIxZjRlNWIzYmY4MGJiNTk4NDcwNTJiMGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJkYjllMWI2Mjc2MGRlMDUzNDE5Y2M2NGNkMDJlODE4Yzg1MzY1OTMxMWYzZWQ3YmQxODljNzZlM2MzNTFiMTQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_cc63b9366bb741ee98523ba81c494375",
+      "statement": "fs/* 的作用域只能由网关兜住，因为 app-server 的 fs/* 只校验是不是绝对路径、它假定 client 与自己同机，而本项目的 client 是远程手机。",
+      "evidence": [
+        {
+          "resource": "repo://src/files/workdir-allowlist.js#L97-L104",
+          "version": "repo-lines-v1:sha256:31bb0f862d00230dad7cb9a9850ec79a4dcdd37285e30e164c0da74afde7465a:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTU0YTRmYzhiNDZkYjQyMjBhOWZiNjEzYjZiNGVjYWE2N2YxMGUxNTY0MTllOTI2MTQxMzYzMWJjYmI1NzAwMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYmNmZWIxNmU2MTVkYjVkZDAxNDRlZTJhMGI1MDVlZDcyZTlkMGVkOWM5ZWNiNGJlMTU2NWQ2MmJkODNlOGE0ZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZWY4MTIyODg0YzMzZWZkYWE1ZWM2OWZhNjZhYTIxNzBlYTA5MmJjZmUzOTFmNTRiYzZmYzkyZTcyOTY5NzUxNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYThhMTM2YzRjNjA5OTlkYmVlZWZkZmM1ZDE0NWUxYzkyZTUyYTcxM2Q3ZDc0ZTQ4MTcyZmQ2NjY3OWQ0MDJiNSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_b7ece9ffa1c94b2cac8bbc47be9b8280",
+      "statement": "作用域闸门的目的是防误操作而不是防攻击者：能发消息的设备照样可以让 agent 去读同一个文件，它挡的是随手翻到密钥文件这类情况。",
+      "evidence": [
+        {
+          "resource": "repo://src/files/workdir-allowlist.js#L100-L102",
+          "version": "repo-lines-v1:sha256:b2a818bf8344e5efc9ceee2c7fa046572f247b6ce4e7acbfc8e408f33eac3e05:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzIyZTkyYWE1OTU2NDgxMGU1NmQzZmM5ZWFkODQ4ZTg2YTM2OGE0N2RhYWJmNjMwMzI0Mjc3MDFkMjUwMjg1NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMTNlMzI1YWM5ZGQ3MDVjNGRlZWE3OWY5NGY2NGQyZDhmNDdmODU3Njk4NDhkMDNjMTU3MDAxZmFhZDE2N2QzMCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTllYzM2MTcxYTlmYjQ5MmY2MmQ0Y2Q3NTg1OTJkY2M2ZDhiZWNmMDY5YWNjODg1YzgxZWEzMDE0MDA2ZWE4YSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjgyNDljYjFiNTczYmJjZmIxNTAwODg3MjY4NjlhZjNiNGMzYTNmMTk1NmE0YmNkNTA1ZDJiMzAzZTYyOWNkZSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_53cd29bff7ed408696eb9942b72e37ba",
+      "statement": "resolveWithinWorkdirs 允许目标尚不存在：对最近的已存在祖先做 realpath 再拼回不存在的尾巴，因为不存在的组件不可能是软链接；并且比较时必须比到分隔符，否则 /srv/work 会顺带放行 /srv/work-other。",
+      "evidence": [
+        {
+          "resource": "repo://src/files/workdir-allowlist.js#L105-L134",
+          "version": "repo-lines-v1:sha256:c5a0d0ae5c0a7f763da1e1e553cd7a640b8f006995ed3790a13308eeeb3aec24:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFjZjc2YTNkNjAyYzUwZDkxMDRhN2ExN2E5ZmM5ZjBmYjdhNGZmYzE0Y2E3NmUyZWEzZDQwMTdlZjc1NWI3ZDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU1MzU0NDI4OTRkYTVlMmY1ZTNiOWIwZjgzNmQwMTY4ODJhYjE2MjRiMDJmMjY0MzFiNGFjMTBiYjNkYmQyYjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJlYjY0MWU1ZjNkNzlmMGUzZDBhZDU4NzQ2NGNkNjNmOWVjNjUzMTcyNjRlOTllZGI3NmZiYTI4MjNkNGZiOWMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a693591aed604f81a3e467293b63f280",
+      "statement": "越界时只写拒绝的安全审计而不记放行，因为文件浏览器持续列目录会把审计淹掉。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L1274-L1290",
+          "version": "repo-lines-v1:sha256:5013dac9b20b0c92fec98646838b01cc3dc378c4d6de9bd9caba4c1e90205cbc:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFlZWE0ZTg3MmU2MmY5ZjhjYjk0NjNiM2FiOWUwYWRmZmMxYjVhODJlNWY5ODBmNzI2M2NjNzU1ZjNkN2QzZmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgyZGNmNTY2MmFlYTUyZDY4YjIzMTVjY2JlYjBlNzc2ZGY0NGIwMTAyOWY3ZWYyY2E1MWJmNWI5YWEwOWZmY2EifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c05dc34067b04b7e916dd59128e11933",
+      "statement": "文件搜索候选优先用 git ls-files（含未跟踪且遵守 exclude-standard），失败则退回自己走目录树，深度上限 6、候选上限 5000，并跳过 node_modules / .git / .worktrees 与点开头的条目。",
+      "evidence": [
+        {
+          "resource": "repo://src/files/file-search.js#L1-L14",
+          "version": "repo-lines-v1:sha256:33c353094a6d1597e49dd11ddad8d00eb4c69cd0865e2ece20c6b87553e996f3:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY3N2ExMGY5NzcyYzkwODgxNjBiZjRlNmI4MjBmMGIwNGI4NzRhNjMzYzUwNzY0ZGQ2NmM2ZWRkNTYyYmYzN2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk4NWVjMGFkNDFlYWQ1ZTFlZTA3NmFkYzJiMmU4NjJjNjZkZGU4Yjc4YWM0NjBhYTcxNDgzNDgwZGM2MDhkZTAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIyMGNjYjJhYWRmODljMTVlYjM5ZDRjMDNjYjdhMGU5NzIwZmFiYzljYmUxYWIxNzIwNzI3MDllYjVhMzA5MDQifQ"
+        },
+        {
+          "resource": "repo://src/files/file-search.js#L38-L79",
+          "version": "repo-lines-v1:sha256:32f34a880e9bc94f1ec34ea8a313827a83402f47e2ab788bf0a850373f2d4225:eyJzZWxlY3RlZExpbmVDb3VudCI6NDIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQxNWQ5ODkyOWNkMmIyZGZkY2M4N2FmM2Y4OTE4OWQzNjY3ODAxYjhhZDcxZTliODg1MDFjNGU4YzQ2ZWRiMTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJkMGYyZDNhM2FhZGEyNzU4NjQ1NzhkMGE0MzkxNTYzOGQ1NDNmZWNhMmM5NDg1OGRiOTQxMjExZTg2Y2VmMmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1ZGUyNTcyNWM4OTcxMjg2NTE4MDAwNjVmZjI0NTg1ZGM2MGU3ZDc2YmE3MjZkNGUwOGViODJiZjUzOWU2MzQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9fb6c01b4617422296bd64a26653803e",
+      "statement": "目录遍历用异步 readdir，因为最坏要走 5000 个候选乘深度 6，同步版会把事件循环钉住，而这正是非 git 工作区里打 @ 时走的路径。",
+      "evidence": [
+        {
+          "resource": "repo://src/files/file-search.js#L52-L54",
+          "version": "repo-lines-v1:sha256:e58fdaff8fbd4084561ebf822d2cf3daca79583d1c7a2dfaab8ec45d2de1c906:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzMyZGU5YTYyYThkMjA1OGM1MmQ3ZDAxNzhlYWQ3MTVmYWUxMTJkYmYwODk4NWE3MDlhZTc5ZDMwZDk5MTQyNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiN2JiYzVhNzg3MzYzYTIwZjJhNjI3YjY0OTJhOTgwZWJjNzBiMWI2ZjYwMGY0MzIxMDVjNjUwZjZkM2JlMDIzNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmI1ODBlOTY0ZjgzYTQ3M2Y0M2Q0NDM4NDYyOTQ5ZDY4YjU2MDBmZGE3ODdmMTYzNzQ1ZDAwZGU4OWNiZjM2YSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDU3NGIxMzhiMmU3ODg5MWNjMGI1YWMzMjhhYzQ5OWE0NzRmYjU1NjFiNzJlMmYwZDlhZGIzNzU1YWM2MTU1YiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_90827f4edcce41278f7733f894271115",
+      "statement": "候选列表按 cwd 缓存 5 秒，匹配是四档子序列打分（basename 子串、全路径子串、basename 子序列、全路径子序列），结果上限 50 条。",
+      "evidence": [
+        {
+          "resource": "repo://src/files/file-search.js#L85-L124",
+          "version": "repo-lines-v1:sha256:af8e3b03481335c63b64a3cac5798c965f6c2df3b0c2bc0328ca766cd2668195:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA2MGY1NTM5NzIzN2Q4MjFiMjFlYWUxZWVlMzczMjU3YjJjZmVmNGY1MTg1OWUzN2NjNjdkYWI2ODk3YmI0M2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRhMGM3MTQ2Mjg3MDAwNjljMzdmOGRiZDlhMWQ3NmE2NGYwZjJjNjJjZTFmZWM5MTk3ZDJhOWY1NDFjNzdlZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVhMjE5Y2E4OWM2MjY5ZDEwZGVhODJkYWI3MjMwYzFlNzIwOWJmY2E5ZTVlZTZhNDI1Y2QxNjIyNmQ3ZmI5MzAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4aa075f999134b34a1040e1efa6e5268",
+      "statement": "git status 用 porcelain=v1 -z 并自行解析，重命名与复制占两条记录（新路径加旧路径），解析器据此跳两格。",
+      "evidence": [
+        {
+          "resource": "repo://src/files/git-workspace.js#L45-L62",
+          "version": "repo-lines-v1:sha256:e1f9e6a82aba4b4b48e115bbbf4ded3c9e7d21b8b78cb91d97d3efe7b766948d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYyYTI4MDVkYzI5YTFiOTAyYjJiZGFiM2U3YWNlYTQ3ZjUyYmNiNjM1MmY3OWM3N2IwZDU5OTFiYWMzYzZlMDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJkMGYyZDNhM2FhZGEyNzU4NjQ1NzhkMGE0MzkxNTYzOGQ1NDNmZWNhMmM5NDg1OGRiOTQxMjExZTg2Y2VmMmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE2MjBiNTFlYzkwNDViNmMxNzQ1YTExNzRiOGFlZDI4NDA0NTJmODZhNzQzYTczZmUyMzk3MzdkMDc5MTJmYTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d2309596ad804034984931381c30b967",
+      "statement": "git 改动分成 staged / unstaged / untracked / conflicted 四组，判据分别是 X 位属于 MADRC、Y 位属于 MDT、?? 与七种冲突组合，同一文件可以同时出现在 staged 与 unstaged 里。",
+      "evidence": [
+        {
+          "resource": "repo://src/files/git-workspace.js#L10-L10",
+          "version": "repo-lines-v1:sha256:b5893a898bf7c2d3487b130728459468282957edc0ad02d55604f287e332a047:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjU4OTNhODk4YmY3YzJkMzQ4N2IxMzA3Mjg0NTk0NjgyODI5NTdlZGMwYWQwMmQ1NTYwNGYyODdlMzMyYTA0NyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjU4OTNhODk4YmY3YzJkMzQ4N2IxMzA3Mjg0NTk0NjgyODI5NTdlZGMwYWQwMmQ1NTYwNGYyODdlMzMyYTA0NyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTgyYjk2ZDIzM2JjOWYzNjA2ODg1MmQ4MWNhNGRkODEzZDdlOGI5YWYzZDc0YjY4ZDBkYjQzMmFjMzY3YTBlNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjQwMWI0ODQwOGI3OGQ0ZDQyNjc5YTEzYjk1ZGIxNjcyNjRlNDg5YWViOWJlNzAwZDA5NDEzYzY3ZjQyNzkxMCJ9"
+        },
+        {
+          "resource": "repo://src/files/git-workspace.js#L64-L85",
+          "version": "repo-lines-v1:sha256:c841b9c6b65f07dd576f989c4ccb424d3eced4d15556ca0bbf65a04b84a79ac3:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY5MGRiNjNkMzM3Mjk5MTQ1ODJhMmVjMTAwYjdmYzNhMDc3YmQ2ZmI2ZGFjNTBmMjBlNTRlMGZiMWZmZmQ1ZTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE3YThmZDBkMTQ3ODg5NzgyMWQwZTA4MDhlZTE4ZmQ2ZDljZDQ5Yjg0ZDczNzk3NTM5ZDFkZmExODk0MGJhMGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRjZmNlZDllODdiN2FkM2Y2MmFiYjA0MjA3OWYyYWRjOGQ5MTVlYjQ1ZTRkMWMzYmYxMzkyNWFkNDBiYTFiM2EifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f487ec32a9e6444a836664017792ff4e",
+      "statement": "分支名先试 symbolic-ref --short HEAD，失败退回 rev-parse --short HEAD；都失败且错误文本像「不是 git 仓库」就回 not_git，那是一个正常状态而非错误。",
+      "evidence": [
+        {
+          "resource": "repo://src/files/git-workspace.js#L104-L147",
+          "version": "repo-lines-v1:sha256:894f725fa7e485396c73524c19b1630147729140c956be42484d1d560fde8697:eyJzZWxlY3RlZExpbmVDb3VudCI6NDQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMyZDc3MTAyZmZkMDVmM2ExNWIzMTAxNjNmZGNjODA0MzQ2NGQwYmQ5MWFkNGJlYzM1ODg1MDJjZmRkM2IzMjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg3ZmY3ODVkYmE5ZGQ3NzM3MTM4MmI0N2NjOGRkNGVmNTg3ZDU2MTg5OTZjMjUzZDNiOTNiY2ZmYWIwMmNiMDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJmMDRjOTEyNTk3MmU5MGRlM2ZkZjVkMzU4ZjlkMDM3ZTE4Mzg0YjhhZmI2N2EwNzE0OGFkYjllZTg2YTI1MzQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f48d4a2d297443bc8463b8d1a4470b6b",
+      "statement": "git 改动列表上限 500 条并在超出时置 truncated，diff 上限 256KB，status 超时 2 秒、diff 超时 3 秒。",
+      "evidence": [
+        {
+          "resource": "repo://src/files/git-workspace.js#L135-L146",
+          "version": "repo-lines-v1:sha256:3413c117daa63f6f0c592f0f2e113d699d424dca0acf5e4aefd4185ac3076707:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNlYzUxYzk5YTY0NzhjYmY4NWEzZWI4MDQ4Y2VjY2RlNmVmOWY2MDRhZjk2ZjU5MmJjNzc5NGNlYjRiOWIxMWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQyYTJjYjI1YTEyMmI0NDIyMWE2MjM0ZWM2NjBhN2I1ZmI3ZjliZGU3YjNiOWUyYjNjNTU5YTBkOTZmYWM3MzkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM2ZGM0NzE0MmE2MTYzZDk4YzU4NzI0NTA4YTA0MGQzZDc2NWY3Y2Y4NDQzYzA4YzYxZWIzYmU5MTgwNTM3OGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ0MzQ2ZDljYmQwMzZmYWFlODc1NDM5ZTI5ZTVlOWEzYzk0YmM1YTgyMDhhYjZmNzM2OGQ2ZTBlMGJiMzY2NTgifQ"
+        },
+        {
+          "resource": "repo://src/files/git-workspace.js#L160-L185",
+          "version": "repo-lines-v1:sha256:310de7aa96359c9c7dfa76968d2f21f29a7f2a59ade9de715dab66e6ff3a3e98:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZjYzMxZjNjMWQ2NmU0OGFiMjEzYjEyYjA2OTE1NWI3MzE0ZGVmZDVhYTdhMmRjNGYzOWNhODFhMmQwMTdlMTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU4ZmExNmJmYjU0YjYxMzAwNzUzZGIwNDM4YzcxZTRmNGFjOWQwYzVjYWQxNzdlMDMxYzVkYWQzMDA2MDg3NmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg3NDA0ZTY0ZWQ5MzdiODEyMzJkYjNkMzU5Zjg3NDY3ZjY2MDk1OTIyNDA1YjgzZWM0YjQ0MWEzYTQ5MTQ5ODQifQ"
+        },
+        {
+          "resource": "repo://src/files/git-workspace.js#L5-L9",
+          "version": "repo-lines-v1:sha256:707f01f5711e9389a621a0b8abf967a463c3f8af31a453e3f262fda047356a68:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNGM5YWE4ZjA3MTE2OGFkNjBhODNkY2Y0NzBkZmMxOTg0MTUzN2RjYTI3ODliYWUwNDZlZWVmNzI3MmI1MjRlMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNmY0MWZiNTdmMDQ5MjZkNTU4YWQxOGI5NjgzZTdlN2U2OGVlM2I2M2ExZWRiOTZmNjU0YmVlZWYyMDUwODVhNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODI4YjEzNDdkMTU3OThmZGRkYTA1NzE3MTVhM2M3M2RjYWU3N2M2YWY0NzRkNTYzMjZkNDA1MjI5ZmMxZTBjMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODNhZWU3MjAwOGM4MzI4ZWY3NzE3YzcwNzJiZmYyYTU5MGRmYjNkZDRmMDA4NDMxMjQ5Zjg0MTEzNjQ3ZTJmYSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_5ef177fd37284200bdf709f0fff02238",
+      "statement": "assertSafeRelPath 除了拒绝绝对路径与逃逸，还拒绝含 glob 与特殊字符的路径，因为它们会被 git 当成 pathspec 展开。",
+      "evidence": [
+        {
+          "resource": "repo://src/files/git-workspace.js#L87-L97",
+          "version": "repo-lines-v1:sha256:a616eb39b70412245121221c06c157f528dc2f1e2d8f7f44bcc7ea4082341ecf:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE4NDMxZjZlMzY5M2MzNjU2YmJiOGExNTlmNjZkODZkNzY4MDYzMmQ2YmNjOGEyMjdhMGYzNzQxMTUxMzZjM2IiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA3ZjhmMTc5ZWNjMjlhNDdjOGUwYWJjZTZhYjYyN2IzMzlhOTYzZmM0ODkxNzBmMWExZTM2ZmUwMWVmNDY2ODIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ4NjAyYmQxZjYyYzZmNDNkMTNhNzM1NTRjODVmMWU2MGYyMjdkYThmMmViNTU5MDE3ZmFjYzJjZjBkYTM2YzAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4bec012483e9486c85765eb152dd3794",
+      "statement": "diff 检出二进制（Binary files ... differ 或含 NUL）时直接回一句说明而不把字节糊到手机上。",
+      "evidence": [
+        {
+          "resource": "repo://src/files/git-workspace.js#L175-L179",
+          "version": "repo-lines-v1:sha256:53784886668490253266e52dc517e7773a7eadb740181c98527a3686f4370570:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTE4Mjc5Yjc2YTY0MWJlNzEzNTMyMmRmZmY2Zjc1MDM1ZWI3NWExNjNjODJkODYxYjliYTJjMzg4N2UyNTc4MSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzYwZDU1MjcwMTNjYjJlMjA3MmJmYzRkNmRhMTdiODgwZDhhZjE1NmNlMjgyMTdjNTg5Y2I5N2UyMTM1MDE2NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTI3YzFhZTkwZDg4NGJiODY2Y2U5Zjk0MGY5Mzc2NzcxZjZkNjA3NTJhMWUxYjRlMzk4OTZhYjcxNTMxZDYwNSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_aeafb039ff1a4bffb98cb7762236717b",
+      "statement": "buildPreview 必须告诉用户内容被截了；抽出来之前同一条规则有两个调用点、两套参数、两种解码实现，且两边都不说被截了。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/files/file-preview.js#L1-L9",
+          "version": "repo-lines-v1:sha256:3e30b6fcd266fd5acc4a1b629ef47c3769f62d6c9e316ec00938474cfedff369:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNGQ4ZGVlMjcyYzFhOTEyM2VjZWFmMzgyMzc0Mjc0NTEzNzE5N2UxNzZmODY5ZDJhODE4OTE1ZWE1MWI5YzRmOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOTM5YTMwYWI4ZDhkNzI3ZTEwMmMxMDg5Y2JmMTc1OWIwMjY5OTIwMzI2NTkxMDNmOTNiZDc2NzQ3OTkzZjg2MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiN2QzMTRlNjhjNTVmODA3MDZhM2VjNTRkNjQwN2I5Y2VkNjdlNzFkODc5ZGQ3YjA4NjFkOTU5ZDAyMjljYjg4MyJ9"
+        },
+        {
+          "resource": "repo://public/js/files/file-preview.js#L27-L55",
+          "version": "repo-lines-v1:sha256:d61a31f4edb5d167446a15793285e3688a9c657aa6f2592ca54f2087158bdfc8:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg5N2EyNmY5ZTA2ZTExYjYwNjEzZjhhNTE4NjQ0NjBhYzJkMTQ4ZWI2MDQwMGEyYjM3ZWIzZGM0ODUyNmZjYzgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e5b97594a57a48cc91729dd8d603cd49",
+      "statement": "二进制判据是出现 NUL 或 U+FFFD 占比超过 10%，按比例判是因为正常文本里偶尔出现一两个是可能的；判为二进制时返回一句说明而不是乱码。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/files/file-preview.js#L11-L49",
+          "version": "repo-lines-v1:sha256:2782a2fc254bc70a5a661abc5faa3c71dda48aa68db2386561fe9d25d63a0806:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxYjYxZDRhZmVjNDZhYzc1NWNkMGFjM2VhOWIyYTRiZjg4YTY2NDJmNGEwMjA1YTc2OTBhMzA4MTNlYTE1NzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFmNzE1ZTIyYjE1MjU2OTExNTE2ZjBhMDlkNzU2ZDgwNzgzZmNkMGE0OWM5OGZjNjliMzhkN2E1Yzk0OWIzMTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY2Y2QxZTJjNzcwY2Q5OWE2NGNiOTM3OTc5NGEzMjFhMzk1NjNhNTJhZmE1OWFiZDg5ZmFlMjIxMjZmMTViYmMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_397e6283d9924a1c977b890fdbb8eae4",
+      "statement": "写入前的 diff 摘要不做完整 LCS，而是剪掉公共前缀与后缀取变化区间，hunk 上限 20 行；代价是相邻的多处改动会被并成一段。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/files/file-diff-summary.js#L1-L49",
+          "version": "repo-lines-v1:sha256:5fbe4ac9abbf45b25fd0b087a00aed5bfc64fd4afdc249b93be4185414e052ba:eyJzZWxlY3RlZExpbmVDb3VudCI6NDksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNjM2I1ZWJhZGRhYWM3ZWM5OWYxZmY2NDI1YTM0MmM4OTQxODZmM2JlZmM5ZTMyODI2ZWYzZDQ4M2IwZmFmNWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_866ca19a9366434e8ed57f008912e0d1",
+      "statement": "compactPath 只保留路径最后两段，因为界面上出现宿主机绝对路径会把运行者的身份与目录结构送到可能在别人手上的浏览器里；两段以内不缩。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/files/display-path.js#L1-L20",
+          "version": "repo-lines-v1:sha256:044e152fa2eee3ce53d95cd269854dc352d01c07c3617e4ee533bd70e22b314b:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk4YWJmYjFhOGJiNzlmZDRhNDIxMjNhNTQ2ODM2ZWQ4MTg5ZjViZTg0ZTVhYTE0MTA1ZWJkNTA3YWNkNTc1OTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_1661f08af3ad4d74a376ac1815b137b9",
+      "statement": "workspace-panel 的文件解码只留一份，因为原先自带的 decodeURIComponent(escape(atob())) 版与 app.js 的 TextDecoder 版在多字节 UTF-8 与非字符串输入上行为不同，同一个文件会在两个面板里显示成两个样子。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/files/workspace-panel.js#L1-L4",
+          "version": "repo-lines-v1:sha256:6689b84f5cbfc21ea2aed4338cf1a181e1b84d1e08df3e05144d4d8f12c325fd:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZmMzYmI2NWE0Njk2MThkMDQ5ZWMxZTc3ZWM3ZWQ2OGQ2YzU0NTRhMjRhMGJjYmFmYmIxMzRhNjYzYjk2NDdiNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZmEyMTM5NzAzOGYzMTY2MDg1MjQ5M2JlYTg4MzE0NDY4OWNhMzhlMjEyNGEyZTM0NTM4MjllM2I4MGY4MzI0OSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGE4OGQ3OGUwNjFhOWY1ODNhZGFlZDA0M2E1MzFhNzY0NTcyYjJiNTA2MDU4NGFiNjMyODk0YmM5MjJmZDkyYSJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.5.2",
+    "at": "2026-09-22T08:36:26.702Z"
+  }
+}

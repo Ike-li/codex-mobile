@@ -1,5 +1,6 @@
 // e2e/critical-flows.spec.js —— 关键用户旅程 E2E 测试。
 import { test, expect } from '@playwright/test';
+import { sampleScrollContinuity } from './lib/scroll-audit.js';
 
 function latestApprovalCard(page) {
   return page.locator('.tool-card').filter({ hasText: '需要审批' }).last();
@@ -28,23 +29,23 @@ test.describe('关键用户旅程', () => {
     await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
   });
 
-  test('斜杠命令 /status', async ({ page }) => {
+  // 这条过去断言的是「发 /status 给模型、模型回一句话」——那是 bug 期的行为：
+  // app-server 不解析斜杠命令，那一发只是往对话里塞了句 "/status"。
+  test('斜杠命令 /status 打开会话设置，而不是发给模型', async ({ page }) => {
     await page.goto('/');
 
     // Wait for connection and idle state
     await expect(page.locator('#state-label')).not.toHaveText('offline', { timeout: 10000 });
     await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
 
-    // Send /status command
     const input = page.locator('#msg-input');
     await input.fill('/status');
     await page.locator('#send-btn').click();
 
-    // Wait for idle again (response complete)
+    await expect(page.locator('#session-settings')).toBeVisible();
+    await expect(input).toHaveValue('');
+    await expect(page.locator('.msg.user')).toHaveCount(0);
     await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
-
-    // Should receive status response - use text locator to find the specific message
-    await expect(page.getByText('当前没有活跃目标').last()).toBeVisible({ timeout: 10000 });
   });
 
   test('发送中断信号', async ({ page }) => {
@@ -79,9 +80,10 @@ test.describe('关键用户旅程', () => {
     await expect(page.locator('#followup-btn')).toBeHidden();
 
     await page.locator('#msg-input').fill('FOLLOW_UP');
+    await expect(page.locator('#send-btn')).toHaveAttribute('data-mode', 'send');
     await expect(page.locator('#followup-btn')).toBeVisible();
-    await expect(page.locator('#send-btn')).toHaveAttribute('data-mode', 'stop');
-    await page.locator('#followup-btn').click();
+    await expect(page.locator('#followup-btn')).toHaveAttribute('data-mode', 'stop');
+    await page.locator('#send-btn').click();
 
     await expect(page.locator('.msg.user').filter({ hasText: 'FOLLOW_UP' })).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('已向当前运行任务追加指令').last()).toBeVisible({ timeout: 10000 });
@@ -98,7 +100,6 @@ test.describe('关键用户旅程', () => {
     // Header should be visible
     await expect(page.locator('#header')).toBeVisible();
     await expect(page.locator('#header-context')).toBeVisible();
-    await expect(page.locator('#status-dot')).toBeVisible();
     // session-meta is hidden by default (CSS display:none), only shown on tap
     await expect(page.locator('#session-meta')).toBeAttached();
   });
@@ -118,7 +119,14 @@ test.describe('关键用户旅程', () => {
     await expect(bubble.locator('li')).toHaveCount(2);
   });
 
-  test('流式阶段保持稳定文本，完成后再渲染 Markdown', async ({ page }) => {
+  // 这条过去断言的是「流式期间 strong/code/li 计数为 0」——即全程显示 markdown
+  // 源码，收尾才渲染。那是 fd84592 的决策，动机是避免 markdown 结构边流边翻转。
+  //
+  // 动机成立，但「稳定」和「渲染」并不互斥：被空行闭合的块后续文本改不了它，
+  // 提前渲染同样稳定。splitStreamingMarkdown 把文本切成这样的 stable 前缀和
+  // active 尾部，前者渲染一次不再重建（单调性由 test/markdown-stream.test.mjs
+  // 逐字回放守着），后者才随写随更新。收益是整轮结束时不再有源码→渲染的突变。
+  test('流式阶段就渲染已定型的 Markdown，不等整轮结束', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
 
@@ -129,8 +137,12 @@ test.describe('关键用户旅程', () => {
     const turn = bubble.locator('..');
     await expect(bubble).toHaveAttribute('data-streaming', 'true', { timeout: 10000 });
     await expect(turn).toHaveAttribute('aria-busy', 'true');
-    await expect(bubble).toContainText('Here is', { timeout: 10000 });
-    await expect(bubble.locator('strong, code, li')).toHaveCount(0);
+
+    // fixture 的第一段被空行闭合后就进 stable。这里要的是它**在流式途中**
+    // 已经是渲染态：紧跟的 aria-busy 断言负责证明那一刻还没收尾。
+    await expect(bubble.locator('strong')).toHaveText('bold', { timeout: 10000 });
+    await expect(bubble.locator('code')).toHaveText('code');
+    await expect(turn).toHaveAttribute('aria-busy', 'true');
 
     await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
     await expect(bubble).not.toHaveAttribute('data-streaming', 'true');
@@ -138,6 +150,46 @@ test.describe('关键用户旅程', () => {
     await expect(bubble.locator('strong')).toHaveText('bold');
     await expect(bubble.locator('code')).toHaveText('code');
     await expect(bubble.locator('li')).toHaveCount(2);
+  });
+
+  // 入场动画只给**实时发送**的气泡，不给历史回放——切会话时几十条一起滑入是灾难。
+  // 两者本来就是分开的代码路径（appendUserBubble 与 appendHistoryUserBubble），
+  // 动画类只挂在前者上。
+  test('新发送的用户气泡有入场动画', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
+
+    await page.locator('#msg-input').fill('hello motion');
+    await page.locator('#send-btn').click();
+
+    const bubble = page.locator('.msg.user').filter({ hasText: 'hello motion' }).last();
+    await expect(bubble).toBeVisible();
+
+    const anim = await bubble.evaluate(el => {
+      const cs = el.ownerDocument.defaultView.getComputedStyle(el);
+      return { name: cs.animationName, duration: cs.animationDuration };
+    });
+    expect(anim.name).toBe('slideUp');
+    expect(parseFloat(anim.duration)).toBeGreaterThan(0);
+  });
+
+  // 判据是「有多少帧是静止的」：内容在长、视口却纹丝不动的那些帧，就是用户看到
+  // 的顿挫。瞬时 scrollTop = scrollHeight 下实测 92% 的帧静止，剩下 8% 整齐地跳
+  // 46px（两行高）—— 约 10fps 的跳动。这条测的是运动的连续性，不是滚动的正确性,
+  // 后者由下面那条「不抢回滚动位置」守。
+  test('流式跟随是连续滚动，不是一跳一跳', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 520 });
+    await page.goto('/');
+    await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
+
+    await page.locator('#msg-input').fill('SCROLL_STREAM_FIXTURE');
+    await page.locator('#send-btn').click();
+    await expect(page.locator('#state-label')).not.toHaveText('idle', { timeout: 10000 });
+
+    // fixture 是 90 行 × 35ms ≈ 3.1s，采 2s 落在流式中段。
+    const motion = await sampleScrollContinuity(page, '#messages', 2000);
+    expect(motion.totalScrolled).toBeGreaterThan(200); // 先确认真的在滚，否则下面的比例没有意义
+    expect(motion.stillRatio).toBeLessThan(0.7);
   });
 
   test('用户上滑阅读时流式输出不抢回滚动位置', async ({ page }) => {
@@ -184,10 +236,16 @@ test.describe('关键用户旅程', () => {
     await expect(turn.locator(':scope > .bubble.md').last()).toContainText('After the tool.');
     await expect(turn).not.toHaveAttribute('data-active', 'true');
 
-    const order = await turn.locator(':scope > *').evaluateAll(elements => elements.map(element => (
-      element.classList.contains('tool-card') ? 'tool' : 'text'
-    )));
-    expect(order).toEqual(['text', 'tool', 'text']);
+    // turn 收尾会在活动区和最终回复之间插一条「用时 N 秒」，末尾再挂一排操作按钮。
+    // 这条守的仍是正文与工具的相对顺序——divider 和操作条单独分类，免得它们被
+    // 归进 'text' 之后，顺序断言看起来还是对的，实际上已经分不清谁是谁。
+    const order = await turn.locator(':scope > *').evaluateAll(elements => elements.map(element => {
+      if (element.classList.contains('tool-card')) return 'tool';
+      if (element.classList.contains('worked-for')) return 'divider';
+      if (element.classList.contains('turn-actions')) return 'actions';
+      return 'text';
+    }));
+    expect(order).toEqual(['text', 'tool', 'divider', 'text', 'actions']);
   });
 
   test('reasoning 默认紧凑且尊重用户展开状态', async ({ page }) => {
@@ -200,13 +258,16 @@ test.describe('关键用户旅程', () => {
     const fold = page.locator('.assistant-turn .reasoning-fold').last();
     await expect(fold).toBeAttached({ timeout: 10000 });
     await expect(fold).not.toHaveAttribute('open', '');
-    await expect(fold.locator('.reasoning-label')).toHaveText('思考中');
+    await expect(fold.locator('.reasoning-label')).toHaveText('正在思考');
 
     await fold.locator('.reasoning-toggle').click();
     await expect(fold).toHaveAttribute('open', '');
     await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
     await expect(fold).toHaveAttribute('open', '');
-    await expect(fold.locator('.reasoning-label')).toHaveText('思考过程');
+    // 完成态带耗时（「已思考 4秒」）；mock 下这一轮可能不到一秒，那时退回
+    // 「已完成思考」。两种都以「已」开头——这条守的是时态从现在时切到了过去时，
+    // 钉死某个秒数只会变成一条随机红的用例。
+    await expect(fold.locator('.reasoning-label')).toHaveText(/^已(思考 .+|完成思考)$/);
   });
 
   test('输入区域元素存在', async ({ page }) => {
@@ -288,8 +349,13 @@ test.describe('关键用户旅程', () => {
     // Wait for the turn to complete (command executed after approval)
     await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 15000 });
 
-    // Should see the tool result with exit: 0 (command executed successfully)
-    await expect(page.getByText('exit: 0').last()).toBeVisible({ timeout: 10000 });
+    // 命令跑完后活动行会收起，退出码折在里面。成功不在行上留标记是有意的：
+    // 成功是常态，每条都缀一个 ✓ 只会淹没真正需要注意的失败（失败走 data-ok=false，
+    // 行首变红并缀「· 失败」）。所以这里点开再验退出码。
+    const row = page.locator('.command-card').last();
+    await expect(row).toHaveAttribute('data-ok', 'true', { timeout: 10000 });
+    await row.locator('.activity-toggle').click();
+    await expect(row.getByText('exit: 0')).toBeVisible({ timeout: 10000 });
   });
 
   test('审批流程：拒绝审批', async ({ page }) => {

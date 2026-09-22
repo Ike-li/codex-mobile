@@ -1,5 +1,5 @@
 // scripts/device.js —— CLI 工具：管理待确认和受信任的设备指纹。
-import { getPendingDevices, approveDevice, denyDevice } from '../devices.js';
+import { getPendingDevices, approveDevice, denyDevice } from '../src/auth/devices.js';
 import { readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -22,6 +22,31 @@ Codex Chat Mobile 设备审批工具
 `);
 }
 
+/**
+ * 把一条受信任设备记录格式化成可读的若干行。
+ *
+ * 兼容两种格式:早期 trusted-devices.json 存的是纯 token 字符串数组,现在是对象。
+ * devices.js 的读取侧至今留着同样的兼容分支,这里不能比它更严 —— 那时批准的设备
+ * 还在文件里。上一版直接把条目塞进模板字符串,对象格式下打印出的是 [object Object]。
+ *
+ * 缺字段只让那一行少点信息,不抛:手改过的文件、跨版本写入的半截记录都可能缺,
+ * 而这是「我批准过哪些设备」的唯一查询入口,炸掉比信息不全严重得多。
+ */
+export function formatTrustedDevice(entry, index) {
+  const record = typeof entry === 'string' ? { deviceToken: entry } : (entry || {});
+  const lines = [`  [${index + 1}] ID: ${record.deviceToken || '(缺少 deviceToken)'}`];
+
+  const meta = [];
+  if (record.ip) meta.push(`IP: ${record.ip}`);
+  if (Number.isFinite(record.approvedAt)) {
+    meta.push(`批准时间: ${new Date(record.approvedAt).toLocaleString()}`);
+  }
+  if (meta.length) lines.push(`      ${meta.join(' | ')}`);
+  if (record.userAgent) lines.push(`      User-Agent: ${record.userAgent}`);
+
+  return lines;
+}
+
 function listDevices() {
   console.log('=== 等待确认的设备 (Pending) ===');
   const pending = getPendingDevices();
@@ -41,8 +66,8 @@ function listDevices() {
     if (existsSync(TRUSTED_DEVICES_FILE)) {
       const trusted = JSON.parse(readFileSync(TRUSTED_DEVICES_FILE, 'utf8'));
       if (Array.isArray(trusted) && trusted.length > 0) {
-        trusted.forEach((id, idx) => {
-          console.log(`  [${idx + 1}] ID: ${id}`);
+        trusted.forEach((entry, idx) => {
+          for (const line of formatTrustedDevice(entry, idx)) console.log(line);
         });
       } else {
         console.log('  （暂无已受信任的设备）');
@@ -84,18 +109,22 @@ function handleDeny(id) {
   }
 }
 
-switch (command) {
-  case 'list':
-    listDevices();
-    break;
-  case 'approve':
-    handleApprove(args[1]);
-    break;
-  case 'deny':
-    handleDeny(args[1]);
-    break;
-  case 'help':
-  default:
-    printHelp();
-    break;
+// 只有被当作命令行工具直接执行时才跑,照 scripts/doctor.js 的形态。
+// 没有这道守卫的话,测试 import 这个模块会顺带执行一遍 switch 并打印帮助。
+if (process.argv[1] && process.argv[1].endsWith('device.js')) {
+  switch (command) {
+    case 'list':
+      listDevices();
+      break;
+    case 'approve':
+      handleApprove(args[1]);
+      break;
+    case 'deny':
+      handleDeny(args[1]);
+      break;
+    case 'help':
+    default:
+      printHelp();
+      break;
+  }
 }

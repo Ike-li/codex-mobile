@@ -13,7 +13,7 @@ test('offline message survives page close and drains once after reconnect', asyn
   ).toHaveCount(1);
 
   const storedBeforeClose = await page.evaluate(async () => {
-    const { createIndexedDbMessageStore } = await import('/js/indexeddb-outbox.js');
+    const { createIndexedDbMessageStore } = await import('/js/outbox/indexeddb-outbox.js');
     const store = createIndexedDbMessageStore();
     const records = await store.list();
     store.close();
@@ -35,7 +35,7 @@ test('offline message survives page close and drains once after reconnect', asyn
   ).toHaveCount(1, { timeout: 10000 });
 
   await expect.poll(async () => reopened.evaluate(async () => {
-    const { createIndexedDbMessageStore } = await import('/js/indexeddb-outbox.js');
+    const { createIndexedDbMessageStore } = await import('/js/outbox/indexeddb-outbox.js');
     const store = createIndexedDbMessageStore();
     const records = await store.list();
     store.close();
@@ -67,7 +67,7 @@ test('a never-attempted provisional request rebinds after its instance disappear
   await page.goto('/');
   await expect(page.locator('#state-label')).not.toHaveText('offline', { timeout: 10000 });
   await page.evaluate(async () => {
-    const { createIndexedDbMessageStore } = await import('/js/indexeddb-outbox.js');
+    const { createIndexedDbMessageStore } = await import('/js/outbox/indexeddb-outbox.js');
     const store = createIndexedDbMessageStore();
     await store.put({
       clientRequestId: 'req-e2e-unattempted-orphan',
@@ -89,7 +89,7 @@ test('a never-attempted provisional request rebinds after its instance disappear
   await expect(page.locator('.msg.codex').filter({ hasText: 'Mock response to: recover never attempted orphan' }))
     .toHaveCount(1, { timeout: 10000 });
   await expect.poll(async () => page.evaluate(async () => {
-    const { createIndexedDbMessageStore } = await import('/js/indexeddb-outbox.js');
+    const { createIndexedDbMessageStore } = await import('/js/outbox/indexeddb-outbox.js');
     const store = createIndexedDbMessageStore();
     const records = await store.list();
     store.close();
@@ -101,7 +101,7 @@ test('an attempted provisional orphan waits for fresh-id confirmation before sen
   await page.goto('/');
   await expect(page.locator('#state-label')).not.toHaveText('offline', { timeout: 10000 });
   await page.evaluate(async () => {
-    const { createIndexedDbMessageStore } = await import('/js/indexeddb-outbox.js');
+    const { createIndexedDbMessageStore } = await import('/js/outbox/indexeddb-outbox.js');
     const store = createIndexedDbMessageStore();
     await store.put({
       clientRequestId: 'req-e2e-attempted-orphan',
@@ -132,7 +132,7 @@ test('an attempted provisional orphan waits for fresh-id confirmation before sen
   await expect(page.locator('.msg.codex').filter({ hasText: 'Mock response to: confirm attempted orphan retry' }))
     .toHaveCount(1, { timeout: 10000 });
   const finalIds = await page.evaluate(async () => {
-    const { createIndexedDbMessageStore } = await import('/js/indexeddb-outbox.js');
+    const { createIndexedDbMessageStore } = await import('/js/outbox/indexeddb-outbox.js');
     const store = createIndexedDbMessageStore();
     const records = await store.list();
     store.close();

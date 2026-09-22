@@ -10,11 +10,13 @@ export default [
       'node_modules/**',
       'coverage/**',
       'test-results/**',
+      // 工具在这里开 git worktree（.claude/worktrees/<name>/），里面是整个仓库的
+      // 另一份 checkout —— 连 public/vendor 的 min.js 一起被扫，实测一下多出 224 条报错。
+      '.claude/**',
       'playwright-report/**',
       'data/**',
       'public/vendor/**',
       '_shot.mjs',
-      'tmp-ui-shots/**',
     ],
   },
   js.configs.recommended,
@@ -49,6 +51,15 @@ export default [
       ecmaVersion: 2023,
       sourceType: 'module',
       globals: { ...globals.browser, io: 'readonly' },
+    },
+  },
+  {
+    // e2e 的截图辅助模块：文件本身是 Node 侧的 ESM，但主体是一段传给
+    // page.evaluate 的函数，在浏览器上下文里执行，用 document / window。
+    // 两套 globals 都放开，代价是这个文件里 Node 部分误用浏览器 API 抓不到。
+    files: ['e2e/lib/*.js'],
+    languageOptions: {
+      globals: { ...globals.node, ...globals.browser },
     },
   },
 ];

@@ -1,0 +1,236 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:0dd587930bb7b23e42fb80213af67c0f6a5883f4f5fcfcea8bbf229f269bb70a",
+  "claims": [
+    {
+      "id": "claim_b4a031f0de084b57b4cc43850a8b230a",
+      "statement": "resolveListenHost 在启动期硬拒绝两种配置：没有 AUTH_TOKEN 时 HOST 必须是 loopback，绑非 loopback 时 AUTH_TOKEN 至少 32 字符，不降级。",
+      "evidence": [
+        {
+          "resource": "repo://src/auth/server-security.js#L34-L44",
+          "version": "repo-lines-v1:sha256:2b9f68869d12b86e88395d8221acd4332e7534323f82487b965bb7bda6b06b35:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ1ZDI1ZGJjMTg4NDU4YjJhY2FiYmFhNjE2YmMzMjdiZmEzMWZlNDE4NmI0MjcxNmM0NTY1Yjc3YTY0NTY1N2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU5NDBmYTBjNTcwZWVmMjFmZmY3Y2Q4YzU1YTYwOTQ0YWIxYTgyNTM0YTJmOGQyMTdiZGRiNDA0YzdhNmY3NDMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE1M2I0M2ZiYTAxOWE2YzBiZmUzMGFiYzdhNGZhZWJmZDA1Njc1MTBhZGUyZTg2OTlkZmZkMjc0NWM1NjEyYTkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_53c0b98cb987466b83aebed6512e6a0a",
+      "statement": "经可信代理进来的请求必须带合法的 X-Forwarded-Proto，缺失回 forwarded_proto_required、值非 http/https 回 invalid_forwarded_proto，不猜一个协议。",
+      "evidence": [
+        {
+          "resource": "repo://src/auth/server-security.js#L46-L97",
+          "version": "repo-lines-v1:sha256:81c6009a6d19835daf71a693e5e70315ec24da975ab12cf91a5b6904db7cc4bf:eyJzZWxlY3RlZExpbmVDb3VudCI6NTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEwNWNkZDY3ZjUwODcyODEyZDllMWYyZTIxYTVkMGIyZDJkNGM2OTc3N2QxZDZjOTE1MDZmYjI3OTMxOGE2NGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNjMGJkMTdmODFiZmYwMDExNmIwZjlkMmQyNjI1ZmZkZmI5NTgzZWM0MGEzNjYwZGY0YWUzYmNjYjE3NmIzMTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBjNDc4YTI2ZjlmMjAzMzE0ZjY5NzkxNTgzZjllOTg1ZTk4M2YyMjEwMjBhZDAzZmM0ZDE2MjI5ZDVmOGFmY2UifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e6dc4feb167f495084a304aa8a5752a4",
+      "statement": "远程明文连接默认被拒（https_required），只有 CODEX_ALLOW_INSECURE_REMOTE 为 1 时才放行；HTTP 层拒绝以 426 返回。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L401-L414",
+          "version": "repo-lines-v1:sha256:1ee2fafec579f3beb3ec3baf456bd1e636d028d324f9f0551c109b7d3334dbb4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhYjBhMWJmY2NkNjZhMzg5MDZlZmY5N2E1ODBlNWM3Y2VjMTQxZDliZjA4NDUwZGExMTNlMjdmMmM2NzVhYjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ0NGI4NGY0ZDgwNDIwMjE3YjgyNTAzZjA4OWU1ZmNlMzg3OGNkNzY4Mzc0ZDAzYjlkNjY2NGZkNWE3YWNjNjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdmZDczZGExZWUzOWMwY2UxNjc1OWJlZGM3OTk3ZmI3Mzc2ZmM1ZjRiY2E5ZDdkZDhmNTY3NGZiN2JkMmYyNjYifQ"
+        },
+        {
+          "resource": "repo://src/auth/server-security.js#L93-L96",
+          "version": "repo-lines-v1:sha256:c8edc42d045fe7da42ad9de5d7f7bb8818d7d505d82a2dbc7467f0584dc6b37e:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNmJkMTU3MmY5YjFhZTM4Y2JmNmVmNWZmYWVmYjU2ODNmZmIwMzBiMzMyMjk3YTc1YzJiM2RmMGE5YjgzYjJiMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiM2E4YzYwMzNiOTUyYjkwYjRmYWYwOTcwZDMwOTgxYTgwOTY2YzU3MmVhZmE0YTU1NDJiY2JiMTMwZjQ0Y2M5NSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTM5MWRmMjRlOTI3NGI5NTM5M2U3ZTg2Y2RiNTg2NmE0YmJkZDZhNzA5Njg5OGJlODFhNTc4NDM4ZTU2YmVhMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiY2VhNGUwOTMxYzI0MTg2MWY1NTc2MDE1YjAxNTJmMjFjMDQ3ODRlYmNhZjYxNmU1MjhlZWUxMDFmMjQ2ZTE3ZiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_d39ef1d5de164b0bac958378fb6297f9",
+      "statement": "Origin 判定分本地远程两套：远程连接必须带 Origin 且在白名单里，本地连接允许无 Origin、有则要求同源或在白名单里。",
+      "evidence": [
+        {
+          "resource": "repo://src/auth/server-security.js#L99-L128",
+          "version": "repo-lines-v1:sha256:a0a2f6074fecbcf78c0e02e72aba6c6c9c0d36dc250228df39bf81ae23716e36:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjllYWE1Yjk3OGMwMjAwODUzNmQ2MDY1N2FhZjZmZjZmN2NkOGQxOTkxNzJmMzFlODQyY2U2NzM2NzFmMTNmOGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRhNDYxNjgxNzhiYzEwNzAxMzY4NjEwOTBlOTc1ZjBkMzU5ZDdmYzdiMTMxNzQ4NGNlNzVhYzM1ZGU1MTAyMjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ0YTUzNzA1ZGZiNWUyMTJmNGNhMDM1ZmM1ZDM0NzNhMjg1ZDQ2OTBmODNmZDkxMTE0YmI0MzJjMGRlNGU2OTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_af3aaa769f0c45c897957d4657a8154d",
+      "statement": "canonicalOrigin 只接受纯 origin 形态，带路径、query、hash 或用户名密码的一律判非法；parseGatewaySecurityPolicy 对非法白名单条目抛错而不是静默忽略。",
+      "evidence": [
+        {
+          "resource": "repo://src/auth/server-security.js#L130-L166",
+          "version": "repo-lines-v1:sha256:4afc17f921749bdbd9621ad22f73db8fdf978ce5210628299ef688adef5be108:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE5NzNiNmQxYzAzYzQ4NTE3MjBjNWNmMGRkN2I3YzYwZTVhMTI2ZjcxZGZlODE0N2YwNWIyMWNiNGE3ZjdjNmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjEzZWQxNDkxZjBjYjY1NTFiNzFmMjI0YjU0YWQxYWFlNzFmOWU4MWZmZDg0YmY3Y2UzZDdlYjUwYWI3Nzc0YWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU2NWY3ZjcxYzQ0YjYyMmVjNWQ0NjVkMzU4YTYzYTU0YWM3MDllMGQzZDNmOWU2YjUwMWM4NjlhOWI4ZmY2N2UifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_68ce0b161a3d49dab2c412e837322bf4",
+      "statement": "网关为所有响应设置 CSP（script-src 'self'）、X-Frame-Options: DENY、X-Content-Type-Options: nosniff 与 Referrer-Policy: no-referrer。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L415-L429",
+          "version": "repo-lines-v1:sha256:e3287982d6f5e125170a72ee08f8b85100d564965c44c1ce4fe41431d12873a4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU1NDYwNTNjMjMxZGFhMjIxMDQzNDcwZDQ4MTRjNDIzODlmOWRkYTAxZTdjY2VjZmQ0MWIxOTM4ZjRlYzZhYzAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgzOGI0ZDgwN2NmN2M3NzkzNzU0YjJjNjM4MmFkMGExZjYxMmVhNjg4ZGJjOWExNDIyZWYyMDBiYjdkZDI4MzciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImMxMmU3NTYyMjU3NzQ1ZjVhODhlZGM2OGQyNTZhZWY4YzkwMTg0YTRlOWIyOWIzODI1OWZmNDdmZGQ4ZTU2MDYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_cbb27f10d5024dfdbb9f9d8e539b55b2",
+      "statement": "凭证分两级：共享的入册令牌只在新设备首次接入时用一次，此后设备用自己的专属凭证，因此轮换入册令牌只阻断新设备注册而不影响已注册设备。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L505-L527",
+          "version": "repo-lines-v1:sha256:0991187b088e5a71f0280c6438cdabdee765cde5052c520ac29d0ea4091f3463:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY3MDY5Y2VkMWU4ZDcwZWU0NDkzZmY2ODE5NWU5NmFmYTYyYmQ0MmM2ZmZlMzc3Mzg4MWUzN2ExMzE5OGQ0MmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBkZDEyZmFhYzFmNTIzZGI1OTQyZDNkYjgwNjI4Zjc4YjE1Y2Q0NmI2OGIzNzNiMDY4NjYxOWMxMTRjYThkOWIifQ"
+        },
+        {
+          "resource": "repo://src/auth/devices.js#L140-L161",
+          "version": "repo-lines-v1:sha256:903775144ea5897e79855c46e1852823d0864faf8bd738b393a7697f97022eb9:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJmOGJlNDM2MjBmMzg4MDYyYzVhYzA0ODNiNzQ2MjMwOGIxMjVjZDVkNjJhYjA5ZTVhNWJmY2JhZWU2ZWMzZjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMwMmQ1Y2Q3NGU3NzFjYjY3NGQzNzYyZjVjNjBkMTA3MzI2ZWFiNTdhYmI5MDg3NGFmZjNkYTA3NTg4ZmQ2NGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU4N2JiOGM3MzI5M2U4ZjZkNjFmODBlOGNiZmNjMjM2YzYxYTllNTA2ZDA1ODIyYjg0ZDM3YWVmYTA1ZGFhYzUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b929c6627f41498a8beffbfd722bc88c",
+      "statement": "入册令牌持久化在 data/enrollment-token，否则轮换等于「重启前有效」，用户没法信任它；令牌比对用 timingSafeEqual 并先比长度。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L505-L521",
+          "version": "repo-lines-v1:sha256:3db9281650b9c3939355b90abbdc5f81a554b1c1748c5ed46245a7ad9f6b5c82:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY3MDY5Y2VkMWU4ZDcwZWU0NDkzZmY2ODE5NWU5NmFmYTYyYmQ0MmM2ZmZlMzc3Mzg4MWUzN2ExMzE5OGQ0MmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkzYWZhNzgxZTgwNjViNmNjZGIwMWNjMDVhM2NkYWEyMmIxZTk4YzBiOGMxNjFhZGFhNmNjNmUxZTIzOTdlMTcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_983b3f460a0e4d69ab300c16a8c002a6",
+      "statement": "会话 cookie 只在服务端存 SHA-256 后的 key，属性为 HttpOnly、SameSite=Strict、Path=/，传输安全时追加 Secure；撤销设备时按 deviceToken 批量吊销会话。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L529-L597",
+          "version": "repo-lines-v1:sha256:d86c16adc54709ef31ff030e10e9c8d4c3eefae616291581ab58762eeea0b6ac:eyJzZWxlY3RlZExpbmVDb3VudCI6NjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFhNGVmNDVkOGE4YjJmNjU4NWFhNmRlNTUxODE4NjE2M2UyMmU5ZjNiNmE2OGNkMTRkOTczYWE2OWE4N2ZmZDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM3MjE4ZmVhN2U1NWQ5YjBjMDAxNmQ5YjVmMzdhZDQzMDE4YTA4MDM3YTdjZTA4NjRjNTRlYzEwMmI3NTQzMGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE5NjE3MDU0ZDlkZjA2Y2NkNTQ0MTFkZWE4MjIwYjczMTk4NmIzOWRjNjM2NTkwOGFlNzMxMjNkMzA5NjJhNmQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_caf31edad8e54f28b05161e5fe658465",
+      "statement": "Socket 握手未在信任表中的非本地设备会进待批队列并在服务端控制台打印提示；待批队列满时以 pairing_capacity 拒绝，以免任何人用无限新设备刷爆队列。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L1188-L1228",
+          "version": "repo-lines-v1:sha256:f96c60176d749c8df5bfaff67030d8f1194856fd47935ce444abda130bc09cea:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU5YThjNTQxZmVkNjM3YTRjZTA1MGU0NzlhZjIzYTEwNzJkOTQ0ZGQwYzljN2RjNDIzNmIyMzc5OTI0MWM2N2YiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE0ZGRmY2MyNzhhN2YyYWFlYmRiZWI2YTI4NDQ4MDVkNTEyODUxYTFjMjQzNTNkODE3NjhhNzBmMGEwNzk4MTAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_90169d493d0f4b4db671d455130a5d14",
+      "statement": "信任表读失败时采取 fail-closed：清空内存表、作废签名缓存并标记失败，之后拒绝把残缺的表写回磁盘，否则一次瞬时读失败后的任何批准或撤销都会让老设备永久失联。",
+      "evidence": [
+        {
+          "resource": "repo://src/auth/devices.js#L20-L67",
+          "version": "repo-lines-v1:sha256:3153efa26e8d4d26091c4dcf0e2b2379bf1d5119b8a61069a0e9199a1c54fc77:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJlOTBmZTFhMjM3ZDMzNjgyMjZlYWIxZTFlZDE5ODkxMzhhNTcyYTYwMDFmMDRmM2UzMTM1YTE2OWJmMjg4ZWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMwODcyNTQxM2VlMzNkMjA2NGZkYjVmMjZlN2VmOGY5NTMxMGNiODlkODg2Y2Q4MTY4YzlkMmRjOTUwZGIzYjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI1YWE3ZjRlNjhiNTdjZjNkMTM0OTdkMmQyMTQ2MjAwNjFlYjEwZGVmZTgwODVkMzAzNmQ2MjYyMzE3NTI3NzYifQ"
+        },
+        {
+          "resource": "repo://src/auth/devices.js#L69-L88",
+          "version": "repo-lines-v1:sha256:4b0c3daf07300292a124510c802e4ea43d2b679b7cbd5be7f3a6563b1f69fdda:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYzYmM2ODEyZjQzMDAwN2Y1NDNiZjk2NTM5MGU1NjRhZTE3YmU5ZDZhYzc2NDQxYmQyZmQ2ODE1MmU4NDY0MzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVhM2UwYzY4MjEzMmRmNDkwN2MzZDRhZWJkZDQ3NTJkZWU5NGUwMTdiMzFlN2MzNzRmMDI0ZDVkNGUzNjU5YWQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7ff211fbd343485180fbd9e7b2581d8f",
+      "statement": "HTTP 鉴权与 socket 握手共用同一张失败窗口表，否则 /health、/metrics、/push/* 会成为绕过锁定的无限次试令牌通道。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L599-L638",
+          "version": "repo-lines-v1:sha256:957d1f9cbd0914e7a89e5304d6bbdc61f0a5b2707820467f72c1bd8a0045cbfb:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ5MTc1N2UwMWM2OGUwOTM4MzcxMDBkZDNjZmRjNjY1MDU0YWYxYjVlNTgwYTJkOTQ1YWMwMzcxODI3ZWJjZTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY1YmVjOTIzNzMwMzk2NDJmMjNjYjkzNjE3MmUyNzNhMTIwZTdjZTc5YzBkNDVjMGU1NzVhNzkwYzQ0MzFjYWQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7f39e7258932478ca8460a496eec625f",
+      "statement": "鉴权失败区分 401 与 429 两种含义并在锁定时给 Retry-After，失败审计只记 path、来源与失败类别（bad_token 与 no_token）而不带令牌值。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L606-L637",
+          "version": "repo-lines-v1:sha256:f8da058a4df86af7f19d6fd59cf657d90279dbabe56df9ead16e49438c7a375c:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI1YWIyYjJlNTBkOTAyODg3MmZiMDc3YTI4NjJhYzc5MjNkZDQzZWJjMjA5OGE1Y2RiOTc4YTgyNGE2NmVmNmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM5OTIwNGI1ZTAwZmI4ODJiNzViYTI3MjFiNzM3MzMyMWQ5ODc4MzUzZDYyOWZiZWJmMTdmMGIxZWViMmNlMzMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI3ZGFjMmVhZTk2ZmIwMTg1MTUwZGI4MWFmMmRlODY5NjI2YTg2NDdmMTc1YzE1NWE0OTEyOGY2NGQ0MTkyOTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhkNWUzMWI2YTE3MWZlODE1ODJjNWZmNTRlODU3OTBjNWI5ZmI0MzAwMGRlMDM0NThmNWYzNjI3ZjRhOTZkN2QifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5052c76c13ab40c3b567353091072bdb",
+      "statement": "限流表有两套不可互替的回收：trimAuthFailureWindows 只保证 10000 条上界，pruneExpiredFailureWindows 每五分钟全表扫做过期回收；Map 迭代顺序使「表头即最早到期」不成立，仅靠 trim 会一个也删不掉。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L434-L494",
+          "version": "repo-lines-v1:sha256:cc122d7b507d83b150d332cdb3d37083e965fc363f523d09eb0dc8239703c33b:eyJzZWxlY3RlZExpbmVDb3VudCI6NjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc0MjhjY2VmOTlkMWE2MTg3ZTg5NThmMDE1Y2EzMTdlYTIxZDRjZTJkZjUyODFmNDliNzcxZjQ1ZDAwMDY1NWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEyODM3ZmQwMzJmOGJlZDQ1ZjhkNjZmMzA5NzBhZjM0NTE5OGNkYjRjZmFiNzg2NzQyYmUxNWEwMTMzM2M5MzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdiNjJiMjNjZDcwZjE5ZTVlOGFlYTRkNWU3ZTg1MDdjY2E1Zjk2MGZmYTQxNmQ4OGZmYzk4OTVkNDBmYTE4YjYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_64cafbc9fd544630a3a0f017f8e6fd9c",
+      "statement": "不能把过期扫描挂在每次鉴权失败上：实测冲过阈值后同样 2000 次调用从 0.3ms 涨到 309ms（899 倍），而 IPv6 下单台主机就能制造海量源地址，使限流表自己成为 DoS 放大器。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L434-L444",
+          "version": "repo-lines-v1:sha256:4846ae97bbf62cb73757ead33186b3d19ae93db4fa8e437de6183a4da8de15c8:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc0MjhjY2VmOTlkMWE2MTg3ZTg5NThmMDE1Y2EzMTdlYTIxZDRjZTJkZjUyODFmNDliNzcxZjQ1ZDAwMDY1NWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFiYjEyZTlkZWJmZWMzOTQxZmY1YzRjYzVhMzc2NjRhZGU0YzBkZTAyZDM3OWJiMThmMzlkOTAyNDRkYmZlMTciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEyODM3ZmQwMzJmOGJlZDQ1ZjhkNjZmMzA5NzBhZjM0NTE5OGNkYjRjZmFiNzg2NzQyYmUxNWEwMTMzM2M5MzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA5YjAxNzMyNGY0MDI4NmQ4NmYzNmJlOTVmMjE1ZGFhNGRjODNhNzhlNWI0MmFiODFkMDA2MTBhYTA4NTZhYTMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c1637ceed597421f9f2c49eee42049e3",
+      "statement": "安全审计写入失败被吞掉，因为安全日志不得让认证路径崩掉；审计里的标识符经 securityRef 取 SHA-256 前 16 位而不记原值。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L495-L503",
+          "version": "repo-lines-v1:sha256:1c17bf98ce5106f83533f6fa4ca3c7dbb52f8265f56c799449a2c8d4619c19f5:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzhmOTllMTdmNWMyZDJlNTkwOWVjMDQwODQzYjE3ZGI4NDI0ODQ1NGQyNmIzMjRlMDY4MGRmN2U5YzkxY2FmZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTIwNDBlMDk1YTk0ZTJhZGE3NGU0MjFmMzcxODc1MWE5MWE4MTBiZmQ2NmY0OGY0ZTkzOWM3Yjc0ODBlYjY3MCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYmU1NjVjYmY5MDllNDgzOGI2N2RhMTBkMmYwMTBkZTJmMDk4ZjU0NjA0NDgzMWIyMjNmMGI3MWJiYmRiYjQ2NiJ9"
+        },
+        {
+          "resource": "repo://server.js#L533-L536",
+          "version": "repo-lines-v1:sha256:8f69c0bb06d3275b5a4fe9661c061c4919c76bb0cd7885b063138fc3b9e5ca88:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjgyNGU0MjdlMzc1NTA5ZjM5ZWE1MGUyOGE4NDI5YWNjZTQ2Nzc3ZTI0NDFlMTU0ODIwODMxNGNkM2I0Y2QyZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjhhMDE3Njg4YTQ1YzY1OTYyMWIyZDkwMTQxODkyN2MzNmE4N2Y4M2NiZmM1M2VjNmJlN2NkMWQwZjM1ZWU0NiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjQyOTg1MzM5MzEyMzczOWRlOWIzYThjYjlkODJjZmYwN2ZlZDViYTkyMWZkM2ZhNGIwZDQxNWNjZDk5OWJjZCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_759fc0e95bac4fefb03724f8d658da42",
+      "statement": "sanitizer 的敏感赋值正则有两条被注释钉住的写法约束：不得用两个重叠的 Kleene star（实测退化到 O(n^3)），且值必须停在分隔符处（用 \\S+ 会让后续的敏感赋值整条漏出）。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/sanitizer.js#L1-L20",
+          "version": "repo-lines-v1:sha256:55cc46c21bf0aed84b15992b937f5833940982cf50d4c7e0a2ea31bc7664d957:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZjOGVmNDQ3MDk5ZTE0NDNhYzYxNDVhNzYyZjZhYjBkYWI0N2U0ZTNiYWZlY2UzNWU1YWMyNzMzZGM3ZGFmMDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhhOTVhNzYyYzQwNDMwMDM1Zjk5OGQzNTVjMGQ1YjQ0ZGIwMDJlYWJjYjEzNzQwYjE4OGNmYjY3N2E4ZWE4ODcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d1cd5d674180462d96904df093949da7",
+      "statement": "rpc-log-redaction 是唯一把 API key、prompt 与绝对路径挡在落盘日志之外的闸，它按三条判据分工：键名像凭证则整值换成 <redacted>，键名是正文则只留长度，其余过 sanitize 与 sanitizePath 后截断。",
+      "evidence": [
+        {
+          "resource": "repo://src/agent/rpc-log-redaction.js#L1-L23",
+          "version": "repo-lines-v1:sha256:c2fe5cd910efddcaf153ce53a9e52dbddc48b217b9cc17cf1609703045170bb1:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE3N2UzNzU5ZmYxZmZhMjc2OTQ3YmUxODgyZDFjODA1NGQ4MDYxNjQ1MmFiOGQ1ZjIyNDlhMjM3NGFkZjQyZWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM3OTIyOWZmMDIzOWQzYTU0NzlhZDdhMjhhMjVkZmNmYzQyMGQzNzZiMTE2NjcwMTA1Y2RjOGM0YTQyMDllY2EifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_71925f1680904d0493001d87956f1019",
+      "statement": "前端错误上报被当作不可信输入，进日志前经形状校验、长度钳制、脱敏三道收敛，并额外有按 socket 的限流器。",
+      "evidence": [
+        {
+          "resource": "repo://src/ops/client-error-log.js#L1-L51",
+          "version": "repo-lines-v1:sha256:e3a2a881108b206c49b47b243529dd7132ee863f9342a3d1a24ef8da23ea09cf:eyJzZWxlY3RlZExpbmVDb3VudCI6NTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ0N2U0MTE5M2M4ZTA0OWNjMDkyODBjOWQ4ZDZiNjAyOWVmY2NiYjY5ZjIyMjRkMDIwNTIxZDMxMWVkNmM1M2MiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fcdae3a05e31499abb98d1ccb8411844",
+      "statement": "/push/subscribe 在入口就校验订阅 endpoint 必须是不带用户名密码的公网 HTTPS（长度限 2048），并限制 p256dh 与 auth 密钥长度，且要求设备已被批准。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L646-L685",
+          "version": "repo-lines-v1:sha256:0301f7c38ddddd125bde853af1ad6cd56ad7ef9353694356969ed4c367230d39:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU4MzI5ZTAzMDdiNWIwNWViNWM2Zjk4NmIyMjY2MjczMDJjYjI3ZjMwYjk0MzFhMDE4OTVjM2NmMzRmYzE1YTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJjNjQ2YjQ1OTBjZDc5M2M0ZGQ2Njg0YjAzNjM5NDcxY2I1OTQxYWEyNTNmMTgzNDA2NjAxNjQwZTEzMmEzMTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE2NmE4ZWJiOTM4YTgzY2Q2MzAzNmM3MGM1ZWQ5ZWI0MzJiZGMyZmEwYmRlNzliMWJjMDJjYzVmN2QxZGQyODMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ee222b7e702743619ca032af8eed3882",
+      "statement": "信任表文件被 fs.watch 盯着，外部改动会触发对已连 socket 的重新对账，使 CLI 批准与撤销能即时生效。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L1043-L1113",
+          "version": "repo-lines-v1:sha256:4292540d26ff45ce7bc90b89c4ef35d4a6803cd2e256ff7f6927bc559ecf93d6:eyJzZWxlY3RlZExpbmVDb3VudCI6NzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk0ZTU5MWIxY2YwYTcyNzc2NTU0NDY4YTJiMzU5ODM1NzJlZTU2MDk5MmMyNmE0ZmY1NGNhZDM2ODc5MTFjNDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVjZjAyZjU3ZTliMDQ2YWU1MGQ0YzRlMThjYjJiMTYwZDNiYmRjY2U4ZTUwMzg4YWQ5NzBmYzAzZTI0ZDU2NDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMxOGNlYjI2ZDQ5MjQ2Y2UzZDcyYTFiZWU1MDRmMTZkNzdhMTRhYTU2NWQ3MjM2MWQ0NTQ4ODA5ODkzMDVhZGYifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.5.2",
+    "at": "2026-09-22T08:36:26.702Z"
+  }
+}

@@ -1,0 +1,184 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:930a350eeeffc052a74d57226564d2e920cf198340c911223ea0498fb432161d",
+  "claims": [
+    {
+      "id": "claim_f7e4f684564a4b1491ff5816b058fec5",
+      "statement": "协议定义以 codex app-server generate-ts 的输出形式版本化 vendored 在 .protocol/stable/，仅作为比对基线存在；当前 pin 的版本写在 .codex-version 里。",
+      "evidence": [
+        {
+          "resource": "repo://.codex-version",
+          "version": "repo-file-v1:sha256:3bec841237f6716b2fd5a7f98c827e325221fbca940cd71f09f3cc7497493ab1"
+        },
+        {
+          "resource": "repo://scripts/gates/protocol-check.mjs#L15-L24",
+          "version": "repo-lines-v1:sha256:cbd247d829b5abe97b8ec8288defe73ab4eee601f102f6aa8e37172e19cbea75:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI4NmVjYmEyNDUyNzZhMTIzMGIwYTM2NTgzYmUwZjU2MGM1MDZkMTEzNzY3NjllMzUyNzg2MThmZjQ2YjEyNWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkwZTIyMzcyMDc3ODBiZTI3NTNhOTIzMTVlYmU1NzZjMGJjZWJmMDExZmVjNjMxYzQ0YTYyZGUzNjQ1Yjc0YWIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVmMWJlZDQ2MmMzMTQxYzQ3MmEzMjEyNjc0Yjc1ZjkwOTUzOWI2ZTZiZWZiNWIyYWQ0Njk4MzMyOTc1ZWNjNWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM5NjUyNWFjNTI2M2ZhMjdmNTI3MmEyZDUwMjExZTI1OTI4MWViODgxMTA1MGY2OGNlNjZiNjBhZWJiM2I5YjQifQ"
+        },
+        {
+          "resource": "repo://scripts/gates/protocol-check.mjs#L582-L582",
+          "version": "repo-lines-v1:sha256:412ca345ccf75bf9c0806bce695be8de808b79984251a7a54d202cf6101dd451:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOWRmYTdlMTI4NGE0ZDNhYTkxM2ZhMWQ1YTBhNTA4MWY4MmRkM2FhNzFkYzBlYjM5NDk5NjY5YjIyZTZlYzBjYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZWIyMzU4NmQxOWZiNzQxZDYwNDZhMjBmMGRiMzZiYzQ0MmI4ZjNjZTcxMjU4ZTVlNGYyNDMxOGNlNDk3NzU3ZSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_91fe964c92d94537b04cbd5d6d672fe7",
+      "statement": "protocol-check 跑四项比对：导出漂移（方法集合、类型文件集合、文件内容）、方法覆盖、通知字段漂移、请求参数形状。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/gates/protocol-check.mjs#L583-L636",
+          "version": "repo-lines-v1:sha256:3388e36d1fac8a6c1ca9ba31e627d35bc5f040f4e54221e1d21aca5854f65fd1:eyJzZWxlY3RlZExpbmVDb3VudCI6NTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRjOTEyZTU2NzRmNmVmNmY4YjkyOGVjMjU5MTJjODg2NDM4ZmJhY2JhNTJkOTM2MDFhMTdmNzYzYmEyMDE3MWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ3NjU1MmI3NTFkNmY2MzIyZWJiYzZhYjFkNDA4NDE4MDBhZGZmZWVjNDE4Y2Y0ZTkzNDNiMTUwZjcwODJiNGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY3NTQyZTI1MWEwZjQ5ZmU3NmI5NThkYzk2MGIyNGIyYjkzNDMyOWQwZDIxYjY5MDAwN2E4MDAyODZmNWU3NGMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e14bb592ab93452a85ea58ef52d36814",
+      "statement": "方法覆盖从桥接代码静态抽取四个方向的方法名：handleNotification 的 case 标签、this.request 与 this.notify 的字面量、handleServerRequest 的 method 比较，以及 ApprovalBroker 的 ALL_REQUEST_METHODS 常量集合（递归展开 spread）。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/gates/protocol-check.mjs#L239-L254",
+          "version": "repo-lines-v1:sha256:b7437a19116825f8dbe4c77abd07971f3df2224d7d9329bc0defc2193b871bdf:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRhODM0Nzk4ODZkZjVhMWI5Zjk3YTY1NzNjOWZmNWNlOTZkZjg4NzI3NDM3M2JlMTk0ZWVhNGNkYmQ5ODliYmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFjZmFjZjQyNjUxZmUxNzkzZjgyYTQwZTA1OGNlMzEzNjlkNWJmZWVjZDUyMTZmZjk5MzgwZjY3NDJjZTFiOWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJhNWU5NTIyOTBkNzkxNzA2ZmRiYmMzMzQ2Nzg5ZGM0ZGE3YWIyMWRmMWJkYjM3Y2VjYTcxMWVhNGVjYTZhYWUifQ"
+        },
+        {
+          "resource": "repo://scripts/gates/protocol-check.mjs#L385-L420",
+          "version": "repo-lines-v1:sha256:a33259840f2afb36380aa138d3615c6c8aa46757df51d8c931217b14dcffcf8e:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkwYzQ4YmExZmE0YTRkM2Y2YmU0ZTQyZmE4ZTQ1YWU5YmJjODU5ODk5MTFjNzNlZmUxNmIxYjk1MjNhN2E0ZGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRhNTc1NzlkMDkyYzE3NDg0N2Q2MDM1N2QxYTJmYjA3ODgzZWMzNTdlYjIxMjIyZTc1ZTQ0ZGI1YjYxZDMzN2IiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRkY2JjMjNjOTZiZWUzOGUyNWQyNThlNjU5ZGZlZDI1MGUzYTlkNzFlZjAzYWZkM2Q2MGNjN2FiNDI5M2Y1MTkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9f74330106de4005995e4768b880c6ae",
+      "statement": "通知字段漂移检查刻意对着新生成的协议比而不是基线，这样字段改名在升级那一刻就报出来；字段改名的运行时症状是读到 undefined，不抛异常也没有失败用例。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/gates/protocol-check.mjs#L132-L143",
+          "version": "repo-lines-v1:sha256:7d526e4c96daba17f13636fb7708721da19584d156d1e9d25f0c8f60bf75a138:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZiMjZkZmE3YmZhNGRhODcyNzdjMzZiNzkxNDVlYmQwMDVkNDI1NDFkNDk0MDE2N2MxZDdlMGE0MzAyYzJiNDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJmNjUwYmNjMTJjYzljMjUzYzY4ZDQxNDVhNWExZmI5YzM3NmVjNjBhMzI3OThhMTczMmNiYWU2YmEwNWMxMDMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZiNGUyMjI1N2JiZTZhOGFjYzg4YmVmYTY5OTQwZWEyMzY1MTM2MzE1ZTczYTE0NDMyOTIxM2M2NTA5OGQxMTEifQ"
+        },
+        {
+          "resource": "repo://scripts/gates/protocol-check.mjs#L597-L607",
+          "version": "repo-lines-v1:sha256:03344b8f59ef73e5898bf081dd77f6c5067c7bc6762767edc3a5c69016d73a1f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIyZDExY2FmNDNlOTdlZjM2OWU2YmVlZDFhMjY4YmQwNTgzOGYyOWI5ZGQyNTRiZjY5YmE2NDg4NDE0NzIzNGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIyZDExY2FmNDNlOTdlZjM2OWU2YmVlZDFhMjY4YmQwNTgzOGYyOWI5ZGQyNTRiZjY5YmE2NDg4NDE0NzIzNGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNiNWE2OWRiODkxNmMyNTQ3Zjk0NGMyNGVjOGMzZGY5ZTJkMjg3ZTQzYjVlMTA4YWI4NjI2OGE1YzI4N2Q0ZDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMyZGE0MDQwMmEyZDM1MWIzMGRhZDdlMTU4YjdjN2UwYzIxZDY2YTMwMGEzN2QwYjZjZmQwYThhYzJjZTVkMWIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f691f5b06d534e39a7e85b018ce628fd",
+      "statement": "请求参数形状检查抓的是协议要结构体而调用点送 undefined 的情况：JSON.stringify 会丢掉值为 undefined 的键，app-server 因此以 -32600 missing field params 拒绝，而假 server 一律照答使下游测试全绿。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/gates/protocol-check.mjs#L178-L190",
+          "version": "repo-lines-v1:sha256:c65a2b7d06dd7bca514d30da52219d84a9cc5c83d30b590d3194f3928ce9a6cc:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJlZTVlM2JhYTFjMDRlNmQyMDQ4NjUxYmIxZGRiZTRkM2Y3YzM0ZDMyYWMxZDkzNWMyMzY1NzBiMTVkMDBlOTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJmNjUwYmNjMTJjYzljMjUzYzY4ZDQxNDVhNWExZmI5YzM3NmVjNjBhMzI3OThhMTczMmNiYWU2YmEwNWMxMDMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYwYWQxOWUzNTljZWEzMmRlODIyOThiMDY2MjI3ZDkxOWM0NzZjOWYxYmZhMDY3OGM2ODM3NWFlNjZjNDZlYjMifQ"
+        },
+        {
+          "resource": "repo://scripts/gates/protocol-check.mjs#L608-L613",
+          "version": "repo-lines-v1:sha256:b4b48653c5121449c8f4e1de253364ebe5f4fc9a1785d4a927c0a43578c5213b:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYmMxMzhkMzJkNWJmOWU4YTgzZDI4ZTZhMjA5NmI3YzQ1ODRmNTY3YThlZjg4Y2Y0OWRmZmRhZjMxNzFhMzZiMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOTE0MjMyOWQzOTFjY2I5MWMxMmFjNWI5YmZlYzUyZTNmODUxZjI4MjBjYjRhZTM4OWVjZWNmOWU1NjQ2MTVlZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDg4YTYxN2ExYjk4ZjFlYzc2M2E2ZGMxNTBkYWNhOTJlM2ZiNDdhMDBhYjNlNjkwZjZjZmFhYTIxMWIzOGE3NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODU2NWJkMGRjODM5OGRjMWJkMzVkZTRkMzNlODA0ZDRhMDJlYTlkZmY1ODY5YWIzMzJiNWY2NWQxOTVlNjZiMyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_4784e396e4804248acc4aea37bf7e195",
+      "statement": "请求参数检查只认字面量写法，因为 this.request(m, someVar) 里 someVar 运行时是不是 undefined 静态看不出来。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/gates/protocol-check.mjs#L156-L164",
+          "version": "repo-lines-v1:sha256:60471083d77eb3c89f547ee4dd526d7cd534b623bb7fec99e03c36483d234dc4:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZWFjZDMyMmRjMWVhMzJjZGY3ODkxOThlMzFjYTY1ZDMyNmRlYzI3ZTQ2NDZmM2RkOTMzNzdkYmM0ZDE5NzljOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzIzZDhmMTFhYTNmZDUxZWE2NmMwYWE4NjU2M2I5Yjc4MjkyZTQ0MGIxOTE4ZWMyZmIwMjY2N2RkNTI0NDQ1YSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjU0OTFhNTJhNjk4M2YyYjUyYTkzOTVlYWZlZDIzM2U4OWYzYzExNmIyNmZmZWEwYWUwMWU4Y2MxZjJlMGI4NiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_549c414b121147c5b7eeccbe4158604b",
+      "statement": "LEGACY_METHOD_ALLOWLIST 包含 turn/failed，EXPERIMENTAL_METHOD_ALLOWLIST 包含 thread/settings/update，后者对应的降级策略是把 -32601 与 experimentalApi 错误当作推迟到下一次 turn/start。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/gates/protocol-check.mjs#L26-L37",
+          "version": "repo-lines-v1:sha256:ad619a875e12a3e2ecb2246bac64d1e7205cbc8f6247da88785ee128e78939fd:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlmMTQ4ZGVjNzJmN2MzYmQ3YTY4NzFjYjc3ODM3ZmQ2MzQ0NTg3OTcwYWJjOTUxNjc0ZWYyYTBhZGU1NWIzMDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI5N2FjZmI2MDU0ZWFkOGM3OWIwZDk0YjUyNjI5YTZhOTI3Y2NjZTQ1NWJkNGQwOWFkM2EzNGVlNzNiMmI2NjciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgyOGZkMWNjM2RhYzI5YmJlNjE4YjNkZWY4MzMxZTM1YjY3YjBlODczMzY1ZWNkOGQwNmI2ZGRjYmY2MjNhYWEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_76fdab0979c94e819f4aeb3de74310e2",
+      "statement": "LEGACY_FIELD_ALLOWLIST 按 method 分组登记已从协议中消失但仍要读的旧字段（process/exited 的 processId、thread/name/updated 的 name），存在理由是运行时的 codex 版本并不受 .codex-version 约束，用户机器上可能装着更老的一版。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/gates/protocol-check.mjs#L39-L48",
+          "version": "repo-lines-v1:sha256:46bc2fb17ebb698d0a28bbdac62b4e0c50afb2c47fde2e3b1cd792fdefcd9eb4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk5YTExYmFmMWJjN2YyYmMzZTlkM2VjMzU1MmYxOTA2MGU0NTYyYTc5OWMyNWFlZjQ0Mzg5ZTRkNWIwMTE2ODAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1ZTI2Y2Q5MjM2NmY2MGQ4ZWQ5MmQwMjM5ZjA3ZmVmNzRjYWMxNGFhNjlhZGRmOWMyY2MwZDExZWIwMGE0NjMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQxNTU4MDM5Y2E4Y2ZkNDc3NDYxNWUwNDVlZTQ4NTI0ZWM4NjMyYWM4OTk0YTYyYjk1NWM0YjZiNTZmYzgyYmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc3YzM1OTAwZDNhMGQzOGZmOTAxZGQzZTEwOWJiNjA3NGQzMWNjNmU4MjM1ZjIwNGM0MDg0ZmU1NWYxMGY1NGUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_1f88756a4d784d14b4f7ac712bcee411",
+      "statement": "白名单写在门禁文件里而不是只留在源码的 ?? 回退里，是为了让「这是有意的」可被读到，否则下一个人要么当成手滑删掉、要么当成协议还有这个字段。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/gates/protocol-check.mjs#L39-L44",
+          "version": "repo-lines-v1:sha256:d5338ac085b4b8b8dbde114cd9e6f5abe5960f2abfbe22716fea6737cc4dc1d7:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTlhMTFiYWYxYmM3ZjJiYzNlOWQzZWMzNTUyZjE5MDYwZTQ1NjJhNzk5YzI1YWVmNDQzODllNGQ1YjAxMTY4MCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODRhZmNiYWVmOTEwNmVkMmY2MDBlMDFmN2M2NGJjMjYyMmJlZjRmYjY3NWU2ZGJlZDI2ODUzYWIxZDVhY2ZhNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDE1NTgwMzljYThjZmQ0Nzc0NjE1ZTA0NWVlNDg1MjRlYzg2MzJhYzg5OTRhNjJiOTU1YzRiNmI1NmZjODJiYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjkxNTEzYmU3M2NlODVjOTA0OWVhNmJkYzk1NjhlNzc1Mjc2MWFlOWViNDY3ZTMxMzgxY2Q1M2JkMTNkZDYwMSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_3c6d97ae9cad46a89ac60d2962bd4730",
+      "statement": "--against-installed 模式只改变文件层漂移的性质：对着比 pin 新的 codex 比对时协议文件必然大面积 diff（实测 0.147.0 到 0.153.4 有 122 个文件），那不计入退出码，而方法覆盖、字段漂移、参数形状在两种模式下都是硬失败。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/gates/protocol-check.mjs#L333-L347",
+          "version": "repo-lines-v1:sha256:be2c18e306006a5312285fc5178e4bebda492843b730bc23863a0fe12e59bb4c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNmNmI2ZDU5ZDM5Y2EyMTNlMzhiOWJhOTdjYzMwYTA3YmY3MzQ2Y2M4MDg0MDIyNTNmZWRjYWJmZGNmMjRlYjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMyNWZmZTFkNzM5OTJlZGYwZTNhN2ZlYmIzYWFjNjdiNjY5MzU1OGZlNGNhZjI2ZTE0ZjkxZDRmODdkY2ZjOGIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8032ac6e1d7140f480ad16ee289cae68",
+      "statement": "严格模式下本机安装的 codex 版本必须包含 .codex-version 的 pin，否则门禁直接报错并给出安装命令。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/gates/protocol-check.mjs#L542-L560",
+          "version": "repo-lines-v1:sha256:741b51fb597ff7669601dfff34bfeaec0f4d0793197b3cc81271db3e9906152b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUxOWVjMTZmY2I0NzUxNTkyODk3YTY3NmE1ZWUzN2NlZDE1MjU0OTY1Y2U0Nzg0YzJiN2NiMDdkYzA0ODcxMzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcxZTJiMjhiMjY4YmM1MTE2NTM1OTFkYzliNTAzNTE5MDlkMGQ4ZjdjZWJhNzRlOWNmZjcwZDA2MWE2ZTM3MDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUzMThlZGMwMjE0YzBiZWE3ZjE1ODQ3OGRjYjA5OGQ5Nzg2MzEwNDBkMjIwMmJiMmI0Y2NhZTAwNzY2NDM0N2QifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fdbd54424bd540b1b9762a3d79a9fb03",
+      "statement": "readAllNotificationParamsFields 在「声明了 params 类型却一个字段都读不出」时主动抛错，因为那种扫描面塌陷会让门禁打印 OK 并返回退出码 0，而上游把 type 改成 interface 就是这个形态。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/gates/protocol-check.mjs#L76-L97",
+          "version": "repo-lines-v1:sha256:4d6b544c28185b2da17cf0829f6c6f015a3fefde3168742f11be6ee905b56eb3:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc4MWMzYjZlZTBiZmRmNzM4NTI4NzJjODc1MjEyMzM3MzZmMWRiMjA2MjBhZmNhYzhhNjMzNjdmMDY1OTgwN2IiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU5ZjFiZmNiZGUyMzdhMTIxNDEyMDUyNDRhOWNhNDAzM2I4OGVkYzAwNTlmNmQ1YzAzM2U0MTcxMmRhYTEyMWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQzMTBmNjQ0MGFkYTc1Yzc3ODg5ZTA4MTk4NzI2NWJhZWU4OTBmOGYyN2MwYjBmOTM0MzgwMzdkM2E2ZjU1NjEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_27635e48afb14f039c0dbf7b0759dd47",
+      "statement": "findDefinitionIndex 会跳过属性访问形式的调用点，避免把定义之前的调用误认成定义而切出空函数体、使整个覆盖抽取失效。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/gates/protocol-check.mjs#L482-L495",
+          "version": "repo-lines-v1:sha256:85e00b47def89b9ff0f1189e3ee89b7e44de67c9951bcdf27e26332616b9f422:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIzYmYwYTEzNTQ4YTMyOTVhMWNkZmEyYmFiNDA2Y2E4NDBhOTNhM2JhNjhmZGY3NzVhNGZiZDMwM2Y2MGYzYmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVkOTRhYWMwYzVjNzFlMjcyNGI4NDVkNDAyNTgwOTFiYzg4YTY1YjljMWE5NGY1OTFlNTFjMzdkOTI5NTAyNWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI1OTkxMjA0ZmM3ZWQ0MDI4NDE4ODUxOGM3YzFkMjZlOTkzMjNjNmQ1ZTVkOTgxOWFlM2VhOTA4YWMzZDJmY2IifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0be69108d42040a1b7b4c9547b538b16",
+      "statement": "文件内容比对前会把 CRLF 归一成 LF，避免平台换行差异制造假阳性漂移。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/gates/protocol-check.mjs#L529-L531",
+          "version": "repo-lines-v1:sha256:dc4328d8e0665ab0ff356eb3d9fbab9c0ac58b379dba49bca786b36263bae435:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDNhZjExODU1ZTdiMGNjNjI4MDllODM1ZGNjOWFmNzMyMTkyZWUzNWVkNDM4Njc5Y2YwMGI3ZDQ1MDNhMGZhMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmI1ODBlOTY0ZjgzYTQ3M2Y0M2Q0NDM4NDYyOTQ5ZDY4YjU2MDBmZGE3ODdmMTYzNzQ1ZDAwZGU4OWNiZjM2YSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZmMyOTRmMmQyYTI2Zjg3YjRkNTc2ZDNmZWI1MTM4NjFkOTBhODgxN2I4NjViNTQxYzUzNDAxNDc2MDFkNGE4MSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_bfcce8c392cb4610be5d5f1c910507f3",
+      "statement": "门禁每次运行都现场把协议生成到一个临时目录并在 finally 里递归删除，不在仓库里留下生成物。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/gates/protocol-check.mjs#L561-L582",
+          "version": "repo-lines-v1:sha256:9ac8fadabadb891006ea83280e29166f44fab706eabd7571ca2dfb11dac26ba3:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFkZWI4ZTAxMDI4ZDA1NjhjNDBmOTkyZWQ1MTViMjUwYzE5MjYxM2NiMzMyZWMwM2JmZmY2ZGEzMDRmMTRiNjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImViMjM1ODZkMTlmYjc0MWQ2MDQ2YTIwZjBkYjM2YmM0NDJiOGYzY2U3MTI1OGU1ZTRmMjQzMThjZTQ5Nzc1N2UifQ"
+        },
+        {
+          "resource": "repo://scripts/gates/protocol-check.mjs#L637-L640",
+          "version": "repo-lines-v1:sha256:40fe823f1826d276c1cae9a625ab5ddce49833353e9f2737782a735316c3559a:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOWMyOGE1MGY2YzNiZGUzOTA2MzZlODU5ZDZkOTA2MGZkMGM0MjAzOWFiNTg0NDc1OTA1MGE3OTA4ZmQ1NDkzYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjdlNTc4OGQ1ZDlkNzNkMjRhODFkYmMwYTVhNzRiZmE4MmM5YzNiM2FmOTllNTJhZjc5NmU5MGI0NjhhOGEzZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzgzZDY5YmExMjQzYWIyMjk4NmQyYWM2NWFmYWZlMGYyMDAzZjY4YTkzYTZkMjMyMzQxMjJjOWZkODNhYWNkOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiM2U1NzYwMmRkOWE2OGNjNmFmNTYxYWY3NTExZjViNmI1NDA5ZmUwOWQzNTE1MmRkNDUwMmFhNGY5ZTlmNDBlZCJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.5.2",
+    "at": "2026-09-22T08:36:26.702Z"
+  }
+}

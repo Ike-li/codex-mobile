@@ -7,36 +7,75 @@
   --text: #0d0d0d;
   --text-muted: #676767;
   --accent: #0d0d0d;
-  /* 装饰档:仅用于状态点/图标/边框/流式光标等非文本元素。
-     实测 on #ffffff = 3.20:1,on --bg #f8f9fa = 3.03:1 —— 距 3:1 非文本标准只剩 0.03 余量,
-     任何对 --bg 的提亮都会让它跌破 3:1。文字请一律用 --accent-text。 */
-  --accent-light: #10a37f; /* OpenAI Green */
-  /* 文字档:on #ffffff = 4.77:1,on --bg #f8f9fa = 4.53:1,两者均过 WCAG AA 正文。 */
-  --accent-text: #0d8265;
-  --user-bg: #ececec;
-  --user-text: #0d0d0d;
+  /* 2026-09-14 去绿：强调色并入中性 --accent(#0d0d0d 浅 / #f2f2f2 深)。两个名字
+     保留不是摆设——装饰档(状态点/图标/边框/流式光标)和文字档(链接/实心按钮底)
+     的调用点语义不同，将来要再分档时不必回头翻 18 处引用。
+     并入 --accent 顺带解决了旧绿的一个结构问题：--accent-text 不随主题反相，
+     它的反色字 --on-accent-text 因此被钉死成白；现在两者都跟着 --accent 走。
+     对比度从旧绿的 3.20:1 / 4.77:1 抬到 18:1 上下，两档都远超标准。 */
+  --accent-light: var(--accent);
+  --accent-text: var(--accent);
+  /* 发送/停止是墨色方钮，跟着 --accent 反相：浅色深底浅标、深色浅底深标。
+     图标走 --on-accent。浅色 #ffffff on #0d0d0d ≈ 19:1，深色反过来同样过 AA。 */
+  --send-accent: var(--accent);
+  /* 用户发言是一张指令条，不是聊天气泡。浅石板底 + 深墨字，靠位置靠右、
+     内侧一条墨线辨认「这句是我说的」。#1c2430 on #dde1e8 ≈ 11.4:1。 */
+  --user-bg: #dde1e8;
+  --user-text: #1c2430;
+  /* 空状态标题、口令页标题：系统衬线。中文家族必须写在 serif 之前，
+     否则 Android/Windows 的 serif 兜底会截走中文，Songti/Noto Serif 永远轮不到。 */
+  --font-display: ui-serif, 'Iowan Old Style', 'Palatino Linotype',
+    'Songti SC', 'Songti TC', 'Noto Serif SC', 'Source Han Serif SC', 'STSong', serif;
   --codex-bg: transparent;
   --codex-border: transparent;
   --tool-bg: #ffffff;
   --tool-border: #e3e3e5;
   --error: #df1c1c;
   --system: #676767;
-  --radius: 24px;
-  --radius-sm: 12px;
-  --radius-lg: 32px;
-  /* 字号/间距 scale:等价值替换用,计算后 px 不变。 */
-  --font-3xs: 8px;
-  --font-2xs: 10px;
-  --font-xs: 11px;
-  --font-sm: 12px;
-  --font-md: 13px;
-  --font-body: 14px;
-  --font-user: 15px;
-  --font-lg: 16px;
-  --font-xl: 18px;
-  --font-2xl: 20px;
-  --font-3xl: 22px;
-  --font-4xl: 24px;
+  /* 圆角 scale。上一版 --radius(24px) 和 --radius-lg(32px) 定义了但全项目零引用,
+     真正在用的是散落的 9 个硬编码值:6/8/10/12/14/16/18/20/22px —— 2px 一档,
+     和字号 scale 一样密到没有意义,元素之间因此看不出属于同一套形状语言。
+     按用途归成 4 档,每档的归并幅度都在 2px 以内(6→8、10→12、14→16、18/22→20),
+     单看某个元素察觉不到,合起来才是一致的形状。 */
+  --radius-xs: 8px;   /* 内嵌块:代码块、终端输出、小控件 */
+  --radius-sm: 12px;  /* 按钮、列表条目、输入框 */
+  --radius: 16px;     /* 卡片与面板 */
+  --radius-lg: 20px;  /* 气泡、浮层、输入区容器 */
+  --radius-pill: 999px;
+  /* 字号 scale。
+     上一版是 8/10/11/12/13/14/15/16 —— 8 个档挤在 8px 区间里,每档差 1px。两个后果:
+     档之间的差别肉眼不可辨(定它们等于没定),而低端三档承载了大量中文。实测界面上
+     35 处含汉字的文本落在 10px 与 11px,其中包括会话设置里「只有 ls、cat 等信任命令
+     自动执行;其余一律询问」这类必须读懂才能安全操作的说明。
+     汉字笔画密度远高于拉丁字母,10px 下抗锯齿会把字糊成灰块 —— 同尺寸的 `26ms`
+     照样认得出,所以这是中文特有的问题,不是「字小」这么简单。
+
+     新 scale 把含中文的档全部抬到 12px 以上(判据见 e2e/lib/layout-audit.js 的
+     cjk-font-too-small)。抬升是连锁的:xs 从 11 抬到 13 就超过了 sm 的 12,
+     命名与值会倒挂,所以必须一路往上推,不是范围蔓延。
+     --font-3xs 是唯一保留在 12px 以下的档:它只用于 .badge-dot 的纯数字角标。
+     --font-lg 用在 #msg-input,只能 ≥16px —— iOS Safari 对字号低于 16px 的输入框
+     会在聚焦时强制缩放整个页面。 */
+  --font-3xs: 10px;
+  --font-2xs: 12px;
+  --font-xs: 13px;
+  --font-sm: 14px;
+  --font-md: 15px;
+  --font-body: 16px;
+  --font-user: 17px;
+  --font-lg: 18px;
+  --font-xl: 20px;
+  --font-2xl: 22px;
+  --font-3xl: 26px;
+  --font-4xl: 28px;
+  /* 等宽终端档,刻意不跟随上面的 scale 抬升。终端输出的可读性取决于**一行放得下多少
+     列**,不是字号:抬到 13px 会让 393px 视口从 46 列掉到 42 列,命令输出的对齐结构被
+     多折的行毁掉,比字小更难读。装的又是路径和命令这类拉丁字符,11px 等宽完全认得出。
+     范围刻意只到 .tool-output(终端 stdout)和 .tool-exit(退出码,纯数字)。同一批卡片里
+     另外两类都跟随 scale:.tool-note 装人话;.tool-cmd 看着像纯命令,实际还装
+     「新增: src/example.js」这种中文标签行和参数 JSON —— 先把它一起划进终端档,
+     结果 cjk-font-too-small 在文件变更卡和 Raw 卡上立刻报了出来。 */
+  --font-terminal: 11px;
   --space-1: 4px;
   --space-2: 6px;
   --space-3: 8px;
@@ -50,10 +89,13 @@
   --keyboard-inset: 0px;
   /* 语义基色:每个语义只维护这一个纯色,surface/border/text 三档由下面的 @supports
      派生。基色刻意留在守护块之外 —— 它们是纯 hex 不需要守护,而且 --warn 被守护块
-     之外的规则(#status-dot.busy 等)直接引用,放进去会让不支持的引擎读到 undefined。 */
+     之外的规则(.thread-status-dot.needs-you 等)直接引用,放进去会让不支持的引擎
+     读到 undefined。 */
   --info: #2f7fd6;
   --warn: #e09a10;
-  --success: #1a9d6d;
+  /* 去绿后「成功」不再有专属色相，跟着中性 accent 走。红(--error)/琥珀(--warn)
+     仍在，所以「出事了」照样一眼可辨；失去的是「一切正常」的绿色确认感。 */
+  --success: var(--accent);
   /* 派生档的硬编码 fallback:color-mix 不可用时原样保留迁移前的手调值。 */
   --info-surface: #e8f4ff;
   --info-border: #c5dff5;
@@ -61,22 +103,45 @@
   --warn-surface: #fff4e0;
   --warn-border: #f0d49a;
   --warn-text: #6e4c00;
-  --success-surface: #e8f7ef;
-  --success-border: #9ad8b2;
-  --success-text: #0d6b45;
+  --success-surface: #e2e2e2;
+  --success-border: #8b8b8b;
+  --success-text: #0d0d0d;
   /* 向后兼容别名:5 处 var(--banner-*) 引用零改动。var() 惰性求值,别名只需声明一次,
      无论 --*-surface 后面被 @supports 还是深色块覆盖都会自动跟随。 */
   --banner-info: var(--info-surface);
   --banner-warn: var(--warn-surface);
   --banner-success: var(--success-surface);
-  --diff-add: rgba(16,163,127,0.12);
+  /* 代码块与终端输出的表面。过去是两处硬编码 #1e1e1e，浅色界面里一整块纯黑，
+     视觉上像挖了个洞，而且不跟随主题。
+     ChatGPT 桌面端的做法（从 app.asar 提取的一手值）：--codex-diffs-surface 取的
+     就是 var(--color-surface)，靠 color-mix(in oklab, … 50%, transparent) 拉层次，
+     浅色主题落在 --gray-100 = #ececec 这一档。这里取同一档。
+     深色档保留原来的 #1e1e1e —— 深色下那块底本来就没问题。 */
+  --code-surface: #ececec;
+  /* ANSI 九色的浅底档。原来那套（#ff6b6b / #51cf66 / #fcc419…，Open Color 的 5 档）
+     是为 #1e1e1e 深底挑的，压在 #ececec 上只有 1.18–2.82:1，读不了——.ansi-bold
+     更是纯白，等于隐形。
+     这一档不是另选的配色：保持原色相与饱和度不动，只把明度降到过 AA 为止，
+     所以它是「同一个颜色的深版本」。实测 4.61–4.80:1 on --code-surface，
+     由 e2e/code-surface.spec.js 逐色守着，改任何一个都会红。 */
+  --ansi-strong: #0d0d0d;
+  --ansi-red: #d60000;
+  --ansi-green: #217830;
+  --ansi-yellow: #836302;
+  --ansi-blue: #0e6bb9;
+  --ansi-magenta: #aa1dcd;
+  --ansi-cyan: #15717f;
+  --ansi-muted: #616970;
+  --diff-add: rgba(13,13,13,0.12);
   --diff-del: rgba(223,28,28,0.1);
-  /* 实心底上的反色字:--accent 会随主题反相,--accent-text(绿)与 --error 不会。 */
+  /* 实心底上的反色字。--accent-text 去绿后也跟着 --accent 反相了，所以它的反色字
+     直接取 --on-accent，不再需要一个钉死成白的独立值——旧的那个在深色下会白底白字。
+     --error 仍然不反相，--on-error 因此保持写死。 */
   --on-accent: #ffffff;
-  --on-accent-text: #ffffff;
+  --on-accent-text: var(--on-accent);
   --on-error: #ffffff;
   --accent-pressed: #232323;
-  --accent-text-pressed: #0b7259;
+  --accent-text-pressed: var(--accent-pressed);
   /* 玻璃/微交互/滚动条:浅色写死白或黑透明,深色必须换档,否则发亮或消失。 */
   --glass: rgba(255, 255, 255, 0.9);
   --glass-soft: rgba(255, 255, 255, 0.6);
@@ -89,6 +154,11 @@
   --hover-wash: rgba(0, 0, 0, 0.02);
   --hover-wash-hover: rgba(0, 0, 0, 0.03);
   --hover-wash-strong: rgba(0, 0, 0, 0.06);
+  /* 卡片与背景的分层。浅色下 --surface(#fff) 和 --bg(#f8f9fa) 只差约 7 个灰阶,再配
+     1px 的 --border(#e3e3e3),分层信号弱到卡片像一叠平铺的纸片。两层阴影:1px 那层
+     交代边缘,8px 那层给出离开背景的高度,都压到 4% 以内 —— 再深就从「浮起」变成
+     「打了个灰框」。深色见下面的覆盖。 */
+  --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -101,31 +171,40 @@
     --text: #f2f2f2;
     --text-muted: #9a9a9a;
     --accent: #f2f2f2;
-    /* 深色下装饰档已达 5.33:1(on --surface)/ 5.86:1(on --bg),文字档无需再沉一档。 */
-    --accent-text: #10a37f;
-    --user-bg: #2a2a2a;
-    --user-text: #f2f2f2;
+    /* 去绿后 --accent-light / --accent-text 都是 var(--accent) 的别名，这里覆盖
+       --accent 一处，两个别名自动跟到 #f2f2f2，深色块不再需要单独列它们。 */
+    /* 深色指令条：#e6e9f0 on #32363f ≈ 10.2:1。 */
+    --user-bg: #32363f;
+    --user-text: #e6e9f0;
     --tool-bg: #1c1c1c;
     --tool-border: #2e2e2e;
     --system: #9a9a9a;
-    /* 绿基色深色下单独下沉一档:浅色的 #1a9d6d 明度不够,和 --text 怎么混都出不来
-       深色下 #87e0a2 那种高亮薄荷绿文字。蓝/琥珀基色两模式共用,不在这里覆盖。 */
-    --success: #2ecc71;
+    /* 深色下代码块保持原来那档深灰：暗底终端在暗色主题里本来就不突兀。 */
+    --code-surface: #1e1e1e;
+    /* ANSI 深色档保留原值 —— 它们本来就是为这块底挑的，深色模式观感不变。 */
+    --ansi-strong: #ffffff;
+    --ansi-red: #ff6b6b;
+    --ansi-green: #51cf66;
+    --ansi-yellow: #fcc419;
+    --ansi-blue: #339af0;
+    --ansi-magenta: #cc5de8;
+    --ansi-cyan: #22b8cf;
+    --ansi-muted: #868e96;
+    /* --success 去绿后是 var(--accent) 的别名，深色下自动跟到 #f2f2f2，
+       不再需要「绿基色深色下单独下沉一档」那条覆盖。 */
     --info-surface: #163044;
     --info-border: #2a4a66;
     --warn-surface: #3a2c14;
     --warn-border: #5a4520;
     --warn-text: #e0b05a;
-    --success-surface: #163226;
-    --success-border: #24543a;
-    --success-text: #87e0a2;
-    --diff-add: rgba(16,163,127,0.2);
+    --success-surface: #363636;
+    --success-border: #636363;
+    --success-text: #f2f2f2;
+    --diff-add: rgba(242,242,242,0.2);
     --diff-del: rgba(223,28,28,0.18);
     --on-accent: #0d0d0d;
-    --on-accent-text: #ffffff;
     --on-error: #ffffff;
     --accent-pressed: #e0e0e0;
-    --accent-text-pressed: #0b7259;
     --glass: rgba(28, 28, 28, 0.92);
     --glass-soft: rgba(28, 28, 28, 0.72);
     --scrollbar-thumb: rgba(255, 255, 255, 0.2);
@@ -137,6 +216,9 @@
     --hover-wash: rgba(255, 255, 255, 0.04);
     --hover-wash-hover: rgba(255, 255, 255, 0.06);
     --hover-wash-strong: rgba(255, 255, 255, 0.1);
+    /* 深色下不给阴影:黑底上的黑影是不可见的,加了只是白付出一层合成。这里的分层已经
+       由表面亮度承担 —— --surface(#1c1c1c) 本来就比 --bg(#121212) 亮一档。 */
+    --card-shadow: none;
   }
 }
 
@@ -148,8 +230,10 @@
    background 直接变成 unset —— 横幅会完全没有底色。
    因此上面 :root / 深色块里的硬编码值是必须保留的 fallback,派生层整体关进 @supports。
 
-   --diff-* 的 rgba 精确等于既有语义色(#10a37f = --accent-light、#df1c1c = --error),
-   这一组是零观感变化的等价替换。 */
+   --diff-* 的 rgba 精确等于既有语义色(--accent-light、#df1c1c = --error),
+   这一组是零观感变化的等价替换。2026-09-14 去绿后 --accent-light 成了 --accent
+   的别名,新增行底色因此跟着变成中性灰 —— 删除行仍是红,这一对不再对称,是
+   「全部换掉,含 diff」这个选择的已知代价。 */
 @supports (color: color-mix(in srgb, red 50%, white)) {
   :root {
     /* 混比按模式分档:浅色是「白 + 一点色」,深色是「暗面 + 较多色」。
@@ -196,7 +280,12 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* 拉丁字体在前、CJK 在后：前面几个都不含中文字形,浏览器会自行继续往后找,于是
+     拉丁走 SF/Segoe/Roboto、中文走 PingFang/鸿蒙/Noto,两套各自拿到设计过的字形。
+     补 CJK 档之前中文完全由平台兜底决定:iOS 靠 -apple-system 恰好能兜到 PingFang SC,
+     Android 落到 Roboto(无 CJK)后就交给 UA 了,渲染不受控。 */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'PingFang SC', 'HarmonyOS Sans SC', 'Noto Sans CJK SC', 'Noto Sans SC', sans-serif;
   background: var(--bg);
   background-image: var(--bg-gradient);
   color: var(--text);
@@ -220,7 +309,7 @@ body {
   }
   #messages::-webkit-scrollbar-thumb, .tool-output::-webkit-scrollbar-thumb {
     background: var(--scrollbar-thumb);
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
   }
   #messages::-webkit-scrollbar-track, .tool-output::-webkit-scrollbar-track {
     background: var(--scrollbar-track);
@@ -250,7 +339,7 @@ body {
   position: relative;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   width: 36px;
   height: 36px;
   flex-shrink: 0;
@@ -273,7 +362,7 @@ body {
   align-items: center;
   min-height: 22px;
   padding: 0 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--bg);
   border: 1px solid var(--border-light);
   color: var(--text-muted);
@@ -307,7 +396,7 @@ body {
   gap: var(--space-2);
   min-height: 32px;
   padding: 0 12px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--bg);
   border: 1px solid var(--border-light);
   color: var(--text);
@@ -316,12 +405,32 @@ body {
   overflow: hidden;
 }
 #header-context svg { width: 14px; height: 14px; flex-shrink: 0; color: var(--accent-light); }
+#header-thread {
+  min-width: 0;
+  max-width: 42%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--font-2xs);
+  font-weight: 500;
+  color: var(--text-muted);
+}
+#header-thread:not([hidden])::before {
+  content: '·';
+  margin-right: 4px;
+  color: var(--text-muted);
+}
+#header-thread[hidden] { display: none !important; }
 #header-project {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: var(--font-sm);
+  /* 不跟随 scale 抬升,留在 12px。顶栏 393px 里塞着五个元素,这里装的又是目录名 ——
+     拉丁字符加连字符,12px 完全认得出(12px 下限只对汉字成立)。抬到 14px 实测把
+     可显示长度从 14 个字符压到 11 个,`ccm-e2e-USgARH` 被截成 `ccm-e2e-Y1K…`,
+     而项目名正是用户用来区分工作区的那条信息,换 2px 字号不划算。 */
+  font-size: var(--font-2xs);
   font-weight: 700;
 }
 #header-changes {
@@ -331,7 +440,7 @@ body {
   min-width: 16px;
   height: 16px;
   padding: 0 4px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--text);
   color: var(--surface);
   font-size: var(--font-2xs);
@@ -373,7 +482,7 @@ body {
   max-width: 95%;
   background: var(--bg);
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: 1px solid var(--border-light);
 }
 
@@ -386,30 +495,11 @@ body {
   margin-top: var(--space-1);
   background: var(--bg);
   padding: var(--space-1) 10px;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border-light);
   max-width: 95%;
   word-break: break-all;
 }
-
-#status-dot {
-  position: absolute;
-  right: -2px;
-  bottom: -2px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  border: 2px solid var(--surface);
-  background: #ccc;
-  box-shadow: none;
-  transition: background 0.3s;
-}
-#status-dot.connected { background: var(--accent-light); box-shadow: 0 0 6px rgba(16,163,127,0.4); }
-#status-dot.busy { background: var(--warn); animation: pulse 1s infinite; }
-/* awaiting 刻意留成独立的橙色:它和 busy 只靠色相区分,归并到 --warn 会让两个状态点
-   变成同一个颜色。 */
-#status-dot.awaiting { background: #d9822b; animation: pulse 1s infinite; }
-#status-dot.queued { background: #607d3b; }
 
 @keyframes pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
@@ -499,7 +589,7 @@ body {
   color: var(--text);
   cursor: pointer;
   padding: 0;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
 }
 #drawer-close svg { width: 18px; height: 18px; }
 #drawer-close:active { background: var(--hover-wash-strong); }
@@ -516,7 +606,7 @@ body {
   width: 100%;
   padding: 6px 8px;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-xs);
   background: transparent;
   color: var(--text-muted);
   font-size: var(--font-xs);
@@ -583,7 +673,7 @@ body {
   width: 28px;
   height: 28px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-xs);
   background: var(--surface);
   color: var(--text-muted);
   cursor: pointer;
@@ -624,6 +714,18 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/* 未读点。与 .thread-status-dot 是**两条不同的注意力轴**：那个表达 agent 活跃状态
+   （running / needs-you / error），这个表达「有没有看过新内容」。清除条件不同，
+   所以形状也要分得开——实心方块 vs 圆点，不靠颜色区分（色觉差异下会糊成一个）。 */
+.thread-unread-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 2px;
+  flex: 0 0 6px;
+  background: var(--accent);
+}
+.thread-unread-dot[hidden] { display: none; }
+
 .thread-status-dot {
   width: 8px;
   height: 8px;
@@ -656,7 +758,7 @@ body {
   flex: 1;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: var(--space-8) 16px 28px;
+  padding: var(--space-8) 16px 72px;
   display: flex;
   flex-direction: column;
   align-self: stretch;
@@ -666,7 +768,7 @@ body {
   gap: var(--space-8);
 }
 
-/* Empty landing: question + compact task cards */
+/* Empty landing: one display line + a task list */
 .empty-state {
   flex: 1;
   min-height: 0;
@@ -674,17 +776,23 @@ body {
   overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
   text-align: center;
   padding: var(--space-7) 16px 8px;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  align-self: center;
 }
 .empty-heading {
-  font-size: var(--font-3xl);
+  font-family: var(--font-display);
+  font-size: var(--font-4xl);
   font-weight: 600;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
   color: var(--text);
-  margin: 0 0 6px;
+  margin: 0 0 8px;
 }
 .empty-project {
   font-size: var(--font-md);
@@ -693,41 +801,53 @@ body {
 }
 .empty-project[hidden] { display: none !important; }
 .suggestions-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
   width: 100%;
-  max-width: 440px;
-  margin-top: 22px;
+  margin-top: 28px;
+  border-top: 1px solid var(--border);
+  text-align: left;
 }
 .suggestion-card {
   appearance: none;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: var(--space-6) 12px 12px;
-  min-height: 88px;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  box-shadow: none;
+  border-radius: 0;
+  padding: 14px 4px;
+  min-height: 52px;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-4);
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
   cursor: pointer;
   font: inherit;
   text-align: left;
   color: var(--text);
 }
 .suggestion-card:active {
-  transform: scale(0.98);
-  background: var(--bg);
+  background: var(--hover-wash-strong);
 }
 .suggestion-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
-  color: var(--accent-light);
+  color: var(--text-muted);
+  flex-shrink: 0;
 }
 .suggestion-icon .ui-icon { width: 16px; height: 16px; }
+.suggestion-text-sub {
+  display: block;
+  color: var(--text-muted);
+  font-size: var(--font-xs);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .suggestion-text {
   font-size: var(--font-md);
   font-weight: 500;
@@ -742,7 +862,10 @@ body {
   content-visibility: auto;
   contain-intrinsic-size: auto 100px;
 }
-.msg.user { align-self: flex-end; align-items: flex-end; max-width: min(85%, 420px); }
+/* 456px 是 ChatGPT compact 视图给用户气泡定的上限（--user-chat-width）。
+   本项目原来是 min(85%, 420px)：百分比那一档在 393px 视口下只剩 334px，
+   短句还好，一长就提前折行。 */
+.msg.user { align-self: flex-end; align-items: flex-end; max-width: min(456px, 100%); }
 .msg.codex { align-self: stretch; align-items: stretch; max-width: 100%; }
 .msg.system-msg { align-self: center; max-width: 100%; }
 .assistant-turn {
@@ -753,46 +876,72 @@ body {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
+/* 入场动画只挂在**实时新建**的气泡上（app.js 的 appendUserBubble 加 .enter）。
+   不做成 .msg 通用规则：切会话时 renderHistoryMessages 会一次性插入几十条，
+   全都滑一遍是灾难，而且那些消息对用户来说不是「刚发生」的。
+
+   曲线和时长取自本表已有的 popIn / sheetUp —— 动效语言统一比单独调参更要紧。 */
+.msg.enter {
+  animation: slideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .msg.enter { animation: none; }
+}
 
 .bubble {
   padding: var(--space-3) 14px;
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   font-size: var(--font-user);
   line-height: 1.55;
   word-break: break-word;
   white-space: pre-wrap;
 }
-/* 用户消息是紧凑气泡:字号小一档,行高必须跟着收 —— 沿用 .bubble 里为 15px 正文
-   定的 1.55,两行短句之间会空得像两个段落。 */
+/* 用户发言是靠右的指令条：内侧一条墨线、贴条侧收紧圆角。 */
 .user .bubble {
   background: var(--user-bg);
   color: var(--user-text);
-  border-radius: 18px;
-  box-shadow: none;
+  border-radius: 4px 12px 12px 4px;
+  box-shadow: inset 2px 0 0 var(--text);
   font-size: var(--font-body);
-  line-height: 1.45;
+  padding: 8px 12px 8px 14px;
+  width: fit-content;
+  line-height: calc(1em + 6px);
+  letter-spacing: -0.01em;
 }
-/* 助手回复是长文阅读态:铺满阅读栏、段落和列表多,行高放宽一档更好扫读。 */
+/* 气泡宽度贴合内容对短句是对的，但代码块被挤成窄条就没法读了。用 :has() 让气泡
+   «看见»自己装了什么再决定宽度——ChatGPT 原样如此。 */
+.user .bubble:has(pre, code) {
+  width: 100%;
+}
+/* 助手正文同样吃这套排版。行高是 calc(1em + 6px) 而不是倍数：倍数在字号变化时
+   行距等比放大，大字号被推散、小字号又挤；绝对增量让不同字号保持同一条呼吸节奏。 */
 .codex .bubble {
   background: transparent;
   color: var(--text);
   border-radius: 0;
   padding: 0;
-  line-height: 1.65;
+  line-height: calc(1em + 6px);
+  letter-spacing: -0.01em;
 }
 .codex .bubble.md {
   white-space: normal;
 }
-.codex .bubble.md[data-streaming="true"] {
-  white-space: pre-wrap;
+/* 活动尾部不生成自己的盒子：渲染出的 p/ul/pre 直接参与气泡布局，下面那些
+   .codex .bubble.md p 之类的后代选择器与 margin 折叠因此和收尾重渲染后完全
+   一致 —— 少了这行，流式态和完成态的间距会差一档，收尾时跳一下。 */
+.codex .bubble.md .md-active {
+  display: contents;
 }
-.codex .bubble.md[data-streaming="true"]::after {
-  content: '';
+/* 光标是真节点，不是伪元素：它要跟住正在写的那个字，而「最后一个字」可能在
+   <li> 或 <code> 里。伪元素只能挂在容器上，跟在块级子元素后面会被挤成匿名块、
+   自己占一行——列表和代码块下会凭空多出一根竖线。插入位置由 app.js 的
+   CARET_CONTAINERS 决定。 */
+.codex .bubble.md .stream-caret {
   display: inline-block;
   width: 2px;
   height: 1em;
   margin-left: 3px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--accent-light);
   vertical-align: -0.14em;
   animation: streamCaret 1s ease-in-out infinite;
@@ -802,7 +951,7 @@ body {
   50% { opacity: 0.9; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .codex .bubble.md[data-streaming="true"]::after {
+  .codex .bubble.md .stream-caret {
     animation: none;
     opacity: 0.6;
   }
@@ -816,9 +965,9 @@ body {
   padding: var(--space-4) 12px;
   overflow: auto;
   overscroll-behavior: contain;
-  border-radius: 8px;
-  background: #1e1e1e;
-  color: #f1f1f1;
+  border-radius: var(--radius-xs);
+  background: var(--code-surface);
+  color: var(--text);
   font-size: var(--font-sm);
 }
 .codex .bubble.md code {
@@ -844,9 +993,15 @@ body {
 }
 /* 首个块级元素的上外边距会在气泡顶部凭空撑出一段空白。 */
 .codex .bubble.md > :first-child { margin-top: 0; }
-.codex .bubble.md h1 { font-size: 1.3em; }
-.codex .bubble.md h2 { font-size: 1.15em; }
-.codex .bubble.md h3 { font-size: 1.05em; }
+/* 上一版是 1.3 / 1.15 / 1.05em,相邻级别只差 13%,而字重、颜色全都一样 —— 只有一个
+   维度在区分。中文比拉丁文更吃这一点:汉字是等宽方块,没有 x-height 和升降部可以
+   参照,一屏方块里 2.5px 的差根本看不出来(深色模式截图上「顶层标题」和「次级标题」
+   看着一样大)。拉开到 1.4 / 1.2em,并给 h1 单独加一档字重当第二个维度。
+   h3 退到和正文同字号、只靠 650 的字重区分:对话流里 h3 已经是很细的分节,
+   再占一档字号会和 h2 挤在一起,反而更难扫读。 */
+.codex .bubble.md h1 { font-size: 1.4em; font-weight: 700; }
+.codex .bubble.md h2 { font-size: 1.2em; }
+.codex .bubble.md h3 { font-size: 1em; }
 .codex .bubble.md h4,
 .codex .bubble.md h5,
 .codex .bubble.md h6 { font-size: 1em; }
@@ -872,21 +1027,63 @@ body {
 .codex .bubble.md img {
   max-width: 100%;
   height: auto;
-  border-radius: 8px;
+  border-radius: var(--radius-xs);
 }
 .codex .bubble.md strong { font-weight: 650; }
 .codex .bubble.md em { font-style: italic; }
 
-/* 表格自己横向滚动:阅读栏只有 720px(手机上约 360px),宽表格若按 display: table
+/* 宽表格横向滚动:阅读栏只有 720px(手机上约 360px),宽表格若按 display: table
    参与外层布局,要么把消息撑破,要么被挤成一堆断词。overscroll-behavior-x 把横向
-   滚动链截断在表格上,滑到头不会继续带动页面。 */
-.codex .bubble.md table {
-  display: block;
-  width: max-content;
+   滚动链截断在容器上,滑到头不会继续带动页面。
+
+   滚动容器和表格必须是两个元素。合成一个(给 table 设 display: block + max-width: 100%)
+   时,max-width 夹住的是**内部表格算法的可用宽度**——表格不知道外面能滚,于是在
+   361px 里硬分 4 列:不可断行的 ASCII 路径 min-content 很大、抢光空间,中文的
+   min-content 是一个字,于是「说明」列被压到 49px,21 个字压成一根竖条、把整行撑到 286px。
+   四条排版断言当时全绿(没撑破、能滚动、overflow 值对),它们问的是「会不会崩」,
+   没有一条问「读不读得了」。现在由 e2e/layout-sanity.spec.js 守后者。 */
+.codex .bubble.md .table-scroll {
   max-width: 100%;
   margin: 0 0 0.75em;
   overflow-x: auto;
   overscroll-behavior-x: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-clip: padding-box;
+  mask-clip: padding-box;
+}
+/* 溢出提示：用 mask 把容器边缘淡出，不另挂 position:absolute 元素。
+   遮挡检测把 absolute/fixed/sticky 当候选，渐变层会压到单元格上被判 occluded-text。
+   mask 画在容器自己身上，深色模式不用换色（black 只当 alpha，用户看见的是背后的 --bg）。
+   can-scroll-* 由 markdown.js 按 scrollLeft 开关；滑到头或没有溢出时 class 卸掉，提示消失。 */
+.codex .bubble.md .table-scroll.can-scroll-right {
+  -webkit-mask-image: linear-gradient(to right, black calc(100% - var(--space-9)), transparent);
+  mask-image: linear-gradient(to right, black calc(100% - var(--space-9)), transparent);
+}
+.codex .bubble.md .table-scroll.can-scroll-left {
+  -webkit-mask-image: linear-gradient(to right, transparent, black var(--space-9));
+  mask-image: linear-gradient(to right, transparent, black var(--space-9));
+}
+.codex .bubble.md .table-scroll.can-scroll-left.can-scroll-right {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    black var(--space-9),
+    black calc(100% - var(--space-9)),
+    transparent
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black var(--space-9),
+    black calc(100% - var(--space-9)),
+    transparent
+  );
+}
+.codex .bubble.md table {
+  width: max-content;
   border-collapse: collapse;
   font-size: 0.92em;
 }
@@ -914,6 +1111,8 @@ body {
   padding: var(--space-1) 8px;
   font-weight: 500;
 }
+/* /help 是一张命令表，逐行长度不一；沿用系统消息的居中会让左边缘参差。 */
+.system-msg.slash-help .bubble { text-align: left; }
 .error-msg .bubble {
   background: var(--error-surface);
   color: var(--error-text);
@@ -950,7 +1149,7 @@ body {
   display: inline-flex;
   margin-top: var(--space-2);
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: var(--space-1) 9px;
   background: transparent;
   color: inherit;
@@ -964,7 +1163,7 @@ body {
   margin-top: var(--space-2);
   margin-left: var(--space-2);
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: var(--space-1) 9px;
   background: transparent;
   color: inherit;
@@ -976,16 +1175,27 @@ body {
 }
 
 /* Tool and Output Cards */
+/* 左边框是消息流唯一的语义编码位：整圈边框只做轮廓，类型和状态都编码在左边那一条。
+   两个维度分开之前，命令卡用整圈变绿表示成功，而成功是常态、不该被高亮，结果是
+   滚动时满屏绿框、真正要注意的东西反而不突出。
+
+   分档按「用户需要做什么」而不是「这是什么技术类型」：
+     decision  需要你决策（审批 / 提问）—— 用 warn 系，和「需要你」面板同色呼应
+     outcome   产出物（结果 / 文件变更 / 计划 / 变更摘要）—— 用户会回看
+     action    执行动作（命令 / MCP / 搜索）—— 信息性，保持低调
+     meta      过程与兜底（reasoning / Raw）—— 可跳过，权重最低 */
 .tool-card {
   background: var(--surface);
   border: 1px solid var(--tool-border);
-  border-radius: 14px;
+  border-left-width: 3px;
+  border-left-color: var(--border);
+  border-radius: var(--radius);
   padding: var(--space-5) 14px;
   font-size: var(--font-md);
   margin-top: 0;
   width: 100%;
   max-width: 100%;
-  box-shadow: none;
+  box-shadow: var(--card-shadow);
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
@@ -1044,16 +1254,42 @@ body {
   font-size: var(--font-xs);
 }
 .reasoning-fold[open] .reasoning-toggle::before { content: '▾ '; }
-.reasoning-card[data-streaming="true"] .reasoning-label {
-  animation: reasoningPulse 1.4s ease-in-out infinite;
+/* 「还在进行」的统一信号：文字被一道微光从左扫到右。等待态和 reasoning 进行时
+   共用它（.loading-shimmer 由 JS 挂上/摘掉），因为这两者前后脚出现，用两套动效
+   会让人以为是两件不同的事。
+
+   数值照抄 ChatGPT 桌面端的 .loading-shimmer：2s 一个周期、渐变带宽只占文字的
+   50%、background-position 从 -100% 走到 250%。关键是 steps(48, end)——微光走
+   48 级阶梯而不是平滑滑过，看起来像逐字点亮；ChatGPT 管这个叫 cadenced（有节奏），
+   换成线性就变成一道平淡的反光，那个「正在一个字一个字想」的感觉就没了。 */
+@keyframes loadingShimmer {
+  0% { background-position: -100% 0; }
+  100% { background-position: 250% 0; }
 }
-@keyframes reasoningPulse {
-  0%, 100% { opacity: 0.55; }
-  50% { opacity: 1; }
+.loading-shimmer {
+  display: inline-block;
+  background: var(--text-muted) linear-gradient(
+    to right,
+    transparent 0%,
+    var(--text) 40%,
+    var(--text) 60%,
+    transparent 100%
+  );
+  background-position: -100% 0;
+  background-repeat: no-repeat;
+  background-size: 50% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: loadingShimmer 2s steps(48, end) infinite;
 }
+/* 关掉动画还不够：text-fill-color 是透明的，只停动画会留下一行看不见的字。
+   必须把颜色填回来。 */
 @media (prefers-reduced-motion: reduce) {
-  .reasoning-card[data-streaming="true"] .reasoning-label {
+  .loading-shimmer {
     animation: none;
+    background: none;
+    -webkit-text-fill-color: var(--text-muted);
   }
 }
 .reasoning-stack { margin-top: var(--space-2); }
@@ -1087,65 +1323,239 @@ body {
   word-break: break-all;
   background: var(--bg);
   padding: var(--space-2) 10px;
-  border-radius: 6px;
+  border-radius: var(--radius-xs);
   border: 1px solid var(--border-light);
 }
+/* 卡片里的自然语言：计划步骤、搜索结果摘要。
+   和 .tool-cmd / .tool-output 的差别是语义——那两个装代码和终端输出，等宽是为了对齐；
+   这里装的是给人读的句子，等宽只换来「技术感」，代价是小字号下辨识度下降。
+   word-break 必须复位：.tool-cmd 的 break-all 对路径是必需的，对句子会把英文单词
+   从中间劈开（实测「screenshot() 支持 clip 参数」里的 screenshot 会被劈）。
+   overflow-wrap: anywhere 兜住超长 token，不至于撑破卡片。 */
+.tool-note {
+  font-family: inherit;
+  font-size: var(--font-xs);
+  line-height: 1.5;
+  word-break: normal;
+  overflow-wrap: anywhere;
+}
+/* 搜索结果摘要：块级、次要色。原先借用 .tool-output 再拿内联 style 把背景、颜色、
+   padding 逐个盖掉——只为了拿它的字号，等宽字体是顺带继承来的副作用。 */
+.search-snippet {
+  display: block;
+  color: var(--text-muted);
+  padding-top: 4px;
+}
+
 .tool-output {
   margin-top: var(--space-1);
+  /* 贴到卡片边缘，拿回卡片自己的 14px 水平 padding。三层容器（#messages 16px +
+     .tool-card 14px + 这里 12px）连续吃掉 84px，393px 视口下终端内容只剩 307px。
+     拿回 28px ≈ 4 列（46 → 50）。这不解决「终端输出按 80 列设计」的根本问题——
+     393px 视口下 11px 等宽最多约 53 列，那是物理限制，这里只是少折几行。 */
+  margin-left: -14px;
+  margin-right: -14px;
   padding: var(--space-3) 12px;
-  border-radius: 8px;
-  background: #1e1e1e; /* Dark theme terminal looks amazing */
+  border-radius: var(--radius-xs);
+  background: var(--code-surface);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: var(--font-xs);
-  color: #f1f1f1;
+  font-size: var(--font-terminal);
+  color: var(--text);
   white-space: pre-wrap;
   max-height: 150px;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
-.tool-ok { color: #87e0a2; }
-.tool-err { color: #ff8888; }
-.command-card[data-ok="true"] { border-color: var(--success-border); }
-.command-card[data-ok="false"] { border-color: var(--error-border); }
+/* 协议数据的 JSON dump（Raw 卡片）。借 .tool-output 的暗底与滚动，但不跟它一起留在
+   11px 终端档：JSON 的可读性靠缩进层级，不靠一行放得下多少列，而它装的是上游原样
+   回传的 item —— 字段值里出现中文是常态，不是 fixture 造出来的边角情况
+   （实测 mock 的 note 字段就是「未识别的 item 会降级成 Raw 卡片…」）。 */
+.tool-json {
+  font-size: var(--font-xs);
+}
+/* 原先写死 #87e0a2 —— 那是深色档的薄荷绿，却放在通用规则里，浅色模式下
+   on #ffffff 只有 1.8:1，成功标记基本看不见。去绿时一并修掉：改用会反相的
+   --text-muted。「失败」仍是 .tool-err 的红，出事照样醒目。 */
+.tool-ok { color: var(--text-muted); }
+/* 同 .tool-ok 当年那条的理由：#ff8888 是深色档的红，放在通用规则里，底色跟随
+   主题后它在浅底上读不了。
+   取 --ansi-red 而不是 --error-text：后者是为 --surface(#ffffff) 选的，压在略深的
+   --code-surface(#ececec) 上只有 4.11:1，过不了 AA。--ansi-red 正是按这块底算出来的
+   （4.61:1），而 .tool-err 本来就和 ANSI 输出同处一块底；少数配 background:transparent
+   用在卡片白底上的场合，#d60000 on #ffffff 更高，不吃亏。 */
+.tool-err { color: var(--ansi-red); }
+.tool-card[data-card="decision"] { border-left-color: var(--warn-text); }
+
+/* 决议结果的文字。此前走 .tool-output 再内联 padding:0，结果紧贴卡片左边缘、
+   几乎压在那道琥珀竖线上——按钮换成文字时把内边距一起清掉了。 */
+.approval-result {
+  display: inline-block;
+  padding: var(--space-2) 0;
+  font-size: var(--font-terminal);
+  color: var(--ok-text, var(--text-muted));
+}
+.approval-result-err { color: var(--err-text, var(--text-muted)); }
+
+/* 决议之后这张卡是历史记录：命令在下面的执行行里还会出现，原因和按钮已无操作价值。
+   收成标题一行，详情留在 DOM 里不删——需要回看时还能靠展开拿到。 */
+.tool-card[data-resolved] > *:not(.tool-name) { display: none; }
+.tool-card[data-resolved] { opacity: .72; }
+.tool-card[data-resolved] .tool-name {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.approval-resolved-cmd {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono, monospace);
+  font-size: var(--font-terminal);
+  color: var(--text-muted);
+}
+.tool-card[data-card="outcome"] { border-left-color: var(--accent-text); }
+.tool-card[data-card="action"] { border-left-color: var(--border); }
+.tool-card[data-card="meta"] { border-left-color: var(--border-light); }
+
+/* 失败覆盖类型色——命令跑挂了比「这是一张命令卡」重要得多，要能在滚动中一眼找到。
+   成功刻意不改色：exit code 已经在卡片里用绿字标过一次，边框再标是冗余，而且
+   成功是常态，占用视觉权重只会稀释真正需要注意的东西。 */
+/* 工具活动行。抄 ChatGPT 桌面端：过程降到一行灰字，详情折进去，让最终回复占住
+   视觉重心。原先每个工具一张带边框带底色的卡片，TOOL_CARDS_FIXTURE 的三张在
+   Pixel 5 上就是一整屏——手机端这是最贵的一块面积。 */
+.tool-card.activity-row {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  gap: 0;
+}
+.activity-toggle {
+  list-style: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: var(--font-md);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  user-select: none;
+  min-width: 0;
+}
+.activity-toggle::-webkit-details-marker { display: none; }
+.activity-static { cursor: default; }
+.activity-fold > .activity-toggle::before {
+  content: '▸';
+  font-size: var(--font-xs);
+  flex: 0 0 auto;
+}
+.activity-fold[open] > .activity-toggle::before { content: '▾'; }
+/* 活动行的全部价值在于恒定占一行。命令和路径都可能很长，截断而不是换行——
+   要看全的人会点开，而折行会让这一行重新变成一块。 */
+.activity-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.activity-row .ui-icon { flex: 0 0 auto; }
+.activity-detail {
+  margin-top: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+/* .tool-output 的左右负 margin 是为了抵消卡片的 14px padding。活动行没有 padding，
+   再负出去就直接溢出容器了。这里复位——终端块本来就贴着活动行的边，宽度不亏。 */
+.activity-detail .tool-output {
+  margin-left: 0;
+  margin-right: 0;
+}
+.activity-group-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+/* 失败的命令即使收起来也要能一眼看到——这是唯一一处活动行允许带颜色的地方。 */
+.activity-row[data-ok="false"] > .activity-fold > .activity-toggle { color: var(--error); }
+
+/* turn 末尾的操作条。低权重——它是回复读完之后才会用到的东西，不该和正文抢注意力。
+   32px 不进 44px 的触摸下限，那条只管高风险操作；复制是可逆的，和全局 28px 按钮同档。 */
+.turn-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: calc(var(--space-1) - var(--space-3));
+}
+.turn-action {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  min-height: 32px;
+  padding: 0 8px;
+  font: inherit;
+  font-size: var(--font-xs);
+  font-weight: 600;
+}
+.turn-action .ui-icon {
+  width: 16px;
+  height: 16px;
+}
+.turn-actions[data-copied="true"]::after {
+  content: '已复制';
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+}
+
+/* 活动区和最终回复之间的分隔。ChatGPT 管这个叫 workedFor divider，
+   文案「用时 4秒」。 */
+.worked-for {
+  color: var(--text-muted);
+  font-size: var(--font-sm);
+  padding: var(--space-1) 0;
+}
+
+.command-card[data-ok="false"] { border-left-color: var(--error); }
 .tool-exit {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: var(--font-xs);
+  font-size: var(--font-terminal);
   font-weight: 700;
 }
 .file-change-card details summary.tool-cmd { cursor: pointer; }
 .live-output {
   max-height: 180px;
-  color: #f1f1f1;
+  /* 不设 color：交给 .tool-output 的 var(--text)。这里曾硬编码 #f1f1f1（深底档的
+     浅灰），它和 .tool-output 同特异性但定义在后面，所以一直是它赢——底色跟随主题
+     之后，浅底上 #f1f1f1 只有 1.05:1，命令输出整块隐形。 */
 }
-.ansi-bold { font-weight: 700; color: #ffffff; }
+.ansi-bold { font-weight: 700; color: var(--ansi-strong); }
 .ansi-dim { opacity: 0.65; }
-.ansi-red { color: #ff6b6b; }
-.ansi-green { color: #51cf66; }
-.ansi-yellow { color: #fcc419; }
-.ansi-blue { color: #339af0; }
-.ansi-magenta { color: #cc5de8; }
-.ansi-cyan { color: #22b8cf; }
-.ansi-muted { color: #868e96; }
+.ansi-red { color: var(--ansi-red); }
+.ansi-green { color: var(--ansi-green); }
+.ansi-yellow { color: var(--ansi-yellow); }
+.ansi-blue { color: var(--ansi-blue); }
+.ansi-magenta { color: var(--ansi-magenta); }
+.ansi-cyan { color: var(--ansi-cyan); }
+.ansi-muted { color: var(--ansi-muted); }
 
 /* Typing indicator */
+/* 等待态。原先是三个脉动的圆点——它只说明「在动」，不说明在做什么，而且和后面
+   紧接着出现的 reasoning「正在思考」是两套视觉语言。ChatGPT 桌面端这里放的就是
+   文字本身，由 .loading-shimmer 扫光，所以这里只管排版，动效交给那个类。 */
 .typing {
-  display: flex;
-  gap: var(--space-1);
   padding: var(--space-3) 0;
-  background: transparent;
+  font-size: var(--font-md);
+  line-height: 1.5;
   width: fit-content;
-}
-.typing span {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: var(--text-muted);
-  animation: bounce 1.2s infinite;
-}
-.typing span:nth-child(2) { animation-delay: 0.2s; }
-.typing span:nth-child(3) { animation-delay: 0.4s; }
-@keyframes bounce {
-  0%, 80%, 100% { transform: translateY(0); }
-  40% { transform: translateY(-6px); }
 }
 
 /* Floating Settings Badges */
@@ -1161,7 +1571,7 @@ body {
   background: var(--surface);
   border: 1px solid var(--border);
   color: var(--text-muted);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: var(--space-1) 12px;
   font-size: var(--font-xs);
   font-weight: 600;
@@ -1188,7 +1598,7 @@ body {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border);
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   box-shadow: 0 8px 32px rgba(0,0,0,0.08);
   z-index: 50;
   overflow: hidden;
@@ -1248,7 +1658,7 @@ body {
   left: 50%;
   transform: translateX(-50%);
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 7px 12px;
   background: var(--surface);
   color: var(--text-muted);
@@ -1264,13 +1674,15 @@ body {
 #msg-input-container {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 22px;
+  border-radius: var(--radius-lg);
   padding: var(--space-4) 10px 8px;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   box-shadow: 0 2px 12px rgba(0,0,0,0.04);
   transition: border-color 0.15s, box-shadow 0.15s;
+  /* #context-meter-detail 的定位锚点。 */
+  position: relative;
 }
 #msg-input-container:focus-within {
   border-color: var(--border);
@@ -1298,9 +1710,16 @@ body {
   min-width: 0;
 }
 
+/* display: flex + nowrap 是这里的关键，不是装饰。原先是 block 容器，里面的设置
+   胶囊和上下文表都是 inline-flex——行内元素放不下时会**换行**，而不是触发这里
+   的 overflow-x。于是 turn 一开始跑（多出 loading 和停止按钮），两个胶囊就掉成
+   上下两行，整个输入区窜高一截。改成 flex 之后放不下才真的横向滚动。 */
 .composer-chips {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
   overflow-x: auto;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
@@ -1315,7 +1734,7 @@ body {
   max-width: min(100%, 68vw);
   height: 36px;
   padding: 0 0.75rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--bg);
   border: 1px solid var(--border-light);
   color: var(--text-muted);
@@ -1331,6 +1750,79 @@ body {
   color: var(--text);
   outline: none;
 }
+
+/* 上下文占用。放在 composer 而不是 #status-detail —— 后者是 display:none 且
+   全表没有任何规则打开它，把用量放进去等于不显示。这里是用户决定「这条要不要
+   发、要不要先 compact」的地方。
+
+   形态抄 ChatGPT 的 composer.contextUsageIndicator：一个按百分比填充的小圆环，
+   具体数字退到 title。原先是 `24.5k/258.4k` 的数字胶囊，84px 宽——turn 跑起来
+   右边多两个控件就放不下，只能剩半个露在外面。换成 18px 的环之后空间绰绰有余，
+   不必再在 turn 进行中把它藏掉。
+
+   环用 conic-gradient 填、用 mask 挖中心：挖空比盖一个同色圆点可靠，后者要求
+   背景色永远和容器一致，换个主题就露馅。 */
+#context-meter {
+  --ring-fill: var(--text-muted);
+  /* 轨道用 --border 而不是 --border-light：后者在 #ffffff 的输入框上是 1.1:1，
+     低用量时弧又短，整个控件近乎隐形——它现在是个可点的东西，看不见就等于没有。 */
+  --ring-track: var(--border);
+  flex: 0 0 auto;
+  /* 环仍是 18px，但命中区跟 #attach-btn 一样 40px。上一版环是 18px 的 span，
+     右边隔 2px 就是附件按钮那 40px 的透明命中区（图标只占 22px，左右各余 9px），
+     指尖接触面远大于 18px——想点环，打开的是文件选择器。 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+#context-meter:active { transform: scale(0.92); }
+/* flex 会盖掉 [hidden] 自带的 display:none，必须显式还原。 */
+#context-meter[hidden] { display: none; }
+/* 环画在伪元素上：按钮本体要占满 40px 命中区，conic-gradient 铺满 40px 就不成环了。 */
+#context-meter::before {
+  content: '';
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: conic-gradient(var(--ring-fill) calc(var(--pct, 0) * 1%), var(--ring-track) 0);
+  -webkit-mask: radial-gradient(circle, transparent 54%, #000 56%);
+  mask: radial-gradient(circle, transparent 54%, #000 56%);
+}
+
+/* 点环弹出的具体数字。绝对定位而不是内联展开：内联会把控件行撑宽一截，
+   而这一行的宽度上一版刚被 84px 的数字胶囊挤爆过一次。锚在输入框卡片上、
+   浮到卡片外侧上方——挂在控件行正上方会盖住用户正在打的字（实拍验证）。
+   右对齐到卡片右缘，窄屏上不会溢出视口。 */
+#context-meter-detail {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 0.5rem);
+  /* 高于 #jump-to-latest(20)：那个按钮浮在输入框上方的同一片地方，而气泡是用户
+     主动点出来的，被一条被动提示盖住就等于没弹。 */
+  z-index: 21;
+  padding: 0.375rem 0.625rem;
+  border-radius: var(--radius-sm);
+  background: var(--text);
+  color: var(--surface);
+  font-size: 0.75rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+}
+/* 拿不到上下文窗口时画不出比例。JS 那边把 --pct 设成 100，这里把填充色也调成
+   轨道色——于是它退化成一个安静的灰圈，而不是一个「用满了」的假警报。 */
+#context-meter[data-unknown] { --ring-fill: var(--ring-track); }
+#context-meter[data-tone="warn"] { --ring-fill: var(--warn-text); }
+#context-meter[data-tone="bad"] { --ring-fill: var(--error); }
 .pill-part {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1369,7 +1861,7 @@ body {
   transition: color 0.15s, transform 0.1s, background 0.15s;
   box-shadow: none;
   flex-shrink: 0;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   padding: 0;
 }
 #attach-btn svg { width: 22px; height: 22px; }
@@ -1388,7 +1880,7 @@ body {
 #send-btn,
 #followup-btn {
   border: 1px solid var(--border-light);
-  border-radius: 50%;
+  border-radius: var(--radius-xs);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1399,9 +1891,14 @@ body {
   color: var(--text);
   padding: 0;
 }
+/* 主操作：墨色方钮，发送态和停止态同一颗按钮、只换图标。图标色走 --on-accent，
+   浅色白标、深色深标，跟着按钮底反相。 */
 #send-btn {
   position: absolute;
   inset: 2px;
+  background: var(--send-accent);
+  border-color: transparent;
+  color: var(--on-accent);
 }
 #send-btn svg,
 #followup-btn svg {
@@ -1409,12 +1906,16 @@ body {
   height: 18px;
   display: block;
 }
-#send-btn .icon-stop { display: none; }
-#send-btn[data-mode="stop"] .icon-send { display: none; }
-#send-btn[data-mode="stop"] .icon-stop { display: block; }
+#send-btn .icon-stop,
+#followup-btn .icon-stop { display: none; }
+#send-btn[data-mode="stop"] .icon-send,
+#followup-btn[data-mode="stop"] .icon-send { display: none; }
+#send-btn[data-mode="stop"] .icon-stop,
+#followup-btn[data-mode="stop"] .icon-stop { display: block; }
 #send-btn[hidden] { display: none !important; }
+/* 唯一会看到 disabled 的时机是停止钮的 interruptPending（中断已发出、还没生效）。
+   只降透明度，不改 color——墨底上把图标换成 --text-muted 会糊成一团。 */
 #send-btn:disabled {
-  color: var(--text-muted);
   opacity: 0.5;
   cursor: not-allowed;
 }
@@ -1432,19 +1933,6 @@ body {
   transform: scale(0.93);
 }
 
-.mini-spinner {
-  width: 14px;
-  height: 14px;
-  border: 2px solid var(--spinner-track);
-  border-top-color: var(--accent-light);
-  border-radius: 50%;
-  animation: mini-spin 0.8s linear infinite;
-  display: inline-block;
-  flex-shrink: 0;
-}
-@keyframes mini-spin {
-  to { transform: rotate(360deg); }
-}
 
 .popover-header {
   padding: var(--space-6) 16px 10px;
@@ -1463,23 +1951,35 @@ body {
   padding: var(--space-1);
 }
 .popover-section-label {
-  padding: var(--space-4) 16px 4px;
+  padding: 8px 12px 3px;
   font-size: var(--font-xs);
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.popover-section-label .label-sub {
+  font-size: var(--font-2xs);
+  color: var(--text-muted);
+  opacity: 0.75;
+  text-transform: none;
+  font-weight: normal;
+  margin-left: auto;
 }
 .popover-section-label + .popover-list {
   padding-top: 2px;
 }
 .popover-section-label.bordered {
   border-top: 1px solid var(--border-light);
-  margin-top: var(--space-1);
+  margin-top: 6px;
+  padding-top: 8px;
 }
 
 .popover-list {
-  padding: var(--space-2);
+  padding: 4px 8px;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -1487,20 +1987,164 @@ body {
 /* display:flex 会压过 [hidden] 自带的 display:none——不支持服务档位的模型下，
    「速度」标题藏了，空的列表容器却还留着自己那圈 padding。 */
 .popover-list[hidden] {
-  display: none;
+  display: none !important;
+}
+
+/* ── 紧凑网格与磁贴布局 (Compact Tile & Grid System) ── */
+.settings-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  padding: 4px 8px;
+}
+
+.settings-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  padding: 4px 8px;
+}
+
+.settings-wrap-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 4px 8px;
+}
+
+.settings-actions-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  padding: 4px 8px;
 }
 
 .popover-item {
   display: flex;
   align-items: center;
-  gap: var(--space-5);
-  padding: var(--space-4) 12px;
-  border-radius: 12px;
+  gap: var(--space-3);
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light);
+  background: var(--surface);
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.15s, border-color 0.15s, transform 0.08s;
+  user-select: none;
+}
+.popover-item:active {
+  transform: scale(0.98);
 }
 .popover-item.selected {
-  background: var(--hover-wash);
+  background: var(--hover-wash-strong);
+  border-color: var(--accent-light);
+  box-shadow: 0 0 0 1px var(--accent-light);
+}
+
+/* 在 2 列或 3 列网格中的磁贴微调 */
+.settings-grid-2 .popover-item,
+.settings-grid-3 .popover-item {
+  position: relative;
+  min-height: 48px;
+  padding: 7px 9px;
+  align-items: flex-start;
+  gap: 7px;
+}
+.settings-grid-3 .popover-item {
+  padding: 6px 7px;
+  flex-direction: column;
+  gap: 4px;
+}
+.settings-grid-3 .popover-item .popover-item-icon {
+  margin-top: 1px;
+}
+.settings-grid-3 .popover-item-title {
+  font-size: var(--font-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+.settings-grid-3 .popover-item-desc {
+  font-size: var(--font-2xs);
+  line-height: 1.35;
+  white-space: normal;
+  display: -webkit-box;
+  /* 2 行装不下最长的那条档位说明（「只有 ls、cat 等信任命令自动执行；其余一律询问」
+     实测只显示 24/36px），而这是安全档位，说明被吃掉半句的代价是用户选错权限。
+     字号从 10px 抬到 12px 后 3 行又装不下（实测 49/65px），同样的理由再放一行。
+     这个值跟着字号走，不是个能一劳永逸定死的常数——clipped-text 会在它不够时变红。 */
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 思考强度与速度等横向药丸微调 */
+.settings-wrap-row .popover-item {
+  border-radius: var(--radius-pill);
+  padding: 5px 12px;
+  gap: 5px;
+  min-height: 30px;
+}
+.settings-wrap-row .popover-item .popover-item-icon {
+  font-size: 11px;
+  width: auto;
+}
+.settings-wrap-row .popover-item-title {
+  font-size: var(--font-xs);
+  font-weight: 500;
+}
+.settings-wrap-row .popover-item-desc {
+  display: none;
+}
+.settings-wrap-row .popover-item-check {
+  display: none;
+}
+
+/* 细粒度审批开关磁贴 */
+#granular-list .popover-item {
+  min-height: 40px;
+  padding: 6px 8px;
+}
+#granular-list .popover-item-title {
+  font-size: var(--font-xs);
+  font-weight: 600;
+}
+#granular-list .popover-item-desc {
+  font-size: var(--font-2xs);
+  color: var(--text-muted);
+}
+
+/* 模型磁贴紧凑排版 */
+.model-list .popover-item {
+  min-height: 46px;
+  padding: 6px 9px;
+  gap: 6px;
+}
+.model-list .popover-item-title {
+  font-size: var(--font-xs);
+  font-weight: 600;
+  line-height: 1.25;
+}
+.model-list .popover-item-desc {
+  font-size: var(--font-2xs);
+  color: var(--text-muted);
+  opacity: 0.85;
+  margin-top: 1px;
+  line-height: 1.3;
+}
+
+/* 快捷操作栏磁贴 */
+.settings-actions-row .popover-item {
+  min-height: 42px;
+  padding: 6px 9px;
+}
+.settings-actions-row .popover-item-title {
+  font-size: var(--font-xs);
+  font-weight: 600;
+}
+.settings-actions-row .popover-item-desc {
+  font-size: var(--font-2xs);
+  display: none;
 }
 
 .popover-item-icon {
@@ -1510,9 +2154,10 @@ body {
   flex-shrink: 0;
   width: 1.25em;
   color: var(--text-muted);
-  font-size: var(--font-xl); /* 几何符 ●○ 回退字号 */
+  font-size: var(--font-lg); /* 几何符 ●○ 回退字号 */
 }
-.popover-item-icon .ui-icon { width: 18px; height: 18px; }
+.popover-item-icon .ui-icon { width: 16px; height: 16px; }
+.popover-item.selected .popover-item-icon { color: var(--accent-light); }
 .ui-icon {
   display: inline-block;
   width: 1em;
@@ -1570,7 +2215,7 @@ body {
 .attach-chip {
   display: flex; align-items: center; gap: var(--space-1);
   background: var(--surface); border: 1px solid var(--border);
-  border-radius: 999px; padding: var(--space-1) 10px; font-size: var(--font-xs);
+  border-radius: var(--radius-pill); padding: var(--space-1) 10px; font-size: var(--font-xs);
   max-width: 180px; overflow: hidden;
   box-shadow: 0 1px 2px rgba(0,0,0,0.02);
 }
@@ -1590,7 +2235,7 @@ body {
   padding: var(--space-3) 16px;
   background: var(--banner-warn);
   border: 1px solid var(--warn-border);
-  border-radius: 14px;
+  border-radius: var(--radius);
   align-self: center;
   flex-shrink: 0;
 }
@@ -1611,7 +2256,7 @@ body {
   padding: var(--space-4) 16px;
   background: var(--banner-warn);
   border: 1px solid var(--warn-border);
-  border-radius: 14px;
+  border-radius: var(--radius);
   align-self: center;
   flex-shrink: 0;
 }
@@ -1648,21 +2293,27 @@ body {
   color: var(--text-muted);
 }
 .pending-btns { display: flex; gap: var(--space-3); }
+/* 审批决策是本应用误触代价最高的操作之一（批准即执行命令），命中区必须到
+   iOS HIG 的 44×44。原来是 55×31，宽度够、高度差 13px。 */
 .approve-btn, .deny-btn {
   border: 1px solid transparent;
-  border-radius: 999px;
-  padding: var(--space-2) 14px;
+  border-radius: var(--radius-pill);
+  /* 水平内边距跟着高度一起加：只提 min-height 会把 999px 圆角的胶囊拉成椭圆
+     （实测 55×44 看着像被纵向拉伸过）。绊线只管尺寸够不够，比例得靠看图。 */
+  padding: var(--space-2) 22px;
+  min-width: 44px;
+  min-height: 44px;
   font-size: var(--font-sm);
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s, transform 0.1s;
 }
 .approve-btn:active, .deny-btn:active { transform: scale(0.96); }
-/* 批准 = 主操作:OpenAI 绿实心 + 柔和绿阴影 */
+/* 批准 = 主操作:中性 accent 实心(浅色黑底白字/深色白底黑字) + 柔和阴影 */
 .approve-btn {
   background: var(--accent-text);
   color: var(--on-accent-text);
-  box-shadow: 0 1px 3px rgba(13,130,101,0.25);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 .approve-btn:active { background: var(--accent-text-pressed); }
 /* 拒绝 = 次要操作:白底红字红边,克制不刺眼 */
@@ -1700,7 +2351,7 @@ body {
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text);
-  border-radius: 8px;
+  border-radius: var(--radius-xs);
   height: 28px;
   padding: 0 10px;
   font: inherit;
@@ -1714,16 +2365,19 @@ body {
   transform: scale(0.98);
 }
 #native-panel {
-  flex-shrink: 0;
-  max-height: 34vh;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  border-bottom: 1px solid var(--border-light);
-  background: var(--surface);
-  padding: var(--space-4) 12px;
   font-size: var(--font-sm);
 }
-#native-panel[hidden] { display: none; }
+#native-panel .native-sheet {
+  max-height: 85vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+#native-panel .native-panel-body {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  min-height: 0;
+}
 .native-panel-header {
   display: flex;
   align-items: center;
@@ -1734,7 +2388,7 @@ body {
 }
 .native-list-row {
   border: 1px solid var(--border-light);
-  border-radius: 8px;
+  border-radius: var(--radius-xs);
   padding: var(--space-3);
   margin-bottom: var(--space-2);
   background: var(--bg);
@@ -1755,13 +2409,20 @@ body {
   margin-top: 7px;
 }
 .native-danger {
-  color: var(--error);
+  /* 取文字档而不是基色 --error：深色下基色 #df1c1c 压在卡片底上实测只有 3.51:1，
+     过不了 AA 正文。--error-text 正是为此存在的（浅色下两者同值，深色沉到 #ff8888
+     ≈ 6.1:1）—— token 一直在，这里一直没用对。 */
+  color: var(--error-text);
   border-color: var(--error-border);
+  /* 危险操作（Delete / 宿主配置 / 撤销设备 / Logout）的命中区到 44×44。普通按钮
+     保持 28px 的紧凑密度不动——那是产品选择；但误触这几个的代价不一样。 */
+  min-width: 44px;
+  min-height: 44px;
 }
 .native-input {
   width: 100%;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-xs);
   padding: 7px 8px;
   font: var(--font-sm)/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
   color: var(--text);
@@ -1793,7 +2454,13 @@ body {
 #auth-gate { z-index: 210; }
 #auth-gate.show { display: flex; }
 #device-auth.show { display: flex; }
-#auth-gate h2, #device-auth h2 { font-size: var(--font-4xl); font-weight: 700; margin-bottom: var(--space-3); letter-spacing: -0.5px; }
+#auth-gate h2, #device-auth h2 {
+  font-family: var(--font-display);
+  font-size: var(--font-4xl);
+  font-weight: 600;
+  margin-bottom: var(--space-3);
+  letter-spacing: -0.02em;
+}
 #auth-gate p, #device-auth p { color: var(--text-muted); font-size: var(--font-body); line-height: 1.6; max-width: 280px; margin-bottom: var(--space-9); }
 #auth-form {
   width: min(320px, 100%);
@@ -1853,7 +2520,7 @@ body {
   font-size: var(--font-sm);
   font-weight: 600;
   border: 1px solid transparent;
-  border-radius: 14px;
+  border-radius: var(--radius);
   align-self: center;
 }
 #conn-banner[hidden] { display: none !important; }
@@ -1864,12 +2531,197 @@ body {
   margin-left: auto;
   border: 1px solid var(--border);
   background: var(--surface);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: var(--space-1) 10px;
   font: inherit;
   font-size: var(--font-xs);
   cursor: pointer;
 }
+
+/* ── 设置与状态 ──────────────────────────────────────────────────────────
+   抽屉底部入口拉起的底部 sheet。层级夹在抽屉(101)与确认 sheet(150)之间：
+   高于抽屉，因为它是从抽屉里拉起的下一层；低于确认 sheet，因为「宿主配置」
+   会在它之上再弹一次危险确认，那一层必须盖得住它。 */
+#settings-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  background: rgba(0, 0, 0, 0.4);
+}
+#settings-sheet-overlay[hidden] { display: none !important; }
+
+#settings-sheet {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 111;
+  max-height: 85vh;
+  background: var(--surface);
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.16);
+  display: flex;
+  flex-direction: column;
+  animation: sheetUp 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+#settings-sheet[hidden] { display: none !important; }
+@keyframes sheetUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #settings-sheet { animation: none; }
+}
+
+#settings-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-6) 16px var(--space-4);
+  border-bottom: 1px solid var(--border-light);
+  flex-shrink: 0;
+}
+#settings-sheet-title {
+  font-size: var(--font-lg);
+  font-weight: 700;
+}
+#settings-sheet-close {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  width: 44px; height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+#settings-sheet-close:active { background: var(--hover-wash-strong); transform: scale(0.97); }
+#settings-sheet-close .drawer-section-icon { width: 18px; height: 18px; }
+
+#settings-sheet-body {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--space-5) 16px calc(16px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.settings-group { display: flex; flex-direction: column; gap: var(--space-4); }
+.settings-group-title {
+  font-size: var(--font-xs);
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.3px;
+}
+
+/* 开关行整行可点：44px 的判据只守高风险操作，但一个 20px 的小方块谁都不好按。 */
+.settings-toggle-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-6);
+  min-height: 44px;
+  padding: var(--space-4) 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--card-shadow);
+  cursor: pointer;
+}
+.settings-toggle-row:active { background: var(--hover-wash); }
+.settings-toggle-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.settings-toggle-title { font-size: var(--font-sm); font-weight: 600; }
+.settings-toggle-desc {
+  font-size: var(--font-2xs);
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+/* 原生 checkbox 在移动端又小又难点。这里换成轨道+滑块的开关，命中区仍是整行。 */
+.settings-toggle {
+  appearance: none;
+  -webkit-appearance: none;
+  flex-shrink: 0;
+  width: 44px;
+  height: 26px;
+  margin: 0;
+  border-radius: var(--radius-pill);
+  background: var(--border);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.settings-toggle::after {
+  content: '';
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease;
+}
+.settings-toggle:checked { background: var(--accent-text); }
+.settings-toggle:checked::after { transform: translateX(18px); }
+.settings-toggle:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .settings-toggle, .settings-toggle::after { transition: none; }
+}
+
+.settings-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: var(--space-3);
+}
+/* 全部给到 44px：这里面混着 .native-danger（宿主配置），tap-target-too-small
+   守着它不得低于 44×44；让同组按钮共用一个高度，免得后来加的那个忘了。 */
+.settings-action-btn {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  min-height: 44px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: var(--font-xs);
+  font-weight: 600;
+  cursor: pointer;
+}
+.settings-action-btn:active { background: var(--hover-wash-strong); transform: scale(0.98); }
+/* .native-danger 定义在本条之前,两者特异性同为 (0,1,0) —— 靠声明顺序的话,这条会
+   把危险标记的 color / border-color 一起覆盖掉,「宿主配置」和「Account」长得一模一样,
+   而 CSS 不会为此报任何错。组合选择器把特异性抬到 (0,2,0),不再依赖谁写在后面。 */
+.settings-action-btn.native-danger {
+  color: var(--error-text);
+  border-color: var(--error-border);
+}
+
+/* 抽屉底部的入口。和上面的工具按钮拉开：它不是「再来一个工具」，是去下一层。 */
+#btn-general-settings {
+  appearance: none;
+  width: 100%;
+  border: none;
+  border-top: 1px solid var(--border-light);
+  background: var(--surface);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 52px;
+  padding: 0 16px;
+  font: inherit;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+#btn-general-settings:active { background: var(--hover-wash-strong); }
+.settings-entry-chevron { margin-left: auto; color: var(--text-muted); }
 
 .sheet-overlay {
   position: fixed;
@@ -1897,7 +2749,7 @@ body {
 .sheet-handle {
   width: 36px;
   height: 4px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--border);
   margin: 0 auto 10px;
 }
@@ -1909,16 +2761,57 @@ body {
   min-height: 0;
 }
 .sheet-body { font-size: var(--font-md); color: var(--text-muted); white-space: pre-wrap; margin-bottom: var(--space-5); }
+/* 会话操作菜单的菜单项。竖排整行，不跟 .sheet-actions 那样横向均分——
+   菜单项数量会变（归档/取消归档随视图切换），横向均分会让按钮宽度跳。
+   高度统一 48px：这里面混着「删除」，layout-audit 的 tap-target-too-small
+   守着它不低于 44×44，同组共用一个高度免得后来加的那个忘了。 */
+.sheet-menu {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+.sheet-menu button {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  padding: 0 var(--space-5);
+  font: inherit;
+  font-size: var(--font-body);
+  font-weight: 500;
+  text-align: left;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s, transform 0.08s;
+}
+.sheet-menu button:active {
+  background: var(--border-light);
+  transform: scale(0.99);
+}
+/* 和 .native-danger 同一个理由：取文字档而不是基色，深色下基色压在卡片底上
+   只有 3.51:1，过不了 AA。 */
+.sheet-menu-danger {
+  color: var(--error-text) !important;
+  border-color: var(--error-border) !important;
+}
+
 .sheet-actions { display: flex; gap: var(--space-3); }
 .sheet-actions button {
   flex: 1;
   border: 1px solid var(--border);
   background: var(--surface);
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   padding: var(--space-4);
   font: inherit;
   font-weight: 600;
   cursor: pointer;
+  /* 44px 是 e2e/lib/layout-audit.js 的 TAP_MIN。「确定」在 danger 档下带
+     data-danger="true"，正属于那条规则只守的高风险操作——误触「允许完全访问」的代价
+     和误触普通按钮不是一回事。padding 撑出来的高度是 10×2+20=40px，差 4px。
+     两个按钮一起抬：它们并排，只抬一个会视觉不对称。 */
+  min-height: 44px;
 }
 #confirm-ok { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
 #confirm-ok[data-danger="true"] {
@@ -1929,7 +2822,7 @@ body {
 #confirm-input {
   width: 100%;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   padding: var(--space-4);
   font: inherit;
   margin-bottom: var(--space-5);
@@ -1942,7 +2835,7 @@ body {
 .workspace-tab {
   border: 1px solid var(--border);
   background: var(--surface);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   padding: var(--space-2) 10px;
   font: inherit;
   font-size: var(--font-sm);
@@ -1965,7 +2858,7 @@ body {
 .workspace-row-action, .workspace-mention-btn {
   border: 1px solid var(--border);
   background: var(--surface);
-  border-radius: 8px;
+  border-radius: var(--radius-xs);
   padding: var(--space-1) 8px;
   font-size: var(--font-xs);
   cursor: pointer;
@@ -1998,7 +2891,7 @@ body {
   bottom: calc(88px + var(--keyboard-inset) + env(safe-area-inset-bottom));
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   max-height: 220px;
   overflow: auto;
   overscroll-behavior: contain;
@@ -2025,10 +2918,17 @@ body {
   padding: var(--space-7);
 }
 #attach-preview-modal[hidden] { display: none !important; }
-#attach-preview-img { max-width: 100%; max-height: 85vh; object-fit: contain; border-radius: 8px; }
+#attach-preview-img { max-width: 100%; max-height: 85vh; object-fit: contain; border-radius: var(--radius-xs); }
 
 .code-block-wrap { position: relative; }
-.code-block-wrap > pre { padding-top: 2rem; }
+/* 给复制按钮留出完整高度（top: 0.35rem + 32px = 37.6px），否则它压在第一行代码上。
+   选择器必须压过 .codex .bubble.md pre 的 padding 简写：那条是 (0,3,1)，而单写
+   .code-block-wrap > pre 只有 (0,1,1)，简写会把 padding-top 整个覆盖掉——原来那条
+   2rem 就是这么一直没生效的，实测 padding-top 始终是 10px。 */
+.codex .bubble.md .code-block-wrap > pre,
+.code-block-wrap > pre {
+  padding-top: 2.5rem;
+}
 .code-copy-btn {
   position: absolute;
   top: 0.35rem;
@@ -2038,7 +2938,7 @@ body {
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text-muted);
-  border-radius: 6px;
+  border-radius: var(--radius-xs);
   font-size: var(--font-xs);
   cursor: pointer;
 }
@@ -2063,18 +2963,23 @@ body {
    #composer-defaults 基础规则里的 color)。键盘 :focus-visible 不在此列,
    仍留在各自的组件段落中——触摸设备同样需要焦点态。 */
 @media (hover: hover) {
+  .turn-action:hover { color: var(--text); background: var(--surface); }
   .session-item:hover { background: var(--bg); }
   .badge-pill:hover {
     border-color: var(--text);
     color: var(--text);
   }
   .slash-item:hover { background: var(--hover-wash-hover); }
+  .suggestion-card:hover { background: var(--hover-wash-hover); }
   #composer-defaults:hover { color: var(--text); }
   #attach-btn:hover {
     color: var(--text);
     background: var(--bg);
   }
-  #send-btn:hover:not(:disabled),
+  /* 主操作悬停走 --accent-pressed，深浅两套都已经反相过，不能跟追加钮一起变浅灰。 */
+  #send-btn:hover:not(:disabled) {
+    background: var(--accent-pressed);
+  }
   #followup-btn:hover {
     background: var(--border-light);
   }
@@ -2092,3 +2997,23 @@ body {
 .slash-item:active { background: var(--hover-wash-strong); }
 .popover-item:active { background: var(--hover-wash-strong); }
 .attach-chip-remove:active { transform: scale(0.88); }
+/* Session permission controls retain native keyboard and disabled semantics. */
+#session-settings button.popover-item {
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  width: 100%;
+}
+#session-settings button.popover-item:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+#settings-advanced summary { cursor: pointer; }
+#permission-state,
+#permission-effective {
+  font-size: 12px;
+  color: var(--text-secondary, #737373);
+  margin: 0;
+}
+#permission-effective { white-space: pre-wrap; overflow-wrap: anywhere; }
+#speed-list[hidden], #speed-section-label[hidden] { display: none; }

@@ -6,8 +6,8 @@ self.addEventListener('push', e => {
   const body  = data.body  || '';
   e.waitUntil(self.registration.showNotification(title, {
     body,
-    icon:     '/icons/icon.svg',
-    badge:    '/icons/icon.svg',
+    icon:     '/icons/icon-192.png',
+    badge:    '/icons/icon-192.png',
     tag:      data.tag || 'ccm-push',
     data:     data.data || {},
     renotify: true,

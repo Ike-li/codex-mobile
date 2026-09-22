@@ -67,7 +67,7 @@ test.describe('Multi Instance Tabs', () => {
     await expect(page.locator('#drawer-title')).toHaveText('工作区与会话');
     const newSessionButton = page.locator('#drawer-projects .dir-new').first();
     await expect(newSessionButton).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('#drawer-tools')).toBeVisible();
+    await expect(page.locator('#btn-general-settings')).toBeVisible();
     await expect(page.locator('#drawer-projects')).toBeVisible();
     await expect(page.locator('#drawer-projects .drawer-project-item').first()).toBeVisible();
     await expect(page.locator('#drawer-projects .dir-subtree.expanded .session-item').first()).toBeVisible();

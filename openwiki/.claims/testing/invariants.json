@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:eda19c2122427d2e01518e2c0c489ff55c25081876982b636286fe51b45c67bc",
+  "claims": [
+    {
+      "id": "claim_23d3fa057ab540b0b4800d162caf0024",
+      "statement": "仓库显式登记了十条不变量（A2、QUOTA-01、DELIVER-01、SHELL-01、DOC-01、READ-01、OPS-01、ENV-02、GATE-02、TEST-01），每条写明红线正文与守它的文件。",
+      "evidence": [
+        {
+          "resource": "repo://test/README.md#L14-L26",
+          "version": "repo-lines-v1:sha256:745c87d8446ec5c5827d4ebae0241752f9ccc3794b1cabf48c9d9a22813ddcf7:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY5MDA5ZTRmZGY2MTg5NmE5ZTNjNTgwYzRkNGQ5NDU1MDE5MzgzNWU3ZTA2MmQ5ZWZhOTI5NjBlZjU5Y2JlYWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImExNGUyYWQ0NGMzOWE1ZGIxMjUwZmMwM2ZkYmEzMTMwYTQ1Y2JlODlmODE3NDRiMTMzNDE3Yjc0YTFkOTAxNTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjEzYmJmOWQwZmYwMzJiMWM0MTc1ZWIxY2EwYWRkYTRkMGVhMzJjZWQwYjUxNTNlYTg0YzczYWIwOGU2MTNjNjYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_de65f8232ebc4bb4887261ef8db25f1a",
+      "statement": "test/invariants/ 下每个文件的第二行必须是守护行且编号要在登记表首列查得到，当前九个文件覆盖八个编号（A2 由两个文件共同守）。",
+      "evidence": [
+        {
+          "resource": "repo://test/README.md#L5-L12",
+          "version": "repo-lines-v1:sha256:f055cfa0dedf7c6164727aec8aa99c62a075ab3c342ef2c21d7701c8bb584253:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTM4N2FkZTY0ZWMyMjcyYWFiYmY3NmFlMmI4M2E3NjcwOTcxYmVjZjRlMTBlNWJiMDNiZTA2ZmZmZTMxNDFmOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNWY0MjlkMDIwMDE4YWM4ZjJlZTE0NWJjNjBmYWZkZWZmNTAxYTRmMzZjMzUyNWI4OGQzM2IzMDI4MzY3NmRjNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDE2NDNhYmY4YmQ4Y2QxMDRlYmMxZDVmMTQwOThiZTIyNjY4MWZjYzBjYjI1NGZlZDg0ZmJiMzAyYTcyM2JmOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYWJmZmVlNDVkN2NmMjMyNjM2NGZmMjU2MDBmOTkwM2JmYWYyZDJjMzFiMTY5ZmEyNTNiY2I2MDUxMjI4NGMwMiJ9"
+        },
+        {
+          "resource": "repo://test/invariants/thread-source-of-truth.test.mjs#L1-L2",
+          "version": "repo-lines-v1:sha256:f2825e09568c583d30e2c3c9322a73402ad3cf864a68b5bae1d77e14504a2958:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiN2U1ZGIwYzc4ZDRjOTA1ZWJhY2ViYzQzZWFkYWZjNTk5ZDc4YmNhYjBhNGRmNGYzODY0M2VkYjdiOTYwNDVhMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNmYxYzE4MTM0OWQ1MzA2NzRlYzgwODZkNjgyMmI4MWJkYjVlODQ3OWIzNGQyZTk3MDNhZGE2NmUzYWYzZTdlMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiN2YwYjUxNjc2ZDJmM2Y0ZmNhNjBiNmI0ZjFlMjUzMjBlNTQyYzk1NjhiY2U5YjA4OWYxMmY5MWEyMjBiYmU5NCJ9"
+        },
+        {
+          "resource": "repo://test/invariants/zero-persistence-guard.test.mjs#L1-L2",
+          "version": "repo-lines-v1:sha256:5a5fac1d0d7c4e9e0df0c38c23827f331d5e18afc4a4fa7d8a4a313fbe2251b9:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzhiMDllNTg5MGI2MzhmZGVhMGZlMDAzNjgyNDNhZjQzZTM2NTE2Mjk3YTE5ZjczYjJiNzZkYjg2ZTFjNDhiMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNmYxYzE4MTM0OWQ1MzA2NzRlYzgwODZkNjgyMmI4MWJkYjVlODQ3OWIzNGQyZTk3MDNhZGE2NmUzYWYzZTdlMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMGM3Y2MzODI3NTI4ZjY2ZjY1MzdiYWMyYTgxMDk2ZDA4Yjk0YTgyNDk3ZjUxMzYxYTJhNjcyYTM4YTY4ODAyMyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_cf4c7ae2c5f54fcba192b78c28d5add7",
+      "statement": "GATE-02 与 TEST-01 两条由门禁守的不变量住在 test/infra/ 而不是 test/invariants/，因为「测门禁的文件住 infra」是更优先的判据，这也是死条目检测要放宽到整棵 test/ 树的原因。",
+      "evidence": [
+        {
+          "resource": "repo://test/README.md#L10-L12",
+          "version": "repo-lines-v1:sha256:6d129dbc1c7e467a24987c41d2833511e4cc90d3b39be847d05b9ba7a9499366:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjVjY2ZmZWU0YmQ2Mzg5ZjA3MzRhNzMwNTY1YTk5Y2QyMTY0NTcwYTAyYTMzMTIwMTU0YjNlOGZkZmQxNjc2ZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNWY0MjlkMDIwMDE4YWM4ZjJlZTE0NWJjNjBmYWZkZWZmNTAxYTRmMzZjMzUyNWI4OGQzM2IzMDI4MzY3NmRjNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiM2M4NDMwMzEzMjUyZDhmZjg5MWQ5MTQ1MDRmOTllYzY0MjdlZjBhNGExMjIxNDNiMTNmNjUwM2U2ODljOTIxNCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYWJmZmVlNDVkN2NmMjMyNjM2NGZmMjU2MDBmOTkwM2JmYWYyZDJjMzFiMTY5ZmEyNTNiY2I2MDUxMjI4NGMwMiJ9"
+        },
+        {
+          "resource": "repo://test/README.md#L24-L26",
+          "version": "repo-lines-v1:sha256:378b50942b4b2e94e9400717d7ea0ee34ca378c56b3d0e209b67cffafa3c6027:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzg4ZDUzYjA3MjU3N2RiODUxN2QzNWQ2YzhkNmE5NDJjZTIxNDQ5MDcxYmMyOWZiOWM1YTFkMWFlNWNlYmE2YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTFkMTM5MTZmNGJiNzViY2QyY2JhOTg0ODU1ZTE2YTJlMjE5ZjkzNmFlMGQ2MjAwMzQ2ZDVlYWE3OTJmZjE1NCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTNiYmY5ZDBmZjAzMmIxYzQxNzVlYjFjYTBhZGRhNGQwZWEzMmNlZDBiNTE1M2VhODRjNzNhYjA4ZTYxM2M2NiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_69ff8f9e2ffe4f258b46742da2627ff2",
+      "statement": "「守护声明」与「论据锚点」是两回事：前者要求整个文件为一条红线而存在，后者只是注释里的事故或需求编号，不进登记表也不要求文件搬家。",
+      "evidence": [
+        {
+          "resource": "repo://test/README.md#L28-L36",
+          "version": "repo-lines-v1:sha256:bbc868bb0ee00940de31d67a4cbe4073dd45d40c6f7f281ba5e60f2f14281d91:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODRhNzE0ZDVhNTlhYTdhZDhkNmQ5NDlhNmRiYmExZGEzYTg3YzBjNWNjMDM0ZWFmZGFmNzI2ZGMyNGJmZTZiZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMmNjYTE0ZDNhNTU2ZTZkZWEwNWQyOWZjYWI0MGQ5MGQyYmE5MTIxMTgwZjFmYzBlYTA5NTkxMDEyNDg0ZjBhOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTZjZjM0NDI2YzlhMjg5YjI4NWYyZjAzYTcyMjMzMWNhZTVhNTc4OTNiYjJiMmE2MzA4YWQzYTUzMDkyMTU2ZiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_154dafed6ff2471486bc67e4fe2e0400",
+      "statement": "登记表编号提取只认首列，因为红线正文里会出现交叉引用的其他编号，把正文一起扫进来会让登记表自己制造悬空条目。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/gates/check-invariant-ids.js#L47-L53",
+          "version": "repo-lines-v1:sha256:293464a85fb07183611aa4c7eb86692c9b4598d7df173e1918d546baab20edc4:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjIzY2I0YzEzZDY3NzU5ZDU0Zjc2NzFkNDQwMzQ5NzJkMDkwM2EzOWQwOGFmYWU3M2JiOTgxZWI5YWIwZGNmMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTgzY2Q4ZDAwZDBlMjVhMWNmNTNhYTQ4YWZmMDRlNTZmMjU4NzhkZGMyMTk2MWE4MTU1YzliYTgxY2QwNjI5NiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmY1OGQyMjk4YzkwMjMxYWY0YjU2Y2NiNzMxNmZmZGQ3Mjc0YTMzZjFiNTE5ODE0ZGNhYWM3ZmUwMjRlNmRjZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTViZTExMjU5ZmVjMTA1ODJkZmNlMjk4OWE0ZmNlYmY0YTc1M2UxZjJjZmU5MmU2MWVlYWJhZTJmNGE3MTRkNSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_6c39b148c59744178abc811a03916df7",
+      "statement": "acceptance-doc 的上一版有 401 行、约六成在断言标题字面存在，它把文档形状冻住而抓不到正文写反，因此被改了 12 次都只是为了追上无关的措辞调整。",
+      "evidence": [
+        {
+          "resource": "repo://test/invariants/acceptance-doc.test.mjs#L1-L15",
+          "version": "repo-lines-v1:sha256:d2321ad917787d61d234c28c88bc9e658eb18e482dbe27a46c4789037d03711f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY1NjQ5MTQ4ZGNmNDFkZWExNzdlODFmNDRmMjY0ZWNjOWNkY2U2NzI5MmEwMTFlNDVlZTY2ODM0MTAwMWUwYzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEwMWVhZDkzNmEyMjgxZDUzZGNjMDY0YjdlMmEyYWIwZDUzYjkyZWYzZWY3YjM0YjY2ODY3MzAwNzg5NWM4NjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk0OTBmNTJkZTQzNjVjYzE1ZGQ2MWVjYjJhNDc0ZmJlMzFhZTc4ZDViOTM3YzU0YzNjZjMyYTBiMTBlYWVjMWEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_bb0fe54c95ff4318bc1e038b314785f9",
+      "statement": "DOC-01 现在只收两类断言：机器能判定且与措辞无关的客观缺陷（死链、引用不存在的文件、许可证不一致），以及每条背后有一次真实踩坑的具体教训。",
+      "evidence": [
+        {
+          "resource": "repo://test/invariants/acceptance-doc.test.mjs#L10-L16",
+          "version": "repo-lines-v1:sha256:ee56c760f8befa0bdb48f4bfecb694d34d253fe25cd062aa1d282e9ef2950c85:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTAxZWFkOTM2YTIyODFkNTNkY2MwNjRiN2UyYTJhYjBkNTNiOTJlZjNlZjdiMzRiNjY4NjczMDA3ODk1Yzg2MCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGExY2ZmYTNmNWY0Y2I0MmZjMjcwY2I0MTE3MmQ4NmRhYTE5MjhlOTBiOTA3ZWIwZjA2NDFiNDAzZjA4MWNjNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzg4OTFkYjNkOWNmN2ZhZWZkOGEzMTY4ZTM1N2M3MTViOTg2OTQ2YTdiYjE1ZGZjMzYzOWEzNWIzNzljMTdkZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOTc4ZDQwMmI4M2YwYzVjMmI3MmY4OWE3Yzc3NWE1YjgxOGQ0YTA0NjhmMzkxN2U3MWVlNTI3NTYzYjJlMDdlZSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_66e10778b56c49ea9662c4bf466d6c98",
+      "statement": "acceptance-doc 自己贡献了一个新样本：三条咬着已删文档的断言退化成「守住一个不存在的东西」，处置是删掉它们并把「点名的仓库内文件必须存在」的扫描面从 scripts/ 扩到 test/ 与 e2e/。",
+      "evidence": [
+        {
+          "resource": "repo://test/invariants/acceptance-doc.test.mjs#L17-L27",
+          "version": "repo-lines-v1:sha256:4aab44757f581331d6a7550c25757bf8f04e8124604e9188a4eeaa527ed3bb1b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM2Y2ZkYzYxOGU3MDRmZjRhNmJmZjk2NTQzZjRkNDZmMjBjOGVhMGI4YzgxNGFkYmZjMTgwMzYwZTVmZTUwOTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRiMTAwNDUyNzg3MWQyMmI3MmQxOTcwYjI3ZDlhMDNhMzc5NGQ4ZmI4MDllNzk3ZGUwMDVlOTBmY2U5MjM2MzEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMxZWUxNWIyMmQ4ZDUwMzEzMzIwOTAxNzkwMTM0MDg4NDMzODRkYTdlNTNmODUxMDQ5NDgyYTNiMzhlMWRkNTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJmZTJhNjE1M2E2OTg0MTdjYzc0ODdhYzliNmM0Y2YxOWEyMmY0MGQ0MTEzNWY5OGIzZTBhNGE5MmI2NmUzNDgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f5deddc8e32f4e999bcab483ba32b81e",
+      "statement": "文档扫描面是递归的而不是手写清单，因为手写清单在文档增删时会静默失配：那次把 docs/ 从 16 份砍到 6 份时手写清单里有 6 个条目直接 ENOENT。",
+      "evidence": [
+        {
+          "resource": "repo://test/invariants/acceptance-doc.test.mjs#L36-L45",
+          "version": "repo-lines-v1:sha256:972a9918e69a0de442e5befaf5e2fcda074ebad74f8a9f4eb0c2e5c632d572cf:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY2YmEyYjU5OTY3MzJlNzEzOTBkM2UwY2M1YjliZmRmZTU4YWUzZDZkMzgzY2VhYTMyNzRiMzc1OTY1NWRlYmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5Mzg1YzdmNDkwMGIyOWViNGUzZDdhMjg1ZGRjMTgzOTMyZTE5NjVhMTQ2NWRiYjgwNTgzZTJiMjI2YTY4MjMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFmODU0NDAyOGY3NDM4Yjk4NWZmZmQ0NTJiNzU5YTI5MjFiNDQ4ZDc2ZmI4NGFmZjc2ZDQ4ZDg4YTJiZDBmM2MiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIzYjA5OTQ0MDUzNGEzNTQwMmYzOWU2NzNmYjc5MGJjMDg0NjlkZTZlMzEzNzI3NmVkYTlhODViYTMxZTQxMmQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_820e1947208a4a8eb9484482ad7354a1",
+      "statement": "delivery-contract 刻意只断言外部可观察行为而不碰 phase / revision / handles 等内部形态，目的是为后续拆解那两个模块提供一张与实现无关的网。",
+      "evidence": [
+        {
+          "resource": "repo://test/invariants/delivery-contract.test.mjs#L1-L16",
+          "version": "repo-lines-v1:sha256:cd9aa5514e80ad01779b5c54d7626c5b9465d7b716e4407af2fa891d246a9ed1:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAwOGMxYmY1ZmZiMDM0MzJhYmNlN2VhOTA1MmIyMWVmY2RjNTRkMzcyMGVmYzJiMjQxYjdiNjhiNTY5M2UwMDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNlZGNmY2U5ODRhNGI2Yzk0OTk0ZmYyNTJkN2FkZjVhZmVmZDQ4ODFjYjNkOTU3ODlhNDQwMDM0ZmViM2I2NjUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0d5db20ab33240999594eda2e7cb4151",
+      "statement": "不得新增按「会怎么伤人」分的目录（security/、reliability/、performance/），因为那是缺陷的后果分类：一条 SSRF 防护测试既是安全又是纯函数，按后果分就同时该放进两个地方。",
+      "evidence": [
+        {
+          "resource": "repo://docs/TESTING.md#L45-L47",
+          "version": "repo-lines-v1:sha256:0fdd40b6a631af61ffaa335689ec35c9dae3d696b1305abee9407c63f64d7f68:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzBhM2JjNjUxZTVhOGNjODhiZWY4OTAxY2U1YmU1OTRiNTY5NjU3ZDE0MDEzZGNlNjM2Nzk2MjJkZTI5NjZmYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzQwMDIzMmRjZjlhNzEwODIyMGU3ZjE0MDM0Y2U1YmY0YTE2MjUxN2E2ODc2YzQ3MTMyYzdlYzU3ZjljMzczNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDY4YzViNWEzYzZiZWFlMGE0MWMwNTY1N2Q5NzkzYzE5NzA1N2RiYzBkYjljYzFkYzI4NzQ4NDk0MTgwYjhmMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOTk1ZjZhODYwNTY2MGE5ZTVkNDQ5N2I5Njk1M2UzMDQ4NWUxMTUxNjFhOTMxNzVjZWZjNjlmNTMxMTE2MzViYiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_8b7a819e20c54eb4b3012f9cd6388458",
+      "statement": "登记表条目要求写清「违反了会怎样」而不是只写规则名，并且新增不变量的四步流程被明确列出。",
+      "evidence": [
+        {
+          "resource": "repo://test/README.md#L38-L43",
+          "version": "repo-lines-v1:sha256:cb63cdfcdf05008481a66e0120360b789fcdddbfb6e78c67e3760fe68183197b:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDA3OTYzY2I4NTdjNGEyOTkxOGM0NTBhNzNjY2JlZjBhOTg3YTA1NzRkZDRjZWQwNjMzYTE3ZDhjNjZlOWYxYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjAxZjM0ZjY5NDdkNWVkYTBlNzgyNjIxZWVjNmQwZjA0ZTg1ZjIxMGU2YzgyZDM4MTUyOGUyMGRmNjE3MTUzZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiM2Y3NGYwMGZmMTdhY2Y5YWRhZmQ3NGEzNTY4OGVlMTFiNTZjMzFkZjdlMmI0YmZlYjg0ZjAwMDkwZWRlNThmZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.5.2",
+    "at": "2026-09-22T08:36:26.702Z"
+  }
+}

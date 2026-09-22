@@ -15,7 +15,9 @@ test.describe('P0 协议桥、审批与 Socket.IO', () => {
     await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
 
     // 2. Send approve this command.
-    const approvalCards = page.locator('.tool-card').filter({ hasText: '需要审批' });
+    // 用 data-card 而不是「需要审批」这四个字定位：卡片决议后标题会变成「已批准」，
+    // 拿文案当锚点会在那一刻解析不到元素，而那正是要断言结果的时刻。
+    const approvalCards = page.locator('.tool-card[data-card="decision"]');
     const approvalCountBeforeApprove = await approvalCards.count();
     await sendMessage(page, 'approve this command');
     const approveCard = approvalCards.nth(approvalCountBeforeApprove);
@@ -28,10 +30,14 @@ test.describe('P0 协议桥、审批与 Socket.IO', () => {
     // 3. Click approve.
     await approveCard.getByRole('button', { name: '批准' }).click();
     await expect(approveCard).toContainText('已批准');
-    await expect(page.getByText('exit: 0').last()).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('.command-card').last()).toContainText('命令');
-    await expect(page.getByText('command approved and executed').last()).toBeVisible();
     await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
+    // 命令活动行跑完就收起：行上只留命令本身，退出码和输出折在里面。
+    // 标题不再是「命令」两个字——那是卡片时代的固定表头，现在这一行写的是命令正文。
+    const commandRow = page.locator('.command-card').last();
+    await expect(commandRow).toHaveAttribute('data-ok', 'true');
+    await commandRow.locator('.activity-toggle').click();
+    await expect(commandRow.getByText('exit: 0')).toBeVisible({ timeout: 10000 });
+    await expect(commandRow).toContainText('command approved and executed');
 
     // 4. Send approve this command again.
     const approvalCountBeforeDecline = await approvalCards.count();
@@ -44,12 +50,11 @@ test.describe('P0 协议桥、审批与 Socket.IO', () => {
     await expect(page.locator('.error-msg').last()).toContainText('Approval declined by user', { timeout: 10000 });
     await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
 
-    // 5. Send /status.
-    await sendMessage(page, '/status');
-    await expect(page.getByText('当前没有活跃目标').last()).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
+    // 原第 5 步发 /status 等模型回话，靠的是 mock 对这段文本的特判——而 /status
+    // 现在是本地命令，不再产生 turn。这条 spec 测的是富事件渲染，下面那步发普通
+    // 消息已经覆盖同一条「发送→流式响应」路径，不必再造一个像消息的斜杠文本。
 
-    // 6. Send a normal message.
+    // 5. Send a normal message.
     await sendMessage(page, 'rich event plain message');
     await expect(page.locator('.msg.user').last()).toContainText('rich event plain message');
     await expect(page.locator('.msg.codex').last()).toContainText('Mock response to: rich event plain message', { timeout: 10000 });

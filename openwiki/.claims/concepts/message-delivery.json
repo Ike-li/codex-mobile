@@ -1,0 +1,252 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:1c0946dc2d3614176fb8cc09426a2fa8481b8600fc522908c545b3a4762119f9",
+  "claims": [
+    {
+      "id": "claim_cfa3358333a946e197a3c1c9e2228464",
+      "statement": "幂等键是 clientRequestId 加上服务端算的请求指纹（文本、附件规范化指纹、input parts、turn overrides、投递目标一起哈希），用以分清「同一条消息重发」与「同一个 id 被复用到别的消息上」。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L2109-L2136",
+          "version": "repo-lines-v1:sha256:c8a77e6382a59de45790d5019dd63c810ae8189b3b14d6c2ae7373003e01345b:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFmZjExMTE3ZDk2MGZlYjUyN2QzY2E5YmYwMmNmYTJjNmNjYmJjNzg4YjA0NWI0YjQ0MWYwZTE1MWZlNDIwODkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMzZjUyYmRiOWIxMGU2YWJlYjIyZDc2Njc2ZTIzODY0NzhkOGJkYWMyOTE5NjIwNjkwNjgzZTM5MDQ4M2VkZjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkxNThhNzQ2ZWEzOWE3MWQ2ODk1OWJhNDViZmRjNDUyZjQ1YjcxMDFiNThjODAzNTVlN2ZkNmM5ZGVlZmFiZDciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUyNzQ5YjM2NmM2OTBmYWJiNmEzNmYzYzU5ZTRhNzY1OGY4YWM1ZjQ0ODA5M2I0ODYxZDhjZTBmYjc3MWZjZmIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fa23b1d117754ad8a39226403c28b572",
+      "statement": "带 clientRequestId 的请求必须有稳定的 deviceToken，否则服务端直接回 client_identity_required；身份键形式为 device:<token>，无 token 时退化为 socket:<id>。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L2094-L2108",
+          "version": "repo-lines-v1:sha256:3d08136f76a1a3e5a705f261ecec16f74d765436a36bbfa0a3aeb31514e6efcc:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZiMjU1ZmIwOWYxYWJhYTViZGZkYTYxYTFlYWM5NzIxNGQwNmY0NWRkMTYwNGZjMTVlNTIyZGZjODBkMTU0MjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJhZTMxODA5ODU3ZWM0OTZmNTNhYTI0NGY5ZDdmNWIzMjM0NDBjYWFjZWEwMTgxYjI3NDIzM2FlNDE2ZDI1MTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU5YjYzZGZjMWMzY2M2YjY5MDIyZTgyZGZjODdhYTIyZDhlZDY4Mzc1MzZkZDY4YWFiOTQ5ZmEzNmI2ZDQ2ODgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM3NzgzOTQxZGY1OTYwOWQwZjA2NzBiYzlhZGQ1YzdlZDFiNjQ0ZDBmMTQ2OGRhNjIxYTBjNTAwNjNhNTNmNzYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_69e4ad5ea8fa433582492c41ab6afb02",
+      "statement": "账本认领有四种结果：owner 继续派发，duplicate 直接回放上一次结果并标 duplicate:true，conflict 回 request_id_conflict，full 回可重试的 receipt_ledger_full。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L2137-L2162",
+          "version": "repo-lines-v1:sha256:36b56196f27b88628f751629f46a0dc68d752d5fd7a2e97b8ff15d7b877941f1:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkxNGI3NDUxYTlmYmU5MmYxMGY3MzczNGMxZmJhN2Y5ZTNhMmFhODBmZWY4NmVlNDNhNDE1ZTFkZjQ0NGQwZTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUxM2MzMWI4ZGEwYTM5OGZjNTQ3MjU4MDY2ZDllMmJjZjg1YjU3OWQ2NWM2ZDZmNjdkNDNmMWVjMTYyMjQ1NTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA1YjY1OWJkOTk2MTYzOGJkMmFiM2M0OGQxNjM5NzY0MTZkOTE2NzdkOGFkZWRkZmEwMTJlOGVhN2QxNjdiMWEifQ"
+        },
+        {
+          "resource": "repo://src/sessions/message-receipt-ledger.js#L19-L47",
+          "version": "repo-lines-v1:sha256:bd11288c5bc5900a434119279c278d8755d4d11560e6c2bff77a21ddf1a39a4d:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFiN2Q0MGMwMTM4ZjNkNmNmZDBhODFhZDJlZDJiODRhN2U2NmRmNzk3ZTZmMmVhY2FmNWJkMjBkZWU4Nzg0OTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJlY2QxMDc0YTNmNzJkYzk4NjBlMDY1MzRmMTJkZWJkNjc0NThjZWUzZGNhZjY0NmQ3MzcwMTI0NzYyN2RmODEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM1YmNlYzFjOGU2YThkN2I3NmM2MGJiYjA0NDg4YzYwYmFlZjQ3MDFkY2IwNGRjZTU3Y2JhMjE3N2VlNDZiNjIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_93d3692715a44e8482dc01325b72b687",
+      "statement": "账本条目分 pending / waiting / settled 三个 phase，pending 绝不能被 prune 回收因为有调用方 await 着它的 ready promise，删了会把 replay 永久挂住。",
+      "evidence": [
+        {
+          "resource": "repo://src/sessions/message-receipt-ledger.js#L111-L142",
+          "version": "repo-lines-v1:sha256:defb5eedafeb2992285a8e2416f5737264a0b8b5be73649f5ff9e706c97182b8:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk3ZGRkZGE2YTJmODA3NDE3YTU0ODM1MGQyZDMwZWQ3NjMyYTM1YzQ4Y2YzMjNjYjJlOTYxYTBkMWY0YTQ0ZDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg2ZjdhMTYwNDAyMGU2N2YzODI0OTEyMTY2Y2M5N2Q4MDYyNTVjNmJkNWFiOWUzN2ZhMmRiYzhmNTcxNzgxMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkwYzJhYmU0ZjNmZGMyNTU3OGRlZWU1OGQ5MWJhN2JkOTA4MzFmMTA0YzZkNWQ1YWNlYzBlMjhjNGI1NGE3YjEifQ"
+        },
+        {
+          "resource": "repo://src/sessions/message-receipt-ledger.js#L187-L198",
+          "version": "repo-lines-v1:sha256:de97ab19fc41ad12186539387cba5ab6c7d0b380205d7b89b016844dcc0e273a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgxNDdhZDA3MGRmMDAwN2UyZjYxOGJjZDJjYjIzODRjMjQ2ZjFjMGRhMTdmZGEzN2I1N2VmOWU4MzhjYjBmMWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjEyZjRkM2RhOWI5N2RlNTIwMTYyZDM3MmQ0NjVkMmQ5ODUzNjI3OTE3OGQ4Njk1MjBlMDExNTI3OTA5YWY4MjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFiNWJjNTI1ZDEwNDgzY2YzOGJjNDZmOGQ5YTc4OTAyYjQ0ZDliYzJkNTNhYTQ0Y2VjOTgzNjYzMTQzZGIzNDMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c6ceb5f9fc21407ea2432c3bafc276f3",
+      "statement": "waiting 条目有独立的宽限期（默认是 ttl 的 7 倍）：无条件跳过 waiting 会让实例被回收后永远等不到终态回执的条目永不释放，攒满后所有带 clientRequestId 的消息一律收到 receipt_ledger_full。",
+      "evidence": [
+        {
+          "resource": "repo://src/sessions/message-receipt-ledger.js#L11-L16",
+          "version": "repo-lines-v1:sha256:e37d5a1d896c9634701d31ed6cc5cf311e2c3827f324a7d560e36a93eb994e40:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNmQ4NzFlZTA4M2U0NjU0ZTg1MzAzYzMwNTgyZGYyMTY2M2Q4MTIwNDJjOTkxZDYzYjFhODBjYzM3Y2RjZDFlYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTQzM2NmMWVjNGMyNmI2NDQ5ZGIyZDEzOTg4OWU1ZDRlYTYwNzNkNmYzZTVmMGNiMDdjNjc3M2VmNmQ3ODY4NiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDI3MjM4MGI2MjA0NjljMDg4Y2QwOTIxZDc4OTk5MDhhNDcxZTRhNzU3YWUyNGZkMjUyMzhiYTM5ZjliOTNhMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMGM3MjcyMjA1MGZkYWEyZTA3MWE5ZDBkN2FmNDE4MmM2MDU0MjE2MDE4NTIwMzJmNzFhMjdmZTYzMmQ1M2UwZSJ9"
+        },
+        {
+          "resource": "repo://src/sessions/message-receipt-ledger.js#L120-L133",
+          "version": "repo-lines-v1:sha256:fd45e2fde047623f26dd7b4d5517030750880d250aba0145101aeac8f0a49b22:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJlODBlMmUwZDNlOWZhYWQ0NzU2M2JkM2I4MDFhNjZkOGZlYTQxYjY1ZGNiMDU3MDY3MTM0NzNjODA5NjlhNTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjliNjJmNjBkODU5MGE1NzljZjQ2ZjhkNjczNzhjNGM1NzJiOTYyY2VjY2RiOTBjN2E1ZjdiNDJiOTYwNzgyYTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNhMDUyOWJjMzZkYzE2OGExYTk1ODU4NDlmYzdlMDU2OGU1MTc4Zjk4M2QzZDEyMmUzNDE2OTdlNDcyNGE1NzAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUxNGRjM2NmY2E5NzdiY2IxZWJjYmVmOWM5ODBlZmE0ZmVmZjBjOGFjYzZlNjI5NjliYThmODAzMGU1MDI3MTQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8155e47035f846439ce2c6eab5e24154",
+      "statement": "settled 条目的回收依据是 settledAt 而不是「是不是终态」，因为按终态回收会让 dispatch_failed 形状（retryable + resultUnknown）的条目永不回收。",
+      "evidence": [
+        {
+          "resource": "repo://src/sessions/message-receipt-ledger.js#L135-L141",
+          "version": "repo-lines-v1:sha256:0796ea7f8ad9f43df40257205a39b511db3600d1d09f08936911ab21b9023d92:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZTU3Yzg2OTlhY2E4ZjkxNmE0MGVlMTM4OTVjNTVkMGMzZGI4Y2NkY2U4NzNjNmU2MzBlMWQyODFjMTlhNmZmMCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDg5M2Y0MGUzNzgxZWI4OTZjODJkMDQ2YTA4MDY3YTExZTM1Y2RmMmYxZGZhZjI2ZmVhOTBiOGRiNjY3NjQxMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzUwZDJjNzAwNzI1YzZhY2VmNWFiNWFjOGY3ZjNkNmIzMzBmNWJiMjM1NTkwMWU5NzkxYzNiNzY3YzYxYTc4OSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDVhNWRlMjJlNjk0MzJlZDk1OTc2ZTVmMjI5ODljZmY1MWFmMzA2NmMyN2YwMWY3YjU3ZmFkMzhlM2RjNGE4OSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_a9d92bcf60e74822884b3845b6fafc3d",
+      "statement": "回执状态有偏序且只能前进：queued 是 rank 1，submitted / steered / rejected 是 rank 2，低 rank 不能覆盖高 rank，两个不同的 rank-2 状态也不能互相覆盖。",
+      "evidence": [
+        {
+          "resource": "repo://src/sessions/message-receipt-ledger.js#L165-L185",
+          "version": "repo-lines-v1:sha256:9c1567eb58d8fb8ca7d6a0ae59d640eec90617b45870ef5e72a6bc1b82ce5aa7:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRlNWRkODgxNzRlZjdhMmZhMTE3YWMyMWVmNDI2NjZiYWM4OTkwN2I2M2E2NWExZGQ4NmVmZDgzZjk2ZWZlMjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYxYjA0NzU0MGQ4YzM1NjM0NDJmZmRkNjU3NmMyODFmMGRkZDIyY2MzYTFjOWJkOGI4ZjZiMzNiNTQyMmE0YTAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a3280f692ff34e8ea9c181a68a328781",
+      "statement": "浏览器 outbox 的 drain 遇到 rejected 或 needs_reconcile 状态的请求会 break 而不是跳过，以保持发送顺序；前一条状态不明时不得发后一条。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/outbox/message-outbox.js#L41-L60",
+          "version": "repo-lines-v1:sha256:ceb19ac22796a422435ccbdc7cf6fc8a5c99cb95d982066dc85ff5539fd3c446:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE1ZTRkNGZmMjQxNWRmOGNmYzNhNDI4YzU4YzUwMTE5YWMxN2MxNWYwZDJlNWQxMGFlOWZhYjU3MzczMjA5YTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhmMmY4YWNmMzVmMmYzYjkyOTJhNTI2ZDg1ZDJkYjU2NGZkN2FmNThkNzNjMDhhYzZlNzEyOGUxMTM2ODk2ZDkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJlZWVmZGQ1MTEzZDk5MDU2ZjFlMTlkZTFiN2Q1YmVkZTZlMGEzMDFmOWU4ZjdiZTRlYWQzZjhmOGRhODY2YzgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg0NzVhZTk0OGU1ODE4OTc5OTU5MGRjMGFkNDUwNjJkMzljMGFmZTg1NjYwYjUzZDEzNDQ1N2QyYWY4ZTRmMDUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3695e2fce57b4ba08db390175d0f6ee1",
+      "statement": "ack 里的 receipt 必须 clientRequestId 相等且 state 属于 queued/submitted/steered 才算数，否则请求被降级成 needs_reconcile 并标 invalid_receipt。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/outbox/message-outbox.js#L92-L106",
+          "version": "repo-lines-v1:sha256:784da6873b3de4a8133022a86212132c4d88f1fc42b86341695c5e3571485766:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxYjE2MDc3OTNhOGE4OTI3MjZmYzVmY2E1Y2YzYmQ1NTAxNzZmZGNkMTZkNGIxNTQ2ZmUwNDQ4MDQzOGU2ZGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjliNjJmNjBkODU5MGE1NzljZjQ2ZjhkNjczNzhjNGM1NzJiOTYyY2VjY2RiOTBjN2E1ZjdiNDJiOTYwNzgyYTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMxN2FkNDQ3YWQ3ODg5YjBkZGM4MDc4YjY2MDIzNjhjMDI5MWFlOGFlMjU5ZTM3YWJhYTZkMTgwOGZhOWJlOTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM4MWVkMDg3NTFmYTFkMmI0MmI3YWViNjAzN2RlYTY1YzNjNmZkZmYxZjVkZTg4MDI2YTFlYTQ2ODA4MGM1MGUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c27c0a71459b4f9dbf6776ff5a0eaaab",
+      "statement": "outbox 把 resultUnknown 与 retryable 分成两条路：resultUnknown 进 needs_reconcile（不自动重发），retryable 进 retryable（下次 drain 重试），其余进 rejected。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/outbox/message-outbox.js#L61-L91",
+          "version": "repo-lines-v1:sha256:7f90352c2860ba00f9b9c28e3a7f2894b81d1b06f4008d126336bf780a031f82:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMxZjk4ZTA0MjE5ZTNlM2RkMTUxMDJlMmFjYTk2YjZkYzE2NmIzNTM1N2M0NmQwZGVlNDc2ZTAyOGIyMWQ3ZTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjliNjJmNjBkODU5MGE1NzljZjQ2ZjhkNjczNzhjNGM1NzJiOTYyY2VjY2RiOTBjN2E1ZjdiNDJiOTYwNzgyYTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc4MDFlNTgwZWZhMjliMWJhMTcwZmFmNzY5MTcwNzU1NWU4ZWVkOTc5Y2E5ZWVhY2UzODI1ZDU5YWYzY2FjNGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgzOWZkZTIyMzNkNTg2YjdkOWU0YzQ5ZDMyNjgwOWUyYjNhOGM4Yjg5ODlkNDdmZmIyZDk3ZGZiZTkwY2QyY2UifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0544d80ab3494423ab5e38cfd11ad5ea",
+      "statement": "用户确认后的重试 retryAfterConfirmation 强制生成新的 clientRequestId（相等则抛错），并记下 retryOfClientRequestId 与确认时间，因为旧 id 会被账本判成 duplicate 并回放旧结果。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/outbox/message-outbox.js#L161-L193",
+          "version": "repo-lines-v1:sha256:42ab4067ab13aab51bb104cf7321f0dcd3a64fc1c905550226b2121b54ffd3b0:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIyMGQ4MjVhNWM5ZTlhYzI3YTgyMDU2NWE1MzlhZmMyODM2NDYzMjZkYmVhNzcxYTk3YTZhZDhkMTM1OThkODAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmMGNkYjk3MmE3YmZiN2VkMjQ2ZjlmZjY3MjM4NWU1NWY0OTY4ZmMxMTA0M2RjNWI2ODRkNTFkZmEzMWRiY2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE0MGUxYTIyNTk4MzgxZDIxNDNiYmI5NTQ5NWZjMzUwZDhiY2MzNWYzYzcwMmM0YjE0Y2Q5ZmIxYmZmZWY0ZjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU3NDMyMDI4NDVmMTZhNWI3NmQyZTEyMGJjNGU5YTZiOTVjOGNiM2JjYjIxNDM1ZDQyMzQ3YWU0YTNhOWEyZTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d283c1c1c44349939ff031a26793f95c",
+      "statement": "message:reconcile 分两级回答：先查回执账本（source: receipt_ledger），账本没有就用 thread/read 在 turn 的 items 里找 clientId 匹配的 userMessage 并合成 submitted 回执（source: thread/read）。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L1625-L1641",
+          "version": "repo-lines-v1:sha256:0de5a6559467b82d69de935af0ec7c33b9681acbbe294a0389c47b0ff0595fc2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVjNTE4NzRkM2QwOTdkN2Y5YzI2NDA0MTI0MDJjZWY5NTY5MWJjYzI1NWViMDg1NzEzNjdkNWQ3ZDllZjk1MGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZhM2NmNTE5MjM1NGY3MTYxNWFjNTEwMzRiM2U5N2MyMGVkYTk5NjQzZmNhZjViYmU2ZDQxYWQ1OWJkMTIxNjciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA3NThlNDYzNDQ1YmEzNWEwNTFiNzFiOGI1ZWRiNDBjNjQzZmM4YWYzNTZkYzA4YzNlNDQ5NGFlNGJlMzM2ODQifQ"
+        },
+        {
+          "resource": "repo://server.js#L1910-L2004",
+          "version": "repo-lines-v1:sha256:4d202da9d06ffabe50809456433120b7d1f62e483e51e598981d5d2bd4deed2a:eyJzZWxlY3RlZExpbmVDb3VudCI6OTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJkOWY1YmExM2JlZDQwOGZiM2RhODE1YzU2NDI2MGM2MzgwMjM3ODUwYmEzZWJlMzBhMWIzYmJiNWY1ZGZmMzEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhM2U0NmY5NDI3NmI2ZjZmNGVkMWYwMmFmNzhiZWY2YTJlZTFjNDM5ZGQ1NTg0Yjk3Mzk0ODMxMzIxNGQyYjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYwMDg2MDYxMTY2NmMzOTI0NzRkNmM5YmM0NDk2OGZmYmFkODhjNTg4MWQ0MDcwMDU3NzYxY2E2ZTU4ZWYwOGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY3ZjgzOWJmYmZiMTljYzY2YTVkMjBhZTc5MDRlYTUzYmRmMjY1NjhhZTA4ZjMyODBkZGNkYTE1NDVlMjEyOTkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ff63d5a3616243cdb82b276224b5d13c",
+      "statement": "两级都查不到时 reconcile 据实回 resolved:false 加 resultUnknown:true 与错误码（client_request_not_found 或 thread_required），让请求停在 needs_reconcile 由用户决定。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/outbox/message-outbox.js#L294-L306",
+          "version": "repo-lines-v1:sha256:3fc94edfae6bee67aa615f7b928337608c35849655550cc6602866b8da726db4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg4MDA1ZDU3MTA2YTM2MmViMDAwZGFmM2RhNDY3NGM4MmI1MThmZjVhMmUyZjY3ZWU4ZTc1N2EzMzNjMmFmNjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNjMmUzZmQwN2FhN2UzY2Y5MmI3MzJiMjdjZGM0YzFiMjRhNWI2OTM1ZTQ1NDczODYwMWVjNTk2NWM5YmJkMjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVkYWE4MjJjYzc0ODVkNWI1OWQ4MWQzYmU2MTI0OWJiNTllMzI2YTkyNGY4YjFiNzc1OTQ2OWFkZjY2YmNlOTEifQ"
+        },
+        {
+          "resource": "repo://server.js#L1962-L1985",
+          "version": "repo-lines-v1:sha256:bd30105c85b944a66d5bc52db852e07fb9f886b290208103a975159b3977be88:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZlMzNkYzczMWU3ZDA3YjFmMGMwNWNmZWJkN2UxOTIyMDIzZTYwNzdiYzBhZTdiYTMwMTQ4ZjUwODMzYTI1YTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJhMTIwZTY0NDgwMzQzYTliNWNmMDFjNzc5NzE3NjM3MGRlZGVjYjFlN2FlMWYxNzAwNzc2NjM2ZmExNTJhMmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdkNTM1OTcxY2I2NWEyN2VjODRjOTZmNGJlYjcyNTllNGM5ODc4NThmZTUwZGEyNmJkMWNhNzA4MzE2YWM4MTYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_32d2791a90804148af6364a5a0ab42b3",
+      "statement": "gatewayEpoch 在网关每次启动时随机生成，客户端记下发送时的 attemptedGatewayEpoch 并在核对时带上，用来区分「查不到是因为账本随重启没了」与「消息真没送到」。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/outbox/message-outbox.js#L249-L255",
+          "version": "repo-lines-v1:sha256:7e596ef33c4bd6d88d7db36dbe4189fe975c492b9034189c31841a00135757f8:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYmUwNjE5ZDgyZTNmODBkNDQ5NTFlOGI4MTk4YjBlMjMwZmQ2MDY5YzEzZGI0NDI0MDA5ZjY3MDlkMzAzZDIzZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTI5NDBhOGI4YzRkMWE1ZjU1NjliY2M5YWQ4ZmZhYWM4OTE1NmNlMTYxYzdhMGU1NjY1ZGE0MjJjNWQyNjgwNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjFiM2MzYjUyY2QzYTg3ODExZjMzZDU5MjFjNDQ0YWE4YTFkNTcwYWE1MjhkZTAyODUyYjc4MjA0ZTA0N2I1MSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDRlNzJkNzUwN2I4NzM2YjYzNTBhMjhlY2VjOTE0MjkxY2JkZjNmYmRkZjRhNDhjNzA3ZmMzNGNjMWUxMzc3NCJ9"
+        },
+        {
+          "resource": "repo://server.js#L103-L106",
+          "version": "repo-lines-v1:sha256:dfed9ca65e454e7b341bcc6cceb5ebf18c076459ce1522362d99189d882576d4:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiM2I4MTZmNWMzNjkzNDQxZmMwMTBlYjM3NTk0M2U2ZGUzYTJmYjE1NDM3MzE5ZjYxNWY4YTRlOWMwZGFlZTE3MSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOGIwMDljNzM2MzBiNzQ4MmIwMTVkMjAzOWZkNTlkODgyMDM4YzY2ZjQ3ZmIwMGUzNjYxNTQwZTAwZGZjNWFiZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjM1OTQxYzUwODcwOTE4NWZkZGE4ZDM1OTQxODk1NGVjYjI4ZmI5M2NkMzg3YzQ3ODIyMGIyNDA1YWRhZDIyYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTZhMmE0YjlhZTJmNDllYmU2ZTA0ZjU5NGIxNTI2NGViNTVmZjBmNmNjMTkwNTFiYWE2NDFiY2Y0MjIwMDU3MyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_1b1223af1213417a82472a4d8e78c9d5",
+      "statement": "catch-up 有增量重放与快照重建两条路：缓冲无缺口且 epoch 相同则逐条重发，否则走 thread/read 重建整个视图。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L2959-L3033",
+          "version": "repo-lines-v1:sha256:bcf4a5d853a5f3ab3df08baae592119d04c166facc5fe2f248a610293e5f8c52:eyJzZWxlY3RlZExpbmVDb3VudCI6NzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA0M2ZkY2IwOTI2NGExNTEzZmU1NDYwOWUyOGQ3ODU4ZDFiNGU4ODJlNzc3NDY5NmZhZjAzMWM0Yzk4YmI2OGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcyMGZjOWU2N2RiMDdlZDIzOWJiM2FkMjMxMmVhYWI5YTcwZTFmNmZiYTAxMjg4YjBiYTZlNjFkN2Y4ZWU3ODgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk2MWNmNmY0YTQxMTZhOTIzODNlMTA5YzFmYzVkNjY2YTU4Yzg4NjU3YTE5MmI0ZTM4NDFiODIxZjU0ZmNhZTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7dde032bcac841bebc29fc9807e76d1f",
+      "statement": "快照重建前必须先冻结水位线 snapshotThroughSeq，读快照期间到达的 runtime 事件要在重建之后重放，即使它的内容与 app-server 快照存在竞争。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/outbox/recovery-state.js#L18-L44",
+          "version": "repo-lines-v1:sha256:336922e5544c30f24bbcf3f5262793d34763fb45a4dbadbf3479898a3f750362:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQzZmI1OGE2Mjg5NGUwNzI3ZWIxOWJlY2Q2MDMzYjA1ODUxM2U4ZWU5NGQyYWZhZmMyZmZlYmM0M2RlY2IyNTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRmMGQxMzk5Mjg4YmY2ODVhZTgzOWJkNzhmYjhhNGMyYWVmZWRiM2U5MmVjMjRkNDQ1MjE3MGUyODFjODg1OWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYzMjY5MGMwMTk3Zjg1OWM4ZjNjZTY4YjczOWNhODVhNTE3MTlmMWY3ZDBkNjI5YzEyMzg1MDcxZWM0Y2RkNzQifQ"
+        },
+        {
+          "resource": "repo://server.js#L2994-L3020",
+          "version": "repo-lines-v1:sha256:621a57e085f65b04b627e3abdc6c6a37ba027cbf95c1853c28f3c85ca5b239b3:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA2OWE3NDQ5YThmOTRhNWVjYmNlNThhNGE2MTBhZmQ2NmZkY2M4OGJhMjQ5YjNmMmIxYjUzNDQxMTEzZDA4YWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJiMzNiMGE0ZTIwZjExNzBhMTIzZGEwZGFjYWJlZTA2NGNhM2UxYTdjZWE3YjQ2YzEyNGM1YTA4Yzg5Mjg2YmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFhNTg0MTkwYzE2YmI2NGQzMWEyNWY5ZjllMjEwN2Y3YTBjYzVkMGUzMTY4NGQyNGIxOWQzYjVmMjZjZjA4ZWIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0ce7dc3828f944a9b36abc0e67f6b7d6",
+      "statement": "completeRecovery 只在 ack 的 instanceId 与 threadId 都匹配、且重建快照的 source 为 thread/read 时才接受结果，并丢掉 seq 不大于 throughSeq 的缓冲事件后去重排序。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/outbox/recovery-state.js#L18-L44",
+          "version": "repo-lines-v1:sha256:336922e5544c30f24bbcf3f5262793d34763fb45a4dbadbf3479898a3f750362:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQzZmI1OGE2Mjg5NGUwNzI3ZWIxOWJlY2Q2MDMzYjA1ODUxM2U4ZWU5NGQyYWZhZmMyZmZlYmM0M2RlY2IyNTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRmMGQxMzk5Mjg4YmY2ODVhZTgzOWJkNzhmYjhhNGMyYWVmZWRiM2U5MmVjMjRkNDQ1MjE3MGUyODFjODg1OWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYzMjY5MGMwMTk3Zjg1OWM4ZjNjZTY4YjczOWNhODVhNTE3MTlmMWY3ZDBkNjI5YzEyMzg1MDcxZWM0Y2RkNzQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_42c134a9afb94a04ac23a81056df745a",
+      "statement": "isDefinitelyUnattempted 是改绑孤儿消息的唯一安全前提（attempts 为 0 且无 attemptedGatewayEpoch），rebindUnattempted 仅对这种记录生效且要求一个明确的新目标。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/outbox/message-outbox.js#L194-L218",
+          "version": "repo-lines-v1:sha256:81d25ecdeed87136f4fc1f1b845cbd2b741f0e435bb5ccdc759cae7bee8e39dd:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlhMmFiODkwMDZiYjZiNGYyZjdmZjRmNTJlYTQ1OGEwOGJiOTdlYmZmM2QwOWE1ZDU0ZjllYTlkYTkzMjNiZTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmMGNkYjk3MmE3YmZiN2VkMjQ2ZjlmZjY3MjM4NWU1NWY0OTY4ZmMxMTA0M2RjNWI2ODRkNTFkZmEzMWRiY2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjMmVlOWY2NTI5YjM5ZjZiYzUxMWRiM2M3YjljYTEzZjZlYTY0ZjY3ODE3MGNjYTA3OTdiYTY1MmZlNWIxMTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZlOTM0ODczYjYyNzU2NjUxNGU1NThiYjExNjEwOTUyMDMyMWRiZjlhNTU4YzYwNTFhNGU5ZTJmOTA0ODVjN2UifQ"
+        },
+        {
+          "resource": "repo://public/js/outbox/outbox-recovery.js#L1-L6",
+          "version": "repo-lines-v1:sha256:31ad37e1d3e153b36985f39a825e45302a7773ef7e4db6100e8ec4dc998976cb:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZThhYjY1ODkyY2FhZDY5MTczYmFjNDczYTI1OTRmOTExMjE3YTVhMmE4ZGNmZjA2NmEyY2UyNDkzYmM2YzYzMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjVmYTg3MTc1OTM0YzIyMzI0OGYwYmJkODVhZTkzYzczOWQ1MDdhMWUxZjlhNzlkZWFhNjNiNDI2ZDM3NTEyMyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_1ed590c031f5493a8b5615caee31b78f",
+      "statement": "shouldSurfaceInOutboxView 额外捐一类记录：已绑定具体 threadId 但那个 thread 已不在的失败记录。不捐的话它既不匹配当前视图也不是 provisional 孤儿，永远不渲染，用户无从得知消息没发出去。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/outbox/outbox-recovery.js#L29-L59",
+          "version": "repo-lines-v1:sha256:195bdd7d2a43201522b186a977995bb4fc7d1630134879a78e60fd1b9506e1e0:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjViYTVmYTYwNGQ5MDc4ZGVhZmI3OWRlZmM3YmJkNjQ5OTdkNGE5NTY4NWVkMDI4MzUzYTg4MTg2ZmYxMzBjNGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAzZmJhYTM4NzQ1MmFiNTQ3ZGZkZDI0OGU2NTRkNTljNTRhM2M3ZTk5NzNjYzMzZTA1YmM1YTRhYTg0YTUxOTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c52e4f8fd90a49519fb1f560f8c052dc",
+      "statement": "outbox 存储层是以 clientRequestId 为 keyPath 的 IndexedDB 对象存储，所有操作包在事务里并对 error / abort / blocked 各自给出明确拒绝。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/outbox/indexeddb-outbox.js#L15-L60",
+          "version": "repo-lines-v1:sha256:4aff0323702baa4b4b3a3fc01e9aca96a86126c3a163a43def6f0f5cc299b415:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBhMzI0M2ZkZmZjMTUxNGM5OGYxZTRjYjViZGZmMWZlNzQ4NDM4M2YzMjNjOTU4MmY3Nzc4M2FkMDdiY2I0NGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIyZDExY2FmNDNlOTdlZjM2OWU2YmVlZDFhMjY4YmQwNTgzOGYyOWI5ZGQyNTRiZjY5YmE2NDg4NDE0NzIzNGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE3NTE0MjZhMTBhZDE0MjA4YjAzNGNlOTQ0ZDA3NGNlZTU2OGI4ZDY3ODAyMWFlZWYxYmEwMmM1Yzk1OTU2MmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI1ZGFhZDk0YWJlNGViOWM1NzU5MGZlOThkOGZmZjQ3NjQ3Yzk5MjQxOGM0ZDVlOTIyZTlhMDcyMjBkYTJmMTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e29abe602b91481699aa9d4f92e0b694",
+      "statement": "服务端对 user:message 做一批前置校验并各自给不可重试的错误码：空消息、附件非法、文本超 50000 字符、input parts 数量超 20、clientRequestId 格式不合法。",
+      "evidence": [
+        {
+          "resource": "repo://server.js#L2017-L2091",
+          "version": "repo-lines-v1:sha256:269449d36f3cf908abac835988a6ffbe481a3101b8d02d1f370625d642374e41:eyJzZWxlY3RlZExpbmVDb3VudCI6NzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZmOGRkNDEyMzBjNTdkMzhjMTNkMjZiMTBiMDcxNzAxMmMyNmViMmE2NDk4NDI2MzcxMDBhYzdjZmQwYjQ4NWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA4MjJlMzljMTVjNjdkMmYyZTA5NDI5ZTYyZGQyMTc2OWVmNGIwMTFlYTQwZDM4MDYyZDA0Njg1OGE3NTI4NDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk4OTAwNTllMGEwMzY5ZjZiNmU4YTYwZjI2ZTMyOWJhM2UyYTU0MDNkZDg5YjZjMjczMGE5NWUzMDZmNTBkZmIifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.5.2",
+    "at": "2026-09-22T08:36:26.702Z"
+  }
+}

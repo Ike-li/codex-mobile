@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:e509cbf7c183c246f5c7a328a2a65eea9fb3daded9817034e6e1a14c82aeac4e",
+  "claims": [
+    {
+      "id": "claim_b9916ae1a02843f2b4d46b619af55937",
+      "statement": "启动四步是 npm install、npm run setup、npm start、npm run qr，前提是 Node 不低于 20 与本机已装好并登录的 codex。",
+      "evidence": [
+        {
+          "resource": "repo://README.md#L30-L45",
+          "version": "repo-lines-v1:sha256:e2d4162b8220e7c7afbd7236c3f0d8e1bf6812bec1d2623a58db6877a717de68:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFiNjJkYzkyYjc3MzcxMmJjNDk5MWY0OGMyYTg0ODk5ZDNlMWJlZjNmNGIxOWE1YTAwZTRjMDViNWQ0NmMzYzAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImViZjIzZDRmYjVmMTdlM2YwMDI3MjY5ZTkwZDg0YTYzYzNiODE4MDQ1NmU0NWI2Y2ExNWEzMzY3MzBkZDc3MDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFhM2E2ZGY5MzMyZDhiNWFhMjMwMjJmNTg1ZTU3MDJjMWFmOGIyNDA5OTRmYjI1MzgyNDhjYjBhYzQ1YjI0MmEifQ"
+        },
+        {
+          "resource": "repo://package.json#L16-L24",
+          "version": "repo-lines-v1:sha256:fffb2b36a3b1ab034134e382b6ecc0f11aef32d097e46116ef9ae653147703c7:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOGZlYjRlMTY3OTllYTUwOWRhNDRmM2UyMTcwOGUwYzAxOTgzNjkzMGE5OTM0MDMwYzQxZjg5Zjg5NDYyZGQ3MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNThiNjcwZDgzMmFiMzY0OGMxNDc1YWYyYmVmY2E4MTZhOWZlMzEyNzExZmFmNDIxMzU2OWJkNjA0Yzk5MWRlZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTIyZGM4NzcwZDE0ODgzZWZkYmIzMTNhN2UyNmQyMGNiM2ZhNjViYjA0NGQ4MWI0OTU3M2ViN2IzODEyNzA0MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjE2OTc1YzNlYmQ1MmJlMTMzNDRlYjBkMzE0YjAxOTM4MTY5YTczMjBiZmY4Nzc5ZmQ5MTU1MTNlOGQwNjU4NyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_c015d46a8c764250a3fe2a40039854e1",
+      "statement": "运行时依赖只有五个（compression、dotenv、express、socket.io、web-push），前端无构建步骤。",
+      "evidence": [
+        {
+          "resource": "repo://package.json#L44-L50",
+          "version": "repo-lines-v1:sha256:22db16745f189e74abc795ba65a2c74d30fcbc3ada103b1d742f7e8d80cd5d66:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYmEzYjQ2OWQ5ZTA5NzU3MjI0NjY2NzM0YzllZjdiMjU0ZDg4NTM0ZjVkNWJiNzA5ODk2MDgwNWM1NTNkYzMwNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGQ1Y2QyZmI0ZjNkZjg4NDUxNTI1NWIzOTUyM2YyZjhiNTQ3MmJlZWE5ZjU2NmZmY2EyMDRkYjgwMjU2MTA0MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiN2NhMDMzYWUwYjAxOTQ1YTk5M2I0Mzg2NzNkMTgzNDk5MWJiY2RmN2UxZTdjYWY3YzMyNzRjN2M4Njc5ZDhiMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODViMDBkNjFlNDgyMDcyMTEwZGE3ODE4MDg1OWU1NDVkMWMyNGE1MmViZjcxNTgxYmQzZmE4YmQyZmMyOTQ1MiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_1e60fdb315aa4c029eeb3a50754412d8",
+      "statement": "npm run test:ci 是全量门禁的单一入口，而 npm run test:e2e 走 mock app-server 因此不消耗模型额度。",
+      "evidence": [
+        {
+          "resource": "repo://package.json#L26-L40",
+          "version": "repo-lines-v1:sha256:a9559351cedfbf29168b9be124d94ca5ef591a8a0fc4b6738cd4eb83b0f31569:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBmNTBlNzc2N2YzZmFhMTVjOTdkNzU0ZTVlZmQ2NDRlZjNiYmJlOGZhMDE2MjQ2NjE4ODI3MTliMDZkMDA2ODciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFlNTE5ZWFkYTY0MDQwNzdmZjE5MjU0YTBhM2JlZTQyNTU0ZGEyODc3NjIxYzYyMGY4NzQ4NmUxMWFlZDFlNTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ1MDE0MmQxYmUyOWMxZmFiZmM0YWI3ZDc5MmFlMjk5MmJkMjE5ZjMyNjNhZWMzMzVjMzFmY2ZlNDMyNTc3NGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdjYTAzM2FlMGIwMTk0NWE5OTNiNDM4NjczZDE4MzQ5OTFiYmNkZjdlMWU3Y2FmN2MzMjc0YzdjODY3OWQ4YjEifQ"
+        },
+        {
+          "resource": "repo://playwright.config.js#L41-L46",
+          "version": "repo-lines-v1:sha256:ccb36a124f9909fc973586f6783e88cbd4d5ee80408b219facc4a0d72af5bb86:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzE1YzBiMGRhMDAwMjI3YmIzZjIwZWQyMjcwNGI5MWQzZDc3OGVmYzNiMTNmNjRjMGM5YWZjNzM3MzYwYTA2NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGQ1Y2QyZmI0ZjNkZjg4NDUxNTI1NWIzOTUyM2YyZjhiNTQ3MmJlZWE5ZjU2NmZmY2EyMDRkYjgwMjU2MTA0MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTZkODdhYjE3ZWUwMGJiZTk0YTczZmNhYTRhZTY4YjMzZDg4ZDZmYzYyYjQ1MDE1Zjk3OTQxZDk4NmQ3YzI1NCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjEsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjZmNWI0MGIxNTg0NTdkMTc4NjRmMjE3OTA3ODZkZDVhMmVjZGI2NGI2NmE2NTFmNzg4ZDRlMjVjZDMzMDNkMiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_746bb5e9eb7b46278705440a8600088c",
+      "statement": "仓库顶层结构是 server.js 组装根、src/ 六个后端域、public/js/ 八个前端域加两个入口、.protocol/stable 协议基线、scripts/gates 五道门禁、test/ 四个组织目录、e2e/ 与 docs/TESTING.md。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/gates/check-import-boundaries.js#L9-L19",
+          "version": "repo-lines-v1:sha256:e589ebd42877a33bc873be4ea153b5e3ffe9f7019d299ddc820474ecc52f83e8:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjljY2Y1MTk1NTE1MmM3M2EyYzE2MzQwOGZhMDZkNDRiMzQ5NzAyYjBkYWEzMmY5NzNmZTQ0Y2Y2MWQ2ZTMxMjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ2YjE5N2UxZDBiMDI3MWY0YTg0YjUwOWYyMTAzODg4NTcwMzYyZGZkOWY3ZjkwZjRlYTQwYWYxZjBlY2ExNTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBiZWIxZTU1ZWRmNmJkYjA4NTIyMDY3OTU3MzdjNzI0MDYwYjZlN2QzMmMxZGEyMTE4ZDgwMWYwZDg4YjljMjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjlmNzI0MTZjZDQ2ODU1YzhiOGMxY2JhMmFhYzIzNDU4NTU4MzA4NmQwYjgyNDZkODExZWIzNWNjYzFkM2Q2NDYifQ"
+        },
+        {
+          "resource": "repo://test/README.md#L1-L12",
+          "version": "repo-lines-v1:sha256:e1031ce8bfb026fc7f8da2cda4a672a99b4309c68e84aaa6d0626acf17f50f5a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3YzZiNDc2MDQ4NTg2NjgwNDkwYjk3YWVhZmUzZjQ4MzQ3ZDNhN2Y3ZDA2ZjNjMmZlMGVkM2FmMTNmM2ZkNTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVmNDI5ZDAyMDAxOGFjOGYyZWUxNDViYzYwZmFmZGVmZjUwMWE0ZjM2YzM1MjViODhkMzNiMzAyODM2NzZkYzYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFiZmZlZTQ1ZDdjZjIzMjYzNjRmZjI1NjAwZjk5MDNiZmFmMmQyYzMxYjE2OWZhMjUzYmNiNjA1MTIyODRjMDIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ed61b02fd5564b4c9e9b023307fe81c0",
+      "statement": "项目分支固定为 master 与 dev，所有开发与文档改动在 dev 上开功能分支，且软件相关改动默认遵循 TDD。",
+      "evidence": [
+        {
+          "resource": "repo://CLAUDE.md#L5-L13",
+          "version": "repo-lines-v1:sha256:025c2a23e2457d9baa29a9846b5a202c5ca948431dd8565e492aa302b917cdd8:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDA5NzYyYTIyNWI1MmM1NzM4ZTcxZDRlOTYzNTE4NzhkOGQ3MjkxMDY0ODU3NDI1M2U1N2I2MDEzMDViN2EyMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYzQ0M2JiN2VlMmUyZmY4ZjExZDRjYzVlNmMwZTVjMTc3ODU5NWIzZTU2MGMzN2VkZDdlMGYzMjNlNWYyOTU4NSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjAwYjAxMGFmNGY2YTJkMGVlM2FkYTVhNjU1MmJlZDk1NzMxOThjOGVlOGQ3NDI0ODVhOTdlYTQ5ZmVlNjYzOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZWIxYmM1YmM0YTIzN2Y1NzhlNmFmNGE0MTVkMDY0N2Y5OTEwYjAzYjM2NGUxZTI3YzFmMWRiYWE3NDNkMDNiYSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_14cbe1d337c4436b834897513d4316c2",
+      "statement": "许可证是 AGPL-3.0-only，把修改版作为网络服务运行时要求向其用户提供修改后的源码。",
+      "evidence": [
+        {
+          "resource": "repo://README.md#L74-L76",
+          "version": "repo-lines-v1:sha256:9cc6cbbbc623740f706c5c1adf7ac29279655f336112d59a4981e0671ca7d211:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjZiNDg3NGU5ZTkyNWJiY2VmYmI0YjMzMDkzN2Q1MGYwNmYxYjA1NGUxOWMyNWE4YzUwYzhhMzNlYWE3OWNiYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiY2Q5YWJmNTdmMDc4YjhkMDE1ZDVhMzU2NmY0MTgwY2NjMzhiYmM5MWFlZjk0MTFlNWMwNjEzZGEyYjIwMWRiOSJ9"
+        },
+        {
+          "resource": "repo://package.json#L7-L7",
+          "version": "repo-lines-v1:sha256:264ff33cbfa6346053bf03f895ccef604c7ca2b0743cbd7d479a58681c2cb1fa:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjY0ZmYzM2NiZmE2MzQ2MDUzYmYwM2Y4OTVjY2VmNjA0YzdjYTJiMDc0M2NiZDdkNDc5YTU4NjgxYzJjYjFmYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjY0ZmYzM2NiZmE2MzQ2MDUzYmYwM2Y4OTVjY2VmNjA0YzdjYTJiMDc0M2NiZDdkNDc5YTU4NjgxYzJjYjFmYSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNTk3ZGUwYmVlYjc4NzA3NjY4MDRiMDRkMzg4NmM5ZDg0ZjI3NjY5Y2U0NWVjYWYwYWZmMjU0NjVjNjYyNWRiYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTlhMTQ0ZGI2NjZjNmIxODZiMzllN2FkMWNiYzIxOGQyOWUzZTM4OGRlNjFkMTlmYzEyOTM2YjBiMjE3NTM5NSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_00a54ea4a87d442880d2d93f94c8a681",
+      "statement": "doctor 的价值在于它用与 server 完全相同的配置加载路径自检，因此能看见配置文件放错位置或被环境变量压过这类故障。",
+      "evidence": [
+        {
+          "resource": "repo://README.md#L45-L46",
+          "version": "repo-lines-v1:sha256:10a3e06301109954de5f74eea1deab7fa7ea08de9fb14307ff64c7ed8b8000cf:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOWQ3YzI3ZDAwOWE0MzcyODgzZTFiYzRhOGI5ZTYyY2IzMjBkY2M4YzMzZDNkYTczZmUyMzFlZTQ4MTljYTU1ZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjBhNzU2NTJmNzBmOWM3Mzc0NjVlN2I4ZDlhM2UxNTg1NzhlM2YwMjg0ZmJmYmVhMWY1ZWY4OTk2NjVjNmI3ZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTRhZTc0ZGRlN2IzNjYwYjlmNDA1OTJjODBiMjE4N2ZjNWE1MTc4NjU4OTM3ZjM1YjdiZGVjMzdhZWNkNDVjNSJ9"
+        },
+        {
+          "resource": "repo://scripts/doctor.js#L1-L11",
+          "version": "repo-lines-v1:sha256:e373454d2eb051cea28f050a8d9054fdbafdea25a40c8807a0023f682e1b41ae:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlYzdmOTYwNmZjOWQwMTYxZmI2NDY5OGZmNGYyYjEyMzg0NjVlY2M3MDQwMWE0YzFiNWNmZTNjZDg5MTg3OTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVhYzJkZWM0ZWNlOGFkMzU4NmZhYzlmODQ2YjMwZWRjYzllNGI5ZWUwYjgwZjc5OTVkODQ3YmNlODEwYTA3YTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkwMjRlZDYyNmYwNTVkNWUxNDc2YzQ2ZmQ4MDlkMzZiZjhhZjRjNWRlYzdjNDc4ZDBiNDBjOWU3NTZiYzViMTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4c67d0095a8140b0b6b61cdc0cbbd127",
+      "statement": "默认只监听 127.0.0.1，要让手机连上必须显式改成 0.0.0.0 并配好来源白名单，而装机向导会问、不替用户决定。",
+      "evidence": [
+        {
+          "resource": "repo://README.md#L60-L64",
+          "version": "repo-lines-v1:sha256:a6e963eb10f474d4dd8566171a974b115713f884925acf56768c3cb3882da806:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNWQ4YzBmOGM5Y2NlOTcxMjlkODk0M2M1M2JhOGUxMjliNmJjNTU3NGQ5NmFhYzQ4M2U5NDc0MWM1YTQ3ZTZhNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzBiZjVjYzM1ZmI2YjY3ZmRmNDE0NGZhYzBiMjM4NmExNzU3ODM3MGY0MGNmMDVmYTU3ZGMwOTNjYWMwOGVhNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMTlmNDI2ZjJiZjAxMGJlOGRhZTMxMTQ5MjE4ZjM3MWQ0YjRmZjI5M2JiYWEzMTRkNTkwMTQxMzhhNzc2MWJiYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzc4NjUwZDg3NGE4Zjc0ZTcxZWFjODNlMTAyOWVkZDBkMGNmYTRkZGRiYjhhNGUwOWE4MTI3YTRlNzUxYTE3NiJ9"
+        },
+        {
+          "resource": "repo://scripts/setup.js#L96-L98",
+          "version": "repo-lines-v1:sha256:e0d5b917ed389d5d6901d85a156c4287768b5608e08963f2376488a938010363:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjFmMTUwN2IxODM1ZDEyNWY2YWUwMTUyZThjMmNiYzI0NDU3ZDc5OTgxYTk2YzFhN2VkMGQ1MTMzMTcyNjE4MyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTZiOWJjNGQ0NTBjYjFhMjg0ZmZjMTc1ZmJhZTQwMWQ1NmE2NDMzYWRjMzVlNmQzY2QzMjhiN2VlYzgyZDgzMCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjlmZWE4YWI3MDgwNWVhMTY3ZDE2MmQwNjFmNGUzZWViZTk5MzgwY2NkNWU2MGI2NjBlNGI3M2VmNGY2YTRkZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjU5ZGNkODg0MjNhNGYxNWJmN2ZhN2ZlNDIxMGVhYzE5NTI5ZjA5NDExZTRhZGQ0ZjE1ZDQ4ZjcwNWQ5YThjMSJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.5.2",
+    "at": "2026-09-22T08:36:26.702Z"
+  }
+}

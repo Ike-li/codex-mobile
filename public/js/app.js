@@ -3,40 +3,51 @@ import {
   eventMatchesTarget,
   outboxRequestMatchesView as requestMatchesView,
   withTarget,
-} from '/js/view-routing.js';
-import { clearCurrentThread, getCurrentThread, setCurrentThread } from '/js/thread-preferences.js';
-import { bufferRecoveryEvent, completeRecovery, createRecoveryState } from '/js/recovery-state.js';
-import { createMessageRequest, messageWirePayload } from '/js/message-request.js';
-import { createMessageOutbox } from '/js/message-outbox.js';
-import { createIndexedDbMessageStore } from '/js/indexeddb-outbox.js';
+} from '/js/ui/view-routing.js';
+import { clearCurrentThread, getCurrentThread, setCurrentThread } from '/js/session/thread-preferences.js';
+import { bufferRecoveryEvent, completeRecovery, createRecoveryState } from '/js/outbox/recovery-state.js';
+import { createMessageRequest, messageWirePayload } from '/js/compose/message-request.js';
+import { createMessageOutbox } from '/js/outbox/message-outbox.js';
+import { createIndexedDbMessageStore } from '/js/outbox/indexeddb-outbox.js';
 import {
   isDefinitelyUnattempted,
   isProvisionalInstanceOrphan,
+  outboxDeliveryLabel,
   requiresManualDisposal,
   shouldSurfaceInOutboxView,
-} from '/js/outbox-recovery.js';
-import { emitWithAck } from '/js/socket-ack.js';
+} from '/js/outbox/outbox-recovery.js';
+import { emitWithAck } from '/js/net/socket-ack.js';
 import {
   applyThreadStatus,
   mergeThreadList,
   threadStatusPresentation,
   needResolutionLabel,
   resolveThreadTitle,
-} from '/js/thread-status.js';
-import { resolveComposerPrimaryMode } from '/js/composer-mode.js';
-import { projectLabel } from '/js/project-label.js';
-import { compactPath, parentPath } from '/js/display-path.js';
-import { loadExpandedDirs, persistExpandedDirs, toggleExpandedDir } from '/js/drawer-dirs.js';
-import { renderMarkdown } from '/js/markdown.js';
-import { createTranscriptStream } from '/js/transcript-stream.js';
-import { commandCard, fileChangeCard } from '/js/tool-cards.js';
-import { resolveConnectionBanner, resolveInsecureTransportBanner } from '/js/connection-banner.js';
-import { formatRttChip, formatWorkspaceChangeBadge } from '/js/header-chrome.js';
-import { createConfirmController } from '/js/confirm-dialog.js';
-import { threadActionConfirm, threadActionErrorMessage } from '/js/thread-actions.js';
-import { summarizeTextChange } from '/js/file-diff-summary.js';
-import { summarizeTurnOutcome } from '/js/turn-outcome.js';
-import { diagnoseHealth, HEALTH_LAYERS } from '/js/health-diagnosis.js';
+  needsYouSessionLabel,
+} from '/js/session/thread-status.js';
+import { resolveComposerPrimaryMode } from '/js/compose/composer-mode.js';
+import { projectLabel } from '/js/session/project-label.js';
+import { compactPath } from '/js/files/display-path.js';
+import { loadExpandedDirs, persistExpandedDirs, toggleExpandedDir } from '/js/files/drawer-dirs.js';
+import { renderMarkdown } from '/js/render/markdown.js';
+import { createTranscriptStream } from '/js/render/transcript-stream.js';
+import { splitStreamingMarkdown } from '/js/render/markdown-stream.js';
+import { createLongPress } from '/js/ui/long-press.js';
+import { commandCard, fileChangeCard } from '/js/render/tool-cards.js';
+import { classifyAgentEvent, DEST } from '/js/render/event-presentation.js';
+import { activeLabel, displayCommand, groupSummary, workedForLabel, thoughtLabel } from '/js/render/agent-activity.js';
+import { resolveConnectionBanner, resolveInsecureTransportBanner } from '/js/net/connection-banner.js';
+import { formatRttChip, formatWorkspaceChangeBadge } from '/js/ui/header-chrome.js';
+import { contextFromTokenUsage, formatContextMeter } from '/js/session/token-usage.js';
+import { createConfirmController } from '/js/ui/confirm-dialog.js';
+import { readPreferences, shouldAnnounceMcpStatus } from '/js/ui/ui-preferences.js';
+import { mcpPanelHtml } from '/js/ui/mcp-panel.js';
+import { accountPanelHtml } from '/js/ui/account-panel.js';
+import { emptyLandingItems } from '/js/ui/empty-landing.js';
+import { bannerNeeds, waitingLabel } from '/js/session/needs-you-view.js';
+import { threadActionConfirm, threadActionErrorMessage } from '/js/session/thread-actions.js';
+import { summarizeTurnOutcome } from '/js/render/turn-outcome.js';
+import { diagnoseHealth, HEALTH_LAYERS } from '/js/net/health-diagnosis.js';
 
 const LAYER_LABELS = {
   browser: '这台设备的网络',
@@ -46,9 +57,9 @@ const LAYER_LABELS = {
   codex: 'codex 运行状态',
   upstream: '模型上游',
 };
-import { detectAtMentionQuery, applyAtMentionPick, mentionPartFromSearchHit } from '/js/at-mention.js';
-import { pickPastedImage, attachmentPreview } from '/js/attachments-ui.js';
-import { createWorkspacePanel } from '/js/workspace-panel.js';
+import { detectAtMentionQuery, applyAtMentionPick, mentionPartFromSearchHit } from '/js/compose/at-mention.js';
+import { pickPastedImage, attachmentPreview } from '/js/compose/attachments-ui.js';
+import { createWorkspacePanel } from '/js/files/workspace-panel.js';
 import {
   APPROVAL_OPTIONS,
   SANDBOX_OPTIONS,
@@ -57,13 +68,14 @@ import {
   effectiveComposerSettings,
   formatModelBadge,
   formatPermissionBadge,
-  formatComposerPermission,
+  permissionModeForSettings,
+  PERMISSION_PRESETS,
   formatComposerModel,
   formatComposerEffort,
+  composerEffortVisible,
   GRANULAR_APPROVAL_KEYS,
   formatComposerMode,
   normalizeCollaborationMode,
-  parseCollaborationModeSlash,
   loadCliSettings,
   modelAcceptsImages,
   reasoningOptionsForModel,
@@ -72,12 +84,15 @@ import {
   sanitizeTurnOverrides,
   serviceTiersForModel,
   visibleModels,
-} from '/js/cli-settings.js';
-import { icon, hydrateIcons } from '/js/icons.js';
+} from '/js/util/cli-settings.js';
+import { resolveSlashCommand, slashPickerItems } from '/js/compose/slash-commands.js';
+import { icon, hydrateIcons } from '/js/ui/icons.js';
 // 沿用 escHtml 这个本地名字：94 处调用点原样不动，改名不是这次搬迁的目的。
-import { escapeHtml as escHtml } from '/js/html-escape.js';
-import { renderAnsi } from '/js/ansi-html.js';
-import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/client-encoding.js';
+import { escapeHtml as escHtml } from '/js/util/html-escape.js';
+import { renderAnsi } from '/js/render/ansi-html.js';
+import { createDeviceToken, urlBase64ToUint8Array } from '/js/util/client-encoding.js';
+import { createUnreadTracker } from '/js/session/unread-tracker.js';
+import { installClientErrorReporting } from '/js/net/client-log.js';
 
 (function() {
   const $ = id => document.getElementById(id);
@@ -89,10 +104,11 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   const attachBtn = $('attach-btn');
   const fileInput = $('file-input');
   const attachTray = $('attach-tray');
-  const statusDot = $('status-dot');
   const stateLabel = $('state-label');
   const sessionMetaEl = $('session-meta');
   const statusDetail = $('status-detail');
+  const contextMeterEl = $('context-meter');
+  const contextMeterDetailEl = $('context-meter-detail');
   const drawerOverlay = $('drawer-overlay');
   const drawer = $('drawer');
 
@@ -126,6 +142,9 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   let atMentionReqId = 0;
   const deviceIdDisplay = $('device-id-display');
 
+  // 本机 UI 偏好。只影响这台设备的显示，不进会话配置。读失败一律回落默认值。
+  let uiPrefs = readPreferences(localStorage);
+
   // Device token
   let deviceToken = localStorage.getItem('codex_device_token');
   if (!deviceToken) {
@@ -150,8 +169,49 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   let busy = false;
   let interruptPending = false;
   let streamingEl = null;
+  // 活动尾部容器，永远是 streamingEl 的最后一个子节点。已定型的内容插在它
+  // 前面、直接挂在气泡下，现有的 .codex .bubble.md p 之类选择器因此原样生效。
+  let streamingActiveEl = null;
+  let streamingStableLength = 0;
+  // 光标往里钻到哪一层为止。只对**容器**下潜：到 <p>/<li>/<code> 就停，
+  // 再往里会插进 <strong> 这类行内元素——`<p>写了 <strong>粗</strong> 还有后半句</p>
+  // 的 lastElementChild 是 strong，光标会跑到后半句文字的前面去。
+  const CARET_CONTAINERS = new Set(['DIV', 'UL', 'OL', 'PRE', 'BLOCKQUOTE', 'TABLE', 'TBODY']);
+  function caretHost(root) {
+    let host = root;
+    while (host.lastElementChild && CARET_CONTAINERS.has(host.tagName)) {
+      host = host.lastElementChild;
+    }
+    return host;
+  }
   const TRANSCRIPT_FOLLOW_DISTANCE_PX = 80;
   let followTranscript = true;
+  // 必须和 followTranscript 一起声明在这里，不能挪到 followBottomSmooth 旁边：
+  // scrollBottom 会读它，而 scrollBottom 在初始化阶段就被调用（视口同步那一处），
+  // 声明写在后面会落进 let 的暂时性死区，整个前端在启动时就抛 ReferenceError。
+  let followRaf = null;
+
+  // 会话行的长按手势。绑在**容器**上而不是每个条目上：会话列表会因状态推送、
+  // turn 收尾等整体重建（renderDrawerProjects 重铺 innerHTML），监听挂在条目上
+  // 时，重建一旦撞进长按那 500ms，手势就随旧元素被丢掉——表现为「长按没反应」，
+  // 而且是随机的。容器是 index.html 里的静态节点。
+  //
+  // 声明放在这里的原因同 followRaf：renderDrawerProjects 要读 rowLongPress.pending，
+  // 而它在初始化阶段就会被调用，声明写在后面会落进暂时性死区。
+  const sessionRowThreads = new WeakMap();
+  let pressedThread = null;
+  // 未读是第三条注意力轴：与「需要你」（答过才清）和服务告警（时效窗退场）
+  // 清除条件完全不同，所以用一个独立的指示器，不挤进 thread-status-dot。
+  const unread = createUnreadTracker({
+    emit: (event, payload) => socket.emit(event, payload),
+    onChange: () => renderSessionList(),
+  });
+
+  const rowLongPress = createLongPress({
+    onLongPress: () => {
+      if (pressedThread) openThreadMenu(pressedThread);
+    },
+  });
   let activeAssistantTurnEl = null;
   const transcriptStream = createTranscriptStream({
     onStart() {
@@ -161,19 +221,43 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
       bubble.className = 'bubble md';
       bubble.dataset.streaming = 'true';
       streamingEl = bubble;
+      streamingActiveEl = document.createElement('div');
+      streamingActiveEl.className = 'md-active';
+      bubble.appendChild(streamingActiveEl);
+      streamingStableLength = 0;
       appendRaw(bubble, 'codex');
       scrollBottom();
     },
     onText(text) {
       if (!streamingEl) return;
-      streamingEl.textContent = text;
-      scrollBottom();
+      const { stable, active } = splitStreamingMarkdown(text);
+      if (stable.length > streamingStableLength) {
+        // 只渲染**新定型**的那一段。切点落在块边界上，所以单独渲染增量和整体
+        // 渲染等价；这也是不让成本随已生成长度累积的关键——否则每 40ms 都要把
+        // 整段重新 parse + sanitize + highlight 一遍。
+        const delta = stable.slice(streamingStableLength);
+        streamingActiveEl.insertAdjacentHTML('beforebegin', renderMarkdown(delta));
+        streamingStableLength = stable.length;
+      }
+      streamingActiveEl.innerHTML = renderMarkdown(active);
+      const caret = document.createElement('span');
+      caret.className = 'stream-caret';
+      caretHost(streamingActiveEl).appendChild(caret);
+      followBottomSmooth();
     },
     onFinish(text) {
       if (!streamingEl) return;
+      // 收尾仍整体重渲染一次。增量拼接对跨块结构（链接引用定义等）不保证和
+      // 整体解析等价，这一次重渲染是正确性兜底；此刻屏幕上已经是渲染态，
+      // 不再有过去那种源码→富文本的突变。
       streamingEl.innerHTML = renderMarkdown(text);
+      // 留住 markdown 原文：复制按钮要给的是源码，不是渲染完的纯文本——
+      // 从 textContent 拿回来的东西，标题、列表、代码围栏全没了。
+      streamingEl.dataset.raw = text;
       delete streamingEl.dataset.streaming;
       streamingEl = null;
+      streamingActiveEl = null;
+      streamingStableLength = 0;
       scrollBottom();
     },
   });
@@ -182,7 +266,6 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   let sessionsByCwd = new Map();
   let expandedDirs = new Set();
   let showArchivedThreads = false;
-  let features = { labs: false };
   let pendingToolCards = {}; // toolUseId -> element
   let pendingApprovalCards = {}; // approvalId -> element
   let needsYouRevision = 0;
@@ -217,7 +300,10 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   }
 
   function rememberCurrentThread(threadId) {
+    const leaving = currentSessionId;
+    if (leaving && leaving !== threadId) unread.markSeen(leaving);
     currentSessionId = typeof threadId === 'string' && threadId ? threadId : null;
+    if (currentSessionId) unread.markEntered(currentSessionId);
     if (currentSessionId) setCurrentThread(localStorage, serverCwd, currentSessionId);
     else clearCurrentThread(localStorage, serverCwd);
   }
@@ -614,12 +700,16 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   window.visualViewport?.addEventListener('resize', syncVisualViewport);
   window.visualViewport?.addEventListener('scroll', syncVisualViewport);
 
+  installClientErrorReporting({ socket });
+
   socket.on('connect', () => {
     setConnectionPhase('online');
     lastConnectErrorNotice = '';
     renderConnectionState();
     requestCatchUp();
     startRttMonitor();
+    // 全量归并：离线期攒的位点靠这一趟推上去，别的设备的位点靠它合并下来。
+    socket.emit('read:sync', unread.snapshot(), ack => { if (ack?.ok) unread.hydrate(ack.state); });
   });
 
   socket.on('disconnect', () => {
@@ -659,7 +749,12 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     else socket.connect();
   });
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState !== 'visible') return;
+    // 切后台用 markSeen 而**不是** markEntered：用户可能刚长按标了「稍后再看」
+    // 就切走，那一笔不能被这一下当场清掉。
+    if (document.visibilityState !== 'visible') {
+      if (currentSessionId) unread.markSeen(currentSessionId);
+      return;
+    }
     paintConnectionBanner();
     if (!socket.connected) socket.connect();
   });
@@ -693,21 +788,94 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     if (isEmpty) {
       followTranscript = true;
       jumpToLatestBtn.hidden = true;
+      renderEmptyLanding();
     }
   }
 
+  function renderEmptyLanding() {
+    const root = $('empty-actions');
+    if (!root) return;
+    const lastThread = (appThreads || []).find(item => item?.id) || null;
+    const items = emptyLandingItems({
+      lastThread,
+      changedCount: workspaceChanged,
+      pendingNeeds: [...needsYou.values()].filter(need => need.state === 'pending'),
+    });
+    root.innerHTML = items.map(item => {
+      if (item.action === 'approvals') {
+        return `<button type="button" class="suggestion-card" data-empty-action="approvals" data-need-id="${escHtml(item.needId)}" data-thread-id="${escHtml(item.threadId)}">
+          <span class="suggestion-icon">${icon('hand')}</span>
+          <span class="suggestion-text">${escHtml(item.label)}</span>
+        </button>`;
+      }
+      if (item.action === 'continue') {
+        const sub = item.title ? `<span class="suggestion-text-sub">${escHtml(item.title)}</span>` : '';
+        return `<button type="button" class="suggestion-card" data-empty-action="continue" data-thread-id="${escHtml(item.threadId)}" data-cwd="${escHtml(item.cwd)}">
+          <span class="suggestion-icon">${icon('chat')}</span>
+          <span class="suggestion-text">${escHtml(item.label)}${sub}</span>
+        </button>`;
+      }
+      return `<button type="button" class="suggestion-card" data-empty-action="changes">
+        <span class="suggestion-icon">${icon('notepad')}</span>
+        <span class="suggestion-text">${escHtml(item.label)}</span>
+      </button>`;
+    }).join('');
+    root.querySelectorAll('[data-empty-action="continue"]').forEach(btn => {
+      btn.onclick = () => {
+        const thread = (appThreads || []).find(item => item.id === btn.dataset.threadId);
+        if (!thread) return;
+        socket.emit('thread:select', { threadId: thread.id, cwd: thread.cwd, title: thread.title }, ack => {
+          if (!ack?.ok) {
+            appendSystem(ack?.error || '无法打开会话', true);
+            return;
+          }
+          applyTargetAck(ack);
+          clearMessages();
+          loadNativeThreadHistory(thread);
+          renderDrawerProjects();
+        });
+      };
+    });
+    root.querySelectorAll('[data-empty-action="changes"]').forEach(btn => {
+      btn.onclick = () => workspacePanel.open('changes');
+    });
+    root.querySelectorAll('[data-empty-action="approvals"]').forEach(btn => {
+      btn.onclick = () => openNeed(needsYou.get(btn.dataset.needId));
+    });
+    // 这颗按钮的出现与消失直接改变横幅该不该出现，落地页一重绘就得重算横幅。
+    renderNeedsYouPanel();
+  }
+
+  let workspaceChanged = 0;
   const storedCliSettings = loadCliSettings(localStorage);
   let selectedModel = storedCliSettings.model || '';
   let selectedReasoning = storedCliSettings.effort || '';
   let selectedServiceTier = storedCliSettings.serviceTier || '';
   let selectedApproval = storedCliSettings.approvalPolicy || '';
   // null = 未启用细粒度，走三个字符串档；对象 = 五个开关整体替换 approvalPolicy。
-  let granularApproval = null;
+  let granularApproval = storedCliSettings.approvalPolicy?.granular || null;
+  let selectedReviewer = storedCliSettings.approvalsReviewer || 'user';
+  let selectedPermission = permissionModeForSettings(storedCliSettings);
+  let settingsCapabilities = null;
+  let permissionSelectionPending = true;
+  let permissionThreadId = null;
+  const permissionOptions = [
+    { id: 'ask', title: '请求批准', desc: '访问工作区外文件或网络时向你询问', iconName: 'hand' },
+    { id: 'auto-review', title: '帮我批准', desc: '由自动审查评估并批准或拒绝请求', iconName: 'shield' },
+    { id: 'full-access', title: '完全访问', desc: '允许访问本机文件和网络，无需逐次批准', iconName: 'warning' },
+    { id: 'host', title: '跟随主机配置', desc: '下一轮重新读取当前项目的主机权限配置', iconName: 'refresh' },
+  ];
   // 本轮的客观素材：聚合 diff 与已结束的命令。turn 结束时汇总成验收摘要后清空。
   let turnDiff = '';
   let turnCommands = [];
+  // 本轮的工具活动行：收尾时要把连续的几行折进同一个 <details>，并算出「用时 N 秒」。
+  // 只存元素——归并摘要需要的 type/count/label 都挂在元素的 dataset 上，
+  // 另存一份平行数组只会多一个会和 DOM 走神的真相源。
+  let turnActivityEls = [];
+  let turnStartedAt = 0;
   let selectedSandbox = storedCliSettings.sandbox || '';
-  let selectedMode = storedCliSettings.collaborationMode || '';
+  // 历史本地 Plan 选择不代表上游已应用；只接受本次连接的确认通知。
+  let selectedMode = '';
   let availableModels = [];
 
   const miInput = $('model-input');
@@ -742,6 +910,13 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
       sandbox: selectedSandbox,
       serviceTier: selectedServiceTier,
       collaborationMode: selectedMode,
+      permission: selectedPermission === 'custom'
+        ? { mode: 'custom', custom: {
+          approvalPolicy: granularApproval ? { granular: granularApproval } : selectedApproval || sessionStatus?.approvalPolicy || 'on-request',
+          approvalsReviewer: selectedReviewer,
+          sandbox: selectedSandbox || sessionStatus?.sandbox || 'workspace-write',
+        } }
+        : { mode: selectedPermission },
     });
   }
 
@@ -771,25 +946,41 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     if (permSelect) permSelect.value = selectedApproval;
   }
 
-  function applyCollaborationMode(mode) {
+  function adoptEffectivePermission(applied) {
+    const sandbox = { readOnly: 'read-only', workspaceWrite: 'workspace-write', dangerFullAccess: 'danger-full-access' }[applied?.sandboxPolicy?.type];
+    if (!sandbox || !applied.approvalPolicy) return;
+    selectedApproval = applied.approvalPolicy;
+    granularApproval = applied.approvalPolicy?.granular || null;
+    selectedReviewer = applied.approvalsReviewer || 'user';
+    selectedSandbox = sandbox;
+    selectedPermission = applied.source === 'host' ? 'host' : permissionModeForSettings({
+      approvalPolicy: selectedApproval, approvalsReviewer: selectedReviewer, sandbox,
+    });
+  }
+
+  async function applyCollaborationMode(mode) {
     const next = normalizeCollaborationMode(mode);
-    if (!next) return;
-    selectedMode = next;
-    persistComposerSettings();
-    renderCliSettingsPopovers();
-    if (!isTransportConnected()) return;
-    socket.emit('thread:collaborationMode', withTarget({
+    if (!next) return false;
+    if (!settingsCapabilities?.available?.collaborationModes?.includes(next)) {
+      appendSystem('当前连接不支持切换此会话模式', true);
+      return false;
+    }
+    if (next === selectedMode || (next === 'default' && !selectedMode)) return true;
+    if (!isTransportConnected()) return false;
+    return new Promise(resolve => socket.timeout(5000).emit('thread:collaborationMode', withTarget({
       mode: next,
       cwd: serverCwd,
-    }, viewTarget()), ack => {
-      if (!ack?.ok) {
+    }, viewTarget()), (error, ack) => {
+      if (error || !ack?.ok || !ack.applied) {
         appendSystem(ack?.error || '切换会话模式失败', true);
+        resolve(false);
         return;
       }
       if (ack.mode) selectedMode = ack.mode;
       persistComposerSettings();
       renderCliSettingsPopovers();
-    });
+      resolve(true);
+    }));
   }
 
   function popoverIconHtml(item) {
@@ -802,20 +993,46 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   function renderPopoverItems(container, items, dataAttr, selectedId) {
     if (!container) return;
     container.innerHTML = items.map(item => `
-      <div class="popover-item${item.id === selectedId ? ' selected' : ''}" data-${dataAttr}="${escHtml(item.id)}">
+      <button type="button" class="popover-item${item.id === selectedId ? ' selected' : ''}" data-${dataAttr}="${escHtml(item.id)}" ${item.disabled ? 'disabled' : ''}>
         <span class="popover-item-icon">${popoverIconHtml(item)}</span>
         <div class="popover-item-details">
           <span class="popover-item-title">${escHtml(item.title)}</span>
           ${item.desc ? `<span class="popover-item-desc">${escHtml(item.desc)}</span>` : ''}
         </div>
         <span class="popover-item-check">✓</span>
-      </div>
+      </button>
     `).join('');
   }
 
   function renderCliSettingsPopovers() {
     const modelRecord = currentModelRecord();
     const effective = effectiveTurnSettings();
+    renderPopoverItems($('permission-list'), permissionOptions.map(item => {
+      const capability = settingsCapabilities?.available?.permissionModes?.find(mode => mode.id === item.id);
+      return { ...item, disabled: !capability?.enabled, desc: capability && !capability.enabled ? capability.reason : item.desc };
+    }), 'permission', selectedPermission);
+    renderPopoverItems($('reviewer-list'), [
+      { id: 'user', title: '由我审批' }, { id: 'auto_review', title: '自动审查' },
+    ], 'reviewer', selectedReviewer);
+    const applied = sessionStatus?.effectivePermissions;
+    const requested = buildPermissionPreview();
+    $('permission-state').textContent = selectedPermission === 'host' && applied?.source === 'host'
+      ? '主机配置已应用；下一轮重新读取'
+      : applied && requested === JSON.stringify({
+      approvalPolicy: applied.approvalPolicy, approvalsReviewer: applied.approvalsReviewer,
+      sandbox: applied.sandboxPolicy?.type,
+    }) ? '当前已生效' : '所选设置将在下一轮生效';
+    const sandboxId = {
+      readOnly: 'read-only',
+      workspaceWrite: 'workspace-write',
+      dangerFullAccess: 'danger-full-access',
+    }[applied?.sandboxPolicy?.type] || '';
+    $('permission-effective').textContent = applied
+      ? formatPermissionBadge({
+        approvalPolicy: typeof applied.approvalPolicy === 'string' ? applied.approvalPolicy : '',
+        sandbox: sandboxId,
+      })
+      : '等待当前会话返回配置';
     syncAttachAffordance(modelRecord);
     renderPopoverItems($('approval-list'), APPROVAL_OPTIONS, 'approval', effective.approvalPolicy);
     renderPopoverItems($('sandbox-list'), SANDBOX_OPTIONS, 'sandbox', effective.sandbox);
@@ -869,20 +1086,15 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
         effective.serviceTier,
       );
     }
-    const bypassList = $('bypass-list');
-    if (bypassList) {
-      const active = selectedApproval === 'never' && selectedSandbox === 'danger-full-access';
-      bypassList.innerHTML = `
-        <div class="popover-item${active ? ' selected' : ''}" data-bypass="1">
-          <span class="popover-item-icon">${icon('skull')}</span>
-          <div class="popover-item-details">
-            <span class="popover-item-title">绕过批准和沙箱</span>
-            <span class="popover-item-desc">对应 --dangerously-bypass-approvals-and-sandbox</span>
-          </div>
-          <span class="popover-item-check">✓</span>
-        </div>`;
-    }
+    const customEnabled = settingsCapabilities?.available?.permissionModes?.find(mode => mode.id === 'custom')?.enabled;
+    for (const button of $('settings-advanced').querySelectorAll('button')) button.disabled = !customEnabled;
     updateFloatingBadges();
+  }
+
+  function buildPermissionPreview() {
+    const current = currentTurnSettings();
+    return JSON.stringify({ approvalPolicy: current.approvalPolicy, approvalsReviewer: current.approvalsReviewer,
+      sandbox: { 'read-only': 'readOnly', 'workspace-write': 'workspaceWrite', 'danger-full-access': 'dangerFullAccess' }[current.sandbox] });
   }
 
   // 模型不收图片就把入口禁掉并说明原因——让用户选完照片、上传完再失败，是最差的顺序。
@@ -907,6 +1119,13 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   function loadComposerModels() {
     renderCliSettingsPopovers();
     if (!socket.connected) return;
+    const requestedCwd = serverCwd;
+    settingsCapabilities = null;
+    socket.emit('session-settings:read', { cwd: requestedCwd }, ack => {
+      if (serverCwd !== requestedCwd) return;
+      settingsCapabilities = ack?.ok ? ack : null;
+      renderCliSettingsPopovers();
+    });
     socket.emit('models:read', { cwd: serverCwd }, ack => {
       if (!ack?.ok) return;
       availableModels = ack.models || [];
@@ -924,26 +1143,27 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   function updateFloatingBadges() {
     const permTextEl = $('perm-trigger-text');
     if (permTextEl) {
-      permTextEl.textContent = formatComposerPermission({
-        approvalPolicy: selectedApproval || sessionStatus?.approvalPolicy || '',
-        sandbox: selectedSandbox || sessionStatus?.sandbox || '',
-      });
+      permTextEl.textContent = permissionOptions.find(item => item.id === selectedPermission)?.title || '自定义';
     }
 
     const modelTextEl = $('model-trigger-text');
     const record = currentModelRecord();
-    if (modelTextEl) {
-      modelTextEl.textContent = formatComposerModel({
-        model: displayModelId(),
-        displayName: record.displayName,
-      }) || '模型';
-    }
+    const modelLabel = formatComposerModel({
+      model: displayModelId(),
+      displayName: record.displayName,
+    });
+    if (modelTextEl) modelTextEl.textContent = modelLabel;
+    const modelWrap = $('model-trigger');
+    if (modelWrap) modelWrap.hidden = !modelLabel;
+    const permSep = $('perm-leading-sep');
+    const modeVisible = normalizeCollaborationMode(selectedMode) === 'plan';
+    if (permSep) permSep.hidden = !modelLabel && !modeVisible;
 
     const effortText = formatComposerEffort(selectedReasoning);
     const effortWrap = $('effort-trigger');
     const effortTextEl = $('effort-trigger-text');
     if (effortTextEl) effortTextEl.textContent = effortText;
-    if (effortWrap) effortWrap.hidden = !effortText;
+    if (effortWrap) effortWrap.hidden = !composerEffortVisible(selectedReasoning, record);
 
     const modeWrap = $('mode-trigger');
     const modeTextEl = $('mode-trigger-text');
@@ -954,7 +1174,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     const defaults = $('composer-defaults');
     if (defaults) {
       defaults.title = [
-        formatComposerModel({ model: displayModelId(), displayName: record.displayName }) || '模型',
+        formatComposerModel({ model: displayModelId(), displayName: record.displayName }),
         formatPermissionBadge({
           approvalPolicy: selectedApproval || sessionStatus?.approvalPolicy || '',
           sandbox: selectedSandbox || sessionStatus?.sandbox || '',
@@ -991,10 +1211,43 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     if (event.target === sessionSettings) closeSessionSettings();
   });
 
+  $('permission-list').addEventListener('click', async event => {
+    const item = event.target.closest('[data-permission]');
+    if (!item || item.disabled) return;
+    const mode = item.dataset.permission;
+    if (mode === 'full-access' && selectedPermission !== mode
+      // danger: true 不能省——这是本应用权限最大的一次确认，没有它 OK 按钮是黑色
+      // 实心主按钮，视觉上最突出、在鼓励点击，和「取消」的层级正好反了。
+      && !await confirmDialog.confirm({ title: '允许完全访问？', body: '此会话可以访问本机文件和网络，操作无需逐次批准。', confirmText: '允许完全访问', danger: true })) return;
+    const capability = settingsCapabilities?.available?.permissionModes?.find(option => option.id === mode);
+    if (!capability?.enabled) return;
+    selectedPermission = mode;
+    permissionSelectionPending = true;
+    const preset = PERMISSION_PRESETS[mode];
+    selectedApproval = preset?.approvalPolicy || '';
+    selectedSandbox = preset?.sandbox || '';
+    selectedReviewer = preset?.approvalsReviewer || 'user';
+    granularApproval = null;
+    persistComposerSettings();
+    renderCliSettingsPopovers();
+    reportPolicyChange(permissionOptions.find(option => option.id === mode)?.title);
+  });
+  $('reviewer-list').addEventListener('click', event => {
+    const item = event.target.closest('[data-reviewer]');
+    if (!item || item.disabled) return;
+    selectedPermission = 'custom';
+    permissionSelectionPending = true;
+    selectedReviewer = item.dataset.reviewer;
+    persistComposerSettings();
+    renderCliSettingsPopovers();
+  });
   $('approval-list')?.addEventListener('click', event => {
     const item = event.target.closest('[data-approval]');
     if (!item) return;
     selectedApproval = item.dataset.approval;
+    permissionSelectionPending = true;
+    selectedPermission = 'custom';
+    granularApproval = null;
     persistComposerSettings();
     renderCliSettingsPopovers();
   });
@@ -1002,13 +1255,8 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     const item = event.target.closest('[data-sandbox]');
     if (!item) return;
     selectedSandbox = item.dataset.sandbox;
-    persistComposerSettings();
-    renderCliSettingsPopovers();
-  });
-  $('bypass-list')?.addEventListener('click', event => {
-    if (!event.target.closest('[data-bypass]')) return;
-    selectedApproval = 'never';
-    selectedSandbox = 'danger-full-access';
+    permissionSelectionPending = true;
+    selectedPermission = 'custom';
     persistComposerSettings();
     renderCliSettingsPopovers();
   });
@@ -1016,6 +1264,8 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     const item = event.target.closest('[data-granular]');
     if (!item) return;
     const key = item.dataset.granular;
+    permissionSelectionPending = true;
+    selectedPermission = 'custom';
     // 第一次点开任意一项就进入细粒度模式；全部关掉则退回三个字符串档，不留一个五项全 false
     // 的空壳——那等于把审批全关，而用户以为自己只是取消了勾选。
     const next = { ...(granularApproval || {}) };
@@ -1024,16 +1274,6 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     persistComposerSettings();
     renderCliSettingsPopovers();
     reportPolicyChange(granularApproval ? '细粒度审批' : '审批档');
-  });
-  $('approval-reset')?.addEventListener('click', () => {
-    // 协议里策略覆盖的语义是 for this turn and subsequent turns，会一直继承。没有这个入口，
-    // 为一个任务临时调松之后所有任务都是松的，而用户不会察觉。
-    selectedApproval = '';
-    selectedSandbox = '';
-    granularApproval = null;
-    persistComposerSettings();
-    renderCliSettingsPopovers();
-    reportPolicyChange('恢复宿主机默认');
   });
   $('model-list')?.addEventListener('click', event => {
     const item = event.target.closest('[data-model]');
@@ -1066,6 +1306,61 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
 
   // Redesign - Slash Autocomplete trigger & control
   const slashPopup = $('slash-popup');
+
+  function bindSlashPickerItems() {
+    slashPopup.querySelectorAll('.slash-item').forEach(item => {
+      item.onclick = () => {
+        hideSlashPopup();
+        // skill 走结构化输入，绝不能走 sendMessage：那等于把 "/archify" 当一句话发给
+        // 模型。实测过这条路的后果——模型会照着字面「扮演」执行，回一句「已压缩上下文」
+        // 而服务端一个动作都没有，静默的假成功比报错更难发现。
+        if (item.dataset.kind === 'skill') {
+          addInputPart({ kind: 'skill', name: item.dataset.skillName, path: item.dataset.skillPath });
+          inputEl.value = '';
+          inputEl.style.height = 'auto';
+          inputEl.focus();
+          return;
+        }
+        // 内置命令：点条目 = 提交这条命令。分发只留 sendMessage 一份，免得 popup 和手打
+        // 命令走出两套行为——旧代码就是这么漂出 bug 的。
+        inputEl.value = item.dataset.cmd;
+        sendMessage();
+      };
+    });
+  }
+
+  // 挑选层里 skill 那一段的数据源。codex 不上报 `/` 命令表（内置那几条只能写死），
+  // 但 skill 给得很足：skills/list 能拉、skills/changed 会推，所以这一段是自动跟上游的。
+  let availableSkills = [];
+  function refreshAvailableSkills() {
+    socket.emit('skills:read', { cwd: serverCwd }, ack => {
+      if (!ack?.ok) return;
+      const next = (ack.entries || [])
+        .flatMap(entry => entry.skills || [])
+        .filter(skill => skill?.enabled === true);
+      availableSkills = next;
+      renderSlashPopup();
+    });
+  }
+
+  function renderSlashPopup() {
+    slashPopup.innerHTML = slashPickerItems({ skills: availableSkills }).map(item => `
+      <div class="slash-item" data-cmd="${escHtml(item.cmd)}" data-kind="${escHtml(item.kind)}"${
+  item.kind === 'skill'
+    ? ` data-skill-name="${escHtml(item.name)}" data-skill-path="${escHtml(item.path)}"`
+    : ''}>
+        <span class="slash-icon">${icon(item.iconName)}</span>
+        <div class="slash-details">
+          <span class="slash-name">${escHtml(item.cmd)}</span>
+          <span class="slash-desc">${escHtml(item.desc)}</span>
+        </div>
+      </div>
+    `).join('');
+    hydrateIcons(slashPopup);
+    bindSlashPickerItems();
+  }
+  renderSlashPopup();
+
   inputEl.addEventListener('input', () => {
     const val = inputEl.value;
     if (val === '/') {
@@ -1149,40 +1444,20 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     applyComposerMode();
   });
 
-  document.querySelectorAll('.slash-item').forEach(item => {
-    item.onclick = () => {
-      const cmd = item.dataset.cmd;
-      hideSlashPopup();
-      const modeSlash = parseCollaborationModeSlash(cmd);
-      if (modeSlash) {
-        applyCollaborationMode(modeSlash.mode);
-        inputEl.value = '';
-        applyComposerMode();
-        return;
-      }
-      inputEl.value = cmd + ' ';
-      inputEl.focus();
-      inputEl.style.height = 'auto';
-      inputEl.style.height = Math.min(inputEl.scrollHeight, 140) + 'px';
-    };
-  });
-
   // Hide popup on click outside
   document.addEventListener('click', e => {
+    // 发送钮点下去可能先打开挑选层，同一记点击再冒泡到这里。
+    // 把发送/停止当成「外面」会刚打开就关掉，挑选层等于没出现。
+    if (e.target.closest('#send-btn, #followup-btn, #send-btn-container')) return;
     if (!slashPopup.contains(e.target) && e.target !== inputEl) {
       hideSlashPopup();
     }
     if (atMentionPopup && !atMentionPopup.contains(e.target) && e.target !== inputEl) {
       hideAtMentionPopup();
     }
-  });
-
-  // Empty state Suggestion cards
-  document.querySelectorAll('.suggestion-card').forEach(card => {
-    card.onclick = () => {
-      inputEl.value = card.dataset.prompt || card.dataset.cmd || '';
-      sendMessage();
-    };
+    // 用量气泡同理。环自己的 onclick 负责 toggle，冒泡到这里时 target 还是环，
+    // contains 为真所以不会被当场关掉。
+    if (!contextMeterEl.contains(e.target)) setContextDetailOpen(false);
   });
 
   function processAgentEvent(ev) {
@@ -1208,12 +1483,18 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     if (ev.type === 'text_delta' || ev.type === 'tool_use' || ev.type === 'tool_output_delta') hideTyping();
     if (ev.type === 'result' || ev.type === 'error') hideTyping();
 
+    const presentation = classifyAgentEvent(ev, uiPrefs);
+    if (presentation.dest === DEST.DEBUG) return;
+
     switch (ev.type) {
       case 'device_status':
         handleDeviceStatus(ev.payload);
         break;
       case 'init':
         handleInit(ev.payload, ev);
+        // skills/changed 只在变动时推，冷启动这一份得自己要。cwd 也可能随会话切换，
+        // 所以跟着 init 走而不是只在连接时拉一次。
+        refreshAvailableSkills();
         break;
       case 'status':
         handleStatus(ev.payload);
@@ -1231,7 +1512,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
         handleThreadStatus(ev.payload);
         break;
       case 'collaboration_mode':
-        if (ev.payload?.mode) {
+        if (ev.payload?.mode && ev.payload?.applied) {
           selectedMode = ev.payload.mode;
           persistComposerSettings();
           renderCliSettingsPopovers();
@@ -1265,12 +1546,6 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
       case 'tool_output_delta':
         handleToolOutputDelta(ev.payload);
         break;
-      case 'term_output':
-        handleP3TerminalOutput(ev.payload);
-        break;
-      case 'term_exit':
-        handleP3TerminalExit(ev.payload);
-        break;
       case 'tool_result':
         handleToolResult(ev.payload);
         break;
@@ -1299,28 +1574,15 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
       case 'account_updated':
         break;
       case 'compact':
-        handleCompact(ev.payload);
-        break;
       case 'rollback':
-        handleRollback(ev.payload);
-        break;
       case 'rate_limits':
-        handleRateLimits(ev.payload);
+      case 'skills_changed':
+        refreshAvailableSkills();
+        break;
+      case 'external_agent_config_import':
         break;
       case 'mcp_status':
         handleMcpStatus(ev.payload);
-        break;
-      case 'skills_changed':
-        handleSkillsChanged(ev.payload);
-        break;
-      case 'external_agent_config_import':
-        handleExternalAgentConfigImport(ev.payload);
-        break;
-      case 'realtime':
-        handleP3Realtime(ev.payload);
-        break;
-      case 'remote_control':
-        handleP3RemoteControl(ev.payload);
         break;
       case 'mcp_use':
         handleMcpUse(ev.payload);
@@ -1345,7 +1607,9 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
         setBusy(false);
         break;
       case 'system':
-        appendSystem(ev.payload.message, ev.payload.isError);
+        if (presentation.dest === DEST.STREAM) {
+          appendSystem(ev.payload.message, ev.payload.isError);
+        }
         break;
       case 'pending_devices':
         handlePendingDevices(ev.payload);
@@ -1354,10 +1618,8 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
         handleUsage(ev.payload);
         break;
       case 'raw_item':
-        handleRawItem(ev.payload);
         break;
       default:
-        handleRawItem({ envelopeType: ev.type, item: ev.payload });
         break;
     }
   }
@@ -1456,7 +1718,6 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   }
 
   function handleInit(payload, event) {
-    applyFeatureManifest(payload.features);
     gatewayEpoch = payload.gatewayEpoch || gatewayEpoch;
     serverCwd = payload.cwd || serverCwd;
     const incomingInstanceId = event?.instanceId || payload.instanceId || null;
@@ -1496,7 +1757,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
       if (!ack?.ok || !Number.isFinite(ack.revision) || ack.revision < needsYouRevision) return;
       needsYouRevision = ack.revision;
       needsYou = new Map((ack.needs || []).map(need => [need.needId, need]));
-      renderNeedsYouPanel();
+      refreshNeedsViews();
       openPendingNeedsYouDeepLink();
     });
   }
@@ -1513,15 +1774,12 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
       const card = pendingApprovalCards[need.needId];
       if (card) {
         delete pendingApprovalCards[need.needId];
-        const actions = card.querySelector('.approval-btns:last-child');
         // 按真实原因写文案：超时与被撤销都不是「在其他设备处理」，那句话会把用户
         // 支使到另一台设备上去找根本不存在的操作记录。
-        if (actions) {
-          actions.innerHTML = `<span class="tool-output tool-ok" style="background:transparent;padding:0;">${escHtml(needResolutionLabel(need.state))}</span>`;
-        }
+        collapseDecisionCard(card, needResolutionLabel(need.state));
       }
     }
-    renderNeedsYouPanel();
+    refreshNeedsViews();
     openPendingNeedsYouDeepLink();
   }
 
@@ -1537,9 +1795,42 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     openNeed(need);
   }
 
+  // 待办是否已经有一个看得见的入口。横幅只负责把**看不见的**待办拉到眼前，眼前已经
+  // 有入口时再挂一条，等于同一件事在一屏内说两遍，还占掉首屏六分之一的高度。
+  //
+  // 两种可见入口：会话里的审批卡（逐条），空落地页的「N 项等你批准」（聚合，覆盖全部）。
+  function inlineVisibleNeedIds() {
+    const landingEntry = $('empty-actions')?.querySelector('[data-empty-action="approvals"]');
+    if (landingEntry && $('empty-state')?.style.display !== 'none') {
+      return [...needsYou.keys()];
+    }
+    const ids = [];
+    for (const [needId, card] of Object.entries(pendingApprovalCards)) {
+      if (!card?.isConnected || typeof card.getBoundingClientRect !== 'function') continue;
+      const rect = card.getBoundingClientRect();
+      if (rect.bottom > 0 && rect.top < (window.innerHeight || 0)) ids.push(needId);
+    }
+    return ids;
+  }
+
+  // 横幅与空落地页的「N 项等你批准」读的是同一份 needsYou。只刷一处，同一屏上就会
+  // 出现两个对不上的数字——实测撞到过：横幅说 1 项，落地页说 2 项。
+  function refreshNeedsViews() {
+    // 先落地页后横幅：横幅的判据要读落地页那颗按钮在不在，顺序反了就读到上一帧的状态。
+    if ($('empty-state')?.style.display !== 'none') renderEmptyLanding();
+    renderNeedsYouPanel();
+  }
+
+  let lastBannerKey = null;
   function renderNeedsYouPanel() {
     if (!needsYouPanel) return;
-    const active = [...needsYou.values()].filter(need => need.state === 'pending' || need.state === 'unknown');
+    const pending = [...needsYou.values()].filter(need => need.state === 'pending' || need.state === 'unknown');
+    const active = bannerNeeds(pending, { inlineNeedIds: inlineVisibleNeedIds() });
+    // 滚动会以每帧的频率调进来。集合没变就不重建 DOM——否则拇指滑动时整条横幅
+    // 每帧闪一次，按钮也会在指尖下被换掉。
+    const key = active.map(need => `${need.needId}:${need.state}`).join(',');
+    if (key === lastBannerKey) return;
+    lastBannerKey = key;
     if (!active.length) {
       needsYouPanel.hidden = true;
       needsYouPanel.innerHTML = '';
@@ -1550,14 +1841,30 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
       + active.map(need => {
         const summary = need.kind === 'question'
           ? (need.payload?.questions?.[0]?.question || 'Codex 有问题等待回答')
-          : (Array.isArray(need.payload?.command) ? need.payload.command.join(' ') : (need.payload?.command || need.payload?.reason || '有操作等待审批'));
+          : displayCommand(Array.isArray(need.payload?.command) ? need.payload.command.join(' ') : (need.payload?.command || need.payload?.reason || '有操作等待审批'));
         const action = need.state === 'unknown'
-          ? '<span class="tool-output tool-err" style="background:transparent;padding:0;">结果未知，等待上游终态</span>'
+          ? '<span class="approval-result approval-result-err">结果未知，等待上游终态</span>'
           : '<button class="native-mini-btn" type="button" data-need-action="open">处理</button>';
-        return `<div class="needs-you-row" data-need-id="${escHtml(need.needId)}">
+        // 显示会话名而不是内部 threadId：`mock_thread_1789224943799` 对用户没有任何
+        // 意义，而「需要你」正是用户最需要快速判断「这是哪个会话在等我」的地方。
+        // 回退策略跟 openNeed 保持一致，避免两处对同一个 thread 给出不同的名字。
+        // 回退带「会话」前缀：appThreads 来自 thread/list，刚创建的 thread 还没进去，
+        // 这时只能拿到 id。裸 id 片段看起来像乱码（实测显示成 `mock_thr`），加上前缀
+        // 至少让用户知道这是个会话标识而不是渲染出错。
+        // 待改进：当前活跃 thread 的标题没有独立来源，要拿到它得改数据流。
+        const thread = appThreads.find(item => item.id === need.target?.threadId);
+        const threadLabel = needsYouSessionLabel({
+          thread,
+          threadId: need.target?.threadId || '',
+          currentSessionId,
+          currentTitle: $('thread-title')?.textContent || '',
+        });
+        // threadId 走 data 属性：深链恢复需要完整 id，让它搭显示文本的便车会把
+        // 「给人看的文案」和「给机器读的数据」焊死——改文案就得改测试。
+        return `<div class="needs-you-row" data-need-id="${escHtml(need.needId)}" data-thread-id="${escHtml(need.target?.threadId || '')}">
           <div class="needs-you-copy">
             <div class="needs-you-summary">${escHtml(summary)}</div>
-            <div class="needs-you-thread">${escHtml(need.target?.threadId || '')}</div>
+            <div class="needs-you-thread">${escHtml(threadLabel)}</div>
           </div>
           ${action}
         </div>`;
@@ -1593,15 +1900,8 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     delete pendingApprovalCards[needId];
     const actions = card.querySelector('.approval-btns:last-child');
     if (actions) {
-      actions.innerHTML = '<span class="tool-output tool-err" style="background:transparent;padding:0;">结果未知，等待上游终态</span>';
+      actions.innerHTML = '<span class="approval-result approval-result-err">结果未知，等待上游终态</span>';
     }
-  }
-
-  function applyFeatureManifest(manifest) {
-    features = { labs: manifest?.labs === true };
-    // 宿主配置不再是特性开关，入口常驻；Labs 仍受实验开关控制。
-    const labsButton = $('native-p3-btn');
-    if (labsButton) labsButton.hidden = !features.labs;
   }
 
   function renderWorkdirSelect() {
@@ -1729,6 +2029,18 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   }
 
   function handleStatus(payload) {
+    const changedThread = permissionThreadId && payload?.sessionId && permissionThreadId !== payload.sessionId;
+    if (changedThread) {
+      permissionSelectionPending = false;
+      selectedPermission = 'ask';
+      selectedApproval = 'on-request';
+      selectedReviewer = 'user';
+      selectedSandbox = 'workspace-write';
+      granularApproval = null;
+    }
+    if (payload?.sessionId) permissionThreadId = payload.sessionId;
+    if (!permissionSelectionPending && payload?.effectivePermissions) adoptEffectivePermission(payload.effectivePermissions);
+    if (payload?.reason === 'settings_applied') permissionSelectionPending = false;
     sessionStatus = payload || null;
     if (payload?.sessionId) {
       rememberCurrentThread(payload.sessionId);
@@ -1737,6 +2049,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     renderSessionMeta();
     renderInstanceTabs();
     updateFloatingBadges();
+    renderCliSettingsPopovers();
     checkEmptyState();
   }
 
@@ -1760,6 +2073,12 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     const name = resolveThreadTitle(appThreads, currentSessionId);
     if (name === null) return;
     titleEl.textContent = name;
+    const visible = $('header-thread');
+    if (visible) {
+      const show = Boolean(currentSessionId && name && name !== '新会话');
+      visible.hidden = !show;
+      visible.textContent = show ? name : '';
+    }
   }
 
   function goHome() {
@@ -1789,26 +2108,14 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     });
   }
 
-  // eslint-disable-next-line no-unused-vars -- drawer fork trigger is not in main chrome yet
-  function forkCurrentSession() {
-    socket.emit('session:fork', { instanceId: currentViewingId }, ack => {
-      if (!ack?.ok) {
-        appendSystem(ack?.error || '会话分叉失败', true);
-        return;
-      }
-      applyTargetAck(ack);
-      clearMessages();
-      appendSystem('已分叉当前会话', false);
-      refreshNativeThreads();
-    });
-  }
-
   function paintHeaderChanges(git) {
     const el = $('header-changes');
     if (!el) return;
     const label = formatWorkspaceChangeBadge(git);
     el.textContent = label;
     el.hidden = !label;
+    workspaceChanged = Number.parseInt(label, 10) || (label === '99+' ? 99 : 0);
+    if ($('empty-state')?.style.display !== 'none') renderEmptyLanding();
   }
 
   function updateStatusDetail(payload) {
@@ -1831,9 +2138,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
       if (g.insertions || g.deletions) gitStr += ` +${g.insertions}/-${g.deletions}`;
       parts.push(gitStr);
     }
-    if (payload.ctx) {
-      parts.push(`${(payload.ctx.totalInputTokens / 1000).toFixed(1)}k`);
-    }
+    if (payload.ctx) renderContextMeter(payload.ctx);
     if (payload.sessionId) {
       parts.push(`${(payload.sessionId || '').slice(0, 8)}`);
     }
@@ -1849,8 +2154,6 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
 
   function handleThreadEvent(payload) {
     if (!payload?.event) return;
-    const labels = { archived: '已归档', unarchived: '已取消归档', deleted: '已删除', name_updated: '已重命名' };
-    appendSystem(`Thread ${labels[payload.event] || payload.event}: ${(payload.threadId || '').slice(0, 8)}`, false);
     refreshNativeThreads();
   }
 
@@ -1884,35 +2187,44 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     if (payload.scope === 'host') scheduleThreadListRefresh();
   }
 
-  function handleCompact(payload) {
-    appendSystem(`上下文压缩完成: ${(payload?.threadId || currentSessionId || '').slice(0, 8)}`, false);
-  }
-
-  function handleRollback(payload) {
-    appendSystem(`已回退 ${payload?.numTurns || 1} 轮: ${(payload?.threadId || currentSessionId || '').slice(0, 8)}`, false);
-  }
-
-  function handleRateLimits(payload) {
-    const limit = payload?.rateLimits?.limitName || payload?.rateLimits?.limitId || 'rate limit';
-    appendSystem(`Rate limits updated: ${limit}`, false);
-  }
-
+  // 启动过程默认静默——4 个 server 各报 starting/ready 就是 8 条系统消息，
+  // 实测把「你是谁」的回答整个挤出首屏。想看的话设置面板里能打开，
+  // 抽屉的 MCP 面板也一直能查。出错不受这个开关管，见 ui-preferences.js。
   function handleMcpStatus(payload) {
+    if (!shouldAnnounceMcpStatus(payload, uiPrefs)) return;
     appendSystem(`MCP ${payload?.name || 'server'}: ${payload?.status || 'updated'}`, Boolean(payload?.error));
   }
 
-  function handleSkillsChanged() {
-    appendSystem('Skills changed', false);
-  }
-
-  function handleExternalAgentConfigImport(payload) {
-    appendSystem(`External config import ${payload?.status || 'updated'}: ${payload?.importId || ''}`, false);
-  }
-
+  // token 用量是状态不是事件：`last.totalTokens` 是当前上下文的快照，每次请求
+  // 都重发全部历史所以单调递增，compact 后又会掉下来。一个 turn 内会推十几次
+  // （实测 101 条对 7 个 turn）。原地更新 composer 上的 meter，不往消息流里追加。
   function handleUsage(payload) {
-    const usage = payload?.usage || {};
-    const total = usage.totalTokens || usage.total_tokens || usage.total || null;
-    if (total) appendSystem(`Token usage: ${total}`, false);
+    const ctx = contextFromTokenUsage(payload?.tokenUsage);
+    if (ctx) renderContextMeter(ctx);
+  }
+
+  // 服务端 status_line 每 4 秒推一次 ctx；本地 tokenUsage 事件更快，两边都调这里。
+  function renderContextMeter(ctx) {
+    const meter = formatContextMeter(ctx);
+    contextMeterEl.hidden = !meter.visible;
+    contextMeterEl.dataset.tone = meter.tone;
+    // 画环的是 CSS 的 conic-gradient，这里只交百分比。拿不到窗口就画不出比例，
+    // 退化成一个满环——那时文案里只说用了多少，不谎称进度。
+    contextMeterEl.style.setProperty('--pct', meter.pct == null ? 100 : meter.pct);
+    contextMeterEl.toggleAttribute('data-unknown', meter.pct == null);
+    // title 留着给桌面浏览器的 hover；手机上够不着，真正的通道是点开的气泡。
+    contextMeterEl.title = meter.title;
+    contextMeterEl.setAttribute('aria-label', meter.pct == null
+      ? meter.title
+      : `上下文用量：${meter.pct}%`);
+    contextMeterDetailEl.textContent = meter.title;
+    // 用量在 turn 之间会更新，气泡开着时文本跟着变；环整个消失了就别留个孤儿气泡。
+    if (!meter.visible) setContextDetailOpen(false);
+  }
+
+  function setContextDetailOpen(open) {
+    contextMeterDetailEl.hidden = !open;
+    contextMeterEl.setAttribute('aria-expanded', String(open));
   }
 
   function renderSessionMeta() {
@@ -1941,19 +2253,44 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     scrollBottom();
   }
 
+  function bindSessionRowGestures(root) {
+    root.addEventListener('pointerdown', event => {
+      const row = event.target.closest?.('.session-item');
+      const thread = row ? sessionRowThreads.get(row) : null;
+      if (!thread) return;
+      pressedThread = thread;
+      rowLongPress.start(event.clientX, event.clientY);
+    });
+    root.addEventListener('pointermove', event => rowLongPress.move(event.clientX, event.clientY));
+    root.addEventListener('pointerup', () => rowLongPress.end());
+    root.addEventListener('pointercancel', () => rowLongPress.end());
+  }
+  bindSessionRowGestures(document.getElementById('drawer-projects'));
+
   function createSessionRow(s) {
     const el = document.createElement('div');
     el.className = 'session-item' + (s.id === currentSessionId ? ' active' : '');
+    // 归档与否过去只能从「这行提供 Archive 还是 Unarchive 按钮」反推。按钮收进
+    // 菜单后列表里看不出来了，于是把状态直接标在条目上。
+    el.dataset.archived = s.archived ? 'true' : 'false';
     const date = new Date(s.lastUsedAt || s.createdAt).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     const tag = s.model ? ` · ${escHtml(s.model)}` : '';
     const status = threadStatusPresentation(s.status);
-    const actions = `<div class="native-row-actions">
-          <button class="native-mini-btn" data-action="rename">Rename</button>
-          <button class="native-mini-btn" data-action="${s.archived ? 'unarchive' : 'archive'}">${s.archived ? 'Unarchive' : 'Archive'}</button>
-          <button class="native-mini-btn native-danger" data-action="delete">Delete</button>
-        </div>`;
-    el.innerHTML = `<div class="session-title"><span class="thread-status-dot ${status.kind}" title="${escHtml(status.label)}"></span><span class="session-title-copy">${escHtml(s.title || '未命名')}</span></div><div class="session-date">${date}${tag} · ${escHtml(status.label)}</div>${actions}`;
+    // 状态只留圆点，不再把 label 写进元信息行。非当前会话一律是 notLoaded——
+    // 那是 app-server 的「没加载进内存」，不是错误，对用户的信息量接近零，
+    // 而「这条不是当前会话」高亮和圆点已经说过了。圆点的 title 留着给读屏。
+    const isUnread = unread.isUnread(s, { viewingId: currentSessionId });
+    el.innerHTML = `<div class="session-title">`
+      + `<span class="thread-unread-dot" ${isUnread ? '' : 'hidden'} title="未读" data-testid="unread-mark"></span>`
+      + `<span class="thread-status-dot ${status.kind}" title="${escHtml(status.label)}"></span>`
+      + `<span class="session-title-copy">${escHtml(s.title || '未命名')}</span></div>`
+      + `<div class="session-date">${date}${tag}</div>`;
+    // 三个操作收进长按菜单。常驻按钮把每条会话撑到约 100px，一屏看不到几条。
+    // 手势本身绑在容器上（见 rowLongPress），这里只登记「这个元素是哪条会话」。
+    sessionRowThreads.set(el, s);
     el.onclick = () => {
+      // 长按之后 pointerup 照样合成一次 click，不挡住会连带把会话打开。
+      if (rowLongPress.fired) return;
       socket.emit('thread:select', { threadId: s.id, cwd: s.cwd, title: s.title }, ack => {
         if (!ack?.ok) {
           appendSystem(ack?.error || 'Thread select failed', true);
@@ -1966,13 +2303,42 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
       });
       closeDrawer();
     };
-    for (const btn of el.querySelectorAll('[data-action]')) {
-      btn.onclick = event => {
-        event.stopPropagation();
-        handleNativeThreadAction(s, btn.dataset.action);
-      };
-    }
     return el;
+  }
+
+  const threadMenuEl = document.getElementById('thread-menu');
+  const threadMenuTitleEl = document.getElementById('thread-menu-title');
+  const threadMenuArchiveEl = document.getElementById('thread-menu-archive');
+  let threadMenuTarget = null;
+
+  function openThreadMenu(thread) {
+    threadMenuTarget = thread;
+    threadMenuTitleEl.textContent = thread.title || '未命名';
+    // 归档视图里这一项是「取消归档」。过去靠两个不同的常驻按钮表达，
+    // 现在同一个位置换文案和 action。
+    const unreadBtn = document.getElementById('thread-menu-unread');
+    if (unreadBtn) unreadBtn.textContent = unread.isManual(thread.id) ? '标为已读' : '标为未读';
+    threadMenuArchiveEl.textContent = thread.archived ? '取消归档' : '归档';
+    threadMenuArchiveEl.dataset.action = thread.archived ? 'unarchive' : 'archive';
+    threadMenuEl.hidden = false;
+  }
+
+  function closeThreadMenu() {
+    threadMenuEl.hidden = true;
+    threadMenuTarget = null;
+  }
+
+  threadMenuEl.addEventListener('click', event => {
+    // 点遮罩空白处关闭；点卡片内部不关。
+    if (event.target === threadMenuEl) closeThreadMenu();
+  });
+  document.getElementById('thread-menu-cancel').onclick = closeThreadMenu;
+  for (const btn of threadMenuEl.querySelectorAll('.sheet-menu [data-action]')) {
+    btn.onclick = () => {
+      const thread = threadMenuTarget;
+      closeThreadMenu();
+      if (thread) handleNativeThreadAction(thread, btn.dataset.action);
+    };
   }
 
   function renderSessionList() {
@@ -1981,6 +2347,25 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   }
 
   async function handleNativeThreadAction(thread, action) {
+    if (action === 'toggle-unread') {
+      unread.setManualUnread(thread.id, !unread.isManual(thread.id));
+      return;
+    }
+    if (action === 'compact') {
+      startCompact(thread.id);
+      return;
+    }
+    if (action === 'rollback') {
+      rollbackThread(thread.id);
+      return;
+    }
+    // 归档 / 重命名是**本机用户自己的元数据操作**，不该产生未读。app-server 的
+    // recencyAt 按协议是「用于最近排序的时间戳」，没有承诺只随对话推进（见
+    // logic/unread.js 头注），所以本地操作后顺手记一笔已看，把这条最常见的
+    // 假未读路径堵掉。跨设备的元数据操作仍可能产生一次假未读，可接受。
+    if (action === 'archive' || action === 'unarchive' || action === 'rename') {
+      unread.markSeen(thread.id);
+    }
     if (action === 'rename') {
       const name = await confirmDialog.prompt({ title: '重命名会话', body: '输入新的会话名称', initial: thread.title || '' });
       if (!name) return;
@@ -2019,12 +2404,24 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     });
   }
 
+  function closeNativePanel() {
+    nativePanel.hidden = true;
+    checkEmptyState();
+  }
+
   function renderNativePanel(title, bodyHtml) {
     nativePanel.hidden = false;
-    nativePanel.innerHTML = `<div class="native-panel-header"><span>${escHtml(title)}</span><button class="native-mini-btn" type="button" data-close-native>Close</button></div>${bodyHtml}`;
+    nativePanel.innerHTML = `<div class="sheet-card native-sheet">
+      <div class="sheet-handle"></div>
+      <div class="native-panel-header"><span>${escHtml(title)}</span><button class="native-mini-btn" type="button" data-close-native>关闭</button></div>
+      <div class="native-panel-body">${bodyHtml}</div>
+    </div>`;
     const close = nativePanel.querySelector('[data-close-native]');
-    if (close) close.onclick = () => { nativePanel.hidden = true; };
+    if (close) close.onclick = closeNativePanel;
   }
+  nativePanel.addEventListener('click', event => {
+    if (event.target === nativePanel) closeNativePanel();
+  });
 
   function scheduleThreadListRefresh() {
     if (threadRefreshTimer) clearTimeout(threadRefreshTimer);
@@ -2035,13 +2432,16 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     }, 250);
   }
 
-  function refreshThreadsForCwd(cwd, { showPanel = false } = {}) {
+  function refreshThreadsForCwd(cwd) {
     if (!cwd) return;
     // 归档与未归档是两份不同的列表,来回切开关会同时挂起两个请求。响应没有顺序保证,
     // 晚到的那份若不认领自己属于哪个视图,就会盖掉用户已经切回去的列表——
     // 开关写着「未归档」,底下却列着归档会话。同 scheduleThreadListRefresh 的 cwd 校验。
     const requestedArchived = showArchivedThreads;
     socket.emit('thread:list', { cwd, archived: requestedArchived }, ack => {
+      // 搭车的位点只覆盖本页这些行。hydrate 逐 key 取 max、只增不减，
+      // 所以少回的 key 不会抹掉本地已有位点。
+      if (ack?.ok && ack.readState) unread.hydrate(ack.readState);
       if (requestedArchived !== showArchivedThreads) return;
       if (!ack?.ok) {
         if (cwd === serverCwd) appendSystem(ack?.error || 'Thread list failed', true);
@@ -2052,18 +2452,16 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
       if (cwd === serverCwd) appThreads = next;
       renderSessionList();
       if (cwd === serverCwd) {
-        if (showPanel) renderNativeThreadList();
         renderThreadTitle();
+        if (messagesEl.children.length === 0) renderEmptyLanding();
       }
     });
   }
 
-  function refreshNativeThreads(showPanel = false) {
+  function refreshNativeThreads() {
     if (serverCwd) expandedDirs.add(serverCwd);
     const targets = expandedDirs.size ? [...expandedDirs] : (serverCwd ? [serverCwd] : []);
-    for (const cwd of targets) {
-      refreshThreadsForCwd(cwd, { showPanel: showPanel && cwd === serverCwd });
-    }
+    for (const cwd of targets) refreshThreadsForCwd(cwd);
   }
 
   function renderArchivedToggle() {
@@ -2088,170 +2486,54 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     setArchivedThreadsView(!showArchivedThreads);
   }
 
-  function renderNativeThreadList() {
-    const rows = appThreads.length
-      ? appThreads.map(t => `<div class="native-list-row">
-          <div class="native-row-title">${escHtml(t.title || t.id)}</div>
-          <div class="native-row-meta">${escHtml((t.id || '').slice(0, 8))} · ${escHtml(t.cwd || '')}</div>
-        </div>`).join('')
-      : '<div class="native-list-row">No native threads</div>';
-    renderNativePanel(showArchivedThreads ? 'Archived Threads' : 'Native Threads', rows);
-  }
-
-  function startCompact() {
-    if (!currentSessionId) {
-      appendSystem('No active thread to compact', true);
+  function startCompact(threadId = currentSessionId) {
+    if (!threadId) {
+      appendSystem('没有可压缩的会话', true);
       return;
     }
-    socket.emit('thread:compact', { threadId: currentSessionId, cwd: serverCwd }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || 'Compact failed', true);
-      appendSystem('Compact requested', false);
+    socket.emit('thread:compact', { threadId, cwd: serverCwd }, ack => {
+      if (!ack?.ok) return appendSystem(ack?.error || '压缩失败', true);
+      appendSystem('已请求压缩上下文', false);
     });
   }
 
-  async function rollbackThread() {
-    if (!currentSessionId) {
-      appendSystem('No active thread to rollback', true);
+  // inline 审查：结果作为当前会话的一个 turn 流回来，所以这里只管发起和报错，
+  // 渲染交给现有的 turn 事件流。
+  async function startReview(instructions = '') {
+    // 审的是工作区改动，不是对话——空会话里直接发起也成立，所以先把会话建出来，
+    // 而不是像 compact 那样要求用户先说过一句话。
+    try {
+      await ensureViewTarget();
+    } catch (error) {
+      appendSystem(error.message || '无法建立会话目标', true);
+      return;
+    }
+    // 先贴提示再发：ack 回来的时机晚于 turn 的事件流，等 ack 会让「已发起」
+    // 落到审查结果后面。失败时下面那条错误会紧跟着出现。
+    appendSystem(instructions ? `已发起审查：${instructions}` : '已发起未提交改动审查', false);
+    // threadId 可能还是空的（thread 懒建），服务端会用 agent 自己的 thread 兜住。
+    socket.emit('thread:review', { threadId: currentSessionId, cwd: serverCwd, instructions }, ack => {
+      if (!ack?.ok) appendSystem(ack?.error || '发起审查失败', true);
+    });
+  }
+
+  async function rollbackThread(threadId = currentSessionId) {
+    if (!threadId) {
+      appendSystem('没有可回退的会话', true);
       return;
     }
     const raw = await confirmDialog.prompt({ title: '回退会话', body: '回退多少轮？', initial: '1' });
     if (raw === null) return;
     const numTurns = Math.max(1, Number.parseInt(raw, 10) || 1);
-    socket.emit('thread:rollback', { threadId: currentSessionId, numTurns, cwd: serverCwd }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || 'Rollback failed', true);
-      appendSystem(`Rollback requested: ${numTurns}`, false);
-    });
-  }
-
-  function loadNativeModels() {
-    socket.emit('models:read', { cwd: serverCwd }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || 'Model list failed', true);
-      const caps = ack.capabilities || {};
-      const modelRows = (ack.models || []).map(model => {
-        const id = model.model || model.id || '';
-        const name = model.displayName || id;
-        return `<div class="native-list-row">
-          <div class="native-row-title">${escHtml(name)}</div>
-          <div class="native-row-meta">${escHtml(id)}${model.isDefault ? ' · default' : ''}</div>
-          <div class="native-row-actions"><button class="native-mini-btn" data-model-id="${escHtml(id)}">Use</button></div>
-        </div>`;
-      }).join('') || '<div class="native-list-row">No models</div>';
-      renderNativePanel('Models', `<div class="native-list-row"><div class="native-row-meta">namespaceTools:${Boolean(caps.namespaceTools)} · image:${Boolean(caps.imageGeneration)} · web:${Boolean(caps.webSearch)}</div></div>${modelRows}`);
-      nativePanel.querySelectorAll('[data-model-id]').forEach(btn => {
-        btn.onclick = () => {
-          applyComposerModel(btn.dataset.modelId);
-        };
-      });
-    });
-  }
-
-  function openFileBrowser(path = serverCwd) {
-    const targetPath = path || serverCwd || '/';
-    socket.emit('fs:readDirectory', { path: targetPath, cwd: serverCwd }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || 'Read directory failed', true);
-      const parent = parentPath(targetPath);
-      const rows = [
-        parent ? `<button class="native-mini-btn" data-dir="${escHtml(parent)}">..</button>` : '',
-        ...(ack.entries || []).map(entry => {
-          const child = joinPath(targetPath, entry.fileName);
-          const action = entry.isDirectory ? `data-dir="${escHtml(child)}"` : `data-file="${escHtml(child)}"`;
-          return `<div class="native-list-row">
-            <div class="native-row-title">${entry.isDirectory ? 'Folder' : 'File'} ${escHtml(entry.fileName)}</div>
-            <div class="native-row-actions">
-              <button class="native-mini-btn" ${action}>${entry.isDirectory ? 'Open' : '@ 引用'}</button>
-              <button class="native-mini-btn native-danger" data-remove="${escHtml(child)}" data-remove-dir="${entry.isDirectory ? '1' : ''}">删除</button>
-            </div>
-          </div>`;
-        })
-      ].join('');
-      renderNativePanel('Files', `<input class="native-input" value="${escHtml(targetPath)}" data-file-path>${rows || '<div class="native-list-row">Empty directory</div>'}`);
-      const pathInput = nativePanel.querySelector('[data-file-path]');
-      pathInput.onkeydown = event => {
-        if (event.key === 'Enter') openFileBrowser(pathInput.value.trim());
-      };
-      nativePanel.querySelectorAll('[data-dir]').forEach(btn => {
-        btn.onclick = () => openFileBrowser(btn.dataset.dir);
-      });
-      nativePanel.querySelectorAll('[data-file]').forEach(btn => {
-        btn.onclick = () => readNativeFile(btn.dataset.file);
-      });
-      nativePanel.querySelectorAll('[data-remove]').forEach(btn => {
-        btn.onclick = () => removeNativePath(btn.dataset.remove, btn.dataset.removeDir === '1', targetPath);
-      });
-    });
-  }
-
-  // 删除不可逆，手机误触率又远高于桌面，所以走真正的确认框而不是 window.prompt。
-  // 目录的 recursive 由这里显式声明——服务端不替用户默认成 true。
-  async function removeNativePath(path, isDirectory, refreshFrom) {
-    const accepted = await confirmDialog.confirm({
-      title: isDirectory ? '删除目录' : '删除文件',
-      body: isDirectory
-        ? `${path}\n\n将连同目录下的全部内容一起删除，且无法撤销。`
-        : `${path}\n\n删除后无法撤销。`,
-      danger: true,
-    });
-    if (!accepted) return;
-    socket.emit('fs:remove', { path, recursive: isDirectory, cwd: serverCwd }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || '删除失败', true);
-      appendSystem(`已删除 ${path}`, false);
-      openFileBrowser(refreshFrom);
-    });
-  }
-
-  function readNativeFile(path) {
-    socket.emit('fs:readFile', { path, cwd: serverCwd }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || 'Read file failed', true);
-      const text = decodeBase64Text(ack.dataBase64 || '');
-      addInputPart({ kind: 'mention', name: path.split('/').pop() || path, path });
-      inputEl.focus();
-      renderNativePanel('File Preview', `<div class="native-list-row">
-        <div class="native-row-title">${escHtml(path)}</div>
-        <div class="native-row-actions"><button class="native-mini-btn" data-edit-file type="button">编辑</button></div>
-        <pre class="tool-output" style="max-height:180px;">${escHtml(text.slice(0, 2000))}</pre>
-      </div>`);
-      nativePanel.querySelector('[data-edit-file]').onclick = () => editNativeFile(path, text);
-    });
-  }
-
-  function editNativeFile(path, original) {
-    renderNativePanel('编辑文件', `<div class="native-list-row">
-      <div class="native-row-title">${escHtml(path)}</div>
-      <textarea class="native-input" data-file-editor rows="12" spellcheck="false">${escHtml(original)}</textarea>
-      <div class="native-row-actions"><button class="native-mini-btn" data-file-save type="button">保存</button></div>
-    </div>`);
-    const editor = nativePanel.querySelector('[data-file-editor]');
-    nativePanel.querySelector('[data-file-save]').onclick = () => saveNativeFile(path, original, editor.value);
-  }
-
-  // R-16：写入前强制看到 diff 再确认。只问「要覆盖吗」不够——用户得能看出改了什么。
-  async function saveNativeFile(path, original, next) {
-    const summary = summarizeTextChange(original, next);
-    if (summary.unchanged) return appendSystem('内容没有变化，未写入', false);
-    const preview = summary.hunk.map(line => `${line.sign}${line.text}`).join('\n');
-    const accepted = await confirmDialog.confirm({
-      title: '写入文件',
-      body: [
-        path,
-        `第 ${summary.firstChangedLine} 行起：+${summary.added} 行 / -${summary.removed} 行`,
-        '',
-        preview + (summary.truncated ? '\n…（差异过长，仅显示开头）' : ''),
-      ].join('\n'),
-      danger: true,
-    });
-    if (!accepted) return;
-    const dataBase64 = btoa(unescape(encodeURIComponent(next)));
-    socket.emit('fs:writeFile', { path, dataBase64, cwd: serverCwd }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || '写入失败', true);
-      appendSystem(`已写入 ${path}`, false);
-      readNativeFile(path);
+    socket.emit('thread:rollback', { threadId, numTurns, cwd: serverCwd }, ack => {
+      if (!ack?.ok) return appendSystem(ack?.error || '回退失败', true);
+      appendSystem(`已请求回退 ${numTurns} 轮`, false);
     });
   }
 
   function loadAccountPanel() {
     socket.emit('account:read', { cwd: serverCwd }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || 'Account read failed', true);
-      renderNativePanel('Account', `<pre class="tool-output" style="max-height:220px;">${escHtml(JSON.stringify({ account: ack.account, usage: ack.usage, rateLimits: ack.rateLimits }, null, 2))}</pre>`);
+      renderNativePanel('账号', accountPanelHtml(ack));
     });
   }
 
@@ -2321,18 +2603,13 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
 
   function loadMcpPanel() {
     socket.emit('mcp:read', { cwd: serverCwd }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || 'MCP read failed', true);
-      const rows = (ack.servers || []).map(server => `<div class="native-list-row">
-        <div class="native-row-title">${escHtml(server.name)}</div>
-        <div class="native-row-meta">${escHtml(server.authStatus || '')} · tools:${Object.keys(server.tools || {}).length}</div>
-      </div>`).join('') || '<div class="native-list-row">No MCP servers</div>';
-      renderNativePanel('MCP', rows);
+      renderNativePanel('MCP', mcpPanelHtml(ack));
     });
   }
 
   function loadSkillsPanel() {
     socket.emit('skills:read', { cwd: serverCwd }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || 'Skills read failed', true);
+      if (!ack?.ok) return appendSystem(ack?.error || '无法读取 Skills', true);
       const skills = (ack.entries || []).flatMap(entry => (entry.skills || []).map(skill => ({
         ...skill,
         cwd: entry.cwd,
@@ -2340,9 +2617,9 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
       const rows = skills.map((skill, index) => `<div class="native-list-row">
         <div class="native-row-title">${escHtml(skill.name)}</div>
         <div class="native-row-meta">${escHtml(skill.description || skill.path || skill.cwd || '')}</div>
-        <div class="native-row-actions"><button class="native-mini-btn" data-skill-index="${index}">Use</button></div>
-      </div>`).join('') || '<div class="native-list-row">No enabled skills</div>';
-      renderNativePanel('Skills', rows);
+        <div class="native-row-actions"><button class="native-mini-btn" data-skill-index="${index}">插入</button></div>
+      </div>`).join('') || '<div class="native-list-row">没有已启用的 skill</div>';
+      renderNativePanel('技能', rows);
       nativePanel.querySelectorAll('[data-skill-index]').forEach(btn => {
         btn.onclick = () => {
           const skill = skills[Number(btn.dataset.skillIndex)];
@@ -2356,183 +2633,56 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
 
   function detectExternalAgentConfig() {
     socket.emit('externalAgentConfig:detect', { cwd: serverCwd, includeHome: false }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || 'Detect failed', true);
+      if (!ack?.ok) return appendSystem(ack?.error || '无法检测可导入配置', true);
       const items = ack.items || [];
       const rows = items.map((item, index) => `<div class="native-list-row">
-        <div class="native-row-title">${escHtml(item.description || 'Migration item')}</div>
-        <div class="native-row-meta">${escHtml(item.cwd || 'home')}</div>
-        <div class="native-row-actions"><button class="native-mini-btn" data-import-index="${index}">Import</button></div>
-      </div>`).join('') || '<div class="native-list-row">No importable config</div>';
-      renderNativePanel('Import', rows);
+        <div class="native-row-title">${escHtml(item.description || '可导入的配置')}</div>
+        <div class="native-row-meta">${escHtml(item.cwd || '本机')}</div>
+        <div class="native-row-actions"><button class="native-mini-btn" data-import-index="${index}">导入</button></div>
+      </div>`).join('') || '<div class="native-list-row">没有可导入的配置</div>';
+      renderNativePanel('导入配置', rows);
       nativePanel.querySelectorAll('[data-import-index]').forEach(btn => {
         btn.onclick = async () => {
           const item = items[Number(btn.dataset.importIndex)];
           if (!item) return;
-          const accepted = await confirmDialog.confirm({ title: '导入配置', body: item.description || 'Import this config?' });
+          const accepted = await confirmDialog.confirm({ title: '导入配置', body: item.description || '导入这份配置？' });
           if (!accepted) return;
           socket.emit('externalAgentConfig:import', { migrationItems: [item], cwd: serverCwd }, importAck => {
-            if (!importAck?.ok) return appendSystem(importAck?.error || 'Import failed', true);
-            appendSystem(`Import started: ${importAck.importId || ''}`, false);
+            if (!importAck?.ok) return appendSystem(importAck?.error || '导入失败', true);
+            appendSystem('已开始导入配置', false);
           });
         };
       });
     });
   }
 
-  function openP3Panel() {
-    if (!features.labs) return;
-    renderNativePanel('Labs', `
-      <div class="native-list-row">
-        <div class="native-row-title">Capabilities</div>
-        <div class="native-row-actions"><button id="p3-capabilities-btn" class="native-mini-btn" type="button">Read</button></div>
-      </div>
-      <div class="native-list-row">
-        <div class="native-row-title">Terminal</div>
-        <div class="native-row-actions">
-          <button id="p3-terminal-spawn-btn" class="native-mini-btn" type="button">Spawn</button>
-          <button id="p3-terminal-write-btn" class="native-mini-btn" type="button">Write</button>
-          <button id="p3-terminal-resize-btn" class="native-mini-btn" type="button">Resize</button>
-          <button id="p3-terminal-terminate-btn" class="native-mini-btn native-danger" type="button">Stop</button>
-        </div>
-      </div>
-      <div class="native-list-row">
-        <div class="native-row-title">Threads</div>
-        <div class="native-row-actions">
-          <button id="p3-thread-turns-btn" class="native-mini-btn" type="button">Turns</button>
-          <button id="p3-thread-search-btn" class="native-mini-btn" type="button">Search</button>
-        </div>
-      </div>
-    `);
-    $('p3-capabilities-btn').onclick = loadP3Capabilities;
-    $('p3-terminal-spawn-btn').onclick = spawnP3Terminal;
-    $('p3-terminal-write-btn').onclick = writeP3Terminal;
-    $('p3-terminal-resize-btn').onclick = resizeP3Terminal;
-    $('p3-terminal-terminate-btn').onclick = terminateP3Terminal;
-    $('p3-thread-turns-btn').onclick = loadP3ThreadTurns;
-    $('p3-thread-search-btn').onclick = searchP3Threads;
-  }
-
-  function loadP3Capabilities() {
-    socket.emit('p3:capabilities', { cwd: serverCwd }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || 'P3 capabilities failed', true);
-      renderNativePanel('Labs', `<pre class="tool-output" style="max-height:220px;">${escHtml(JSON.stringify(ack.capabilities || {}, null, 2))}</pre>`);
-    });
-  }
-
-  function spawnP3Terminal() {
-    const command = promptRequired('Command', 'bash -lc "pwd"');
-    if (command === null) return;
-    const processId = promptRequired('Process id', `term_${Date.now()}`);
-    if (processId === null) return;
-    socket.emit('p3:terminalSpawn', {
-      cwd: serverCwd,
-      processId,
-      command: ['bash', '-lc', command],
-      cols: 100,
-      rows: 30,
-    }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || 'P3 terminal spawn failed', true);
-      appendSystem(`Terminal spawned: ${ack.processId || processId}`, false);
-    });
-  }
-
-  function writeP3Terminal() {
-    const processId = promptRequired('Process id');
-    if (processId === null) return;
-    const text = prompt('Input', '');
-    if (text === null) return;
-    socket.emit('p3:terminalWrite', { cwd: serverCwd, processId, text }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || 'P3 terminal write failed', true);
-      appendSystem(`Terminal write: ${processId}`, false);
-    });
-  }
-
-  function resizeP3Terminal() {
-    const processId = promptRequired('Process id');
-    if (processId === null) return;
-    socket.emit('p3:terminalResize', { cwd: serverCwd, processId, cols: 100, rows: 30 }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || 'P3 terminal resize failed', true);
-      appendSystem(`Terminal resized: ${processId}`, false);
-    });
-  }
-
-  function terminateP3Terminal() {
-    const processId = promptRequired('Process id');
-    if (processId === null) return;
-    socket.emit('p3:terminalTerminate', { cwd: serverCwd, processId }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || 'P3 terminal terminate failed', true);
-      appendSystem(`Terminal stopped: ${processId}`, false);
-    });
-  }
-
-  function loadP3ThreadTurns() {
-    const threadId = promptRequired('Thread id', currentSessionId || '');
-    if (threadId === null) return;
-    socket.emit('p3:threadTurns', { cwd: serverCwd, threadId }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || 'P3 thread turns failed', true);
-      renderNativePanel('Turns', `<pre class="tool-output" style="max-height:220px;">${escHtml(JSON.stringify(ack.turns || [], null, 2))}</pre>`);
-    });
-  }
-
-  function searchP3Threads() {
-    const query = promptRequired('Search query');
-    if (query === null) return;
-    socket.emit('p3:threadSearch', { cwd: serverCwd, query, limit: 20 }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || 'P3 thread search failed', true);
-      const rows = (ack.results || []).map(thread => `<div class="native-list-row">
-        <div class="native-row-title">${escHtml(thread.name || thread.title || thread.preview || thread.id || 'Thread')}</div>
-        <div class="native-row-meta">${escHtml(thread.id || thread.sessionId || '')}</div>
-      </div>`).join('') || '<div class="native-list-row">No results</div>';
-      renderNativePanel('Search', rows);
-    });
-  }
-
-  function handleP3TerminalOutput(payload) {
-    const text = String(payload?.text || '');
-    if (!text) return;
-    appendSystem(`Terminal ${payload?.stream || 'stdout'} ${payload?.processId || ''}: ${text.slice(0, 600)}`, payload?.stream === 'stderr');
-  }
-
-  function handleP3TerminalExit(payload) {
-    appendSystem(`Terminal exited ${payload?.processId || ''}: ${payload?.exitCode ?? 'unknown'}`, Number(payload?.exitCode) !== 0);
-  }
-
-  function handleP3Realtime(payload) {
-    appendSystem(`Realtime ${payload?.event || 'event'}: ${payload?.threadId || currentSessionId || ''}`, payload?.event === 'error');
-  }
-
-  function handleP3RemoteControl(payload) {
-    const status = typeof payload?.status === 'string' ? payload.status : (payload?.status?.type || 'updated');
-    appendSystem(`Remote control ${status}: ${payload?.serverName || ''}`, false);
-  }
-
   function openHostConfigPanel() {
     renderNativePanel('宿主配置', `
       <div class="native-list-row">
-        <div class="native-row-meta">这些操作直接改动宿主机的 Codex 配置、插件与账号。每一项都会单独要求确认并写审计。</div>
+        <div class="native-row-meta">这些操作直接改动这台电脑上的 Codex 配置、插件与账号。每一项都会单独要求确认并写入审计。</div>
       </div>
       <div class="native-list-row">
-        <div class="native-row-title">Config</div>
+        <div class="native-row-title">配置</div>
         <div class="native-row-actions">
-          <button id="host-config-write-btn" class="native-mini-btn" type="button">Write</button>
-          <button id="host-config-batch-btn" class="native-mini-btn" type="button">Batch</button>
+          <button id="host-config-write-btn" class="native-mini-btn" type="button">写入一项</button>
+          <button id="host-config-batch-btn" class="native-mini-btn" type="button">批量写入</button>
         </div>
       </div>
       <div class="native-list-row">
-        <div class="native-row-title">Plugins</div>
+        <div class="native-row-title">插件</div>
         <div class="native-row-actions">
-          <button id="host-plugin-install-btn" class="native-mini-btn" type="button">Install</button>
-          <button id="host-plugin-uninstall-btn" class="native-mini-btn" type="button">Uninstall</button>
-          <button id="host-marketplace-add-btn" class="native-mini-btn" type="button">Add Market</button>
-          <button id="host-marketplace-remove-btn" class="native-mini-btn" type="button">Remove Market</button>
-          <button id="host-marketplace-upgrade-btn" class="native-mini-btn" type="button">Upgrade Market</button>
+          <button id="host-plugin-install-btn" class="native-mini-btn" type="button">安装</button>
+          <button id="host-plugin-uninstall-btn" class="native-mini-btn" type="button">卸载</button>
+          <button id="host-marketplace-add-btn" class="native-mini-btn" type="button">添加市场</button>
+          <button id="host-marketplace-remove-btn" class="native-mini-btn" type="button">移除市场</button>
+          <button id="host-marketplace-upgrade-btn" class="native-mini-btn" type="button">升级市场</button>
         </div>
       </div>
       <div class="native-list-row">
-        <div class="native-row-title">MCP / Account</div>
+        <div class="native-row-title">MCP / 账号</div>
         <div class="native-row-actions">
-          <button id="host-mcp-call-btn" class="native-mini-btn native-danger" type="button">Tool Call</button>
-          <button id="host-logout-btn" class="native-mini-btn native-danger" type="button">Logout</button>
+          <button id="host-mcp-call-btn" class="native-mini-btn native-danger" type="button">调用工具</button>
+          <button id="host-logout-btn" class="native-mini-btn native-danger" type="button">退出登录</button>
         </div>
       </div>
     `);
@@ -2562,13 +2712,13 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   function runHostConfigAction(eventName, buildPayload) {
     let confirmation;
     try {
-      confirmation = promptRequired('Confirm action', eventName);
+      confirmation = promptRequired('确认这项操作（输入动作名）', eventName);
     } catch (err) {
       appendSystem(err.message, true);
       return;
     }
     if (confirmation === null) return;
-    if (confirmation !== eventName) return appendSystem(`${eventName} confirmation mismatch`, true);
+    if (confirmation !== eventName) return appendSystem('确认内容与动作名不一致，已取消', true);
     let payload;
     try {
       payload = buildPayload();
@@ -2578,8 +2728,8 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     }
     if (!payload) return;
     hostConfigEmitters[eventName]({ ...payload, cwd: serverCwd, confirmAction: confirmation }, ack => {
-      if (!ack?.ok) return appendSystem(ack?.error || `${eventName} failed`, true);
-      appendSystem(`${eventName} completed`, false);
+      if (!ack?.ok) return appendSystem(ack?.error || '宿主配置操作失败', true);
+      appendSystem('宿主配置操作已完成', false);
     });
   }
 
@@ -2587,14 +2737,14 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     const value = prompt(label, initial);
     if (value === null) return null;
     const trimmed = value.trim();
-    if (!trimmed) throw new Error(`${label} required`);
+    if (!trimmed) throw new Error(`${label}不能为空`);
     return trimmed;
   }
 
   function hostConfigWrite() {
     runHostConfigAction('host:configWrite', () => ({
-      keyPath: promptRequired('Config keyPath', 'model'),
-      value: promptRequired('Config value', 'gpt-5.5'),
+      keyPath: promptRequired('配置键', 'model'),
+      value: promptRequired('配置值', 'gpt-5.5'),
       mergeStrategy: 'replace',
     }));
   }
@@ -2602,8 +2752,8 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   function hostConfigBatchWrite() {
     runHostConfigAction('host:configBatchWrite', () => ({
       edits: [{
-        keyPath: promptRequired('Config keyPath', 'approval_policy'),
-        value: promptRequired('Config value', 'on-request'),
+        keyPath: promptRequired('配置键', 'approval_policy'),
+        value: promptRequired('配置值', 'on-request'),
         mergeStrategy: 'upsert',
       }],
       reloadUserConfig: true,
@@ -2611,40 +2761,36 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   }
 
   function hostPluginInstall() {
-    runHostConfigAction('host:pluginInstall', () => ({ pluginName: promptRequired('Plugin name') }));
+    runHostConfigAction('host:pluginInstall', () => ({ pluginName: promptRequired('插件名') }));
   }
 
   function hostPluginUninstall() {
-    runHostConfigAction('host:pluginUninstall', () => ({ pluginId: promptRequired('Plugin id') }));
+    runHostConfigAction('host:pluginUninstall', () => ({ pluginId: promptRequired('插件 ID') }));
   }
 
   function hostMarketplaceAdd() {
-    runHostConfigAction('host:marketplaceAdd', () => ({ source: promptRequired('Marketplace source') }));
+    runHostConfigAction('host:marketplaceAdd', () => ({ source: promptRequired('市场来源') }));
   }
 
   function hostMarketplaceRemove() {
-    runHostConfigAction('host:marketplaceRemove', () => ({ marketplaceName: promptRequired('Marketplace name') }));
+    runHostConfigAction('host:marketplaceRemove', () => ({ marketplaceName: promptRequired('市场名') }));
   }
 
   function hostMarketplaceUpgrade() {
-    runHostConfigAction('host:marketplaceUpgrade', () => ({ marketplaceName: promptRequired('Marketplace name') }));
+    runHostConfigAction('host:marketplaceUpgrade', () => ({ marketplaceName: promptRequired('市场名') }));
   }
 
   function hostMcpCall() {
     runHostConfigAction('host:mcpToolCall', () => ({
-      threadId: promptRequired('Thread id', currentSessionId || ''),
-      server: promptRequired('MCP server'),
-      tool: promptRequired('MCP tool'),
-      arguments: JSON.parse(prompt('Arguments JSON', '{}') || '{}'),
+      threadId: promptRequired('会话 ID', currentSessionId || ''),
+      server: promptRequired('MCP 服务'),
+      tool: promptRequired('MCP 工具'),
+      arguments: JSON.parse(prompt('参数 JSON', '{}') || '{}'),
     }));
   }
 
   function hostAccountLogout() {
     runHostConfigAction('host:accountLogout', () => ({}));
-  }
-
-  function joinPath(base, name) {
-    return `${String(base || '/').replace(/\/+$/, '')}/${name}`.replace(/^\/\//, '/');
   }
 
   function loadNativeThreadHistory(s) {
@@ -2693,7 +2839,6 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
         continue;
       }
       if (m.kind === 'raw') {
-        handleRawItem({ item: m.item });
         continue;
       }
       if (m.role === 'user') {
@@ -2737,7 +2882,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
       return;
     }
     const el = document.createElement('div');
-    el.className = 'msg user queued';
+    el.className = 'msg user queued enter';
     el.dataset.text = text;
     if (clientRequestId) el.dataset.clientRequestId = clientRequestId;
     el.innerHTML = `<div class="bubble">${escHtml(text)}<span class="queued-label">Queued #${payload.position || payload.queueLength || 1}</span></div>`;
@@ -2782,7 +2927,9 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     const clientRequestId = payload.clientRequestId || '';
     if (clientRequestId && renderedOutboxStates.has(clientRequestId)) return;
     const el = document.createElement('div');
-    el.className = 'msg user offline';
+    // 乐观气泡才是用户看到的第一帧：点发送的瞬间就是它出现在屏幕上，
+    // 之后的 promote 只改 class 不重建节点。入场动画要挂在这里。
+    el.className = 'msg user offline enter';
     el.dataset.text = text;
     if (clientRequestId) el.dataset.clientRequestId = clientRequestId;
     let html = `<div class="bubble">`;
@@ -2792,17 +2939,11 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     if (payload.parts?.length) {
       html += `<div style="font-size:11px;opacity:.8;margin-bottom:4px;">${icon('pin')} ${payload.parts.map(partDisplayName).map(escHtml).join(', ')}</div>`;
     }
-    const deliveryLabel = unboundRecovery
-      ? (needsReconcile
-        ? '原会话目标已失效，正在按请求 ID 核对；不会自动重发'
-        : (manualDisposal
-          ? '原会话目标已失效且已尝试发送；不会自动重发，也不会自动恢复'
-          : '原会话目标已失效，连接后将恢复到当前会话'))
-      : (needsReconcile
-        ? '结果未知，正在核对；不会自动重发'
-        : (manualDisposal
-          ? '已被运行时拒绝；丢弃后这条会话的队列才会继续'
-          : '弱网等待同步 (Offline Queue)'));
+    const deliveryLabel = outboxDeliveryLabel({
+      unboundRecovery,
+      needsReconcile,
+      manualDisposal,
+    });
     const foreignHint = foreignThread ? '<span class="offline-label">↪ 来自其他会话</span>' : '';
     html += `${escHtml(text || (payload.parts?.length ? '(结构化引用)' : '(附件)'))}${foreignHint}<span class="offline-label">${deliveryLabel}</span></div>`;
     el.innerHTML = html;
@@ -2901,20 +3042,107 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     return true;
   }
 
+  // 工具活动行。抄 ChatGPT 的形态：一行灰字说明在做什么，详情折进去，默认收起。
+  // 原先一个工具一张带边框的卡片，TOOL_CARDS_FIXTURE 那三张就吃满一屏 Pixel 5。
+  function activityRow({ type, label, iconName = '', detailHtml = '', count = 1, open = false }) {
+    const row = document.createElement('div');
+    row.className = 'tool-card activity-row';
+    row.dataset.card = 'action';
+    row.dataset.activity = type;
+    const head = `${iconName ? icon(iconName) : ''}<span class="activity-label">${escHtml(label)}</span>`;
+    row.innerHTML = detailHtml
+      // data-auto-opened 记的是「这是程序为了看实时输出替你打开的」，收尾时只收这些。
+      // 用户自己点开的没有这个标记，turn 结束后保持展开。
+      ? `<details class="activity-fold"${open ? ' open data-auto-opened="true"' : ''}><summary class="activity-toggle">${head}</summary>`
+        + `<div class="activity-detail">${detailHtml}</div></details>`
+      : `<div class="activity-toggle activity-static">${head}</div>`;
+    row.dataset.activityCount = String(count);
+    turnActivityEls.push(row);
+    return row;
+  }
+
+  // turn 收尾：把本轮的活动行折进一句过去时摘要，再在活动区和最终回复之间插一条
+  // 「用时 N 秒」——ChatGPT 那条 divider 的 description 写明就是这个位置。
+  function collapseTurnActivities() {
+    const rows = turnActivityEls.filter(el => el.isConnected);
+    const elapsed = turnStartedAt ? Date.now() - turnStartedAt : 0;
+    turnActivityEls = [];
+    turnStartedAt = 0;
+    if (!rows.length) return;
+
+    // 只折 DOM 上真正相邻的活动行。正文会穿插在工具之间，跨过正文去折会把
+    // 「先说话、再动手、再说话」的顺序搅乱。
+    const groups = [];
+    for (const row of rows) {
+      const tail = groups[groups.length - 1];
+      if (tail && tail[tail.length - 1].nextElementSibling === row) tail.push(row);
+      else groups.push([row]);
+    }
+
+    // 跑完就收起：进行中为了看实时输出而展开的命令行，留着只是占地方。
+    for (const row of rows) {
+      const fold = row.querySelector(':scope > .activity-fold[data-auto-opened="true"]');
+      if (!fold) continue;
+      fold.removeAttribute('open');
+      delete fold.dataset.autoOpened;
+    }
+
+    const blocks = groups.map(group => (group.length < 2 ? group[0] : foldActivityGroup(group)));
+    const divider = document.createElement('div');
+    divider.className = 'worked-for';
+    divider.textContent = workedForLabel(elapsed);
+    blocks[blocks.length - 1].insertAdjacentElement('afterend', divider);
+  }
+
+  function foldActivityGroup(group) {
+    const summary = groupSummary(group.map(el => ({
+      type: el.dataset.activity,
+      count: Number(el.dataset.activityCount) || 1,
+      label: el.querySelector('.activity-label')?.textContent || '',
+    })));
+    const fold = document.createElement('details');
+    fold.className = 'activity-fold activity-group';
+    fold.innerHTML = `<summary class="activity-toggle"><span class="activity-label">${escHtml(summary || '做了几件事')}</span></summary>`;
+    const body = document.createElement('div');
+    body.className = 'activity-group-body';
+    group[0].replaceWith(fold);
+    for (const row of group) body.appendChild(row);
+    fold.appendChild(body);
+    return fold;
+  }
+
+  function setActivityLabel(row, label) {
+    const el = row?.querySelector('.activity-label');
+    if (el) el.textContent = label;
+  }
+
   function renderCommandCard(model) {
-    const card = document.createElement('div');
-    card.className = 'tool-card command-card';
-    if (model.ok === true) card.dataset.ok = 'true';
-    else if (model.ok === false) card.dataset.ok = 'false';
-    const command = model.command || 'streaming output';
-    const exit = model.exitCode == null
-      ? ''
-      : `<div class="tool-exit ${model.ok ? 'tool-ok' : 'tool-err'}">exit: ${escHtml(String(model.exitCode))}</div>`;
-    card.innerHTML = `<div class="tool-name">${escHtml(model.title)}</div>`
-      + `<details${model.running ? ' open' : ''}><summary class="tool-cmd">${escHtml(command)}</summary></details>`
-      + `<div class="tool-output live-output${model.ok === false ? ' tool-err' : model.ok === true ? ' tool-ok' : ''}">${model.output ? renderAnsi(model.output) : ''}</div>`
-      + exit;
-    return card;
+    const command = model.command || '';
+    const row = activityRow({
+      type: 'command',
+      iconName: 'hammer',
+      label: model.running
+        ? activeLabel({ type: 'command', command })
+        : commandDoneLabel(command, model),
+      // 命令跑的时候输出是流式的，收起来就等于看不见。ChatGPT 同样是进行中展开、
+      // 结束后收起——收起的动作在 collapseTurnActivities 里做。
+      open: model.running,
+      detailHtml: `<div class="tool-cmd">${escHtml(displayCommand(command) || 'streaming output')}</div>`
+        + `<div class="tool-output live-output${model.ok === false ? ' tool-err' : model.ok === true ? ' tool-ok' : ''}">${model.output ? renderAnsi(model.output) : ''}</div>`
+        + (model.exitCode == null
+          ? ''
+          : `<div class="tool-exit ${model.ok ? 'tool-ok' : 'tool-err'}">exit: ${escHtml(String(model.exitCode))}</div>`),
+    });
+    row.classList.add('command-card');
+    if (model.ok === true) row.dataset.ok = 'true';
+    else if (model.ok === false) row.dataset.ok = 'false';
+    return row;
+  }
+
+  // 跑挂了的命令不进摘要就没人看得见——退出码非 0 时行首直接写明，不必展开。
+  function commandDoneLabel(command, model) {
+    const name = displayCommand(command) || '命令';
+    return model.ok === false ? `${name} · 失败` : name;
   }
 
   function handleToolUse(payload) {
@@ -2938,7 +3166,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     if (!out) {
       out = document.createElement('div');
       out.className = 'tool-output live-output';
-      card.appendChild(out);
+      (card.querySelector('.activity-detail') || card).appendChild(out);
     }
     return out;
   }
@@ -2968,10 +3196,13 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
       card.classList.add('command-card');
       if (model.ok === true) card.dataset.ok = 'true';
       else if (model.ok === false) card.dataset.ok = 'false';
+      // 进行时 → 完成态：「正在运行 npm test」变回「npm test」，失败再缀上标记。
+      setActivityLabel(card, commandDoneLabel(existingCommand, model));
+      const detail = card.querySelector('.activity-detail') || card;
       let out = card.querySelector('.live-output');
       if (!out) {
         out = document.createElement('div');
-        card.appendChild(out);
+        detail.appendChild(out);
       }
       out.className = 'tool-output live-output ' + (model.ok ? 'tool-ok' : 'tool-err');
       const resultHtml = renderAnsi(model.output);
@@ -2982,7 +3213,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
         exit = document.createElement('div');
         exit.className = 'tool-exit ' + (model.ok ? 'tool-ok' : 'tool-err');
         exit.textContent = `exit: ${model.exitCode}`;
-        card.appendChild(exit);
+        detail.appendChild(exit);
       } else if (exit && model.exitCode != null) {
         exit.className = 'tool-exit ' + (model.ok ? 'tool-ok' : 'tool-err');
         exit.textContent = `exit: ${model.exitCode}`;
@@ -2994,6 +3225,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
 
   function handleResult(payload) {
     finalizeStream();
+    collapseTurnActivities();
     finishAssistantTurn();
     announceTurnComplete(payload?.ok === false ? '回复失败' : '回复完成');
     renderTurnOutcome();
@@ -3027,6 +3259,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
 
     const card = document.createElement('div');
     card.className = 'tool-card';
+    card.dataset.card = 'outcome';
     card.innerHTML = `<div class="tool-name">${icon('clipboard')} 本轮结果</div>`
       + `<pre class="tool-cmd" style="white-space:pre-wrap;font-size:11px;">${escHtml(lines.join('\n'))}</pre>`;
     appendRaw(card, 'codex');
@@ -3044,8 +3277,9 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     const sessionDecision = decisions.includes('acceptForSession') ? `<button class="approve-btn" data-d="acceptForSession">本会话批准</button>` : '';
     const card = document.createElement('div');
     card.className = 'tool-card';
+    card.dataset.card = 'decision';
     card.innerHTML = `<div class="tool-name">${icon('warning')} 需要审批</div>`
-      + `<div class="tool-cmd">${escHtml(payload.command || payload.kind || '需要确认的操作')}</div>`
+      + `<div class="tool-cmd">${escHtml(displayCommand(payload.command) || payload.kind || '需要确认的操作')}</div>`
       + renderApprovalDetails(payload)
       + `<div class="approval-btns">`
       + `<button class="approve-btn" data-d="accept">批准</button>`
@@ -3054,6 +3288,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     appendRaw(card, 'codex');
     const cardKey = payload.needId || String(payload.approvalId);
     pendingApprovalCards[cardKey] = card;
+    refreshWaitingLabel();
     const btns = card.querySelector('.approval-btns');
     btns.querySelectorAll('button').forEach(b => {
       b.onclick = () => {
@@ -3077,12 +3312,27 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
           }
           delete pendingApprovalCards[cardKey];
           needsYou.delete(payload.needId);
-          renderNeedsYouPanel();
-          btns.innerHTML = `<span class="tool-output tool-ok" style="background:transparent;padding:0;">已${b.dataset.d === 'accept' ? '批准' : '拒绝'}</span>`;
+          refreshNeedsViews();
+          refreshWaitingLabel();
+          collapseDecisionCard(card, `已${b.dataset.d === 'accept' ? '批准' : '拒绝'}`);
         });
       };
     });
     scrollBottom();
+  }
+
+  // 决议之后这张卡就是历史记录了：命令在下面的执行行里还会再出现一次，原因和
+  // 按钮都已经没有操作价值。收成一行，标题自带结果与命令摘要，详情仍可展开。
+  function collapseDecisionCard(card, label) {
+    if (!card) return;
+    const cmd = card.querySelector('.tool-cmd');
+    const summary = cmd ? cmd.textContent.trim() : '';
+    const name = card.querySelector('.tool-name');
+    if (name) {
+      name.innerHTML = `${icon('check')} ${escHtml(label)}`
+        + (summary ? `<span class="approval-resolved-cmd">${escHtml(summary)}</span>` : '');
+    }
+    card.dataset.resolved = '1';
   }
 
   function renderApprovalDetails(payload) {
@@ -3122,9 +3372,10 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     const questions = payload.questions || [];
     const card = document.createElement('div');
     card.className = 'tool-card';
+    card.dataset.card = 'decision';
     card.innerHTML = `<div class="tool-name">${icon('question')} 需要回答</div>`
       + questions.map(q => renderQuestion(q)).join('')
-      + (payload.autoResolutionMs ? `<div class="tool-output" style="opacity:.7;background:transparent;color:var(--text-muted);">autoResolutionMs: ${escHtml(String(payload.autoResolutionMs))}</div>` : '')
+
       + `<div class="approval-btns"><button class="approve-btn answer-submit" type="button">提交</button><button class="deny-btn answer-cancel" type="button">跳过</button></div>`;
     appendRaw(card, 'codex');
     const cardKey = payload.needId || String(payload.approvalId);
@@ -3154,7 +3405,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
           return;
         }
         needsYou.delete(payload.needId);
-        renderNeedsYouPanel();
+        refreshNeedsViews();
         markInputCardDone(card, cardKey, successLabel);
       });
     };
@@ -3197,7 +3448,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   function markInputCardDone(card, cardKey, label) {
     delete pendingApprovalCards[cardKey];
     const btns = card.querySelector('.approval-btns:last-child');
-    if (btns) btns.innerHTML = `<span class="tool-output tool-ok" style="background:transparent;padding:0;">${escHtml(label)}</span>`;
+    if (btns) btns.innerHTML = `<span class="approval-result">${escHtml(label)}</span>`;
   }
 
   function handleApprovalRevoked(payload) {
@@ -3213,25 +3464,23 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     finalizeStream();
     const model = fileChangeCard({ files: payload.files || [] });
     if (!model.files.length) return;
-    const card = document.createElement('div');
-    card.className = 'tool-card file-change-card';
-    card.innerHTML = `<div class="tool-name">${escHtml(model.title)}</div>`
-      + model.files.map(file => {
+    // 一个文件就把路径写在行上——「编辑了一个文件」需要再点开才知道是哪个，
+    // 而路径本身就一行放得下。多个才退回计数说法。
+    const label = model.files.length === 1
+      ? `${model.files[0].kindLabel}: ${model.files[0].path}`
+      : `编辑了 ${model.files.length} 个文件`;
+    const card = activityRow({
+      type: 'file-change',
+      iconName: 'pencil',
+      label,
+      count: model.files.length,
+      detailHtml: model.files.map(file => {
         const line = `${file.kindLabel}: ${file.path}`;
         if (!file.expandable) return `<div class="tool-cmd">${escHtml(line)}</div>`;
         return `<details><summary class="tool-cmd">${escHtml(line)}</summary><pre class="tool-output">${escHtml(file.diff)}</pre></details>`;
-      }).join('');
-    appendRaw(card, 'codex');
-    scrollBottom();
-  }
-
-  function handleRawItem(payload) {
-    finalizeStream();
-    const card = document.createElement('div');
-    card.className = 'tool-card';
-    const label = payload?.item?.type || payload?.envelopeType || 'raw';
-    card.innerHTML = `<div class="tool-name">${icon('receipt')} Raw</div>`
-      + `<details><summary class="tool-cmd">${escHtml(label)}</summary><pre class="tool-output">${escHtml(JSON.stringify(payload.item || payload, null, 2))}</pre></details>`;
+      }).join(''),
+    });
+    card.classList.add('file-change-card');
     appendRaw(card, 'codex');
     scrollBottom();
   }
@@ -3248,8 +3497,11 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     }[s] || '•');
     const card = document.createElement('div');
     card.className = 'tool-card';
+    card.dataset.card = 'outcome';
     card.innerHTML = `<div class="tool-name">${icon('clipboard')} 计划</div>`
-      + plan.map(p => `<div class="tool-cmd">${planStatusIcon(p.status)} ${escHtml(p.step || '')}</div>`).join('');
+      // 计划步骤是自然语言的待办项，不是命令：保留 .tool-cmd 的块样式（浅底 + 圆角），
+      // 用 .tool-note 覆盖掉等宽字体和 break-all 断词。
+      + plan.map(p => `<div class="tool-cmd tool-note">${planStatusIcon(p.status)} ${escHtml(p.step || '')}</div>`).join('');
     appendRaw(card, 'codex');
     scrollBottom();
   }
@@ -3261,11 +3513,13 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     if (!appendReasoning.card) {
       const card = document.createElement('div');
       card.className = 'tool-card reasoning-card';
+      card.dataset.card = 'meta';
       card.dataset.streaming = 'true';
-      card.innerHTML = '<details class="reasoning-fold"><summary class="reasoning-toggle"><span class="reasoning-label">思考中</span></summary><div class="reasoning-stack"></div></details>';
+      card.innerHTML = '<details class="reasoning-fold"><summary class="reasoning-toggle"><span class="reasoning-label loading-shimmer">正在思考</span></summary><div class="reasoning-stack"></div></details>';
       appendRaw(card, 'codex');
       appendReasoning.card = card;
       appendReasoning.sections = {};
+      appendReasoning.startedAt = Date.now();
     }
     const section = ensureReasoningSection(channel);
     if (data.kind === 'summary_part_added' && section.textContent.trim()) {
@@ -3293,9 +3547,12 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   const pendingMcpCards = {};
   function handleMcpUse(payload) {
     finalizeStream();
-    const card = document.createElement('div');
-    card.className = 'tool-card';
-    card.innerHTML = `<div class="tool-name">${icon('tools')} ${escHtml(payload.serverName)}/${escHtml(payload.toolName)}</div><div class="tool-cmd">${escHtml(payload.inputSummary || '')}</div>`;
+    const card = activityRow({
+      type: 'mcp',
+      iconName: 'tools',
+      label: activeLabel({ type: 'mcp', serverName: payload.serverName, toolName: payload.toolName }),
+      detailHtml: `<div class="tool-cmd">${escHtml(payload.inputSummary || '')}</div>`,
+    });
     appendRaw(card, 'codex');
     pendingMcpCards[payload.toolUseId] = card;
     scrollBottom();
@@ -3307,7 +3564,8 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
       const out = document.createElement('div');
       out.className = 'tool-output ' + (payload.ok ? 'tool-ok' : 'tool-err');
       out.textContent = payload.outputSummary || (payload.ok ? '(完成)' : '(出错)');
-      card.appendChild(out);
+      (card.querySelector('.activity-detail') || card).appendChild(out);
+      if (!payload.ok) card.dataset.ok = 'false';
       delete pendingMcpCards[payload.toolUseId];
     }
     scrollBottom();
@@ -3318,10 +3576,16 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     finalizeStream();
     const results = payload.results || [];
     if (!payload.query && !results.length) return;
-    const card = document.createElement('div');
-    card.className = 'tool-card';
-    card.innerHTML = `<div class="tool-name">${icon('search')} 搜索: ${escHtml(payload.query || '')}</div>`
-      + results.map(r => `<div class="tool-cmd" style="margin-bottom:4px;"><a href="${escHtml(r.url)}" target="_blank" style="color:var(--accent-text);text-decoration:none;font-weight:600;">${escHtml(r.title)}</a><br><span class="tool-output" style="background:transparent;color:var(--text-muted);padding:4px 0 0;">${escHtml(r.snippet || '')}</span></div>`).join('');
+    // 搜索事件到达时结果已经在手上了，所以直接用完成态说法——和截图里
+    // 「已搜索网页：finance: BTC」一致。
+    const card = activityRow({
+      type: 'search',
+      iconName: 'search',
+      label: payload.query ? `已搜索网页：${payload.query}` : '已搜索网页',
+      // 摘要是一句话说明，不是终端输出。原先借 .tool-output 再用内联 style 把背景、
+      // 颜色、padding 逐个盖掉，只为拿它的字号，等宽是顺带继承的副作用。
+      detailHtml: results.map(r => `<div class="tool-cmd tool-note" style="margin-bottom:4px;"><a href="${escHtml(r.url)}" target="_blank" style="color:var(--accent-text);text-decoration:none;font-weight:600;">${escHtml(r.title)}</a><br><span class="tool-note search-snippet">${escHtml(r.snippet || '')}</span></div>`).join(''),
+    });
     appendRaw(card, 'codex');
     scrollBottom();
   }
@@ -3333,6 +3597,7 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     finalizeStream();
     const card = document.createElement('div');
     card.className = 'tool-card';
+    card.dataset.card = 'outcome';
     card.innerHTML = `<div class="tool-name">${icon('chart')} 变更摘要</div><pre class="tool-cmd" style="white-space:pre-wrap;font-size:11px;max-height:200px;overflow:auto;">${escHtml(payload.diff)}</pre>`;
     appendRaw(card, 'codex');
     scrollBottom();
@@ -3376,10 +3641,15 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
 
   function sealReasoning() {
     const label = appendReasoning.card?.querySelector('.reasoning-label');
-    if (label) label.textContent = '思考过程';
+    if (label) {
+      label.textContent = thoughtLabel(appendReasoning.startedAt ? Date.now() - appendReasoning.startedAt : 0);
+      // 思考结束，微光停下：shimmer 是「还在进行」的信号，留着会一直暗示没完。
+      label.classList.remove('loading-shimmer');
+    }
     if (appendReasoning.card) delete appendReasoning.card.dataset.streaming;
     appendReasoning.card = null;
     appendReasoning.sections = null;
+    appendReasoning.startedAt = 0;
   }
 
   function partDisplayName(part) {
@@ -3389,6 +3659,9 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   }
 
   function appendUserBubble(text, attachments, parts, clientRequestId) {
+    // 一轮的起点是用户按下发送，不是助手开始说话——放在所有 promote 分支之前，
+    // 排队消息转正时同样从这里起表。
+    turnStartedAt = Date.now();
     if (promoteOfflineBubble(clientRequestId)) {
       scrollBottom();
       setBusy(true);
@@ -3402,7 +3675,8 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
       return;
     }
     const el = document.createElement('div');
-    el.className = 'msg user';
+    // .enter 只加在这里：历史回放走 appendHistoryUserBubble，不该逐条滑入。
+    el.className = 'msg user enter';
     let html = `<div class="bubble">`;
     if (attachments?.length) {
       html += `<div style="font-size:11px;opacity:.8;margin-bottom:4px;">${icon('paperclip')} ${attachments.map(a => escHtml(a.name)).join(', ')}</div>`;
@@ -3419,12 +3693,30 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     checkEmptyState();
   }
 
+  let needsYouScrollRaf = 0;
+  messagesEl?.addEventListener('scroll', () => {
+    if (needsYouScrollRaf) return;
+    needsYouScrollRaf = requestAnimationFrame(() => {
+      needsYouScrollRaf = 0;
+      renderNeedsYouPanel();
+    });
+  }, { passive: true });
+
   let typingEl = null;
+  // 审批到达与决议都要把这句话改过来：等审批的时候它没在思考，它在等你。
+  function refreshWaitingLabel() {
+    const shimmer = typingEl?.querySelector('.loading-shimmer');
+    if (shimmer) shimmer.textContent = waitingLabel({ pendingApprovals: Object.keys(pendingApprovalCards).length });
+  }
+
   function showTyping() {
     if (typingEl) return;
     const el = document.createElement('div');
     el.className = 'msg codex';
-    el.innerHTML = `<div class="typing"><span></span><span></span><span></span></div>`;
+    // ChatGPT 的等待态不是三个点，是「正在思考」这几个字本身被一道微光扫过。
+    // 文案和 reasoning 的进行时一致（reasoningItem.thinking），两者前后脚出现，
+    // 用同一句话就不会让人以为是两件事。
+    el.innerHTML = `<div class="typing"><span class="loading-shimmer">${waitingLabel({ pendingApprovals: Object.keys(pendingApprovalCards).length })}</span></div>`;
     typingEl = el;
     messagesEl.appendChild(el);
     scrollBottom();
@@ -3436,6 +3728,11 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
 
   function ensureAssistantTurn() {
     if (activeAssistantTurnEl) return activeAssistantTurnEl;
+    // 计时兜底：正常路径由 appendUserBubble 起表。这里只管没有用户气泡的轮次
+    // （推送恢复、历史续跑），已经在计的不要重置——renderTurnOutcome 会另起一个
+    // turn 容器，那一下重置会把下一轮的起点挪到上一轮收尾的时刻。
+    if (!turnStartedAt) turnStartedAt = Date.now();
+    turnActivityEls = [];
     const turn = document.createElement('div');
     turn.className = 'msg codex assistant-turn';
     turn.dataset.active = 'true';
@@ -3450,7 +3747,36 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     if (!activeAssistantTurnEl) return;
     delete activeAssistantTurnEl.dataset.active;
     activeAssistantTurnEl.removeAttribute('aria-busy');
+    appendTurnActions(activeAssistantTurnEl);
     activeAssistantTurnEl = null;
+  }
+
+  // turn 末尾的操作条。ChatGPT 那排是 复制 / 赞 / 踩 / 分享，这里只做复制：
+  // 赞踩要有接收反馈的一端，分享要有公开链接，这个自用客户端两样都没有，
+  // 按上去没反应的按钮比没有按钮更糟。
+  function appendTurnActions(turn) {
+    if (turn.querySelector(':scope > .turn-actions')) return;
+    if (!turn.querySelector('.bubble.md')) return;
+    const bar = document.createElement('div');
+    bar.className = 'turn-actions';
+    bar.innerHTML = `<button type="button" class="turn-action" data-action="copy" aria-label="复制回复">${icon('copy')} 复制</button>`;
+    bar.querySelector('[data-action="copy"]').onclick = () => copyTurnText(turn, bar);
+    turn.appendChild(bar);
+  }
+
+  async function copyTurnText(turn, bar) {
+    const text = [...turn.querySelectorAll('.bubble.md')]
+      .map(el => el.dataset.raw ?? el.textContent ?? '')
+      .join('\n\n')
+      .trim();
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      bar.dataset.copied = 'true';
+      setTimeout(() => { delete bar.dataset.copied; }, 1500);
+    } catch {
+      appendError('复制失败，浏览器拒绝了剪贴板访问');
+    }
   }
 
   function announceTurnComplete(message) {
@@ -3474,9 +3800,9 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     return wrapper;
   }
 
-  function appendSystem(msg, isError) {
+  function appendSystem(msg, isError, extraClass) {
     const el = document.createElement('div');
-    el.className = 'msg system-msg' + (isError ? ' error-msg' : '');
+    el.className = 'msg system-msg' + (isError ? ' error-msg' : '') + (extraClass ? ` ${extraClass}` : '');
     el.innerHTML = `<div class="bubble">${escHtml(msg)}</div>`;
     messagesEl.appendChild(el);
     scrollBottom();
@@ -3497,14 +3823,20 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     finishAssistantTurn();
     messagesEl.innerHTML = '';
     pendingToolCards = {};
+    // 卡片随会话一起离开 DOM，那些待办就从「看得见」变回「看不见」，横幅要重新出现。
+    // 不清缓存键的话 renderNeedsYouPanel 会认为集合没变而直接返回，横幅永远不回来。
     pendingApprovalCards = {};
+    lastBannerKey = null;
     queuedUserBubbles = [];
     offlineUserBubbles = [];
     renderedOutboxStates = new Map();
     followTranscript = true;
     jumpToLatestBtn.hidden = true;
     setBusy(false);
+    // checkEmptyState 会刷落地页的「N 项等你批准」，横幅得跟着同一时刻重算——
+    // 否则两者读同一份 needsYou 却停在不同的时刻上。
     checkEmptyState();
+    renderNeedsYouPanel();
   }
 
   // Connection UI states
@@ -3529,7 +3861,12 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
       : '发送';
     sendBtn.setAttribute('aria-label', sendBtn.title);
     const followUpBtn = $('followup-btn');
-    if (followUpBtn) followUpBtn.hidden = !state.followUpVisible;
+    if (followUpBtn) {
+      followUpBtn.hidden = !(state.stopVisible || state.followUpVisible);
+      followUpBtn.dataset.mode = state.stopVisible ? 'stop' : 'send';
+      followUpBtn.title = state.stopVisible ? '中断' : '发送下一条';
+      followUpBtn.setAttribute('aria-label', followUpBtn.title);
+    }
   }
 
   function interruptCurrentTurn() {
@@ -3550,17 +3887,13 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     busy = b;
     if (!b) interruptPending = false;
     renderConnectionState();
-    const spinner = $('mini-status-spinner');
-    if (spinner) spinner.style.display = b ? 'inline-block' : 'none';
     if (!b) hideTyping();
     applyComposerMode();
   }
 
   function renderConnectionState() {
     const state = sessionStatus?.state || (busy ? 'running' : 'idle');
-    const dotState = state === 'awaiting_approval' ? 'awaiting' : (state === 'running' ? 'busy' : state);
     const connected = isTransportConnected();
-    statusDot.className = connected ? `connected ${dotState}` : '';
     if (stateLabel) stateLabel.textContent = connected ? state.replace('_', ' ') : 'offline';
     paintConnectionBanner();
   }
@@ -3624,13 +3957,53 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   }
 
   function scrollBottom(force = false) {
+    // 任何一次瞬时滚动都打断插值，否则切会话后残留的循环会接着滚新会话的内容。
+    if (followRaf !== null) {
+      cancelAnimationFrame(followRaf);
+      followRaf = null;
+    }
     if (!force && !followTranscript) {
       paintJumpToLatest();
       return;
     }
     messagesEl.scrollTop = messagesEl.scrollHeight;
+    // content-visibility: auto 会让 scrollHeight 低估还没布局的最后一张卡。
+    // 先把最后节点滚进视口逼它布局，再钉回真正的底部（含 padding）。
+    messagesEl.lastElementChild?.scrollIntoView({ block: 'end', inline: 'nearest' });
+    messagesEl.scrollTop = messagesEl.scrollHeight;
     followTranscript = true;
     paintJumpToLatest();
+  }
+
+  /**
+   * 流式跟随专用：把「贴到底部」这件事摊到多帧完成。
+   *
+   * 直接 scrollTop = scrollHeight 的问题不是频率而是颗粒度——内容每 ~100ms
+   * 长出两行，视口就整齐地跳 46px，实测 92% 的帧纹丝不动，剩下 8% 在跳。
+   * 提高渲染频率解决不了：内容到达速率是固定的，多出来的帧只是空转。
+   */
+  function followBottomSmooth() {
+    if (!followTranscript) {
+      paintJumpToLatest();
+      return;
+    }
+    if (followRaf !== null) return; // 循环已在跑，它每帧都读实时距离
+    followRaf = requestAnimationFrame(function step() {
+      followRaf = null;
+      if (!followTranscript) return;
+      const delta = transcriptDistanceFromBottom();
+      if (delta <= 0.5) return;
+      // 距离超过跟随阈值就直接到位。插值只用来磨掉小跳变的颗粒感；给大跳变
+      // 做动画反而危险——追赶期间距底距离会持续高于阈值，下面那个 scroll
+      // 监听会把它误判成「用户上滑了」，跟随就此关掉。
+      if (delta > TRANSCRIPT_FOLLOW_DISTANCE_PX) {
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+        return;
+      }
+      // 每帧吃掉剩余距离的一部分；保底 1px 是为了收尾，否则会无限逼近。
+      messagesEl.scrollTop += Math.max(1, delta * 0.28);
+      followRaf = requestAnimationFrame(step);
+    });
   }
 
   messagesEl.addEventListener('scroll', () => {
@@ -3647,27 +4020,17 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     if (sendBtn.dataset.mode === 'stop') interruptCurrentTurn();
     else sendMessage();
   };
-  $('followup-btn').onclick = sendMessage;
-  $('native-thread-refresh').onclick = () => refreshNativeThreads(true);
-  $('native-compact-btn').onclick = startCompact;
-  $('native-rollback-btn').onclick = rollbackThread;
-  $('native-models-btn').onclick = loadNativeModels;
-  $('native-files-btn').onclick = () => openFileBrowser(serverCwd);
+  $('followup-btn').onclick = () => {
+    if ($('followup-btn')?.dataset.mode === 'stop') interruptCurrentTurn();
+    else sendMessage();
+  };
   $('native-account-btn').onclick = loadAccountPanel;
   $('native-mcp-btn').onclick = loadMcpPanel;
   $('native-health-btn').onclick = loadHealthPanel;
   $('native-devices-btn').onclick = loadDevicesPanel;
   $('native-skills-btn').onclick = loadSkillsPanel;
   $('native-import-btn').onclick = detectExternalAgentConfig;
-  $('native-p3-btn').onclick = openP3Panel;
   $('native-host-config-btn').onclick = openHostConfigPanel;
-  // 工具按钮在抽屉里:点任一按钮后关闭抽屉,让主区的数据面板可见
-  const nativeControlsRegion = $('native-controls');
-  if (nativeControlsRegion) {
-    nativeControlsRegion.addEventListener('click', (e) => {
-      if (e.target.closest('.native-control-btn')) closeDrawer();
-    });
-  }
   inputEl.addEventListener('keydown', e => {
     if (e.key !== 'Enter' || e.shiftKey) return;
     e.preventDefault();
@@ -3680,14 +4043,53 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     applyComposerMode();
   });
 
+  // 斜杠命令的副作用绑定。解析在 slash-commands.js（纯函数、可单测），这里只把
+  // action id 接到已有的面板/socket 动作上——第一档全是现成函数，没有新协议调用。
+  function runSlashAction(action, args = '') {
+    switch (action) {
+      case 'review': startReview(args); return;
+      // 命令表逐行长度不一，系统消息默认居中会让左边参差不齐，单独左对齐。
+      case 'session-settings': openSessionSettings(); return;
+      case 'diff': workspacePanel.open('changes'); return;
+      case 'compact': startCompact(); return;
+      case 'new-session': createNewSession(); return;
+      case 'files': workspacePanel.open('files'); return;
+      case 'mcp': loadMcpPanel(); return;
+      case 'skills': loadSkillsPanel(); return;
+      case 'account': loadAccountPanel(); return;
+      // 分发表里加了命令却忘了接线时，宁可报错也不要静默——静默正是旧 popup 的失败形态。
+      default: appendSystem(`命令未接线：${action}`, true);
+    }
+  }
+
   async function sendMessage() {
     if (interruptPending) return;
-    const modeSlash = parseCollaborationModeSlash(inputEl.value);
-    if (modeSlash) {
-      applyCollaborationMode(modeSlash.mode);
-      inputEl.value = modeSlash.rest;
+    const slash = resolveSlashCommand(inputEl.value);
+    if (slash?.kind === 'unknown') {
+      appendSystem(`未知命令 ${slash.cmd}。输入 / 看可用命令，草稿已保留`, true);
+      return;
+    }
+    if (slash?.kind === 'unsupported') {
+      appendSystem(`${slash.cmd} 在手机端用不了：${slash.reason}。草稿已保留`, true);
+      return;
+    }
+    if (slash?.kind === 'action') {
+      runSlashAction(slash.action, slash.args);
+      inputEl.value = '';
+      inputEl.style.height = 'auto';
+      hideSlashPopup();
       applyComposerMode();
-      if (!modeSlash.rest && !currentAttachments.length && !currentInputParts.length) return;
+      return;
+    }
+    if (slash?.kind === 'mode') {
+      if (!settingsCapabilities?.available?.collaborationModes?.includes(slash.mode)) {
+        appendSystem('当前连接不支持此模式，草稿已保留', true);
+        return;
+      }
+      if (!await applyCollaborationMode(slash.mode)) return;
+      inputEl.value = slash.rest;
+      applyComposerMode();
+      if (!slash.rest && !currentAttachments.length && !currentInputParts.length) return;
     }
     const text = inputEl.value.trim();
     const hasAttachments = currentAttachments.length > 0;
@@ -3803,6 +4205,10 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
     };
   }
   initPush();
+
+  // ---- 上下文用量 ----
+  // 环上画的是比例，具体数字点开才有。触屏上这是唯一的通道——title 弹不出来。
+  contextMeterEl.onclick = () => setContextDetailOpen(contextMeterDetailEl.hidden);
 
   // ---- 附件 ----
   attachBtn.onclick = () => fileInput.click();
@@ -3934,12 +4340,38 @@ import { createDeviceToken, decodeBase64Text, urlBase64ToUint8Array } from '/js/
   $('drawer-close').onclick = closeDrawer;
   $('drawer-archived-toggle').onclick = toggleArchivedThreads;
 
+  // ── 设置与状态 ──────────────────────────────────────────────────────
+  const settingsSheet = $('settings-sheet');
+  const settingsSheetOverlay = $('settings-sheet-overlay');
+
+  function openSettingsSheet() {
+    // 先收抽屉：它是这张 sheet 的来路，留着只会在 sheet 旁边露出一条，
+    // 而且两层都能滚，手指落在哪一层全看运气。
+    closeDrawer();
+    settingsSheetOverlay.hidden = false;
+    settingsSheet.hidden = false;
+  }
+
+  function closeSettingsSheet() {
+    settingsSheet.hidden = true;
+    settingsSheetOverlay.hidden = true;
+  }
+
+  $('btn-general-settings').onclick = openSettingsSheet;
+  $('settings-sheet-close').onclick = closeSettingsSheet;
+  settingsSheetOverlay.onclick = closeSettingsSheet;
+
+  // #native-panel 不是浮层,它插在页面顶部把消息流挤下去 —— sheet 不收起来就看不见它。
+  // 用冒泡而不是逐个包装 onclick:那些按钮的 onclick 早已各自绑定,包装一遍要动 7 处。
+  $('settings-sheet-body').addEventListener('click', ev => {
+    if (ev.target.closest('.settings-action-btn')) closeSettingsSheet();
+  });
+
   $('header-context').onclick = () => {
     workspacePanel.open();
   };
-  $('header-home').onclick = goHome;
   $('header-new').onclick = () => {
-    createNewSession();
+    goHome();
     closeDrawer();
   };
   $('confirm-modal')?.addEventListener('click', event => {

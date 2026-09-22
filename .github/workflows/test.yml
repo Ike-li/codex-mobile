@@ -2,7 +2,7 @@ name: Test
 
 on:
   push:
-    branches: [master]
+    branches: [master, dev]
   pull_request:
     branches: [master]
   schedule:
@@ -42,6 +42,14 @@ jobs:
         if: matrix.node-version == 20
         run: npm run lint
 
+      - name: Check import boundaries
+        if: matrix.node-version == 20
+        run: node scripts/gates/check-import-boundaries.js
+
+      - name: Check invariant ids
+        if: matrix.node-version == 20
+        run: node scripts/gates/check-invariant-ids.js
+
       - name: Run tests
         run: npm test
 
@@ -65,10 +73,11 @@ jobs:
         # 手机，只装 chromium 等于 iOS 侧零覆盖；漏装的症状是 E2E 报
         # "Executable doesn't exist"，读起来像配置坏了而不像少装了浏览器。
         #
-        # --with-deps 不能省：它装的是浏览器自身的二进制，系统库要另外装。ubuntu-latest
-        # 滚到 24.04 后 webkit 依赖 libgtk-4（此前是 libgtk-3），runner 镜像里没有，
-        # 于是每个 mobile-webkit 用例在 2~3ms 内以 "browserType.launch: Host system is
-        # missing dependencies" 挂掉 —— 失败得太快，看起来像用例本身坏了。
+        # --with-deps 不能省：runner 镜像自带 chromium 要的系统库，但没有 webkit 要的
+        # libgtk-4 / libgraphene / libevent / libopus / libgst*。缺它们时浏览器二进制
+        # 装得上、启动即失败（"Host system is missing dependencies"），每条用例 3-4ms
+        # 就红——看起来像用例写坏了，其实一次都没跑起来。webkit 自 6dee6bb 加进矩阵后
+        # 整条腿从未真正执行过，而这一直被前面单测的红挡着，直到 2026-09-13 才显形。
         run: npx playwright install --with-deps chromium webkit
 
       - name: Run E2E tests

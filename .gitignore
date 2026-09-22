@@ -3,11 +3,17 @@ node_modules/
 
 # Secrets & runtime state
 .env
+# 含 AUTH_TOKEN 与 VAPID 私钥，与 .env 同级敏感
+codex.config.json
+# .env 的备份同样含 AUTH_TOKEN。不写 .env.* —— 那会把要入库的 .env.example 一起挡掉。
+.env.bak*
 *.log
 data/
 workdirs.json
-.codex-chat-approval-audit.jsonl
-.codex-chat-rpc.jsonl
+# 带 * 是因为这两个日志会轮转：只写 .jsonl 时，8.8MB 的 .jsonl.1 会一直
+# 挂在 untracked 列表里等着被 `git add -A` 收进版本库（2026-09-10 实际发生过）。
+.codex-chat-approval-audit.jsonl*
+.codex-chat-rpc.jsonl*
 
 # Generated test/coverage artifacts
 coverage/
@@ -22,6 +28,7 @@ _shot.mjs
 reasonix.toml
 .reasonix
 .bug-hunter/
-tmp-ui-shots/
 .ccm-uploads
 draft
+# 工具开的 git worktree：整个仓库的另一份 checkout，不该被跟踪
+.claude/worktrees/

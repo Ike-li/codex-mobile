@@ -87,12 +87,12 @@ test.describe('语义色 token 快照(浅色)', () => {
         // 不一致手调值,统一到 --warn-text 是目的;蓝通道 +14,ΔE≈4。
         color: 'rgb(110, 78, 14)',
       },
+      // 2026-09-14 去绿:--success 并入中性 --accent,这一档整体从绿变灰。
+      // 三个通道各自相等说明它真的落在中性轴上,没有残留色相。
       'connBanner.success': {
-        backgroundColor: 'rgb(228, 243, 237)', // was #e8f7ef (232,247,239)
-        // 归位②:was #9ad8b2 (154,216,178)。#9ad8b2 色相偏黄绿(143°),不在绿基色
-        // #1a9d6d(158°)与白的连线上,最大通道 Δ=9。
-        borderTopColor: 'rgb(145, 208, 185)',
-        color: 'rgb(22, 108, 76)', // was #0d6b45 (13,107,69),Δ≤9
+        backgroundColor: 'rgb(226, 226, 226)', // was 绿底 rgb(228,243,237)
+        borderTopColor: 'rgb(139, 139, 139)', // was 绿边 rgb(145,208,185)
+        color: 'rgb(13, 13, 13)', // was 绿字 rgb(22,108,76);现在就是 --text
       },
       pendingPanel: {
         backgroundColor: 'rgb(251, 243, 226)',
@@ -103,8 +103,9 @@ test.describe('语义色 token 快照(浅色)', () => {
         borderTopColor: 'rgb(242, 213, 155)',
       },
       needsYouHeading: { color: 'rgb(110, 78, 14)' },
-      // --diff-* 的 rgba 精确等于 --accent-light / --error,color-mix 化后逐通道相同。
-      diffAdd: { backgroundColor: 'rgba(16, 163, 127, 0.12)' },
+      // 去绿后新增行是中性灰、删除行仍是红,这一对不再对称——「全部换掉,含 diff」
+      // 的已知代价,不是漏改。
+      diffAdd: { backgroundColor: 'rgba(13, 13, 13, 0.12)' },
       diffDel: { backgroundColor: 'rgba(223, 28, 28, 0.1)' },
     });
   });
@@ -129,10 +130,11 @@ test.describe('语义色 token 快照(深色)', () => {
         borderTopColor: 'rgb(91, 68, 24)', // was #5a4520 (90,69,32)
         color: 'rgb(229, 180, 84)', // was #e0b05a (224,176,90)
       },
+      // 去绿:深色档同样落到中性轴上,方向相反(亮面混进暗底)。
       'connBanner.success': {
-        backgroundColor: 'rgb(30, 49, 38)', // was #163226 (22,50,38)
-        borderTopColor: 'rgb(34, 86, 56)', // was #24543a (36,84,58)
-        color: 'rgb(134, 221, 171)', // was #87e0a2 (135,224,162)
+        backgroundColor: 'rgb(54, 54, 54)', // was 绿底 rgb(30,49,38)
+        borderTopColor: 'rgb(99, 99, 99)', // was 绿边 rgb(34,86,56)
+        color: 'rgb(242, 242, 242)', // was 薄荷绿字 rgb(134,221,171);现在就是 --text
       },
       pendingPanel: {
         backgroundColor: 'rgb(57, 47, 26)',
@@ -143,7 +145,7 @@ test.describe('语义色 token 快照(深色)', () => {
         borderTopColor: 'rgb(91, 68, 24)',
       },
       needsYouHeading: { color: 'rgb(229, 180, 84)' },
-      diffAdd: { backgroundColor: 'rgba(16, 163, 127, 0.2)' },
+      diffAdd: { backgroundColor: 'rgba(242, 242, 242, 0.2)' },
       diffDel: { backgroundColor: 'rgba(223, 28, 28, 0.18)' },
     });
   });

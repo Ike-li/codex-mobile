@@ -1,0 +1,172 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:9e1340601219b3a736fa2257a49afe3dc923874734d3e674196142ae115e66b3",
+  "claims": [
+    {
+      "id": "claim_c57fe7c683244ee8b61d7c9a9c692a8c",
+      "statement": "QUOTA-01 由四条断言守护：globalSetup 挂着 mock 探测、webServer.command 是 mock 脚本、mock-server.js 显式覆盖 CODEX_BIN 且 mock-codex.sh 自报 mock-codex、测试不得把 codexBin 写成字面量 codex。",
+      "evidence": [
+        {
+          "resource": "repo://test/invariants/zero-quota-guard.test.mjs#L1-L78",
+          "version": "repo-lines-v1:sha256:8545c0e5a082ea1612308ce69ac15055bfcbb0e20ee2e86ddbf941a7b0aa368a:eyJzZWxlY3RlZExpbmVDb3VudCI6NzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMzZmEyNWU5YjYxNTVjY2FjYzBiYTU4MDYxMzRkNDI5Mjg3MjY5YTgwMDc3MWU3OTZhZjRiYjVjMTRlOWM4ZjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e45ee2337d154536a4abf89f8edf6e88",
+      "statement": "测试里把 codexBin 写成字面量 codex 会引入对宿主机 PATH 的隐式依赖，没装 codex 的机器上进程会静默死掉而不是给出失败用例；CI 的 Node 22 腿因此连续失败五次以上。",
+      "evidence": [
+        {
+          "resource": "repo://test/invariants/zero-quota-guard.test.mjs#L35-L62",
+          "version": "repo-lines-v1:sha256:fbbe63c3e718b3a157d436e68b4fc95ad71c81966c6f59a38ad419d003433106:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxZTM4OGU1N2YxNjAyOTUxOTE0MDlkODNiYjMyNDViZjg0YTRkNjUyYjIxYTZkNjM1ZjM1ZWE2MGFkMjY1NDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2ZjViNDBiMTU4NDU3ZDE3ODY0ZjIxNzkwNzg2ZGQ1YTJlY2RiNjRiNjZhNjUxZjc4OGQ0ZTI1Y2QzMzAzZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY4MGQyZGQ0ZjI4OWQyNmRjNzU3YzJiNjVhMDZjMzkyMjdhNjcxN2M0YjQ4YjVhMzk3OTJjOWYxMWU0MWFlYTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBjZGJlMDk3ZTNlYzhjNTFmY2IyZGE3NDZiOTYyOWQ0MDVjM2IwYjFjNDRhMmM5NmE3NDFjMjQwMTkyMjRlOGIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b46bf83b03a640bda31508caad43b98a",
+      "statement": "测试文件扫描器是递归的并带一条 files.length 至少 50 的地板断言，因为扁平扫描在分层后会扫到 0 个文件，而那与「一个违规都没有」在断言上完全一样。",
+      "evidence": [
+        {
+          "resource": "repo://test/invariants/zero-quota-guard.test.mjs#L39-L56",
+          "version": "repo-lines-v1:sha256:60e642e7e7a5e0dcb9a6f277dfff6e05d6770c1d742938bf7c6896d40d5a730c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjViZWNkOGQzNGU2ZGVjMzdkYTc4YzE3NGY4Y2M1ZmUxNzQxYjQ2YmQzODU5ZjEyNTU4Nzc1M2U5NmIzOGFmNzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdhOGM1NDM0YTM0MmExMDlhNjJlZjgwYzFkODllOWQ4ZTk0YTIyODY0MWE5NjAwNjkzNTE1Nzk3MmVlODVlMWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIzZDkyNzI2MjE5ZmM3MTFmYWM2MjQzNGMyZTZhZDdjYWJlZDIyZDAyNWE4NWViNTVjZDY1MjEzNDM1YWQ3NDYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ5Y2U3YjhkZjM4NWUwNmRjOGY2NThhY2ZhYzM4ZGM1MDQ4NDE5ZWJkNzhjMWUyNWIxNzM1ZWNhYTllMzI2ZjUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_85519255b41d4f9fba7fddb947a448f9",
+      "statement": "需要运行时探测而非只静态检查配置，是因为 reuseExistingServer 在本地为 true：端口上已有一个接了真 CLI 的实例时配置文件本身是对的、错的是运行环境。",
+      "evidence": [
+        {
+          "resource": "repo://e2e/assert-mock-backend.js#L1-L11",
+          "version": "repo-lines-v1:sha256:023d377baf87ee284e1f0e9f3ff6c97f7abbf8dd4afa4e1259f0afca2839092a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBiODE0MWZkZjcwODU5MTMxYWYwMzkzYTcyMTUwMzM1ZjZkZGQ5YTBjOTkwYmFkMjljMmQ4N2UzN2MwYWIzYTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQyNzdmNTdjODVkNDFkNmFhZDNmY2FmOWZkOTdhYWEzOTdlMTc0YTZlYTEwMTMwYmIwNzFiNWRiYWU5ZTM2YWYifQ"
+        },
+        {
+          "resource": "repo://playwright.config.js#L41-L46",
+          "version": "repo-lines-v1:sha256:ccb36a124f9909fc973586f6783e88cbd4d5ee80408b219facc4a0d72af5bb86:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzE1YzBiMGRhMDAwMjI3YmIzZjIwZWQyMjcwNGI5MWQzZDc3OGVmYzNiMTNmNjRjMGM5YWZjNzM3MzYwYTA2NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGQ1Y2QyZmI0ZjNkZjg4NDUxNTI1NWIzOTUyM2YyZjhiNTQ3MmJlZWE5ZjU2NmZmY2EyMDRkYjgwMjU2MTA0MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTZkODdhYjE3ZWUwMGJiZTk0YTczZmNhYTRhZTY4YjMzZDg4ZDZmYzYyYjQ1MDE1Zjk3OTQxZDk4NmQ3YzI1NCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjEsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjZmNWI0MGIxNTg0NTdkMTc4NjRmMjE3OTA3ODZkZDVhMmVjZGI2NGI2NmE2NTFmNzg4ZDRlMjVjZDMzMDNkMiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_3e7e720228894b9fbe3507c97e7c91df",
+      "statement": "mock 探测的判据是 /health 的 versions.codex 前缀，该值来自 server 启动时对 CODEX_BIN 执行 --version，是后端真实接了谁的直接证据；探测带六次重试以免把「mock 还在启动」误判成「没有 server」。",
+      "evidence": [
+        {
+          "resource": "repo://e2e/assert-mock-backend.js#L12-L57",
+          "version": "repo-lines-v1:sha256:6dd81830a3e56945aaeeeca873a3e9429570f98c6edcb6b0a50ebde71621700e:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFjZTI5ZmNlZTJiYTkxMTU0ZjE3MDMzNzgxMGE3ZmNlNTg3ODQ0M2YzNGQ2ZjI1NmQyZDI3NTAzZTk4Mzg5OTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIyYjRiMmUwYTQzY2QzNTNkZmQzYmM1MDZhZWFiNWQ5YWFlOTRmYzAwMjNkYmViODQwNDBjYTE0MGE2ZDkxNWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_39c4c3b01d20463499dc1bb9f19f98a2",
+      "statement": "mock-server.js 把临时工作区做成一个分支名固定为 work、含未暂存 / 已暂存 / 未跟踪三种状态的 git 仓库，否则工作区面板的改动标签渲染成空框而可见性断言仍然是绿的。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/mock-server.js#L23-L47",
+          "version": "repo-lines-v1:sha256:ea869c6daef42e4757586774bedb047c7817fc6c76918f3e1994f392d2271fbc:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMzZmI0Nzc4MDJlMTU3YzgxMDgxNzQxOTIyNjFlZjI4Mzc1M2UxMWIzNTAxZWY0OTg2MzU2ZWY0ZjY3MWQ0YWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjNGM4YjM1OWJkOWZhMWFjOWIxOGU0Y2E1OTFmNmNlZDliZDU4ZWI1YzY3ZGJlNjhhNWZlMWEwMjM3YTY3ZmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc1MzAxNzExOTk5Nzk2ZDg1NzU3ZGNlZWJhMDIwZTAyNTBlZGU3ZTIzNjQxNzEzY2E2ODQ1YmVmMzY0MjFkMGYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f825b7e21ace496bbf915926fa931209",
+      "statement": "mock 入口覆盖一批环境变量（CODEX_BIN 指向 mock-codex.sh、端口 3232、空 AUTH_TOKEN、read-only sandbox）后直接 import 真正的 server.js，所以 E2E 跑的是生产服务器代码。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/mock-codex.sh#L1-L10",
+          "version": "repo-lines-v1:sha256:568bae92d8fbaf7dcceede3069ef56b369b0a011a76c44408a4a4e7a90c098fd:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE4MDc2ZDNkMjhkMjFlMDIwMTJiMjBlYWY3ZGJmNzU0MDlhNjI3NzEzNDQzOTAyNWYyODJlMzY4ZTMzMDVhYmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3NjlkMjM3Y2Q0MjBiOWQzOGI5ODFhMGE0ZjY3NzAxOTBhNGE4M2RjYTFmZTU2YzRmNWJhMWUyY2JjMGVmNzYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://scripts/mock-server.js#L49-L61",
+          "version": "repo-lines-v1:sha256:92953854e1bc580cbe854fc6a4fe4ed82af68c0a3dd7321cf24e03b4d97c93a9:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY1OWM0M2ZlNjc5OTgxM2I0Nzg1MWJkNGRlYzNhNGM3MGQ5NTRjNDZhNzJmYWE1MDA5NmRlODE1YjZkZDM0YzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBmY2UzMTdlMGNmYTMxMTYyYjhjNTUwN2YzZDY5OTMyMGUxMGY2NTJhMzE4YjM0MjI5ZGJhZDJjMjRhOTc5ZjMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMzNDc2YmJiYTU0NzYzZmQwMTA1ODViZDU5Y2YwNTNjNDFmNTg1YTQ4NTlkM2I4NGNlY2RmNmY5ZmUzNzhlYTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_eea630fc5f0f4f418254f1343a2801c3",
+      "statement": "mock app-server 在 stdio 上模拟 JSON-RPC，覆盖 initialize、thread/*、turn/*、review/start、account/*、skills/list、config/read、model/list、mcpServerStatus/list 等方法，并会主动发起审批请求。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/mock-codex-app-server.js#L300-L320",
+          "version": "repo-lines-v1:sha256:2e1669f4409cd569fbbdb491ef68a0505e8ae827fda921ec137352a57f5e1590:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFlMzI1NjUwMDQzM2M3ZmM1OWE0YWVhZmU2ZmI2Mzc1OGExYjEzOTE4ZjkyMzAzYWVmNDk2YTJiNDYwNjhhODEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU4ZWJmNDRlMGM3ZmM3OWM3Mzk2Zjk0MmZhZGI2MTMzZGJmZmNiYTc3ZTg5MGQwNzNkOWM5NGVjYjJkMmY2MDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRmNzAzMWE4YWRjMzRiY2QzNmFhNDc3NzRiMjVhOGMxZDg2MjE1NWExMGQ2OTk0OTc1ODYxMjRmMDg2MjBiNDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhlZTQ1MWI2N2ZmNWE3NDQ2ZjcyZGM4Mzk0YmM0ZTNkMjJiMzkyMzk4N2IwMWMzMTMyOTE3MDFjNjUxMzZmZmYifQ"
+        },
+        {
+          "resource": "repo://scripts/mock-codex-app-server.js#L520-L620",
+          "version": "repo-lines-v1:sha256:d2f830b3d6acee3d199ba5da45dd3876f65fa4d2b8fd338a7e1bc284d821a1de:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAxLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIyN2U1Nzg4ZDVkOWQ3M2QyNGE4MWRiYzBhNWE3NGJmYTgyYzljM2IzYWY5OWU1MmFmNzk2ZTkwYjQ2OGE4YTNkIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI2MTM0MGZmMTY2NmZkNDFjYjA1M2UxMTNkZjdhODdlMTNiMGU4MzcwY2YwMGYxYjFkNmYxYTkwZTIyNWQ1NWMwIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIwYTI5ZTc4ODBmYzRhOTU0NmNhNzFlZTg2ZDJmMjZkMTliMDNmY2YyMWZkNjc2NzhiNGRkMWZkYTY5MmVmYTRmIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI4OTZjMTVkZTQ1YTgxNzEzMDAyNTdhOGMyYmU1MGM0NmVmMjE2MDY3Nzg2Nzg3N2M0OWI1Y2MzYzJhZjUzMWJhIn0"
+        }
+      ]
+    },
+    {
+      "id": "claim_2045fbf5f15c40ed96f63f6e61358b8c",
+      "statement": "mock 必须保留归档态语义：thread/list 若忽略 archived 参数，前端「显示已归档」的往返链路就无法回归，任何过滤 bug 都测不出来。",
+      "evidence": [
+        {
+          "resource": "repo://scripts/mock-codex-app-server.js#L11-L16",
+          "version": "repo-lines-v1:sha256:88bea74d0b4c9c38d95596cac81ea4d2b3c8547d02294645188c7e9c9740be1a:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjZjZTY2OTZmMWE5ODM1ZmVjNjUxNTM0ZjNhMDFmMDEyZTNhNThmYjA4YjEwMjI1ODRmNjFhOWFhYmFmYzM3NyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzAxZDg1M2YxOWM1ZDJkMDQ1Y2IxNDczZjAxOGNlMmJjZGRhYTNmZDNlZWU3YjcyOTM2YWEwYzEyZWY0MWU3YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNmQzMjQzYTE1YzQyZGRiZTdjM2FkMmQ3NGMzZTZkMDA3ZjA5ZmQyZjQ3NDgxOTBhMDIwNGY1NmE4NDcxOGRiZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjc5ZjkzNjViNWVlOThkM2FlMWE2OGQ1YzY2OGY1NzIwZjc3ZGNlN2ZhODAwYmNkNDhhZDljY2RhYjU1ZTIyOCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_86b90e1c3a2a4b8d952a2ff07c7ded9e",
+      "statement": "Playwright 跑两个 project（Pixel 5 的 mobile-chrome 与 iPhone 13 的 mobile-webkit），且 WebKit 验不了 PWA 安装、真实 Web Push、软键盘几何与 Safari 存储驱逐，那些只能真机人工验证。",
+      "evidence": [
+        {
+          "resource": "repo://playwright.config.js#L18-L40",
+          "version": "repo-lines-v1:sha256:81474bbc2e27cf8f7069915962c4d2ebf3d9d8c4a5676279cf268943e86ff688:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdhODE1MmM0YTRiMzFkZjE2YTJlYzc1YWM2YTIxOThiNDZlZjMzMWU1Y2M1ZjUwYWZiMjViYjQxODJiODMyYzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk2NGQ4YzA3MzQyOTg5MzEwMTU3NmQ4OGQ5OTEyN2U4OWQ2ODkxZDNiMTdlODlkZjAyZWM5YWU3MDcwNWQ4YmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRmOTJmZjk0MjljNGE5ZTMzN2U1ZmM0YzJlNTYyMTBiYzIzYjk1MzE2ZjYwYjQ0NGQyNTVjYzgwZDVhZTlkZmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk4N2NmZTMwOWRhNTBlN2FmNGUwNzgzOTZkNzg2Yzk4YmU2OTBhMGRiZWEzMGEyM2EzNzFkZTJjY2UzOGFkNjQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_12b6cab98a3b419a901197c6c515d52c",
+      "statement": "remote-origin-handshake.spec.js 在 WebKit 上被排除，因为它靠 Chromium 的 --host-resolver-rules 才能在无 root 权限下走到远程分支，而那两条测的是与浏览器引擎无关的服务端 Origin 判定。",
+      "evidence": [
+        {
+          "resource": "repo://playwright.config.js#L29-L39",
+          "version": "repo-lines-v1:sha256:defc79af18600d164c8900cb57ca73c5f11a285adcc691909998d736294941d0:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY5Y2E4OTFiZmY3YWMxZjdjZWFhZTQwZWYwNTEwNjZiZTllZmU0N2I0ZTQyODFlODZjMzE5YmUyYzU1ZWJjZTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmMGNkYjk3MmE3YmZiN2VkMjQ2ZjlmZjY3MjM4NWU1NWY0OTY4ZmMxMTA0M2RjNWI2ODRkNTFkZmEzMWRiY2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjlkZGZlNDA0MDZlZWVkMGFlM2JkMDFmZmEzODE5YTQ2YjY2ZDdlODdmNmRjNTM3MzA3NTVhYTg2ZjVkOTNmNDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ2YTMzZTcyMDNiNWQ1OTdmYWMxNDgxYTFkYmFiZjY3ZDc1ODE0MzYxZDJiN2ZmMzZlM2U5NGYzNWQ3MGYxMGEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c8c5ef9a5559403797601eed4d1e989f",
+      "statement": "CI 安装浏览器时 --with-deps 不能省：runner 镜像缺 webkit 要的系统库，缺失时浏览器装得上但启动即失败，每条用例三四毫秒就红，看起来像用例写坏了。",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/test.yml#L64-L78",
+          "version": "repo-lines-v1:sha256:76795a56dede09a868efc06632ad1403da1e8b432b939f5deb9e23164f7ec2e2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRlYzYxZDgwOTcwOTYzOWIzZmRhYTFkZDA4ODFmM2QxY2ZhYzhjZWE1ODU1YmE0ZmRhMjE0MzI1YmE5Y2JiYzYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3MGY5NmYzOGQyYWJjNDE2MGJhOWU2YWNmODM5YzkyYjljMWY3NGEzN2IzZmI3NmVmNjU2ZDAwMTg1NzdkOWUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZlMGQ4YWI5MjNmZmEyOGI3ZDk4YWQwNDQxYzE2ZTUwMmM2YmJjODA2MWVjMzc3NWQzMWUwZjBiYmFjYTQ3NmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJlOTJmZDlmMjNkNzU4YTc1MDNlZjQ2MDJmODJkM2M1ZTdkYzAwNDFiZDkwOTZlYTk1MTI3YWJiMmQxNDc4MDgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c89863e0814b41189c85728018974129",
+      "statement": "layout-audit 补的是「读不读得了」这个维度而非「会不会崩」，并且刻意不做 pixel diff：截图对比只能发现和上次不一样，发现不了从第一天起就是错的。",
+      "evidence": [
+        {
+          "resource": "repo://e2e/lib/layout-audit.js#L1-L11",
+          "version": "repo-lines-v1:sha256:0ca874426f5c6c7403db426e2a36c9913d2fc255de3c73a058983fd101d542eb:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYwMjFhMmU4NjJiODgzNzQ0YzZkMmU1ZDczYmUzM2EyOGU4N2ZhNGNmNzdjZjIwMDAzN2Y3ZGVjMmZhODYyMmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJlNDdkYmJlNmVjMWQyYmYwNzllMDNmYTdkYTI3NWUxMTNkZGExMjBlNTc0YjQ1NDE5ZWFjNzY5OGI0NjMyZmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZkZjA5MDZjYzk4NjRkNTBhY2E0NWRjMjUzMmE5NGFiNmJlOWE4YzE4YjFkNGE0NGIxZmNmMDJmN2VmYjViZWUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c1e1adc3fd6a4e39a3215f9082b7cc9c",
+      "statement": "scroll-audit 的判据是静止帧占比而不是跳变幅度，因为后者取决于行高与内容到达速率，换个 fixture 就不成立。",
+      "evidence": [
+        {
+          "resource": "repo://e2e/lib/scroll-audit.js#L1-L12",
+          "version": "repo-lines-v1:sha256:23a61092600518301df1b6fc5a3fe05b921770dd8a206a60d2d9ba56ab8fee66:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg0MjM1NmZlYjNmMDQ2YmQyNjc2YmMwZjVkN2FkZGEzMGE1MTE2YTZkYWJiZGE2MjUzOWZlZmZiNDdmMTQ2MzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU4MTgxZTRhOTZlZWU5ODA4MWRlNDE5MDllNTJiYWFhNDkyNzBmYWRiOGQ0OTIyNDdjNmY4MDk2YTk2MzNhYmQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY4NzQ5NGZkMzhjN2M1MGU1MWQzN2QzZDMyMzUzMGIzZjcyMGYwYjUyNmRhNTZjOWQ4YjQ5OWEzNmNkNWYzZDkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f2a6c66d3e964052bb7b4baeb3f8fdfe",
+      "statement": "contrast.js 守的是 WCAG 绝对判据，与语义色 spec 的快照式断言分工不同：后者适合纯重构，前者在颜色有意改变时仍然成立；它是纯函数，颜色由 spec 从浏览器读出再传入。",
+      "evidence": [
+        {
+          "resource": "repo://e2e/lib/contrast.js#L1-L10",
+          "version": "repo-lines-v1:sha256:035ce9e590c4e51cfcc2540828d8418be982660fd2269cee1987bfd0109558a9:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBiMGMyNzIzM2Y0N2E2ZjdhMzBjODNhMjk5YmRlM2I3YmQxN2FmZTIxY2YyY2Q1ZjI1Zjg3N2QyYjVhYWVkODMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ0ZmJhMzk5MzBhNjJkNmY0MmMzOTMyZjI0NjgzZTBhY2Y3YmExZjNhYTgwYWM5M2EzNjQzYTg1YmI2Njk3ZjkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI0NTU5YzAxMmE0ZDk3MjA4ZTBjMjk3ZWQ5OGM5Y2U3MTVkMDhkY2VhODIxM2EwZGZhY2FkYWVhYzdjNTI2NDkifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.5.2",
+    "at": "2026-09-22T08:36:26.702Z"
+  }
+}

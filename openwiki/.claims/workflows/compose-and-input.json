@@ -1,0 +1,210 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:be46687e8ae3d913145e1430b3b0fbdcf1fc2245dcbe290d9c2b9a6f16911708",
+  "claims": [
+    {
+      "id": "claim_ca97ad59eb9843b8b36b5d6cdf7c58ea",
+      "statement": "斜杠命令必须在本项目自己实现，因为 codex 的 slash command 整套住在 TUI 层、app-server 的 turn/start 只收 UserInput 内容而没有 command 字段，TUI 自己也只是个 app-server 客户端。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/compose/slash-commands.js#L1-L13",
+          "version": "repo-lines-v1:sha256:38d676f515829791a9b243a05a871dc689a2d999f91b45c69b5400d5306c6034:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE4NDZkMmQ5MDkzYTkxOWMzMjgwZTg3NDE0ZjBkZDFkZDNiZjMzNTEzMjllNTkyMTRjMzc5NTIyOWI2NzkzOTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY0ZjY5ZDZmNDE5MDEwM2YwNjU1ODBkN2Q0ZjE2MzY1OTVmOTQzOWU2MjEyYzZmNzI2MmJlZDgxNWJlYmEzMTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRmYWQ2MmViOWJiMTE1ZDZhMzY4ODU3YzFlNmY0YTA4M2M0ZDRhNGYzNzlkN2RhZDA5YjZjMDdlNjQxZGM4MjYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e6deb68983214753bb309716a1494d88",
+      "statement": "命令词正则收紧到「开头一个词、不含第二个斜杠」，且不收参数的命令带了参数一律当普通消息，目的是不误伤 /usr/bin/... 这类正常文本。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/compose/slash-commands.js#L15-L18",
+          "version": "repo-lines-v1:sha256:5f3b52d6e2bb7720f10927abcf3f4278483fb54993d9cdc12a8061d7273b6f26:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMGIwY2M5MjNiYzJlMDcxZjVkMDI3YjUxNDZlNDRiMzY0NjE0Zjg3MWIwZDc2MjFiMjQyMWJmNDhiODc4ZDMzYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiY2ZiY2IyNTA5OWNkNTAyNzhhM2ZlNTdlNjU5NThhN2ZkNDEyMzU3MzViZmI5ZWM5NDg3NTUzMzkxZGQ1YzgzOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMDliYTYwY2EwNmFhZTc3ODNlNjNmMzM0ZTAwY2UzNzVkZTllOThlY2RkZWVhYjg4OWU1N2ZlYzQzYjlhMjk3MSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTljMTFhZGFlMGYzYjUyYmFmNzk3YmJlNWI2M2RkMzVmNWYzZTBjNGE5YWVmZWNjZGVlNGU2NGQyMGM4YjYwOCJ9"
+        },
+        {
+          "resource": "repo://public/js/compose/slash-commands.js#L79-L88",
+          "version": "repo-lines-v1:sha256:bfb3736ca591cab78e45490cb9bf9bbce61e449d2543ace500efd58790114de1:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIzZTBhMWZmMWM4MGQ4Mjc3OTkyYzIyYTBiZDUyNjQ5OWEyYjgyOGRmM2ZkNTliMDc0ZTMxNGJhZTk5NzZjZTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFhOGY4NjM3OGQwZmQ2MDQ3ODRmOWI0MGY0MjlhZTkwYTk1OTdhODViYzBlM2ZiZTE0OWFhOGNlYWY2ZmJiYTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY0MGY0ZmJhMDUwNmM4NDNjYmRiMTg0ZjI3MjY0YWI2ZGRlYzVjOWFhZDhmYjFhNTMyNmJjNjEwNDU1MjkxZDYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f285ab137ec649de8de7ce4efe10d6ff",
+      "statement": "UNSUPPORTED_SLASH 里每条的理由要具体到「改用什么」，否则用户只知道不能用、不知道下一步往哪走。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/compose/slash-commands.js#L38-L61",
+          "version": "repo-lines-v1:sha256:88fc422ad773614cf9f8c2b7a27f014945f4ba47105aff31437dc591fa0123ad:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjljOTNiMDdhZDgxZjI3M2IwNDEyNzU4YTFhYzQ5MTNmNDdjOGFlODg1MTRkYjcyZTQ5OTRkYWMwNmZmM2FhMDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk2MDNkYWRlZGYwYTBhZmU1NjhjODFlNDBlNTg5MDM4OGI2M2M3NzhkOWY2YWQ5OGI2MTQyOGU0MWZlZjgyYzkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc4ZDlkNWVjZGExNzhmMzBkZGJhNzc2ZmVkYjRjZWNlNTUxYTRlODMwZjRjN2IyYzEyZmViMTMzZDQ3MzAwNzEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_66d153cad87d48ffa03faaa5d93b9853",
+      "statement": "/model、/status、/permissions 三条指向同一个会话设置 sheet，其中两条标 hidden 不进挑选层但仍然可识别，以保留 CLI 肌肉记忆。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/compose/slash-commands.js#L103-L113",
+          "version": "repo-lines-v1:sha256:e3f43744861cbdbda4bed4a8bea1158e4ef8ad063ffb6f9701777a51b8c3f6b1:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA0NjMzYWI3MTU3NTAzOThjYzE5NjgyNjM1Yjg4ZTg1YjUzNzY3NjQ4MzY2ZTgyNjUzNDBjYjRmNDc2MTQ4NzAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJjNzQ2ZWEyODM0MTgzOTIzYjViNGIxY2EwOThmMmM0MWE1NWMyY2NkNGVkZWRiZjMyZWM1OTQ1MWUxYWE5NzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAwZDE2YTg2ZGFhNTYxMzUwYTIwZmU0MWE2N2QwZGQ3MjEwNzEwMDcxNjdiYzBjYmQyMTVjYTg4M2JkNTc2ODgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI2MjQ5ZDUyN2YzNzRjMzMxZmMxNDMyNGFiN2VlOGJhYTUwYzhkMjE2ZDQ4OTI4YWE1YzQxNzQ0N2Y5MWNjZGEifQ"
+        },
+        {
+          "resource": "repo://public/js/compose/slash-commands.js#L20-L36",
+          "version": "repo-lines-v1:sha256:14c2b0e2fdf33af8ae4296dc63792c92d30ca4e664f127c23ef38d2c20c4618c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE3MGJlNjhiZDI1MDliZGY1OTM3ZGJlNGUxNWZlMDJmODE0ZjIxM2QyY2FkYmM1NDZlNDBmMjRlNWIwMWIwZjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIzY2I4ZTA5ZmE1ZWIxZGZhMWQ2M2ZlMzdkYjZiY2E3YzQzMjU4ZDdmNzVmMDZiNWNlNjk4NGVlMTM3MzlkYjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE4OTEwOGVmMjEyNjQ1OGY0YjA3OWM5MzQ4YjdlYTIzYjMzNTk2MjRkODIzOTI5MTYwMTVmN2M4ZTNhMzI1ZGIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7557f597a18a4042b395b4bcbc1c172a",
+      "statement": "挑选层把写死的内置命令与从 skills/list 动态拉取的 skill 并进同一个列表，skill 条目带 name 与 path 并走结构化输入而不是往输入框塞文本。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/compose/slash-commands.js#L94-L129",
+          "version": "repo-lines-v1:sha256:32a6b134f0dd71265651679c3f41fbc0c96a4a2d9e5c948acb6ca52b82f06d6c:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE3MmMxZTA4OWEwNGU2ODA2NTNiYmY0MmYzZWE0YWJkNmM4YTc2ZTc0ZmMwYzU3ZjA1ZWMzNGVlZTZkMDQxMjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b0d8f3d8633640beaeed978c2e53bc29",
+      "statement": "附件是否为图片按内容判定而不看扩展名，支持 PNG / JPEG / GIF / WebP；识别不出来的后果不是报错，而是附件以 mention 而非 localImage 下发、模型看不见那张图而界面一切正常。",
+      "evidence": [
+        {
+          "resource": "repo://src/files/uploads.js#L16-L69",
+          "version": "repo-lines-v1:sha256:4876f6d8f499bf04eca20d87272e7bc5df468dfe92a837b366a94c544a696d61:eyJzZWxlY3RlZExpbmVDb3VudCI6NTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQxNjE1ODgyYzFiZTBkMjg5NDJjZDFiZGNhMWZkNjBmMDliNzkwNDkxMzljNjE2OTVjZDk0YTZjODI4MWIxOWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhmODczNTQwM2EyMjZkNTk5NTE3MzI0NTM0YjBkOGMxMmFkMzc2MmQ5NGY5ZDJjNDRjNmUzNWJjYWE2MzVkMjcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_48b19157948b4ebeb76a35bdb370a516",
+      "statement": "每种图片格式都同时查头和尾（WebP 用 RIFF 长度字段等价代替），因为只查魔数头会把截断的文件也判成图片，而失败会发生在更下游、错误信息更难懂。",
+      "evidence": [
+        {
+          "resource": "repo://src/files/uploads.js#L22-L67",
+          "version": "repo-lines-v1:sha256:aa991bd1bc196ad09044df1692ba65123e7750acdcdb9a9152cfbe260b8fd470:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYyM2NiNGMxM2Q2Nzc1OWQ1NGY3NjcxZDQ0MDM0OTcyZDA5MDNhMzlkMDhhZmFlNzNiYjk4MWViOWFiMGRjZjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA0NWI1N2U2NTI2MmI3NDNmNTY4ODU3YTRiZWI4ZDg5ZDVlMzcxYWY3NjM0ZGRiMWYwNTc2YzRhOGFiOGQ5OTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU5ZjFiZmNiZGUyMzdhMTIxNDEyMDUyNDRhOWNhNDAzM2I4OGVkYzAwNTlmNmQ1YzAzM2U0MTcxMmRhYTEyMWIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fa8d6201ecbe49adb42bdd11d9754659",
+      "statement": "附件限额是最多 10 个文件、单文件 10MB、总量 20MB，且 base64 解码是严格的（解码结果再编码回去必须一致）。",
+      "evidence": [
+        {
+          "resource": "repo://src/files/uploads.js#L112-L138",
+          "version": "repo-lines-v1:sha256:2a87cb308ac70b7f61f5810aa41cae5717a3d45448834fdf321a5ea56ec168be:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEyNThmMGVmYzMzM2U3NzJiNjZhYTkyY2VhNzE1NDUyYzkwZjJiZGRiNWY5NTAxMWYwZTcxZjdiYTIyYjBhNWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjllOGVkOTgzN2ZjOWUyNDU0YjYyMzE2YjQ4OWM5NjcxZmRiY2FiNzQ4NjA0NzU4NDI2YzQ2NDJlODk2YmU4YmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ2ZWI2ODM0ZTg5NjBlNzgxZmUzZWI2MGQxMTEwYjUxZTI5ZDVjMGE5NGMyNzhiOTExZTczNWU5MTVkNmIyZjAifQ"
+        },
+        {
+          "resource": "repo://src/files/uploads.js#L71-L79",
+          "version": "repo-lines-v1:sha256:3a63151761f62b70d191f2b0c54a667afb07351d39e1436d2a27b4fdb5cc5083:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMGVkMDAwMmIwMzhjNzNkMmQ1OGQ5NGIyNDY1ZDk4OWQxNzdjZWQzZGNhOTk4OTMwYWQwYWYzNTBlOTQzNjQwMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTlmMWJmY2JkZTIzN2ExMjE0MTIwNTI0NGE5Y2E0MDMzYjg4ZWRjMDA1OWY2ZDVjMDMzZTQxNzEyZGFhMTIxYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDk2NzRhYjFlNmNmODA1YTRiNGFmMTlhMmJiZGQyODk5NWM5NjVhNDdjMzY3YjQ1NmNlNjlhOTczZjhlNjBhYSJ9"
+        },
+        {
+          "resource": "repo://src/files/uploads.js#L9-L13",
+          "version": "repo-lines-v1:sha256:82642e3e4dc1c29ba6be0b0de63fca444931bfa172468bed5fccbae98d7ae845:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWRkMDgyYTdlYjhiY2NjYzAwYzIxZTFlMzc1MTM3MWE1NTQwNjg1MDNkMDAxNTM1MmQzMTliZjA0OTViM2UyNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYzZjMTNjNmQ3MGE5ZmY1OTFjZmMzZmZjNmJiMGFjZjY1Y2Q0ZjU1N2RlM2FiYmYxNTM3YzE2NGUwMWZjZGExNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOWUzZDYxY2UxMGE0OTMzYzg4MGIxODRiZGUxNDdlOTZjZGY5ZmRhZmQ2YzEyNjZhNzc2ODI5Yjg4NTRmMDYyMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMWUwMjZlNTY5ZDBlMDM1YWY2OTI5YjEyODIwMTNjNWM1ZmRkZDllZTBmMzNmZTQ1YzFmZWE2NzJjYzE1NDk4NCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_c5e9faefbd4f45f7825164c16cad88ad",
+      "statement": "decodeAttachments 把解码后的 buffer 交出去供复用，因为同一份 base64 此前会被解码三次（校验、指纹、落盘各一次），每次都额外分配一个完整副本。",
+      "evidence": [
+        {
+          "resource": "repo://src/files/uploads.js#L110-L114",
+          "version": "repo-lines-v1:sha256:9d018aa63910eeca4bd57e88544a7e0ba48c45dc3e4c6a6f8379e93ffb7adb1f:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzk3ZGE0YzY3OTI4MmY4ODU1MTZkZGVkNzQ4OTNlNGQ1MDdiMmUyNDMwOTdhYjYwOGZlODdiOTc4OWM4YmIyYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzZkZWZkM2JlM2Q4NGUwMTZhY2ZiMzk5NTBjNDc1N2U5MjFiOTYxYTgwYzg0MTAzZjg5N2E3ZmEzYjdiYjE2MyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMGQ5MjYzNmQwN2EyNzVkODdjMTE4NjljZjlkM2NlNjlkOTUwOGVlNmUwMTFiNjlmMjQyZGJlMjdjZGYyNzlkMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZGJhZTA1MDY4MDU3NDU2MTA0YTFkNzk2MmNiZGI1ZTg3YmJkOWI1MzkzZTM0YWFmNWYwMzBmZTc1MWU5NTE0MiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_b5ccec07c0344b809199bb383b0d69b4",
+      "statement": "文件名收敛里 trim() 必须排在去前导点之前，否则 BOM 开头的 ..evil 会遗留成隐藏文件，而同样意图的普通输入得到的是 evil。",
+      "evidence": [
+        {
+          "resource": "repo://src/files/uploads.js#L91-L100",
+          "version": "repo-lines-v1:sha256:c13e81ffbab072fb21e42915cc6fd3062216800e6219d17c943453d71acff2e9:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY1ZTIzYWFiZTY1MzcxZGY0MjI3NTc1NjllNGZkNjk2ZDc0YTc5OTc1NWIwYmNmMjZiYzllMWQzYjFjZDAwYTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyY2JlYWI3MmEyODFhNjNlODEyMjA2N2U1OWE1MjBjNmI0MTg1NGJjYWMwMjdjZDkyNjljNmRhN2U1MTYzN2YiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjNmJhNDJjMDFiZTgyZTdiNDIyMzg0NTBmNGE5MDUzOGM0YTlmZWNmOTZjYzIxYzMwZmQ4NjU5MmFjNTE5Y2IiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM3NzQxOGE0ZTQ1ZWI1ZDZkM2MwOTgyZTc5NGRlZWYyMWMyNmU3ZGY3OWYxM2NlMWRjYjIyYTkxYTdmODhjNGIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b55f771f09254864b19aced25d33cb74",
+      "statement": "超长文件名被截断时要保住扩展名（只认最后一个点之后的短后缀），因为 agent 拿到的就是这个名字；长度不在此处收敛会一路炸成 ENAMETOOLONG。",
+      "evidence": [
+        {
+          "resource": "repo://src/files/uploads.js#L81-L108",
+          "version": "repo-lines-v1:sha256:1064aa8a12bad640ab9783dd3519c342128a85df872a22a9fe0a0b2cead5dec8:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZkMDQ4NWQwYTc0NDZiYWQ5MmNlMjJhZGY3MTRhNGNiODQzNjgwNjdlZmRlNTgyMWE4ZGE2Zjg5NTU2NmQ3YTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkxMTBmY2NhMDhkMTY5NGQxODgyNDFjODMwM2I0ZTRjMmM4MzFlOWYyMjI4YTQwNWY5ODg3NGJhZjFlODE0OGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjllOGVkOTgzN2ZjOWUyNDU0YjYyMzE2YjQ4OWM5NjcxZmRiY2FiNzQ4NjA0NzU4NDI2YzQ2NDJlODk2YmU4YmYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d015aadaaddc400587791a979f067266",
+      "statement": "附件落盘有五道防线：mkdir 前后各做一次符号链接检查、lstat 确认是普通目录、chmod 0700、路径穿越检查、以 O_EXCL 加 O_NOFOLLOW 以 0600 模式写入并 fsync。",
+      "evidence": [
+        {
+          "resource": "repo://src/files/uploads.js#L145-L193",
+          "version": "repo-lines-v1:sha256:446593090c28c5435cc2100419d557ca747bacfd2cd8b25723bcf9b65fc2b2d7:eyJzZWxlY3RlZExpbmVDb3VudCI6NDksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRjNzRhNjE1Zjk2MDIxYTNlMTVmMjFhZTZhYTFmZjY2MjZkMjI0NjJhYzMwZmI0ZDc5ODljZTljNGNhNmFmMGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMyNzg3MWRjYjJjN2Y1ZTZkMDNhY2EyOTdkZTY2Y2YyOWRkODVjZjAzMjNiZDczNTViNmEyZGI3YTAwZDc1YmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg4NzBjNTliZGI0ZWIzYmVkYWZmYWVhOWI1ODA0M2Q0ZjE2ZDNkNTBmNzc5OGFlYWUwODRlOTk4MmRhNDkyODMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_47cbd38dae184f63a715b90be2f15a08",
+      "statement": "给前端的附件元数据由 toEventMeta 剥掉 absPath，不泄露服务端路径。",
+      "evidence": [
+        {
+          "resource": "repo://src/files/uploads.js#L195-L198",
+          "version": "repo-lines-v1:sha256:a24b750321af5bd26f82ae6aac7e808f839c353c16f4a8b9109bc9d4319eb288:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOGM1NmU1NDQ0OTMyYzc0MzgyODU5OGQ2YTJkMmE3NTg2NTJhYjI4ZmQ3OWRiZWE5N2QxN2E1YzIyNWEzM2ZlZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmE2ZGE4ZmNmZmNlYjhkYWJhYTA0OTA0NjM0MWRmOGUxNTMxY2UyYzFmZTg2MmMxMTQ0Y2YxZDI1NGJmNTg5MSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOWYzNWU4MTc2OWFiNDRiNjNiZTg4NGUyYWRhMTc0NWU0ZTNlMjJkZGIxYTgwZDFmNDdiZDhlZmY1NDdjMjkzNSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_8252075ca5524d109746aeb2828a7b03",
+      "statement": "resolveInputParts 对 mention 要求 realpath 后仍在 runtime cwd 之内且是普通文件，对 skill 要求在 skills/list 返回且 enabled 的集合里按 name 加 path 找得到，其余 kind 一律抛错。",
+      "evidence": [
+        {
+          "resource": "repo://src/sessions/input-parts.js#L7-L55",
+          "version": "repo-lines-v1:sha256:9d25db53c231a4c0e5dfab27cd0bfcc9dc81c3318b728b0a6763c56589f94c43:eyJzZWxlY3RlZExpbmVDb3VudCI6NDksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY0YWEzYzYyNWM0MTJkMTk2Y2RlMDQzNjY0ZWM0YzNlNGU4YTJlZTZlYWE2NDYzYmMzYjU2OTdkNTc5NTYxNDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZkZmM3NjQxYWZmMGJmMzdiMGQ0YTk4MGJhOTY2NDc2YTBiNGZiZThjMzQ0YzUxMmY4NjE1MDVhMzBkNDljMjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI5NzAyMGMyMTRkNThhMDU1NDIxMzlhYjA4N2NlMTk5NTJlYTdiMGRhZmY0YmY4MDMzYWJiYTlmZWFhNWY3YjAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_18f99e4595ca49f9918bd6d5cad38954",
+      "statement": "远程图片 URL 默认整个禁用，开启后仍要过长度上限、HTTPS 且无凭据、公网主机名、DNS 解析结果逐条为公网地址、detail 枚举合法五道校验。",
+      "evidence": [
+        {
+          "resource": "repo://src/sessions/input-parts.js#L20-L26",
+          "version": "repo-lines-v1:sha256:7b15f6037d889f48c0fa7cd964d4bd170de98765a2c14939e17fe7dc6b752126:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNmZiMjlkMjAxOGQyY2JjMDhjN2NmZGY1ZGI2ZDU1NGFmMWRjYTdjMWJhNWQzZjYzYWQ1NzRkYTg5ZDIwYWE1OCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDg5M2Y0MGUzNzgxZWI4OTZjODJkMDQ2YTA4MDY3YTExZTM1Y2RmMmYxZGZhZjI2ZmVhOTBiOGRiNjY3NjQxMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZGU2NmVlOWNiOTU1NzJiNmQwMWYyNzRmZDU0MzM5YTAwZmVjZDU4YWRmYmMzZGZhNjdmMzYwNWE2N2YzMGMyZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTVhYTA4MjViMGU4YjdiMmVkZjQ3YjgxZjI4OTgwMjJhYzRlNWZmOTZjYmRkN2VlOTJiYjNmNDQyNTFhMzBiOCJ9"
+        },
+        {
+          "resource": "repo://src/sessions/input-parts.js#L57-L88",
+          "version": "repo-lines-v1:sha256:224be4277e165bf2238abc1c0d0c8a4f282108ef602f959ec1c8e9228194a192:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM1MDVkZjRkMTgwNWZjM2MxZmNlYzJmZDEyM2U0Nzk0NzY3OGNkZmYzNjNjNmQ3ZDBiMGM3NTQ3MmMzOTFhYzAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ1NWQyNGUxNTg0ODFhYTJjZWMwMTRiOGRmNGY5MzI0ZWVlMzZjNjM3NzRhOGExYTZmNjFkZTQ4ODEyZmVhYmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjExYjNjNDczN2FkNTYzNjM2ZjJkMzAwOGIyNzBjMzYwNzhlYjE3MGYyYWZmZWE3YmNiODQyODdiNTk1NmJkOTcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4ff465e2c75347848c4a816ba421645b",
+      "statement": "buildUserInputs 把文本、附件与 parts 映射成协议类型（图片附件→localImage、文件附件→mention、imageUrl→image），并对每一支再校验一次必需字段。",
+      "evidence": [
+        {
+          "resource": "repo://src/sessions/user-inputs.js#L1-L60",
+          "version": "repo-lines-v1:sha256:c8870d287aa148f219d91a47a844e26df375f5c59244f5745f5f292d6dd3f4f4:eyJzZWxlY3RlZExpbmVDb3VudCI6NjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI3MWQ4M2ZmMmE3NjExMmQwN2U2MzY0NGUxYzVhZmVjZGRkOGQ1NTM1NDI1NDljMjMzOTMyOWM4MzQ4MmY4YzEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_36f2e7ea504147cbb170644c1fc6a473",
+      "statement": "createMessageRequest 生成 clientRequestId、深拷贝附件与 parts、按 threadId 优先于 instanceId 写投递目标，而 messageWirePayload 在发送前再校验一次内外层 clientRequestId 一致。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/compose/message-request.js#L1-L50",
+          "version": "repo-lines-v1:sha256:224683f136548a0ab9b0d348d414a61d9ff89d7a41a41028924b249e5074f75d:eyJzZWxlY3RlZExpbmVDb3VudCI6NTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYxNzg0Y2U5YTcxYWI3YTY5Mzk1M2Y4NzI2MGQ1N2JmMDk4ODIwNjkzNWI4YmI3ZDNjMzMxNDQ3ODRmOTdiYjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4f335595f72b42f4a2d3e2ea7ffdd419",
+      "statement": "提及检测同时认半角 @ 与全角 ＠，插入路径时会根据光标后是否已有空白决定要不要补一个空格。",
+      "evidence": [
+        {
+          "resource": "repo://public/js/compose/at-mention.js#L1-L30",
+          "version": "repo-lines-v1:sha256:019a83b2f5e5415019cfa64e7b7bf540031a1318e3b6fae1f61f1186b643b3ce:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlkZjgyNDFhMzFiMzJjNDczNGY4MWIxNWU2MmZkNTYxMzkzNzQ4YjIyMDRjZTllYzhlYzhhMmQ0MDZkNmE2ZDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.5.2",
+    "at": "2026-09-22T08:36:26.702Z"
+  }
+}

@@ -1,154 +1,110 @@
-# codex-mobile
+# codex-mobile — self-hosted mobile web UI for your local Codex CLI
+
+**Control your local Codex CLI from your phone.** 手机上操作跑在开发机里的 [Codex CLI](https://github.com/openai/codex) —— 同一个工作区、同一套审批边界、同一条原生 thread。
 
 [![CI](https://github.com/Ike-li/codex-mobile/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/Ike-li/codex-mobile/actions/workflows/test.yml)
 [![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 [![Node.js >= 20](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](package.json)
 
-English | [简体中文](./README.zh-CN.md)
+---
 
-When your local [Codex CLI](https://github.com/openai/codex) uses a custom `base_url` and API key, official ChatGPT remote control cannot pair with that host. This project is the phone control plane for the `codex app-server` already running on your machine — same local workspace, same approval boundaries, same native threads and streaming agent events.
+## 为什么有这个项目
 
-| Streaming chat | Approval card |
-|---|---|
-| ![Streaming chat on a phone](docs/assets/chat.png) | ![Approval card on a phone](docs/assets/approval.png) |
+官方 ChatGPT 的远程控制要求这台主机用官方账号登录。**当你的 Codex CLI 配的是自定义 `base_url` 和 API key（第三方网关、自建代理、企业内网中转），官方远控无法与这台主机配对** —— 你就没有手机端了。
 
-> Screenshots from the deterministic mock app-server (`npm run test:e2e` harness) — no real Codex tokens involved. **See the full [feature tour →](docs/SHOWCASE.md)**
+本项目不做另一个 agent，它是**你这台机器上已经在跑的 `codex app-server` 的手机控制面**。会话是 Codex 原生 thread，存在 `~/.codex` 里，和你在终端 `codex resume` 看到的是同一批数据。手机上开的会话，回到终端能接着聊。
 
-## Features
+三种认证都支持，实测于 codex 0.153.4：
 
-- Streaming conversations with the full agent event feed: text deltas, reasoning, command output
-- Tool and command cards with exit codes, file-change summaries, and a visible raw-envelope fallback for unknown event types; history snapshots rebuild those cards, not only text
-- A read-only workspace sheet from the project name: browse files, inspect git changes, and `@`-mention workspace paths without concatenating them into the prompt
-- A delayed connection banner, confirm/prompt sheets, pasted-image attachments, and syntax-highlighted code copy buttons
-- Approval cards — approve or deny exec/patch requests from your phone, mirroring Codex CLI approval policies
-- Slash commands with suggestions (`/status`, `/diff`, `/review`, `/permissions`, …)
-- Structured inputs: validated owner-only uploads become `localImage` or `mention` parts; enabled skills are supported, while guarded HTTPS images require the default-off `CODEX_ALLOW_REMOTE_IMAGES=1`
-- Native app-server threads are the only conversation source of truth (`thread/list`, `thread/read`, `thread/resume`, `thread/status/changed`)
-- Reliable mobile delivery with stable `clientRequestId`: IndexedDB persists the outbox, the in-memory receipt ledger deduplicates within one gateway lifetime, and unknown results are quarantined and reconciled through the ledger or `thread/read`. A vanished provisional instance is restored or safely rebound only for a never-attempted request; unresolved attempted writes require an explicit warning and a fresh-id retry.
-- Multi-workspace routing (`WORK_DIR` + `WORK_DIRS` allowlist), isolated per-device views, and multiple active thread tabs over one shared app-server process
-- Cross-thread “needs you” aggregation, device-bound Web Push for needs-you deep links and result/error notifications, and an installable PWA with mobile-safe layouts
-
-## How It Works
-
-```text
-phone browser / PWA
-  <-> Socket.IO
-server.js  (Express 5 gateway: auth, ACKs, routing, recovery, push)
-  <-> ThreadRuntime[] + ThreadRegistry
-  <-> one AppServerHost + AppServerTransport
-  <-> stdio JSON-RPC 2.0
-one codex app-server process
-```
-
-There is no hosted backend. The browser talks to a Node gateway on your dev machine. Each supported gateway process owns one shared `codex app-server` process and many native threads; runtime ownership, request correlations, and each device's current view determine routing. Run one gateway service per host. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full architecture and security model.
-
-## Quick Start
-
-Prerequisites:
-
-- Node.js >= 20
-- [Codex CLI](https://github.com/openai/codex) installed and authenticated (`codex` on `PATH`, or set `CODEX_BIN`); the protocol baseline is pinned to the version in `.codex-version`
-
-```bash
-npm install
-cp .env.example .env
-npm test
-npm start
-```
-
-Open `http://127.0.0.1:3001` on the same machine.
-
-From a phone, the only recommended path is Tailscale Serve: keep the gateway on loopback and publish it as tailnet HTTPS.
-
-```bash
-tailscale serve 3001
-```
-
-Set `AUTH_TOKEN` to at least 32 characters, `CODEX_ALLOWED_ORIGINS` to the exact `https://<machine>.<tailnet>.ts.net` URL Serve prints, and `CODEX_TRUSTED_PROXY_IPS=127.0.0.1,::1`. Use Serve, not Funnel. Pair the new device before it can send. Other HTTPS proxies are in [docs/REMOTE_ACCESS.md](docs/REMOTE_ACCESS.md), not here.
-
-## Configuration
-
-| Variable | Default | Purpose |
+| 认证方式 | 会话可用 | 账号用量面板 |
 |---|---|---|
-| `PORT` | `3001` | HTTP port |
-| `HOST` | `127.0.0.1` | Bind address; keep loopback behind a same-host HTTPS proxy |
-| `AUTH_TOKEN` | empty | Bootstrap secret; non-loopback binds require at least 32 characters |
-| `WORK_DIR` | — | Primary Codex workspace |
-| `WORK_DIRS` | empty | Extra workspaces: comma-separated dirs, or a JSON array file such as `workdirs.json` |
-| `CODEX_BIN` | `codex` | Path to the Codex CLI binary |
-| `CODEX_DATA_DIR` | `./data` | Device, Push, and audit state root |
-| `CODEX_APPROVAL_POLICY` | `on-request` | `untrusted` \| `on-failure` \| `on-request` \| `granular` \| `never` |
-| `CODEX_SANDBOX` | `workspace-write` | `read-only` \| `workspace-write` \| `danger-full-access` |
-| `CODEX_INPUT_QUEUE_LIMIT` | `20` | Max queued inputs during a busy turn |
-| `IDLE_TIMEOUT_MS` | `600000` | Busy-turn silence timeout; interrupt after no runtime activity |
-| `CODEX_ALLOWED_ORIGINS` | empty | Exact comma-separated browser origins for remote Socket.IO |
-| `CODEX_TRUSTED_PROXY_IPS` | empty | Exact direct-peer IPs allowed to supply `X-Forwarded-Proto` |
-| `CODEX_SESSION_TTL_MS` | `604800000` | In-memory, device-bound HttpOnly session lifetime |
-| `CODEX_SECURITY_AUDIT_MAX_BYTES` | `1048576` | Active security audit size before one owner-only rotation is retained |
-| `CODEX_ALLOW_REMOTE_IMAGES` | `0` | Explicitly enable guarded HTTPS image URL inputs |
-| `CODEX_P3_EXPERIMENTAL` | `0` | Keep Labs out of the core surface unless explicitly enabled |
-| `VAPID_SUBJECT` / `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` | empty | Enable device-bound Web Push (all three required) |
+| 官方 ChatGPT 账号 | ✅ | ✅ 邮箱 / 套餐 / 限额 |
+| API key | ✅ | 说明「没有套餐与限额信息」 |
+| 第三方网关（自定义 `base_url`） | ✅ | 说明「模型走自定义 base_url」 |
 
-## Commands
+## 快速开始
+
+需要 Node.js >= 20，以及本机已装好并登录的 `codex`。
 
 ```bash
-npm run lint            # ESLint
-npm test                # unit / integration / protocol / security / doc contracts (node:test)
-npm run protocol:check  # app-server protocol drift check against .protocol/stable/
-npm run test:e2e        # Playwright mobile E2E against the mock app-server
-npm run test:ci         # lint + tests + coverage gates + E2E
+git clone https://github.com/Ike-li/codex-mobile.git
+cd codex-mobile
+npm install
+
+npm run setup     # 装机向导：选工作区、绑定地址、生成访问令牌
+npm start         # 启动服务
+
+npm run qr        # 打印带令牌的二维码，手机扫码即连（含凭据，不进启动日志）
 ```
 
-`npm run test:e2e` connects Playwright to `scripts/mock-server.js` — it never calls the real Codex CLI and never consumes model tokens.
+装不起来先跑 `npm run doctor` —— 它用和 server 完全相同的配置加载路径自检，所以「配置文件放错位置 / 被环境变量压过」这类最难查的问题它看得见。
 
-## Security
+## 能做什么
 
-- Empty `AUTH_TOKEN` means loopback-only; non-loopback binds require at least 32 characters.
-- Remote HTTP is rejected by default. Remote Socket.IO additionally requires an exact Origin allowlist and a device-bound HttpOnly session obtained from `POST /auth/session`.
-- New browsers remain locked/pending until approved; their upstream events are discarded. Device denial disconnects its sockets and removes bound sessions and Push subscriptions. External trust-file removal applies the same session/Push revocation, but deliberately preserves an already connected loopback socket.
-- Device, Push, upload, and redacted audit state is owner-only. CSP/frame protections, upload validation, SSRF guards, and bounded auth/pairing/Push limits reduce exposure.
-- Labs is disabled by default. Host-configuration operations have no gate to unlock but require an explicit per-action confirmation and are audited.
+**会话** —— 列表、新建、恢复、fork、重命名、归档、删除、回滚到某一步、压缩上下文、代码审查。跨工作区分组。
 
-This is a control plane for a real development machine — treat any remote exposure as high risk. See [SECURITY.md](SECURITY.md) for the threat model and how to report vulnerabilities.
+**审批** —— `on-request` / `workspace-write` 等策略原样透传。待批准的操作会跨会话汇总成「需要你」入口，卡片在视野里时自动收起，不重复提醒。支持深链直达某一条。
 
-## Key Files
+**输入** —— 流式 markdown、`@` 提及文件、图片附件、`/` 命令面板（内置命令 + 从 `skills/list` 动态拉取的本机 skill，上游增删自动跟随）。
 
-- `server.js` — HTTP/Socket.IO gateway, authentication, receipts, routing, recovery, Push, and needs-you aggregation
-- `app-server-transport.js` / `app-server-host.js` — the single stdio transport and shared app-server multiplexer
-- `thread-runtime.js` / `thread-registry.js` — per-thread semantics and exact ownership/routing
-- `agent-appserver.js` — `ThreadRuntime` implementation and Codex event mapping
-- `public/index.html` — mobile SPA/PWA HTML shell (markup only; no inline `<style>`)
-- `public/css/app.css` — the application stylesheet, linked after the two highlight.js themes so its overrides win
-- `public/js/app.js` — external browser application module: UI interactions, approval cards, and native panels
-- `scripts/mock-codex-app-server.js` — deterministic Codex protocol mock for E2E
-- `.protocol/stable/` — pinned app-server protocol baseline for drift checks
+**文件** —— 工作区抽屉、目录浏览、文件预览、diff 摘要、全文搜索。
 
-## Documentation
+**离线** —— PWA + Service Worker。断线时消息进 IndexedDB 队列，重连后自动补发。Web Push 通知（VAPID）。
 
-- [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) — first successful local and mobile conversation, approval, history resume, PWA, and Push
-- [docs/WEB_UI_MAP.md](docs/WEB_UI_MAP.md) — map of every visible Web UI region and control
-- [docs/RECIPES.md](docs/RECIPES.md) — task-oriented recipes for analysis, edits, approvals, attachments, cross-surface resume, and recovery
-- [docs/CAPABILITY_MATRIX.md](docs/CAPABILITY_MATRIX.md) — availability, configuration, output, and persistence matrix
-- [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) — symptom-first Web, auth, thread, attachment, Push, and feature troubleshooting
-- [docs/CONCEPTS.md](docs/CONCEPTS.md) — thread/runtime, routing, reliable delivery, needs-you, and Codex App/Web concepts
-- [docs/SHOWCASE.md](docs/SHOWCASE.md) — visual feature tour (what it looks like and what it does)
-- [docs/WEB_CAPABILITIES.md](docs/WEB_CAPABILITIES.md) — complete Web UI capability reference: visible state, actions, inputs, and results
-- [docs/GUIDE.md](docs/GUIDE.md) — end-to-end walkthrough from install to installing the PWA
-- [docs/REMOTE_ACCESS.md](docs/REMOTE_ACCESS.md) — phone access: Tailscale Serve is the recommended path; other HTTPS proxies and PWA/Push constraints live here
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — current architecture and security model
-- [docs/PROTOCOL.md](docs/PROTOCOL.md) — Codex app-server protocol reference (methods, events, coverage)
-- [docs/API.md](docs/API.md) — interface reference (HTTP routes + Socket.IO events with signatures)
-- [docs/TESTING.md](docs/TESTING.md) — test gates, acceptance matrix, and manual smoke checklist
-- [docs/SMOKE_MATRIX.md](docs/SMOKE_MATRIX.md) — 71 visual acceptance cases covering 123 of 131 interface and cross-layer test points; judged by what is visible on screen, so a person and a browser agent run the same document
-- [docs/PROTOCOL_UPGRADE.md](docs/PROTOCOL_UPGRADE.md) — Codex app-server protocol upgrade runbook
-- [ROADMAP.md](ROADMAP.md) — shipped / in progress / candidates
+**运维** —— MCP 服务器状态、健康自检、token 用量、账号面板。
 
-The deep-dive docs are currently maintained in Chinese; translations are welcome. Documentation policy: only actively maintained documents are treated as sources of truth. One-off sprint plans and stale QA context are removed; the generative research drafts behind the protocol docs are kept read-only under [docs/archive/](docs/archive/) and clearly marked as unmaintained. Nothing from the archive should be re-promoted unless it is explicitly maintained again.
+## 安全边界
 
-## Contributing
+默认只监听 `127.0.0.1`。要让手机连上得显式改成 `0.0.0.0` 并配好来源白名单 —— 装机向导会问，不替你决定。
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). The project is TDD-first: write a failing test, make the minimal change, then run the four gates above. Issues and PRs are welcome in English or Chinese.
+访问靠 64 位令牌 + 设备配对握手，失败次数有窗口限流，会话有 TTL。审批与沙箱策略由 Codex 自己执行，本项目不绕过它们。
 
-## License
+`npm run setup` 的主体是一张**拒绝矩阵**：把家目录当工作区、在没有 TTY 的地方走完交互分支、覆盖还在用的配置 —— 这三件都不报错而后果很晚才显形，所以它宁可停下来问。
 
-[AGPL-3.0-only](LICENSE). If you run a modified version of this software as a network service, the AGPL requires you to offer the modified source to its users.
+## 架构
+
+```
+手机浏览器 ──Socket.IO── Node 服务 ──stdio/JSON-RPC 2.0── codex app-server
+   PWA                   server.js                        （你本机那个）
+```
+
+生产基线是通过 stdio 运行的 `codex app-server`，不使用已退役的 `codex exec --json`。
+
+协议定义**版本化 vendored** 在 `.protocol/stable/`（`codex app-server generate-ts` 生成），当前对齐 codex **0.155.1**。`npm run protocol:check` 是门禁，卡三类漂移：方法覆盖、通知字段、请求参数形状。`npm run protocol:check:installed` 对着你本机装的那版跑，升级 CLI 前能先看会不会撞。
+
+## 开发
+
+```bash
+npm test                    # 单元 + 集成
+npm run test:e2e            # Playwright（走 mock app-server，不消耗额度）
+npm run test:ci             # 全量门禁：lint + 协议 + 边界 + 覆盖率增量 + e2e
+```
+
+日常回归一律走 mock server，不调真实 Codex CLI。详见 [docs/TESTING.md](docs/TESTING.md)。
+
+## FAQ
+
+**Can I control Codex CLI from my phone without a ChatGPT account?**
+Yes. codex-mobile drives the `codex app-server` process on your own machine over stdio, so it inherits whatever auth your local `codex` already uses — ChatGPT account, API key, or a custom `base_url` gateway. The table above shows what each mode gives you.
+
+**Does it work with a custom `base_url` (third-party gateway, self-hosted proxy, corporate relay)?**
+Yes — that is the reason this project exists. Official ChatGPT remote control requires the host machine to be signed in with an official account, so a machine configured with a custom `base_url` and an API key cannot be paired at all. Here sessions work normally; only the account-usage panel degrades to "model goes through a custom base_url" instead of showing plan and limits.
+
+**Is this the same as ChatGPT's official remote control, or a hosted Codex service?**
+No. It is not another agent and not a cloud service. It is a self-hosted control panel for the `codex app-server` already running on your dev machine. Conversations are native Codex threads stored in `~/.codex` — the same ones `codex resume` lists in your terminal, so a session started on your phone can be continued from the terminal.
+
+**Where does my data live? Does anything pass through a server run by this project?**
+Nothing does. The chain is phone browser → your Node server → your `codex app-server`, entirely on hardware you control, and threads stay in `~/.codex`. Model traffic goes wherever your own `codex` config points.
+
+**Can I reach it from outside my local network?**
+Not by default — the server binds `127.0.0.1`. Exposing it is an explicit decision: switch to `0.0.0.0` and configure an origin allowlist, which `npm run setup` asks about instead of deciding for you. Access then needs a generated 64-character token plus a device-pairing handshake, with windowed rate limiting on failed attempts and a session TTL. Approval and sandbox policy remain Codex's own; this project does not bypass them.
+
+**Which phones are supported?**
+Any modern mobile browser — it is a PWA, installable on both iOS and Android. Web Push on iOS additionally requires iOS 16.4+ with the app added to the Home Screen.
+
+**Is there a build step?**
+No. The frontend is native ESM served as-is, so `npm install && npm start` is the whole pipeline. Requires Node.js 20 or newer.
+
+## 许可证
+
+[AGPL-3.0-only](LICENSE)。如果你把修改版作为网络服务运行，AGPL 要求向其用户提供修改后的源码。
