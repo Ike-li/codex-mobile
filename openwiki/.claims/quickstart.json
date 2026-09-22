@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:e509cbf7c183c246f5c7a328a2a65eea9fb3daded9817034e6e1a14c82aeac4e",
+  "pageVersion": "sha256:565316db22d7e31d9b44f58a831d301262f2912d136025d3e4c305f2ec703155",
   "claims": [
     {
       "id": "claim_b9916ae1a02843f2b4d46b619af55937",
@@ -59,8 +59,8 @@
       "statement": "项目分支固定为 master 与 dev，所有开发与文档改动在 dev 上开功能分支，且软件相关改动默认遵循 TDD。",
       "evidence": [
         {
-          "resource": "repo://CLAUDE.md#L5-L13",
-          "version": "repo-lines-v1:sha256:025c2a23e2457d9baa29a9846b5a202c5ca948431dd8565e492aa302b917cdd8:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDA5NzYyYTIyNWI1MmM1NzM4ZTcxZDRlOTYzNTE4NzhkOGQ3MjkxMDY0ODU3NDI1M2U1N2I2MDEzMDViN2EyMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYzQ0M2JiN2VlMmUyZmY4ZjExZDRjYzVlNmMwZTVjMTc3ODU5NWIzZTU2MGMzN2VkZDdlMGYzMjNlNWYyOTU4NSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjAwYjAxMGFmNGY2YTJkMGVlM2FkYTVhNjU1MmJlZDk1NzMxOThjOGVlOGQ3NDI0ODVhOTdlYTQ5ZmVlNjYzOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZWIxYmM1YmM0YTIzN2Y1NzhlNmFmNGE0MTVkMDY0N2Y5OTEwYjAzYjM2NGUxZTI3YzFmMWRiYWE3NDNkMDNiYSJ9"
+          "resource": "repo://AGENTS.md#L3-L5",
+          "version": "repo-lines-v1:sha256:acefbb0cc3c48fd46a190c84f3aad17bed197350ee0a2915faff520d7e665dd7:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDVlOWMzZDdlZDA5YTUzYWNmMmRhYjk3ZjI4Mzg5MjAyNzNlZDE2OTc2ZjhhMTdkYjM4ZTYzZjg5OGNkMGVhYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOTA5YjMyM2Y2MDQ2ZTJmYzZkNGFmMGE2YmI3ZTQxOTY3MGU3NzIxOWMzOWYwZWJiNTkxNWFmMjI2Zjg5YzRmZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjIsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMWQ0YTZjNGYzNTQzNjRmODc4YjcxY2VhMzkxNmVhNTQyYTVkODY0MDJjYmU5MjQzZjRjODRmMDY0NWMxYTU5ZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiY2U3YTVhMjEyYzMyNzU4YzNmMmUxNWZhY2MwNzEwMGMxNmJlZjc4M2NlM2VkNTEzYTZiYzU1NzQ3NTM0ODU1MyJ9"
         }
       ]
     },
@@ -109,6 +109,6 @@
   ],
   "verification": {
     "by": "openwiki/0.5.2",
-    "at": "2026-09-22T08:36:26.702Z"
+    "at": "2026-09-22T10:31:12.135Z"
   }
 }

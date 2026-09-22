@@ -5,10 +5,10 @@ description: codex-mobile 是什么、怎么跑起来、按任务（改协议桥
 tags: [quickstart, navigation, onboarding, setup]
 verified:
   - by: openwiki/0.5.2
-    at: 2026-09-22T08:36:26.702Z
+    at: 2026-09-22T10:31:12.135Z
 sources:
-  - id: openwiki-source-a2371d6362e5db4bc834ad03
-    resource: repo://CLAUDE.md
+  - id: openwiki-source-8037e2358a2c4f9b2c722a11
+    resource: repo://AGENTS.md
   - id: openwiki-source-5b54a58d1b51cd490b0e7162
     resource: repo://package.json
   - id: openwiki-source-ebee4a6bd315dc1dfbba354d
