@@ -3,7 +3,7 @@
 **Control your local Codex CLI from your phone.** 手机上操作跑在开发机里的 [Codex CLI](https://github.com/openai/codex) —— 同一个工作区、同一套审批边界、同一条原生 thread。
 
 [![CI](https://github.com/Ike-li/codex-mobile/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/Ike-li/codex-mobile/actions/workflows/test.yml)
-[![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Node.js >= 20](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](package.json)
 
 ---
@@ -120,4 +120,7 @@ No. The frontend is native ESM served as-is, so `npm install && npm start` is th
 
 ## 许可证
 
-[AGPL-3.0-only](LICENSE)。如果你把修改版作为网络服务运行，AGPL 要求向其用户提供修改后的源码。
+[MIT](LICENSE)。
+
+随仓库分发的第三方库各自保留原许可（MIT / Apache-2.0 OR MPL-2.0 / BSD-3-Clause），
+见 [public/vendor/THIRD-PARTY-NOTICES.md](public/vendor/THIRD-PARTY-NOTICES.md)。

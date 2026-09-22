@@ -3,12 +3,11 @@ type: guide
 title: 快速上手与文档导航
 description: codex-mobile 是什么、怎么跑起来、按任务（改协议桥、改审批、改前端渲染、加门禁、改配置）该先读哪一页。
 tags: [quickstart, navigation, onboarding, setup]
-verified:
-  - by: openwiki/0.5.2
-    at: 2026-09-22T10:31:12.135Z
 sources:
   - id: openwiki-source-8037e2358a2c4f9b2c722a11
     resource: repo://AGENTS.md
+  - id: openwiki-source-47d02fca3524898d5aae2b3b
+    resource: repo://LICENSE
   - id: openwiki-source-5b54a58d1b51cd490b0e7162
     resource: repo://package.json
   - id: openwiki-source-ebee4a6bd315dc1dfbba354d
@@ -23,7 +22,10 @@ sources:
     resource: repo://scripts/setup.js
   - id: openwiki-source-2d58f6a6fcc12e1b2934dec9
     resource: repo://test/README.md
-generated: { by: "claude-code", at: "2026-09-22T08:36:26.702Z" }
+generated: { by: "claude-code", at: "2026-09-22T12:48:39.204Z" }
+verified:
+  - by: openwiki/0.5.2
+    at: 2026-09-22T12:48:39.204Z
 ---
 
 # 快速上手与文档导航
@@ -117,4 +119,4 @@ npm run qr        # 打印带令牌的二维码，手机扫码即连
 
 不提交本地状态、密钥、运行日志、Playwright 报告或 `data/`。
 
-许可证 [AGPL-3.0-only](../LICENSE)：把修改版作为网络服务运行时，AGPL 要求向其用户提供修改后的源码。
+许可证 [MIT](../LICENSE)。随仓库分发的第三方库各自保留原许可（MIT / Apache-2.0 OR MPL-2.0 / BSD-3-Clause），见 [THIRD-PARTY-NOTICES](../public/vendor/THIRD-PARTY-NOTICES.md)。

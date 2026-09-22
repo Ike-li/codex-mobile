@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:9e1340601219b3a736fa2257a49afe3dc923874734d3e674196142ae115e66b3",
+  "pageVersion": "sha256:27be4eeecbf8feafdc35746d191984cabb78860914c278b255507dd5522a57df",
   "claims": [
     {
       "id": "claim_c57fe7c683244ee8b61d7c9a9c692a8c",
@@ -109,8 +109,8 @@
       "statement": "Playwright 跑两个 project（Pixel 5 的 mobile-chrome 与 iPhone 13 的 mobile-webkit），且 WebKit 验不了 PWA 安装、真实 Web Push、软键盘几何与 Safari 存储驱逐，那些只能真机人工验证。",
       "evidence": [
         {
-          "resource": "repo://playwright.config.js#L18-L40",
-          "version": "repo-lines-v1:sha256:81474bbc2e27cf8f7069915962c4d2ebf3d9d8c4a5676279cf268943e86ff688:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdhODE1MmM0YTRiMzFkZjE2YTJlYzc1YWM2YTIxOThiNDZlZjMzMWU1Y2M1ZjUwYWZiMjViYjQxODJiODMyYzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk2NGQ4YzA3MzQyOTg5MzEwMTU3NmQ4OGQ5OTEyN2U4OWQ2ODkxZDNiMTdlODlkZjAyZWM5YWU3MDcwNWQ4YmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRmOTJmZjk0MjljNGE5ZTMzN2U1ZmM0YzJlNTYyMTBiYzIzYjk1MzE2ZjYwYjQ0NGQyNTVjYzgwZDVhZTlkZmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk4N2NmZTMwOWRhNTBlN2FmNGUwNzgzOTZkNzg2Yzk4YmU2OTBhMGRiZWEzMGEyM2EzNzFkZTJjY2UzOGFkNjQifQ"
+          "resource": "repo://playwright.config.js#L18-L37",
+          "version": "repo-lines-v1:sha256:0c6cb5e04021b7b0b7f5bf313a4a78f22afbb936e2e9e820d443a92c6e0bd131:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdhODE1MmM0YTRiMzFkZjE2YTJlYzc1YWM2YTIxOThiNDZlZjMzMWU1Y2M1ZjUwYWZiMjViYjQxODJiODMyYzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI0YjJmNzk0NGUyYmI1OGI5NjVkZDgwN2JjOTY5NWQ1NGIyNjA3OTExZTcwZjlkYjVhMDY5ZTI4MTA5NGZlZWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRmOTJmZjk0MjljNGE5ZTMzN2U1ZmM0YzJlNTYyMTBiYzIzYjk1MzE2ZjYwYjQ0NGQyNTVjYzgwZDVhZTlkZmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIyZjNjYTllYWI1ZmQ4MWQzOTA3MmJjYzFlYmFjNGYzOWY1ODYyODk0NDY3Nzk1ODgxMmY1Y2Y3M2IxYTAxMjMifQ"
         }
       ]
     },
@@ -167,6 +167,6 @@
   ],
   "verification": {
     "by": "openwiki/0.5.2",
-    "at": "2026-09-22T08:36:26.702Z"
+    "at": "2026-09-22T12:48:39.204Z"
   }
 }

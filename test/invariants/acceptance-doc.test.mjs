@@ -100,9 +100,13 @@ test('文档里的本地引用（链接与图片）都指向真实文件或目�
 
 test('LICENSE 与 package.json 的许可证声明一致', () => {
   // 这两处不一致是法律层面的真错误，不是文档风格问题。
-  assert.match(readDoc('../../LICENSE'), /GNU AFFERO GENERAL PUBLIC LICENSE/);
-  assert.equal(JSON.parse(readDoc('../../package.json')).license, 'AGPL-3.0-only');
-  assert.match(readDoc('../../README.md'), /AGPL-3\.0/, 'README.md 必须声明许可证');
+  assert.match(readDoc('../../LICENSE'), /MIT License/);
+  assert.equal(JSON.parse(readDoc('../../package.json')).license, 'MIT');
+  assert.match(readDoc('../../README.md'), /\bMIT\b/, 'README.md 必须声明许可证');
+  // 旧许可证的残留比没有声明更危险：三处只改两处时，剩下那处会被人当成权威。
+  for (const path of ['../../LICENSE', '../../README.md', '../../package.json']) {
+    assert.doesNotMatch(readDoc(path), /AGPL|Affero/i, `${path} 仍残留 AGPL 声明`);
+  }
 });
 
 test('文档里点名的 npm script 都真实存在', () => {

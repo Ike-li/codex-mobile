@@ -4,7 +4,7 @@
   "description": "Mobile web control panel for your local Codex CLI — run codex app-server on your dev machine and drive it from your phone, including custom base_url gateways.",
   "type": "module",
   "private": true,
-  "license": "AGPL-3.0-only",
+  "license": "MIT",
   "author": "Ike-li (https://github.com/Ike-li)",
   "repository": {
     "type": "git",

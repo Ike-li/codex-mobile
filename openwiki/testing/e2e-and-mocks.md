@@ -5,7 +5,7 @@ description: 日常回归零模型额度 QUOTA-01 的四道闸、mock codex app-
 tags: [testing, e2e, playwright, mock, quota, invariant]
 verified:
   - by: openwiki/0.5.2
-    at: 2026-09-22T08:36:26.702Z
+    at: 2026-09-22T12:48:39.204Z
 sources:
   - id: openwiki-source-4f2678f93d3fd3835f9f2909
     resource: repo://.github/workflows/test.yml
