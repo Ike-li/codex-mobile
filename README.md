@@ -1,4 +1,4 @@
-# codex-mobile
+# codex-mobile — self-hosted mobile web UI for your local Codex CLI
 
 **Control your local Codex CLI from your phone.** 手机上操作跑在开发机里的 [Codex CLI](https://github.com/openai/codex) —— 同一个工作区、同一套审批边界、同一条原生 thread。
 
@@ -81,6 +81,29 @@ npm run test:ci             # 全量门禁：lint + 协议 + 边界 + 覆盖率�
 ```
 
 日常回归一律走 mock server，不调真实 Codex CLI。详见 [docs/TESTING.md](docs/TESTING.md)。
+
+## FAQ
+
+**Can I control Codex CLI from my phone without a ChatGPT account?**
+Yes. codex-mobile drives the `codex app-server` process on your own machine over stdio, so it inherits whatever auth your local `codex` already uses — ChatGPT account, API key, or a custom `base_url` gateway. The table above shows what each mode gives you.
+
+**Does it work with a custom `base_url` (third-party gateway, self-hosted proxy, corporate relay)?**
+Yes — that is the reason this project exists. Official ChatGPT remote control requires the host machine to be signed in with an official account, so a machine configured with a custom `base_url` and an API key cannot be paired at all. Here sessions work normally; only the account-usage panel degrades to "model goes through a custom base_url" instead of showing plan and limits.
+
+**Is this the same as ChatGPT's official remote control, or a hosted Codex service?**
+No. It is not another agent and not a cloud service. It is a self-hosted control panel for the `codex app-server` already running on your dev machine. Conversations are native Codex threads stored in `~/.codex` — the same ones `codex resume` lists in your terminal, so a session started on your phone can be continued from the terminal.
+
+**Where does my data live? Does anything pass through a server run by this project?**
+Nothing does. The chain is phone browser → your Node server → your `codex app-server`, entirely on hardware you control, and threads stay in `~/.codex`. Model traffic goes wherever your own `codex` config points.
+
+**Can I reach it from outside my local network?**
+Not by default — the server binds `127.0.0.1`. Exposing it is an explicit decision: switch to `0.0.0.0` and configure an origin allowlist, which `npm run setup` asks about instead of deciding for you. Access then needs a generated 64-character token plus a device-pairing handshake, with windowed rate limiting on failed attempts and a session TTL. Approval and sandbox policy remain Codex's own; this project does not bypass them.
+
+**Which phones are supported?**
+Any modern mobile browser — it is a PWA, installable on both iOS and Android. Web Push on iOS additionally requires iOS 16.4+ with the app added to the Home Screen.
+
+**Is there a build step?**
+No. The frontend is native ESM served as-is, so `npm install && npm start` is the whole pipeline. Requires Node.js 20 or newer.
 
 ## 许可证
 
