@@ -1311,18 +1311,44 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
     slashPopup.querySelectorAll('.slash-item').forEach(item => {
       item.onclick = () => {
         hideSlashPopup();
-        // 点条目 = 提交这条命令。分发只留 sendMessage 一份，免得 popup 和手打命令
-        // 走出两套行为——旧代码就是这么漂出 bug 的：popup 只把文本塞回输入框，
-        // 于是 /compact 变成了发给模型的一句话。
+        // skill 走结构化输入，绝不能走 sendMessage：那等于把 "/archify" 当一句话发给
+        // 模型。实测过这条路的后果——模型会照着字面「扮演」执行，回一句「已压缩上下文」
+        // 而服务端一个动作都没有，静默的假成功比报错更难发现。
+        if (item.dataset.kind === 'skill') {
+          addInputPart({ kind: 'skill', name: item.dataset.skillName, path: item.dataset.skillPath });
+          inputEl.value = '';
+          inputEl.style.height = 'auto';
+          inputEl.focus();
+          return;
+        }
+        // 内置命令：点条目 = 提交这条命令。分发只留 sendMessage 一份，免得 popup 和手打
+        // 命令走出两套行为——旧代码就是这么漂出 bug 的。
         inputEl.value = item.dataset.cmd;
         sendMessage();
       };
     });
   }
 
+  // 挑选层里 skill 那一段的数据源。codex 不上报 `/` 命令表（内置那几条只能写死），
+  // 但 skill 给得很足：skills/list 能拉、skills/changed 会推，所以这一段是自动跟上游的。
+  let availableSkills = [];
+  function refreshAvailableSkills() {
+    socket.emit('skills:read', { cwd: serverCwd }, ack => {
+      if (!ack?.ok) return;
+      const next = (ack.entries || [])
+        .flatMap(entry => entry.skills || [])
+        .filter(skill => skill?.enabled === true);
+      availableSkills = next;
+      renderSlashPopup();
+    });
+  }
+
   function renderSlashPopup() {
-    slashPopup.innerHTML = slashPickerItems().map(item => `
-      <div class="slash-item" data-cmd="${escHtml(item.cmd)}">
+    slashPopup.innerHTML = slashPickerItems({ skills: availableSkills }).map(item => `
+      <div class="slash-item" data-cmd="${escHtml(item.cmd)}" data-kind="${escHtml(item.kind)}"${
+  item.kind === 'skill'
+    ? ` data-skill-name="${escHtml(item.name)}" data-skill-path="${escHtml(item.path)}"`
+    : ''}>
         <span class="slash-icon">${icon(item.iconName)}</span>
         <div class="slash-details">
           <span class="slash-name">${escHtml(item.cmd)}</span>
@@ -1330,6 +1356,7 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
         </div>
       </div>
     `).join('');
+    hydrateIcons(slashPopup);
     bindSlashPickerItems();
   }
   renderSlashPopup();
@@ -1419,8 +1446,8 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
 
   // Hide popup on click outside
   document.addEventListener('click', e => {
-    // 发送钮点下去会先执行 /help（打开挑选层），同一记点击再冒泡到这里。
-    // 把发送/停止当成「外面」会刚打开就关掉，手机上 /help 等于没反应。
+    // 发送钮点下去可能先打开挑选层，同一记点击再冒泡到这里。
+    // 把发送/停止当成「外面」会刚打开就关掉，挑选层等于没出现。
     if (e.target.closest('#send-btn, #followup-btn, #send-btn-container')) return;
     if (!slashPopup.contains(e.target) && e.target !== inputEl) {
       hideSlashPopup();
@@ -1465,6 +1492,9 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
         break;
       case 'init':
         handleInit(ev.payload, ev);
+        // skills/changed 只在变动时推，冷启动这一份得自己要。cwd 也可能随会话切换，
+        // 所以跟着 init 走而不是只在连接时拉一次。
+        refreshAvailableSkills();
         break;
       case 'status':
         handleStatus(ev.payload);
@@ -1547,6 +1577,8 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
       case 'rollback':
       case 'rate_limits':
       case 'skills_changed':
+        refreshAvailableSkills();
+        break;
       case 'external_agent_config_import':
         break;
       case 'mcp_status':
@@ -4017,13 +4049,6 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
     switch (action) {
       case 'review': startReview(args); return;
       // 命令表逐行长度不一，系统消息默认居中会让左边参差不齐，单独左对齐。
-      case 'help':
-        document.querySelectorAll('.slash-item').forEach(item => { item.style.display = 'flex'; });
-        inputEl.value = '/';
-        inputEl.style.height = 'auto';
-        showSlashPopup();
-        inputEl.focus();
-        return;
       case 'session-settings': openSessionSettings(); return;
       case 'diff': workspacePanel.open('changes'); return;
       case 'compact': startCompact(); return;
@@ -4041,7 +4066,7 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
     if (interruptPending) return;
     const slash = resolveSlashCommand(inputEl.value);
     if (slash?.kind === 'unknown') {
-      appendSystem(`未知命令 ${slash.cmd}。用 /help 看可用命令，草稿已保留`, true);
+      appendSystem(`未知命令 ${slash.cmd}。输入 / 看可用命令，草稿已保留`, true);
       return;
     }
     if (slash?.kind === 'unsupported') {
@@ -4050,11 +4075,9 @@ import { installClientErrorReporting } from '/js/net/client-log.js';
     }
     if (slash?.kind === 'action') {
       runSlashAction(slash.action, slash.args);
-      if (slash.action !== 'help') {
-        inputEl.value = '';
-        inputEl.style.height = 'auto';
-        hideSlashPopup();
-      }
+      inputEl.value = '';
+      inputEl.style.height = 'auto';
+      hideSlashPopup();
       applyComposerMode();
       return;
     }

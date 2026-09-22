@@ -97,11 +97,60 @@ test('非命令输入返回 null', () => {
 test('slash picker 的每个条目都必须真的接上动作', () => {
   const items = slashPickerItems();
   assert.ok(items.length > 0, '挑选层不能是空表');
-  assert.equal(items.length, Object.keys(SLASH_ACTIONS).length);
   for (const { cmd } of items) {
     const resolved = resolveSlashCommand(cmd);
     assert.equal(resolved?.kind, 'action', `${cmd} 在挑选层但是 ${resolved?.kind}——不能列出执行不了的命令`);
   }
+});
+
+// codex 的 `/` 命令表是 TUI 硬编码的，app-server 一个字都不上报（InitializeResponse 只有
+// codexHome / platformFamily / platformOs）。所以内置这几条只能写死。
+//
+// 但真正天天变的不是它们，是用户自己加的 skill —— 那部分 codex 给得很足：skills/list 能拉、
+// skills/changed 会推。把 skill 并进同一个挑选层，「上游更新不用管」就在会变的那一半成立了。
+test('挑选层把内置命令和动态 skill 并成两段', () => {
+  const skills = [
+    { name: 'archify', description: '画架构图', path: '/s/archify/SKILL.md' },
+    { name: 'tdd', description: '测试先行', path: '/s/tdd/SKILL.md' },
+  ];
+  const items = slashPickerItems({ skills });
+
+  const builtins = items.filter(item => item.kind === 'builtin');
+  const skillItems = items.filter(item => item.kind === 'skill');
+  assert.ok(builtins.length > 0, '内置那段不能丢');
+  assert.deepEqual(skillItems.map(item => item.cmd), ['/archify', '/tdd']);
+  assert.deepEqual(items.slice(0, builtins.length).map(item => item.kind),
+    Array(builtins.length).fill('builtin'), '内置在前、skill 在后，两段不交错');
+
+  // skill 条目要带够身份：选中后走 {type:'skill', name, path} 输入，不是往输入框塞文本。
+  assert.equal(skillItems[0].name, 'archify');
+  assert.equal(skillItems[0].path, '/s/archify/SKILL.md');
+  assert.equal(skillItems[0].desc, '画架构图');
+});
+
+test('没有 skill 时挑选层退回纯内置，不留空段', () => {
+  assert.deepEqual(slashPickerItems({ skills: [] }).map(i => i.kind),
+    slashPickerItems().map(i => i.kind));
+  assert.ok(slashPickerItems().every(item => item.kind === 'builtin'));
+});
+
+// /status 与 /permissions 在 codex 里是三条不同的命令，在这边却都打开同一个「会话设置」
+// sheet。列表里摆三个名字指向同一处是噪音，但 CLI 肌肉记忆不该失效——所以隐藏、不删。
+test('同义命令在列表里只留一个，但仍然解析得动', () => {
+  const listed = slashPickerItems().map(item => item.cmd);
+  assert.ok(listed.includes('/model'), '留下的那个要在');
+  assert.ok(!listed.includes('/status'), '/status 是别名，不进列表');
+  assert.ok(!listed.includes('/permissions'), '/permissions 同理');
+
+  for (const alias of ['/status', '/permissions']) {
+    assert.equal(resolveSlashCommand(alias)?.kind, 'action', `${alias} 必须仍然能用`);
+  }
+});
+
+// /help 的实现是「把输入框设成 / 再弹一次挑选层」——它就是 / 本身。
+test('/help 不再存在：它等于 / 自己', () => {
+  assert.ok(!('/help' in SLASH_ACTIONS));
+  assert.ok(!slashPickerItems().some(item => item.cmd === '/help'));
 });
 
 test('index.html 的斜杠挑选层由分发表生成，不写死条目', () => {
@@ -112,7 +161,7 @@ test('index.html 的斜杠挑选层由分发表生成，不写死条目', () => 
   assert.doesNotMatch(block, /data-cmd=/, '挑选层条目必须从 SLASH_ACTIONS 生成，不能在 HTML 里写死');
 });
 
-test('/help 列出的就是分发表本身，不会和实现漂移', () => {
+test('帮助文案列出的就是分发表本身，不会和实现漂移', () => {
   const lines = slashHelpLines();
   assert.ok(lines.length >= Object.keys(SLASH_ACTIONS).length);
   for (const cmd of Object.keys(SLASH_ACTIONS)) {

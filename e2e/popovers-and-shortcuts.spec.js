@@ -48,14 +48,18 @@ test.describe('Popovers And Slash Suggestions', () => {
     await input.pressSequentially('/');
     const slashPopup = page.locator('#slash-popup');
     await expect(slashPopup).toBeVisible();
-    for (const command of ['/status', '/diff', '/compact', '/permissions', '/files', '/mcp']) {
+    for (const command of ['/model', '/diff', '/compact', '/files', '/mcp']) {
       await expect(slashPopup.locator(`.slash-item[data-cmd="${command}"]`).first(), `${command} slash item should be visible`).toBeVisible();
     }
     await expect(slashPopup.locator('.slash-item[data-cmd="/plan"]')).toHaveCount(0);
+    // /status 与 /permissions 和 /model 打开同一个 sheet，列表里只留一个；别名仍然解析得动，
+    // 那条契约由 test/unit/slash-commands.test.mjs 守。
+    await expect(slashPopup.locator('.slash-item[data-cmd="/status"]')).toHaveCount(0);
 
-    // 2. 点条目 = 执行命令。旧行为是把 "/status " 塞回输入框等用户按发送，
-    //    一发就变成给模型的一句普通文本——app-server 不解析斜杠命令。
-    await slashPopup.locator('.slash-item[data-cmd="/status"]').first().click();
+    // 2. 点条目 = 执行命令。旧行为是把 "/model " 塞回输入框等用户按发送，
+    //    一发就变成给模型的一句普通文本——app-server 不解析斜杠命令（实测过：模型会
+    //    照字面「扮演」执行，服务端零动作）。
+    await slashPopup.locator('.slash-item[data-cmd="/model"]').first().click();
     await expect(page.locator('#session-settings')).toBeVisible();
     await expect(input).toHaveValue('');
     await expect(page.locator('.msg.user')).toHaveCount(0);
@@ -195,29 +199,14 @@ test.describe('斜杠命令兜底', () => {
     await expect(input).toHaveValue('/init');
     await expect(page.locator('.msg.user')).toHaveCount(0);
 
-    // 压根不存在的命令：同样拦下，并指路 /help。
+    // 压根不存在的命令：同样拦下，并指路 `/` 本身（/help 已随实现删除——它的实现就是
+    // 把输入框设成 / 再弹一次挑选层，等于 / 自己）。
     await input.fill('/nope');
     await input.press('Enter');
     await expect(errors).toHaveCount(2);
-    await expect(errors.nth(1)).toContainText('/help');
+    await expect(errors.nth(1)).toContainText('输入 /');
     await expect(page.locator('.msg.user')).toHaveCount(0);
 
-    // /help 打开命令挑选层，不把整张表塞进对话。
-    await input.fill('/help');
-    await input.press('Enter');
-    await expect(page.locator('#slash-popup')).toBeVisible();
-    await expect(page.locator('#slash-popup')).toContainText('/compact');
-    await expect(page.locator('.msg.system-msg.slash-help')).toHaveCount(0);
-    await expect(input).toHaveValue('/');
-
-    // 手机上是点发送，不是按 Enter。同一记点击会冒泡到 document 的「点外面关掉」
-    // 监听——打开又立刻关上，挑选层等于没出现。
-    await page.locator('#msg-input').fill('占位');
-    await page.locator('#msg-input').fill('/help');
-    await page.locator('#send-btn').click();
-    await expect(page.locator('#slash-popup')).toBeVisible();
-    await expect(page.locator('#slash-popup')).toContainText('/compact');
-    await expect(input).toHaveValue('/');
 
     // 绝对路径不是命令意图——误判会把正常消息拦下来。
     await input.fill('/usr/bin/codex 这个路径不对');
@@ -273,4 +262,48 @@ test.describe('斜杠命令兜底', () => {
 
     expectNoForbiddenRuntimeErrors(runtimeErrors);
   });
+});
+
+// codex 的 `/` 命令表是 TUI 硬编码的，app-server 一个字都不上报，所以内置那几条只能写死。
+// 真正天天变的是用户自己加的 skill —— skills/list 能拉、skills/changed 会推，那一段才是
+// 「上游更新不用管」真正成立的地方。两段必须并在同一个挑选层里，否则 skill 就只能从
+// 「抽屉 → 设置与状态 → 技能 → 插入」四层菜单进去。
+test('斜杠挑选层把内置命令和动态 skill 并成两段', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('#state-label')).not.toHaveText('offline', { timeout: 10000 });
+
+  await page.locator('#msg-input').fill('/');
+  const popup = page.locator('#slash-popup');
+  await expect(popup).toHaveClass(/show/);
+
+  await expect(popup.locator('.slash-item[data-kind="builtin"]').first()).toBeVisible();
+  await expect(popup.locator('.slash-item[data-cmd="/archify"]'), 'skill 要出现在挑选层里')
+    .toBeVisible({ timeout: 10000 });
+  await expect(popup.locator('.slash-item[data-cmd="/disabled-one"]'), '未启用的 skill 不该列出')
+    .toHaveCount(0);
+
+  // 同义别名只留一个，/help 已随实现删除
+  await expect(popup.locator('.slash-item[data-cmd="/status"]')).toHaveCount(0);
+  await expect(popup.locator('.slash-item[data-cmd="/help"]')).toHaveCount(0);
+  await expect(popup.locator('.slash-item[data-cmd="/model"]')).toHaveCount(1);
+});
+
+// 选中 skill 绝不能走 sendMessage —— 那等于把 "/archify" 当一句话发给模型，而模型会照着
+// 字面「扮演」执行（实测过：回一句「已压缩上下文」，服务端一个动作都没有）。
+test('选中 skill 插入结构化输入，不把命令名当消息发出去', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('#state-label')).not.toHaveText('offline', { timeout: 10000 });
+
+  await page.locator('#msg-input').fill('/');
+  const skillItem = page.locator('#slash-popup .slash-item[data-cmd="/archify"]');
+  await expect(skillItem).toBeVisible({ timeout: 10000 });
+  await skillItem.click();
+
+  await expect(page.locator('#msg-input'), '输入框要被清空，等用户接着写指令').toHaveValue('');
+  await expect(page.locator('#messages'), '不能把 /archify 当消息发出去')
+    .not.toContainText('/archify');
+  // 挂成输入部件的 chip。前缀是 $ 不是 / —— / 只是挑选层的触发符，$ 才是 codex 里
+  // skill 的身份标识，插入后显示 $ 与 CLI 一致。
+  await expect(page.locator('#attach-tray'), 'skill 应作为输入部件挂上')
+    .toContainText('$archify', { timeout: 5000 });
 });

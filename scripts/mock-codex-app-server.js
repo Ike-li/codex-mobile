@@ -708,6 +708,21 @@ rl.on('line', async (line) => {
       case 'account/rateLimits/read':
         respond(msg.id, { rateLimits: { limitName: 'Codex', planType: 'plus' } });
         break;
+      // 斜杠挑选层的 skill 那一段靠它。此前 mock 没实现，走 default 兜底回 {}，于是
+      // 「/ 面板要同时列出内置命令和 skill」这条链路在 e2e 上根本没有被走到过。
+      case 'skills/list':
+        respond(msg.id, {
+          data: [{
+            cwd: process.cwd(),
+            skills: [
+              { name: 'archify', description: '画架构图', path: '/mock/skills/archify/SKILL.md', scope: 'user', enabled: true },
+              { name: 'tdd', description: '测试先行', path: '/mock/skills/tdd/SKILL.md', scope: 'project', enabled: true },
+              { name: 'disabled-one', description: '未启用的不该出现', path: '/mock/skills/x/SKILL.md', scope: 'user', enabled: false },
+            ],
+            errors: [],
+          }],
+        });
+        break;
       case 'configRequirements/read':
         respond(msg.id, { requirements: null });
         break;

@@ -19,10 +19,11 @@ const COMMAND_WORD = /^\/([A-Za-z][A-Za-z0-9-]*)(?:\s+([\s\S]+))?$/;
 
 // 已接入的命令。action 是给 app.js 查表用的 id，desc / iconName 喂给 /help 和挑选层。
 export const SLASH_ACTIONS = {
-  '/help': { action: 'help', desc: '列出手机端可用的命令', iconName: 'compass' },
-  '/status': { action: 'session-settings', desc: '查看本会话的模型、权限和推理强度', iconName: 'chart' },
-  '/model': { action: 'session-settings', desc: '切换模型与推理强度', iconName: 'bot' },
-  '/permissions': { action: 'session-settings', desc: '查看或修改审批与沙箱', iconName: 'shield' },
+  // 这三条在 codex 里是三个不同的命令，在这边都打开同一个「会话设置」sheet。列表里摆
+  // 三个名字指向同一处是噪音，但 CLI 肌肉记忆不该失效 —— 所以 hidden，不删。
+  '/model': { action: 'session-settings', desc: '切换模型、推理强度与审批', iconName: 'bot' },
+  '/status': { action: 'session-settings', desc: '查看本会话的模型、权限和推理强度', iconName: 'chart', hidden: true },
+  '/permissions': { action: 'session-settings', desc: '查看或修改审批与沙箱', iconName: 'shield', hidden: true },
   '/diff': { action: 'diff', desc: '打开工作区改动面板', iconName: 'search' },
   // 唯一收参数的命令：无参数审未提交改动，有参数当自定义审查指令。
   '/review': { action: 'review', desc: '审查未提交改动；跟一句话则按该指令审查', acceptsArgs: true, iconName: 'notepad' },
@@ -90,10 +91,39 @@ export function slashHelpLines() {
   return Object.entries(SLASH_ACTIONS).map(([cmd, { desc }]) => `${cmd} — ${desc}`);
 }
 
-export function slashPickerItems() {
-  return Object.entries(SLASH_ACTIONS).map(([cmd, { desc, iconName }]) => ({
-    cmd,
-    desc,
-    iconName: iconName || 'compass',
-  }));
+/**
+ * 挑选层的条目：内置命令在前，动态 skill 在后。
+ *
+ * codex 的 `/` 命令表是 TUI 硬编码的，app-server 一个字都不上报（InitializeResponse 只有
+ * codexHome / platformFamily / platformOs，105 个方法里也没有任何命令表接口），所以内置
+ * 这几条只能写死。但真正天天变的不是它们，是用户自己加的 skill —— 那部分 codex 给得很足：
+ * skills/list 能拉、skills/changed 会推。两段并进同一个挑选层，「上游更新不用管」就在会变
+ * 的那一半成立了。
+ *
+ * hidden 的内置命令（同义别名）不进列表，但 resolveSlashCommand 照旧认。
+ */
+export function slashPickerItems({ skills = [] } = {}) {
+  const builtins = Object.entries(SLASH_ACTIONS)
+    .filter(([, spec]) => spec.hidden !== true)
+    .map(([cmd, { desc, iconName }]) => ({
+      kind: 'builtin',
+      cmd,
+      desc,
+      iconName: iconName || 'compass',
+    }));
+
+  // skill 条目带着 name/path：选中后走 {type:'skill', name, path} 结构化输入，
+  // 不是往输入框塞一段文本让模型猜。
+  const skillItems = (Array.isArray(skills) ? skills : [])
+    .filter(skill => skill?.name)
+    .map(skill => ({
+      kind: 'skill',
+      cmd: `/${skill.name}`,
+      desc: skill.description || skill.shortDescription || '',
+      iconName: 'star',
+      name: skill.name,
+      path: skill.path || '',
+    }));
+
+  return [...builtins, ...skillItems];
 }
