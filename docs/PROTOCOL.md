@@ -1,6 +1,6 @@
 # Codex App Server 协议参考
 
-本文件是 codex-chat-mobile 对 Codex `app-server` JSON-RPC 2.0 协议的维护型参考。仓库 pin 为 `.codex-version` 中的 `0.147.0`；类型与方法事实以 `.protocol/stable/` 的 `generate-ts` 基线为准，桥接行为以 `app-server-host.js`、`app-server-transport.js`、`thread-registry.js` 和 `agent-appserver.js` 为准。
+本文件是 codex-mobile 对 Codex `app-server` JSON-RPC 2.0 协议的维护型参考。仓库 pin 为 `.codex-version` 中的 `0.147.0`；类型与方法事实以 `.protocol/stable/` 的 `generate-ts` 基线为准，桥接行为以 `app-server-host.js`、`app-server-transport.js`、`thread-registry.js` 和 `agent-appserver.js` 为准。
 
 本文只记录项目实际依赖与适配边界，不记录某台开发机某次门禁是否通过。更早的调研底稿位于 [archive/](archive/)；它们不再维护，也不是事实来源。
 

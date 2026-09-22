@@ -1,6 +1,6 @@
 # 接口参考
 
-本文件是 codex-chat-mobile 浏览器网关的接口参考，覆盖浏览器可调用的 HTTP 路由、Socket.IO 事件和统一的 `agent:event` 信封。Codex app-server 的 JSON-RPC 方法见 [PROTOCOL.md](PROTOCOL.md)，运行链路与安全边界见 [ARCHITECTURE.md](ARCHITECTURE.md)。
+本文件是 codex-mobile 浏览器网关的接口参考，覆盖浏览器可调用的 HTTP 路由、Socket.IO 事件和统一的 `agent:event` 信封。Codex app-server 的 JSON-RPC 方法见 [PROTOCOL.md](PROTOCOL.md)，运行链路与安全边界见 [ARCHITECTURE.md](ARCHITECTURE.md)。
 
 接口事实以 `server.js`、`agent-appserver.js` 和对应测试为准。当前线上的 thread 元数据与历史只来自 app-server 的 `thread/list`、`thread/read`、`thread/resume` 和 `thread/status/changed`；网关不维护第二套会话历史。
 

@@ -2,7 +2,7 @@
 
 [English README](../README.md) · [中文 README](../README.zh-CN.md)
 
-**codex-chat-mobile 是什么**：Codex CLI 跑在你的开发机上，这个项目让你从手机上像用终端一样驱动它——同一个工作区、同一套审批边界、同样的流式 agent 事件。下面用截图过一遍它到底能干什么。
+**codex-mobile 是什么**：Codex CLI 跑在你的开发机上，这个项目让你从手机上像用终端一样驱动它——同一个工作区、同一套审批边界、同样的流式 agent 事件。下面用截图过一遍它到底能干什么。
 
 > 所有截图取自确定性 mock app-server（`npm run test:e2e` 用的 harness），不调用真实 Codex、不消耗任何模型额度。真实使用步骤见 [GUIDE.md](GUIDE.md)。
 

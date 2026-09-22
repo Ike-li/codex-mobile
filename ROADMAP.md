@@ -1,6 +1,6 @@
 # Roadmap
 
-This roadmap separates what is shipped and maintained from what is still open. It reflects the state of `master`; day-to-day tasks live in [GitHub issues](https://github.com/Ike-li/codex-chat-mobile/issues), not here.
+This roadmap separates what is shipped and maintained from what is still open. It reflects the state of `master`; day-to-day tasks live in [GitHub issues](https://github.com/Ike-li/codex-mobile/issues), not here.
 
 「已完成」依据 git 历史与当前测试门禁；「进行中 / 候选」中标注 *(待确认)* 的条目需要维护者确认后再排期。中文说明见每节。
 

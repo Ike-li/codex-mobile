@@ -1,6 +1,6 @@
 # Security Policy
 
-codex-chat-mobile is a local control plane for a real development machine. An approved browser can drive Codex inside the configured workspace, sandbox, and approval policy: it can read files, propose patches, request commands, and answer app-server prompts. Treat every remote deployment as high risk.
+codex-mobile is a local control plane for a real development machine. An approved browser can drive Codex inside the configured workspace, sandbox, and approval policy: it can read files, propose patches, request commands, and answer app-server prompts. Treat every remote deployment as high risk.
 
 ## Threat Model
 
@@ -44,6 +44,6 @@ Pre-1.0: only the latest `master` receives security fixes.
 
 ## Reporting a Vulnerability
 
-- Report privately via GitHub: [Security → Report a vulnerability](https://github.com/Ike-li/codex-chat-mobile/security/advisories/new).
+- Report privately via GitHub: [Security → Report a vulnerability](https://github.com/Ike-li/codex-mobile/security/advisories/new).
 - Do not open a public issue for a suspected vulnerability.
 - Include reproduction steps, impact, and the relevant deployment values without including secrets: bind topology, whether HTTPS terminates at a proxy, allowed Origin/trusted proxy configuration, sandbox/approval policy, enabled Labs/remote-image flags, and whether VAPID is configured. You should normally hear back within a week.

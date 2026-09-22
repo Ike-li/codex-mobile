@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping improve codex-chat-mobile. Issues and pull requests are welcome in English or Chinese（中英文皆可）.
+Thanks for helping improve codex-mobile. Issues and pull requests are welcome in English or Chinese（中英文皆可）.
 
 ## Ground Rules
 
@@ -13,8 +13,8 @@ Thanks for helping improve codex-chat-mobile. Issues and pull requests are welco
 ## Development Setup
 
 ```bash
-git clone https://github.com/Ike-li/codex-chat-mobile.git
-cd codex-chat-mobile
+git clone https://github.com/Ike-li/codex-mobile.git
+cd codex-mobile
 npm install
 cp .env.example .env
 npm run dev

@@ -1,4 +1,4 @@
-# codex-chat-mobile 架构设计文档
+# codex-mobile 架构设计文档
 
 > 生成模型：`claude-fable-5` ｜ 日期：2026-07-05 ｜ 版本：v1.0
 > 上游依据：《接口地图-合并版》《需求文档 PRD v1.0》；对齐现状基线 `docs/technical-plan.md`

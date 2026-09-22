@@ -1,6 +1,6 @@
-# codex-chat-mobile
+# codex-mobile
 
-[![CI](https://github.com/Ike-li/codex-chat-mobile/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/Ike-li/codex-chat-mobile/actions/workflows/test.yml)
+[![CI](https://github.com/Ike-li/codex-mobile/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/Ike-li/codex-mobile/actions/workflows/test.yml)
 [![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 [![Node.js >= 20](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](package.json)
 

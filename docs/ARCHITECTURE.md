@@ -1,6 +1,6 @@
 # 架构
 
-`codex-chat-mobile` 是 Codex CLI 的自托管移动端 rich client。浏览器只连接开发机上的 Node 网关；网关通过 stdio 管理一个共享的 `codex app-server`，不会把工作代理到本项目自有的托管后端。
+`codex-mobile` 是 Codex CLI 的自托管移动端 rich client。浏览器只连接开发机上的 Node 网关；网关通过 stdio 管理一个共享的 `codex app-server`，不会把工作代理到本项目自有的托管后端。
 
 ## 运行链路
 
