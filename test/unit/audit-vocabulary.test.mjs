@@ -107,8 +107,17 @@ test('transitions 区分「本来就没有」与「被清空了」', () => {
 test('留痕失败不阻断配置写入——配不上比记不上严重', () => {
   withDir(dir => {
     const previous = process.env.CODEX_DATA_DIR;
-    // 指向一个不可能写入的路径
-    process.env.CODEX_DATA_DIR = '/proc/nonexistent-ccm-audit';
+    // 「不可能写入」必须用**父目录是普通文件**来构造，mkdir 得到 ENOTDIR，两个平台一致。
+    //
+    // 这里原本写的是 /proc/nonexistent-ccm-audit，那条路在 Linux 上会让整个测试进程
+    // 活锁在 100% CPU：procfs 是可写挂载，却对创建条目返回 ENOENT；而 Node 的递归
+    // mkdir 把 ENOENT 当成「父目录缺失」，于是去建 /proc（已存在）→ 回头重试子路径
+    // → 又 ENOENT → 无限循环（同 nodejs/node#28599 的形状）。macOS 上 /proc 根本
+    // 不存在，递归 mkdir 在根目录下立刻权限失败抛错，所以本机一直是绿的——这条用例
+    // 从写下那天起就没在 Linux 上跑通过，而 CI 的表现是卡死而不是变红。
+    const blocker = join(dir, 'not-a-dir');
+    writeFileSync(blocker, 'x');
+    process.env.CODEX_DATA_DIR = join(blocker, 'audit');
     try {
       writeFileSync(join(dir, 'codex.config.json'), '{}');
       assert.equal(runConfigCommand(['set', 'PORT=4100'], { dir }).ok, true);
