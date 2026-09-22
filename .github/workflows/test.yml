@@ -84,6 +84,19 @@ jobs:
         if: matrix.node-version == 20
         run: npx playwright test
 
+      # 失败那一次的现场只存在于 runner 上。playwright.config.js 配了
+      # screenshot: only-on-failure 与 trace: on-first-retry，产物落在 test-results/，
+      # 不上传就随容器销毁 —— 线上失败只剩一行断言文本。
+      # 条件必须是 failure() 而不是默认：默认只在前面步骤全绿时执行，而现场只在失败时才有。
+      - name: Upload Playwright failure artifacts
+        if: ${{ failure() && matrix.node-version == 20 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-failure-artifacts
+          path: test-results/
+          retention-days: 7
+          if-no-files-found: ignore
+
       - name: Upload coverage report
         if: matrix.node-version == 20
         uses: actions/upload-artifact@v4
