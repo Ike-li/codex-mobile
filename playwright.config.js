@@ -26,6 +26,12 @@ export default defineConfig({
     // ⚠ 它验不了 iOS 真机上最容易挂的那几件事：PWA 安装（iOS 的路径是分享→添加到
     // 主屏幕）、真实 Web Push（要 16.4+ 且已添加主屏）、软键盘几何、Safari 的存储驱逐。
     // 那些只能在 iOS 真机上人工验证，别把这条 project 当成它们的替代。
+    //
+    // 再加一项，成因不同：**任何基于动画帧的判据**。Linux 的 Playwright WebKit 几乎
+    // 不产帧 —— 实测 rAF 空转 1 秒，macOS 61 帧 / Linux 1 帧，headed + xvfb 也只到
+    // 约 1/10。于是 rAF 驱动的滚动插值推不动，连续性无从测起。critical-flows.spec.js
+    // 的「流式跟随是连续滚动」因此在 WebKit 上跳过，那里有完整数据。这不是 WebKit 的
+    // 缺陷，是无头环境不出帧；但代价是这条判据只剩 Chromium 覆盖。
     {
       name: 'mobile-webkit',
       use: { ...devices['iPhone 13'] },

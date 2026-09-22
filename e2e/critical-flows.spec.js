@@ -183,7 +183,19 @@ test.describe('关键用户旅程', () => {
   // 的顿挫。瞬时 scrollTop = scrollHeight 下实测 92% 的帧静止，剩下 8% 整齐地跳
   // 46px（两行高）—— 约 10fps 的跳动。这条测的是运动的连续性，不是滚动的正确性,
   // 后者由下面那条「不抢回滚动位置」守。
-  test('流式跟随是连续滚动，不是一跳一跳', async ({ page }) => {
+  test('流式跟随是连续滚动，不是一跳一跳', async ({ page, browserName }) => {
+    // WebKit 上不跑：不是它有 bug，也不是我们不在乎它——是这个环境里**没有可测对象**。
+    // 滚动跟随用 rAF 插值实现（见 20ad2c7），而 Linux 的 Playwright WebKit 几乎不产帧。
+    // 实测（playwright:v1.61.1-noble 官方镜像，与 CI 同族），rAF 空转 1 秒的帧数：
+    //   macOS WebKit 61  ·  Linux WebKit 1
+    // 于是插值推不动、采样器也一起饿死：同一条用例 totalScrolled 在 macOS 上是 1046，
+    // 在 Linux 上是 22（阈值 200）。headed + xvfb 只把它抬到 96，仍然不够。
+    // 把阈值调到 22 能过等于不再测任何东西——判据测的是运动的连续性，而那里没有运动。
+    //
+    // ⚠ 代价要说清楚：产品主设备是 iPhone，排除之后滚动跟随的连续性只在 Chromium 上
+    // 有覆盖，真机顺不顺只能人工验。这一条已登记进 playwright.config.js 里
+    // 「WebKit 验不了什么」那张清单，不是可以忘掉的事。
+    test.skip(browserName === 'webkit', 'Linux WebKit 的 rAF 约 1fps，动画连续性在此无法测量');
     await page.setViewportSize({ width: 390, height: 520 });
     await page.goto('/');
     await expect(page.locator('#state-label')).toHaveText('idle', { timeout: 10000 });
