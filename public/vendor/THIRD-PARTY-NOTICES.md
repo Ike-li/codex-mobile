@@ -1,7 +1,7 @@
 # 第三方组件与许可证 / Third-Party Notices
 
 本目录（`public/vendor/`）打包并随项目分发以下第三方组件。它们各自的版权与许可证如下。
-项目自身代码以 AGPL-3.0-only 许可（见仓库根 `LICENSE`），不改变下列组件的许可。
+项目自身代码以 MIT 许可（见仓库根 `LICENSE`），不改变下列组件的许可。
 
 ## marked — `marked.min.js`
 

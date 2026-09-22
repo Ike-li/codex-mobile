@@ -100,18 +100,18 @@
       "completedRunId": "d6405764-2745-433b-805c-3728f1b97a36"
     },
     "/openwiki/quickstart.md": {
-      "pageVersion": "sha256:565316db22d7e31d9b44f58a831d301262f2912d136025d3e4c305f2ec703155",
+      "pageVersion": "sha256:e0c7f727897ab09f7a301cf79e7f08975ec9a06c5f765350b4e3ca24ec48d0db",
       "completedBy": "claude-code",
-      "completedRunId": "cbc595cc-faf0-402a-87ea-2786209ef263",
-      "gitHead": "cf9b95a7e88e9ae40174db954ae0435aed40376b",
-      "sourceFingerprint": "sha256:606cd96ac0639d4ed5444fb57654679cd80085a6305f92c141adad2b19c78622"
+      "completedRunId": "96ff829f-b910-47c1-b77a-f061bce231b5",
+      "gitHead": "4b9db0f4f23385b2c4cb1f3262de1211aeb58458",
+      "sourceFingerprint": "sha256:a56ac309e82fb71df9febedcb23f26edf5560977abc9f746786ae920436b1ac2"
     },
     "/openwiki/testing/e2e-and-mocks.md": {
-      "gitHead": "3e21c59a59d16c615ad80fb4ce4b1172aca807ec",
-      "sourceFingerprint": "sha256:38b30ef0bba808c7a89917e8bc135a4e8303ae21fbf3a264ab278ceee43fd378",
-      "pageVersion": "sha256:9e1340601219b3a736fa2257a49afe3dc923874734d3e674196142ae115e66b3",
+      "pageVersion": "sha256:27be4eeecbf8feafdc35746d191984cabb78860914c278b255507dd5522a57df",
       "completedBy": "claude-code",
-      "completedRunId": "d6405764-2745-433b-805c-3728f1b97a36"
+      "completedRunId": "96ff829f-b910-47c1-b77a-f061bce231b5",
+      "gitHead": "4b9db0f4f23385b2c4cb1f3262de1211aeb58458",
+      "sourceFingerprint": "sha256:a56ac309e82fb71df9febedcb23f26edf5560977abc9f746786ae920436b1ac2"
     },
     "/openwiki/testing/gates-and-ci.md": {
       "gitHead": "3e21c59a59d16c615ad80fb4ce4b1172aca807ec",
